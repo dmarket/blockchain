@@ -1,0 +1,89 @@
+version: 2
+jobs:
+  build:
+    working_directory: /project
+
+    docker:
+      - image: rust
+
+    steps:
+
+      - run:
+          name: Install System Packages
+          command: apt-get update && apt-get -y install libsodium18 libsodium-dev pkg-config
+
+      - checkout
+
+      - restore_cache:
+          key: suntechsoft-videomarket-api-{{ .Branch }}-{{ checksum "Cargo.toml" }}
+
+      - run:
+          name: Install Project Dependencies
+          command: cargo install
+
+      - save_cache:
+          key: suntechsoft-videomarket-api-{{ .Branch }}-{{ checksum "Cargo.toml" }}
+          paths:
+            - "/project/target"
+            - "/project/Cargo.lock"
+
+      - run:
+          name: Run Tests
+          command: cargo test
+
+#      - store_artifacts:
+#          path: /project/report/
+#          destination: artifact-dir
+
+#      - setup_remote_docker
+#
+#      - run:
+#          name: Install Docker client
+#          command: |
+#            set -x
+#            VER="17.03.0-ce"
+#            curl -L -o /tmp/docker-$VER.tgz https://get.docker.com/builds/Linux/x86_64/docker-$VER.tgz
+#            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
+#            mv /tmp/docker/* /usr/bin
+#
+#      # build and test application
+#      - run:
+#          name: Build and Push api container
+#          command: |
+#            docker login -u $DOCKER_USER -p $DOCKER_PASS
+#            docker build -t globalgames/videomarket_api .
+#            docker push globalgames/videomarket_api
+#
+#      - run:
+#          name: Deploy
+#          command: |
+#            curl -u ${CIRCLE_API_TOKEN}: \
+#               -d build_parameters[CIRCLE_JOB]=deploy \
+#               https://circleci.com/api/v1.1/project/github/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/tree/$CIRCLE_BRANCH
+#  deploy:
+#    docker:
+#      - image: cdrx/rancher-gitlab-deploy
+#    working_directory: ~/
+#    steps:
+#      - run:
+#          name: Upgrade services
+#          command: |
+#            TAG=$CIRCLE_BRANCH
+#            ENVIRONMENT=videomarket-uat
+#            upgrade --environment $ENVIRONMENT --stack $ENVIRONMENT --service api-cron --new-image globalgames/videomarket_api:latest --no-start-before-stopping
+#            upgrade --environment $ENVIRONMENT --stack $ENVIRONMENT --service api --new-image globalgames/videomarket_api:latest --no-start-before-stopping
+
+
+#      - run:
+#          name: Install rancher cli
+#          command: |
+#            apt-get -y install python-setuptools
+#            set -x
+#            curl -L -o /tmp/deploy.tgz https://github.com/cdrx/rancher-gitlab-deploy/archive/1.3.tar.gz
+#            tar -xz -C /tmp -f /tmp/deploy.tgz
+#            cd /tmp/rancher-gitlab-deploy-1.3/ && python setup.py install
+#            ln -s /usr/local/bin/rancher-gitlab-deploy /usr/local/bin/upgrade
+#            TAG=$CIRCLE_BRANCH
+#            ENVIRONMENT=videomarket-uat
+#            upgrade --environment $ENVIRONMENT --stack $ENVIRONMENT --service api --new-image globalgames/videomarket_api:latest --no-start-before-stopping
+#            upgrade --environment $ENVIRONMENT --stack $ENVIRONMENT --service nginx --no-start-before-stopping
