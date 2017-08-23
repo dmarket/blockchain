@@ -4,4 +4,4 @@ WORKDIR /src/app
 COPY . /src/app
 RUN cargo install
 
-CMD ["cargo run"]
+CMD ["/usr/local/cargo/bin/dmarket-blockchain"]
