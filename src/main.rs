@@ -8,16 +8,16 @@ extern crate router;
 extern crate bodyparser;
 extern crate iron;
 
-use exonum::blockchain::{self, Blockchain, Service, GenesisConfig, ValidatorKeys, Transaction,
-                         ApiContext};
+use exonum::blockchain::{self, Blockchain, Service, GenesisConfig, ValidatorKeys, Transaction, ApiContext};
 use exonum::node::{Node, NodeConfig, NodeApiConfig, TransactionSend, ApiSender, NodeChannel};
 use exonum::messages::{RawTransaction, FromRaw, Message};
-use exonum::storage::{Fork, MemoryDB, MapIndex};
+use exonum::storage::{Fork, LevelDB, LevelDBOptions, MapIndex};
 use exonum::crypto::{PublicKey, Hash};
 use exonum::encoding::{self, Field};
 use exonum::api::{Api, ApiError};
 use iron::prelude::*;
 use iron::Handler;
+use iron::status;
 use router::Router;
 
 // Service identifier
@@ -158,9 +158,15 @@ struct TransactionResponse {
     tx_hash: Hash,
 }
 
+#[derive(Serialize, Deserialize)]
+struct AssetResponse {
+    asset_id: String,
+}
+
 impl Api for CryptocurrencyApi {
     fn wire(&self, router: &mut Router) {
         let self_ = self.clone();
+
         let tx_handler = move |req: &mut Request| -> IronResult<Response> {
             match req.get::<bodyparser::Struct<TransactionRequest>>() {
                 Ok(Some(tx)) => {
@@ -178,6 +184,17 @@ impl Api for CryptocurrencyApi {
         // Bind the transaction handler to a specific route.
         let route_post = "/v1/wallets/transaction";
         router.post(&route_post, tx_handler, "transaction");
+
+        let self_ = self.clone();
+        let get_assets_handler = move |req: &mut Request| -> IronResult<Response> {
+            let ref pub_key = req.extensions.get::<Router>().unwrap().find("pub_key").unwrap_or("/");
+
+            let fake_assets = vec![AssetResponse { asset_id: "550e8400-e29b-41d4-a716-446655440000".to_owned() }, AssetResponse { asset_id: "110e8400-e29b-41d4-a716-446655440000".to_owned() }];
+
+            self_.ok_response(&serde_json::to_value(&fake_assets).unwrap())
+        };
+
+        router.get("/asset/list/:pub_key", get_assets_handler, "get_assets");
     }
 }
 
@@ -193,7 +210,6 @@ impl Service for CurrencyService {
     }
 
     fn tx_from_raw(&self, raw: RawTransaction) -> Result<Box<Transaction>, encoding::Error> {
-
         let trans: Box<Transaction> = match raw.message_type() {
             TX_TRANSFER_ID => Box::new(TxTransfer::from_raw(raw)?),
             TX_CREATE_WALLET_ID => Box::new(TxCreateWallet::from_raw(raw)?),
@@ -216,9 +232,15 @@ impl Service for CurrencyService {
 
 fn main() {
     exonum::helpers::init_logger().unwrap();
-    let db = MemoryDB::new();
+
+    let mut options = LevelDBOptions::new();
+    options.create_if_missing = true;
+
+    let path = "/var/leveldb/dmc";
+    let db = Box::new(LevelDB::open(path, options).unwrap());
+
     let services: Vec<Box<Service>> = vec![Box::new(CurrencyService)];
-    let blockchain = Blockchain::new(Box::new(db), services);
+    let blockchain = Blockchain::new(db, services);
 
     /** Create Keys */
     let (consensus_public_key, consensus_secret_key) = exonum::crypto::gen_keypair();
@@ -255,5 +277,4 @@ fn main() {
 
     let mut node = Node::new(blockchain, node_cfg);
     node.run().unwrap();
-
 }
