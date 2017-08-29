@@ -28,6 +28,10 @@ jobs:
             - "/project/Cargo.lock"
 
       - run:
+          name: Run Fmt
+          command: cargo fmt
+
+      - run:
           name: Run Tests
           command: cargo test
 
