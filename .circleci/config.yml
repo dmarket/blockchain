@@ -15,14 +15,14 @@ jobs:
       - checkout
 
       - restore_cache:
-          key: suntechsoft-videomarket-api-{{ .Branch }}-{{ checksum "Cargo.toml" }}
+          key: suntechsoft-dmarket-blockchain-{{ .Branch }}-{{ checksum "Cargo.toml" }}
 
       - run:
           name: Install Project Dependencies
           command: cargo install
 
       - save_cache:
-          key: suntechsoft-videomarket-api-{{ .Branch }}-{{ checksum "Cargo.toml" }}
+          key: suntechsoft-dmarket-blockchain-{{ .Branch }}-{{ checksum "Cargo.toml" }}
           paths:
             - "/project/target"
             - "/project/Cargo.lock"
