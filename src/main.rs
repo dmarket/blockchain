@@ -21,7 +21,7 @@ fn main() {
     let mut options = LevelDBOptions::new();
     options.create_if_missing = true;
 
-    let path = "/var/leveldb/dmc";
+    let path = "/var/db/leveldb/dmc";
     let db = Box::new(LevelDB::open(path, options).unwrap());
 
     let services: Vec<Box<Service>> = vec![Box::new(CurrencyService)];

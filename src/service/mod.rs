@@ -5,19 +5,22 @@ extern crate router;
 extern crate bodyparser;
 extern crate iron;
 
-mod message;
-
-use exonum::blockchain::{self, Service, Transaction, ApiContext};
+use exonum::blockchain::{Service, Transaction, ApiContext};
 use exonum::node::{TransactionSend, ApiSender, NodeChannel};
 use exonum::messages::{RawTransaction, FromRaw};
-use exonum::storage::{Fork, MapIndex};
-use exonum::crypto::{PublicKey, Hash};
-use exonum::encoding::{self, Field};
+use exonum::crypto::Hash;
+use exonum::encoding;
 use exonum::api::{Api, ApiError};
 use iron::prelude::*;
 use iron::Handler;
 use router::Router;
-use self::message::{TxTransfer, TxCreateWallet};
+
+pub mod transaction;
+pub mod schema;
+pub mod wallet;
+
+use self::transaction::create_wallet::TxCreateWallet;
+use self::transaction::transfer::TxTransfer;
 
 // Service identifier
 const SERVICE_ID: u16 = 1;
@@ -25,46 +28,6 @@ const SERVICE_ID: u16 = 1;
 const TX_CREATE_WALLET_ID: u16 = 1;
 // Identifier for coins transfer transaction type
 const TX_TRANSFER_ID: u16 = 2;
-
-encoding_struct! {
-    struct Wallet {
-        const SIZE = 48;
-
-        field pub_key:            &PublicKey  [00 => 32]
-        field name:               &str        [32 => 40]
-        field balance:            u64         [40 => 48]
-    }
-}
-
-impl Wallet {
-    pub fn increase(&mut self, amount: u64) {
-        let balance = self.balance() + amount;
-        Field::write(&balance, &mut self.raw, 40, 48);
-    }
-
-    pub fn decrease(&mut self, amount: u64) {
-        let balance = self.balance() - amount;
-        Field::write(&balance, &mut self.raw, 40, 48);
-    }
-}
-
-pub struct CurrencySchema<'a> {
-    view: &'a mut Fork,
-}
-
-
-impl<'a> CurrencySchema<'a> {
-    pub fn wallets(&mut self) -> MapIndex<&mut Fork, PublicKey, Wallet> {
-        let prefix = blockchain::gen_prefix(SERVICE_ID, 0, &());
-        MapIndex::new(prefix, self.view)
-    }
-
-    // Utility method to quickly get a separate wallet from the storage
-    pub fn wallet(&mut self, pub_key: &PublicKey) -> Option<Wallet> {
-        self.wallets().get(pub_key)
-    }
-}
-
 
 #[derive(Clone)]
 struct CryptocurrencyApi {
