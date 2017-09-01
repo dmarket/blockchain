@@ -9,6 +9,7 @@ extern crate bodyparser;
 extern crate iron;
 
 mod service;
+mod config;
 
 use exonum::blockchain::{Blockchain, Service, GenesisConfig, ValidatorKeys};
 use exonum::node::{Node, NodeConfig, NodeApiConfig};
@@ -37,9 +38,8 @@ fn main() {
         service_key: service_public_key,
     };
     let genesis = GenesisConfig::new(vec![validator_keys].into_iter());
-    let api_address = "0.0.0.0:8000".parse().unwrap();
     let api_cfg = NodeApiConfig {
-        public_api_address: Some(api_address),
+        public_api_address: Some(config::config().api().address().parse().unwrap()),
         ..Default::default()
     };
     let peer_address = "0.0.0.0:2000".parse().unwrap(); // for peer-to-peer
