@@ -2,6 +2,7 @@
 
 extern crate toml;
 
+use std::env;
 use std::result::Result;
 use std::io::Error;
 use std::fs::File;
@@ -26,7 +27,10 @@ impl Config {
 
 impl Api {
     pub fn address(self) -> String {
-        self.address.unwrap()
+        match env::var("API_ADDRESS") {
+            Ok(value) => value,
+            Err(_) => self.address.unwrap()
+        }
     }
 }
 
@@ -52,4 +56,11 @@ pub fn config() -> Config {
 #[test]
 fn positive() {
     assert_eq!("0.0.0.0:8000", config().api.address.unwrap().as_str())
+}
+
+#[test]
+fn env_positive() {
+    let address = "1.1.1.1:1231";
+    env::set_var("API_ADDRESS", address);
+    assert_eq!(address, config().api.address().as_str())
 }
