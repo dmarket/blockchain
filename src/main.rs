@@ -14,7 +14,7 @@ mod config;
 use exonum::blockchain::{Blockchain, Service, GenesisConfig, ValidatorKeys};
 use exonum::node::{Node, NodeConfig, NodeApiConfig};
 use exonum::storage::{LevelDB, LevelDBOptions};
-use service::CurrencyService;
+use service::api::CurrencyService;
 
 fn main() {
     exonum::helpers::init_logger().unwrap();
