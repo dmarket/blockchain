@@ -1,6 +1,5 @@
 extern crate toml;
 
-#[cfg(test)]
 use std::env;
 use std::result::Result;
 use std::io::Error;
@@ -51,6 +50,7 @@ pub fn read_config() -> Result<Config, Error> {
 pub fn config() -> Config {
     read_config().ok().unwrap()
 }
+#[cfg(test)]
 
 #[test]
 fn positive() {
