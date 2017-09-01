@@ -1,7 +1,6 @@
-#[cfg(test)]
-
 extern crate toml;
 
+#[cfg(test)]
 use std::result::Result;
 use std::io::Error;
 use std::fs::File;
