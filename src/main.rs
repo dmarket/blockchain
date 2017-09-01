@@ -39,7 +39,7 @@ fn main() {
     };
     let genesis = GenesisConfig::new(vec![validator_keys].into_iter());
     let api_cfg = NodeApiConfig {
-        public_api_address: Some(config::config().ok().unwrap().api.address.unwrap().parse().unwrap()),
+        public_api_address: Some(config::config().api().address().parse().unwrap()),
         ..Default::default()
     };
     let peer_address = "0.0.0.0:2000".parse().unwrap(); // for peer-to-peer
