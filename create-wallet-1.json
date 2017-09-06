@@ -1,11 +1,10 @@
 {
   "body": {
-    "pub_key": "03e657ae71e51be60a45b4bd20bcf79ff52f0c037ae6da0540a0e0066132b472",
-    "name": "Johnny Doe"
+    "pub_key": "cdfe0378c3b7614410c468b7179cd5ba2b4ff3b9e5e24965b1aa23c5f623d28c"
   },
   "network_id": 0,
   "protocol_version": 0,
   "service_id": 1,
   "message_id": 1,
-  "signature": "ad5efdb52e48309df9aa582e67372bb3ae67828c5eaa1a7a5e387597174055d315eaa7879912d0509acf17f06a23b7f13f242017b354f682d85930fa28240402"
+  "signature": "dd070b7b41ecf629ef3b749cd64c097d29af2a8b07ffb9648b46071b6a950a452d465d0df30b95034d02db32410ecc7597b0fce319c8ea80c21e765309635107"
 }

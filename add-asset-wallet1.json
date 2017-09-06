@@ -1,0 +1,15 @@
+{
+  "body": {
+    "pub_key": "cdfe0378c3b7614410c468b7179cd5ba2b4ff3b9e5e24965b1aa23c5f623d28c",
+    "asset": {
+      "hash_id": "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f",
+      "amount": 3
+    },
+    "seed": "13"
+  },
+  "network_id": 0,
+  "protocol_version": 0,
+  "service_id": 1,
+  "message_id": 3,
+  "signature": "501eece87348e14263a082f92c2bbc11aa02a216bd8a05073397d11add712ee7dc26c9868434e2992291fa924aefba4ae8dfeaa72fa229b31f49e439ce1f340a"
+}

@@ -50,7 +50,6 @@ pub fn read_config() -> Result<Config, Error> {
 pub fn config() -> Config {
     read_config().ok().unwrap()
 }
-#[cfg(test)]
 
 #[test]
 fn positive() {

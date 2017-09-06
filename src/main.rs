@@ -25,28 +25,48 @@ fn main() {
     let path = "/var/db/leveldb/dmc";
     let db = Box::new(LevelDB::open(path, options).unwrap());
 
-    let services: Vec<Box<Service>> = vec![Box::new(CurrencyService)];
+    let services: Vec<Box<Service>> = vec![
+        Box::new(CurrencyService)
+    ];
     let blockchain = Blockchain::new(db, services);
 
     /** Create Keys */
     let (consensus_public_key, consensus_secret_key) = exonum::crypto::gen_keypair();
     let (service_public_key, service_secret_key) = exonum::crypto::gen_keypair();
 
+//    let consensus_public_key_str = config::config().consensus_public_key().parse().unwrap();
+//    let consensus_secret_key_str = config::config().consensus_secret_key().parse().unwrap();;
+//
+//    let consensus_public_key = PublicKey::from_hex(consensus_public_key_str).unwrap();
+//    let consensus_secret_key = SecretKey::from_hex(consensus_secret_key_str).unwrap();
+//
+//    println!("{}", HexValue::to_hex(&consensus_public_key));
+//    println!("{}", HexValue::to_hex(&consensus_secret_key));
+
+//    println!("{}", HexValue::to_hex(&service_public_key));
+//    println!("{}", HexValue::to_hex(&service_secret_key));
+
     /** Configure Node */
     let validator_keys = ValidatorKeys {
         consensus_key: consensus_public_key,
         service_key: service_public_key,
     };
-    let genesis = GenesisConfig::new(vec![validator_keys].into_iter());
+    let genesis = GenesisConfig::new(
+        vec![validator_keys].into_iter()
+    );
     let api_cfg = NodeApiConfig {
         public_api_address: Some(config::config().api().address().parse().unwrap()),
         ..Default::default()
     };
     let peer_address = "0.0.0.0:2000".parse().unwrap(); // for peer-to-peer
+
     // Complete node configuration
     let node_cfg = NodeConfig {
         listen_address: peer_address,
-        peers: vec![],
+        peers: vec![
+//            SocketAddr::new(IpAddr::V4(Ipv4Addr::new(172, 104, 146, 242)), 2000),
+//            SocketAddr::new(IpAddr::V4(Ipv4Addr::new(139, 162, 183, 213)), 2000),
+        ],
         service_public_key,
         service_secret_key,
         consensus_public_key,
