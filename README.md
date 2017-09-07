@@ -26,3 +26,8 @@ Block info:
 ```
 curl http://127.0.0.1:8000/api/explorer/v1/blocks/1
 ```
+
+Wallet info:
+```
+curl http://127.0.0.1:8000/api/services/cryptocurrency/wallet/cdfe0378c3b7614410c468b7179cd5ba2b4ff3b9e5e24965b1aa23c5f623d28c
+```
