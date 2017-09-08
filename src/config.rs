@@ -13,7 +13,7 @@ pub struct Config {
 }
 
 #[derive(Deserialize)]
-struct Api {
+pub struct Api {
     address: Option<String>
 }
 
