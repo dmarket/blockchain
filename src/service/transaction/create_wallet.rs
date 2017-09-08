@@ -27,10 +27,27 @@ impl Transaction for TxCreateWallet {
     fn execute(&self, view: &mut Fork) {
         let mut schema = CurrencySchema { view };
         if schema.wallet(self.pub_key()).is_none() {
-            let asset = Asset::new("123123", 10);
-            let wallet = Wallet::new(self.pub_key(), INIT_BALANCE, vec!(asset));
+            let assets: Vec<Asset> = vec!();
+            let wallet = Wallet::new(self.pub_key(), INIT_BALANCE, assets);
             println!("Create the wallet: {:?}", wallet);
             schema.wallets().put(self.pub_key(), wallet)
         }
     }
+}
+
+#[test]
+fn test_convert_from_json() {
+    let json =
+        r#"{
+  "body": {
+    "pub_key": "83dbc25eea26578cfdae481b421b09faeb1b35b98451a30c9a6a33271503e61a"
+  },
+  "network_id": 0,
+  "protocol_version": 0,
+  "service_id": 1,
+  "message_id": 1,
+  "signature": "100c4bf9d50bd2da4af8d65b7b35847b0258d59d62b993311af4ce86049fa5de6712847db7b1a62d217e8c289bdf7b151552fac2404f965383c2c07fc39a5409"
+}"#;
+
+    let tx_create_wallet: TxCreateWallet = ::serde_json::from_str(&json).unwrap();
 }

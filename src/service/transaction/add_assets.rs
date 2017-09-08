@@ -35,9 +35,10 @@ impl Transaction for TxAddAsset {
 
             if creator.balance() >= FEE_FOR_MINING {
                 creator.decrease(FEE_FOR_MINING);
-                println!("Mining asset: {:?}", creator);
-                let asset = Asset::new("sdfsdfsdfsdf", 12);
-                creator.add_assets(asset);
+                println!("Asset {:?}", self.asset());
+                creator.add_assets(self.asset());
+                println!("Wallet after mining asset: {:?}", creator);
+                schema.wallets().put(self.pub_key(), creator)
             }
         }
 
@@ -46,7 +47,7 @@ impl Transaction for TxAddAsset {
 
 
 #[test]
-fn test_add_asset() {
+fn test_convert_from_json() {
     let json =
         r#"{
     "body": {
@@ -55,7 +56,7 @@ fn test_add_asset() {
             "hash_id": "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f"
         },
         "pub_key": "cdfe0378c3b7614410c468b7179cd5ba2b4ff3b9e5e24965b1aa23c5f623d28c",
-        "seed": 13
+        "seed": "13"
     },
     "message_id": 3,
     "network_id": 0,
@@ -65,5 +66,4 @@ fn test_add_asset() {
 }"#;
 
     let tx_add: TxAddAsset = ::serde_json::from_str(&json).unwrap();
-
 }
