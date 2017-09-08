@@ -19,3 +19,8 @@ pub mod transfer;
 const TX_ADD_ASSETS_ID: u16 = 3;
 
 pub mod add_assets;
+
+// Add Assets
+const TX_DEL_ASSETS_ID: u16 = 4;
+
+pub mod del_assets;

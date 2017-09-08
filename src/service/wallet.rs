@@ -1,43 +1,7 @@
 extern crate exonum;
 
-//use std::collections::HashMap;
 use exonum::crypto::PublicKey;
-//use exonum::encoding::segments::SegmentField;
 use exonum::encoding::Field;
-//use exonum::encoding::{Field, Offset, CheckedOffset, Result};
-//
-//impl<'a> SegmentField<'a> for &'a HashMap<&str, u32> {
-//    fn item_size() -> Offset {
-//        ::std::mem::size_of::<HashMap<&str, u32>>() as Offset
-//    }
-//
-//    fn count(&self) -> Offset {
-//        self.len() as Offset
-//    }
-//
-//    unsafe fn from_buffer(buffer: &'a [u8], from: Offset, count: Offset) -> Self {
-//        let to = from + count * Self::item_size();
-//        let slice = &buffer[(from as usize)..(to as usize)];
-//        ::std::slice::from_raw_parts(slice.as_ptr() as *const Hash,
-//                                     slice.len() / Self::item_size() as usize)
-//    }
-//
-//    fn extend_buffer(&self, buffer: &mut Vec<u8>) {
-//        let slice = unsafe {
-//            ::std::slice::from_raw_parts(self.as_ptr() as *const u8,
-//                                         self.len() * Self::item_size() as usize)
-//        };
-//        buffer.extend_from_slice(slice)
-//    }
-//
-//    fn check_data(_: &'a [u8],
-//                  _: CheckedOffset,
-//                  _: CheckedOffset,
-//                  latest_segment: CheckedOffset) -> Result {
-//        Ok(latest_segment)
-//    }
-//}
-//
 
 encoding_struct!{
     struct Asset {
@@ -96,18 +60,22 @@ impl Wallet {
         Field::write( &assets, &mut self.raw, 40, 48);
     }
 
-//    pub fn del_assets(&mut self, asset: Asset) -> bool {
-//        let assets = self.assets();
-//
-//        for i in 0..assets.len() {
-//            if assets[i].hash_id() == asset.hash_id() && assets[i].amount() > asset.amount() {
-//                assets[i].amount -= asset.amount();
-//                Field::write( &assets, &mut self.raw, 40, 48);
-//                return true;
-//            }
-//        }
-//
-//        false
-//    }
+    pub fn del_assets(&mut self, asset: Asset) -> bool {
+        let mut assets = self.assets();
+        for i in 0..assets.len() {
+            if assets[i].hash_id() == asset.hash_id() && assets[i].amount() >= asset.amount() {
+                let amount = assets[i].amount() - asset.amount();
+                if amount == 0 {
+                    assets.remove(i);
+                } else {
+                    assets[i] = Asset::new(asset.hash_id(), amount);
+                }
+                Field::write( &assets, &mut self.raw, 40, 48);
+                return true;
+            }
+        }
+
+        false
+    }
 }
 
