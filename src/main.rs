@@ -1,5 +1,4 @@
 extern crate serde;
-#[macro_use]
 extern crate serde_json;
 #[macro_use]
 extern crate serde_derive;
@@ -23,7 +22,7 @@ fn main() {
     let mut options = LevelDBOptions::new();
     options.create_if_missing = true;
 
-    let path = "/var/db/leveldb/dmc";
+    let path = config::config().db().path();
     let db = Box::new(LevelDB::open(path, options).unwrap());
 
     let services: Vec<Box<Service>> = vec![
@@ -47,11 +46,10 @@ fn main() {
         public_api_address: Some(config::config().api().address().parse().unwrap()),
         ..Default::default()
     };
-    let peer_address = "0.0.0.0:2000".parse().unwrap(); // for peer-to-peer
 
     // Complete node configuration
     let node_cfg = NodeConfig {
-        listen_address: peer_address,
+        listen_address: config::config().api().peer_address().parse().unwrap(),
         peers: vec![
         ],
         service_public_key,
