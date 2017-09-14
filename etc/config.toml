@@ -1,0 +1,8 @@
+[api]
+address = "0.0.0.0:8000"
+peer_address = "0.0.0.0:2000"
+peers = ["172.104.146.241:2010", "172.104.146.241:2010"]
+keys_path = "./var/keys"
+
+[db]
+path = "./var/db"

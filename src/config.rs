@@ -9,17 +9,29 @@ use std::path::Path;
 
 #[derive(Deserialize)]
 pub struct Config {
-    api: Api
+    api: Api,
+    db: Db
 }
 
 #[derive(Deserialize)]
 pub struct Api {
-    address: Option<String>
+    address: Option<String>,
+    keys_path: Option<String>,
+    peer_address: Option<String>,
+    peers: Option<Vec<String>>
+}
+
+#[derive(Deserialize)]
+pub struct Db {
+    path: Option<String>
 }
 
 impl Config {
     pub fn api(self) -> Api {
         self.api
+    }
+    pub fn db(self) -> Db {
+        self.db
     }
 }
 
@@ -30,7 +42,38 @@ impl Api {
             Err(_) => self.address.unwrap()
         }
     }
+    pub fn keys_path(self) -> String {
+        match env::var("API_KEYS_PATH") {
+            Ok(value) => value,
+            Err(_) => self.keys_path.unwrap()
+
+        }
+    }
+    pub fn peer_address(self) -> String {
+        match env::var("API_PEER_ADDRESS") {
+            Ok(value) => value,
+            Err(_) => self.peer_address.unwrap()
+
+        }
+    }
+    pub fn peers(self) -> Vec<String> {
+
+        match env::var("API_PEERS") {
+            Ok(value) => {vec![]}, // todo: add parse environment
+            Err(_) => self.peers.unwrap()
+        }
+    }
 }
+
+impl Db {
+    pub fn path(self) -> String {
+        match env::var("DB_PATH") {
+            Ok(value) => value,
+            Err(_) => self.path.unwrap()
+        }
+    }
+}
+
 
 ///
 /// Load configuration
@@ -42,7 +85,7 @@ impl Api {
 /// ```
 pub fn read_config() -> Result<Config, Error> {
     let mut content: String = String::new();
-    let mut f = File::open(Path::new("./config.toml"))?;
+    let mut f = File::open(Path::new("./etc/config.toml"))?;
     f.read_to_string(&mut content);
     Ok(toml::from_str(content.as_str()).unwrap())
 }

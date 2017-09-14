@@ -1,4 +1,5 @@
 extern crate serde;
+#[macro_use]
 extern crate serde_json;
 #[macro_use]
 extern crate serde_derive;
@@ -34,18 +35,6 @@ fn main() {
     let (consensus_public_key, consensus_secret_key) = exonum::crypto::gen_keypair();
     let (service_public_key, service_secret_key) = exonum::crypto::gen_keypair();
 
-//    let consensus_public_key_str = config::config().consensus_public_key().parse().unwrap();
-//    let consensus_secret_key_str = config::config().consensus_secret_key().parse().unwrap();;
-//
-//    let consensus_public_key = PublicKey::from_hex(consensus_public_key_str).unwrap();
-//    let consensus_secret_key = SecretKey::from_hex(consensus_secret_key_str).unwrap();
-//
-//    println!("{}", HexValue::to_hex(&consensus_public_key));
-//    println!("{}", HexValue::to_hex(&consensus_secret_key));
-
-//    println!("{}", HexValue::to_hex(&service_public_key));
-//    println!("{}", HexValue::to_hex(&service_secret_key));
-
     /** Configure Node */
     let validator_keys = ValidatorKeys {
         consensus_key: consensus_public_key,
@@ -64,8 +53,6 @@ fn main() {
     let node_cfg = NodeConfig {
         listen_address: peer_address,
         peers: vec![
-//            SocketAddr::new(IpAddr::V4(Ipv4Addr::new(172, 104, 146, 242)), 2000),
-//            SocketAddr::new(IpAddr::V4(Ipv4Addr::new(139, 162, 183, 213)), 2000),
         ],
         service_public_key,
         service_secret_key,
