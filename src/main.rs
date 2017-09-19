@@ -1,4 +1,5 @@
 extern crate serde;
+#[macro_use]
 extern crate serde_json;
 #[macro_use]
 extern crate serde_derive;
@@ -10,11 +11,13 @@ extern crate iron;
 
 mod service;
 mod config;
+mod keys;
 
 use exonum::blockchain::{Blockchain, Service, GenesisConfig, ValidatorKeys};
 use exonum::node::{Node, NodeConfig, NodeApiConfig};
 use exonum::storage::{LevelDB, LevelDBOptions};
 use service::api::CurrencyService;
+use keys::{KeyPair, Disc};
 
 fn main() {
     exonum::helpers::init_logger().unwrap();
@@ -31,16 +34,34 @@ fn main() {
     let blockchain = Blockchain::new(db, services);
 
     /** Create Keys */
-    let (consensus_public_key, consensus_secret_key) = exonum::crypto::gen_keypair();
-    let (service_public_key, service_secret_key) = exonum::crypto::gen_keypair();
+    println!("Current node: {}", config::config().api().current_node());
+    let consensus_name:String = config::config().api().current_node() + "_consensus.json";
+    let service_name:String = config::config().api().current_node() + "_service.json";
+
+    let consensus_keys = KeyPair::read(&consensus_name);
+    let service_keys = KeyPair::read(&service_name);
+
+    let consensus_public_key = consensus_keys.public;
+    let consensus_secret_key = consensus_keys.secret;
+    let service_public_key = service_keys.public;
+    let service_secret_key = service_keys.secret;
+
+    let nodenames = vec!["node0", "node1", "node2", "node3"];
+    let mut validators: Vec<ValidatorKeys> = vec![];
+    for name_prefix in nodenames {
+        let consensus_name = name_prefix.to_string() + "_consensus.json";
+        let service_name = name_prefix.to_string() + "_service.json";
+        let consensus_keys = KeyPair::read(&consensus_name);
+        let service_keys = KeyPair::read(&service_name);
+        validators.push(ValidatorKeys {
+            consensus_key: consensus_keys.public,
+            service_key: service_keys.public,
+        });
+    }
 
     /** Configure Node */
-    let validator_keys = ValidatorKeys {
-        consensus_key: consensus_public_key,
-        service_key: service_public_key,
-    };
     let genesis = GenesisConfig::new(
-        vec![validator_keys].into_iter()
+        validators.into_iter()
     );
     let api_cfg = NodeApiConfig {
         public_api_address: Some(config::config().api().address().parse().unwrap()),
@@ -50,8 +71,7 @@ fn main() {
     // Complete node configuration
     let node_cfg = NodeConfig {
         listen_address: config::config().api().peer_address().parse().unwrap(),
-        peers: vec![
-        ],
+        peers: config::config().api().peers(),
         service_public_key,
         service_secret_key,
         consensus_public_key,

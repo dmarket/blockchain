@@ -2,12 +2,15 @@ extern crate toml;
 
 use std::env;
 use std::result::Result;
+use std::io;
 use std::io::Error;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
+use std::net::{ToSocketAddrs, SocketAddr};
 
 #[derive(Deserialize)]
+#[warn(unused_must_use)]
 pub struct Config {
     api: Api,
     db: Db
@@ -15,6 +18,7 @@ pub struct Config {
 
 #[derive(Deserialize)]
 pub struct Api {
+    current_node: Option<String>,
     address: Option<String>,
     keys_path: Option<String>,
     peer_address: Option<String>,
@@ -36,6 +40,13 @@ impl Config {
 }
 
 impl Api {
+    pub fn current_node(self) -> String {
+        match env::var("CURRENT_NODE") {
+            Ok(value) => value,
+            Err(_) => self.current_node.unwrap()
+        }
+    }
+
     pub fn address(self) -> String {
         match env::var("API_ADDRESS") {
             Ok(value) => value,
@@ -56,11 +67,24 @@ impl Api {
 
         }
     }
-    pub fn peers(self) -> Vec<String> {
+
+    pub fn peers(self) -> Vec<SocketAddr> {
 
         match env::var("API_PEERS") {
             Ok(value) => {vec![]}, // todo: add parse environment
-            Err(_) => self.peers.unwrap()
+            Err(_) => {
+                let mut peers: Vec<SocketAddr> = vec![];
+                for peer in self.peers.unwrap() {
+                    match peer.to_socket_addrs() {
+                        Ok(addr) => {
+                            let mut a = addr;
+                            peers.push(a.next().unwrap());
+                        },
+                        Err(e) => println!("Error: {:?}", e)
+                    }
+                }
+                peers
+            }
         }
     }
 }
