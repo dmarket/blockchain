@@ -10,7 +10,7 @@ use config;
 #[derive(Serialize, Deserialize, Debug)]
 pub struct KeyPair {
     pub public: PublicKey,
-    pub secret: SecretKey
+    pub secret: SecretKey,
 }
 
 pub trait Disc {
@@ -19,7 +19,7 @@ pub trait Disc {
 }
 
 impl Disc for KeyPair {
-    fn save(&self, filename: &str){
+    fn save(&self, filename: &str) {
         let path = config::config().api().keys_path();
         let path = Path::new(&path).join(filename);
         let display = path.display();
@@ -32,7 +32,7 @@ impl Disc for KeyPair {
         let s = json!(self);
 
         match file.write_all(&s.to_string().as_bytes()) {
-            Err(why) => { panic!("couldn't write to {}: {}", display, why.description()) },
+            Err(why) => panic!("couldn't write to {}: {}", display, why.description()),
             Ok(_) => println!("successfully wrote to {}", display),
         };
     }
@@ -56,17 +56,21 @@ impl Disc for KeyPair {
         let buffer_string = &mut String::new();
         reader.read_line(buffer_string);
         let s = buffer_string.to_string();
-        let keys:KeyPair = serde_json::from_str(&s).unwrap();
+        let keys: KeyPair = serde_json::from_str(&s).unwrap();
 
         keys
     }
 }
 
-
+#[cfg(test)]
+use exonum::crypto;
 #[test]
-fn test_create_keys () {
-    let (p, s) = exonum::crypto::gen_keypair();
-    let key = KeyPair {public:p, secret:s};
+fn test_create_keys() {
+    let (p, s) = crypto::gen_keypair();
+    let key = KeyPair {
+        public: p,
+        secret: s,
+    };
     key.save("node3_service.json");
     let new_key = KeyPair::read("node3_service.json");
 

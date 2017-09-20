@@ -13,7 +13,7 @@ use std::net::{ToSocketAddrs, SocketAddr};
 #[warn(unused_must_use)]
 pub struct Config {
     api: Api,
-    db: Db
+    db: Db,
 }
 
 #[derive(Deserialize)]
@@ -22,12 +22,12 @@ pub struct Api {
     address: Option<String>,
     keys_path: Option<String>,
     peer_address: Option<String>,
-    peers: Option<Vec<String>>
+    peers: Option<Vec<String>>,
 }
 
 #[derive(Deserialize)]
 pub struct Db {
-    path: Option<String>
+    path: Option<String>,
 }
 
 impl Config {
@@ -43,27 +43,27 @@ impl Api {
     pub fn current_node(self) -> String {
         match env::var("CURRENT_NODE") {
             Ok(value) => value,
-            Err(_) => self.current_node.unwrap()
+            Err(_) => self.current_node.unwrap(),
         }
     }
 
     pub fn address(self) -> String {
         match env::var("API_ADDRESS") {
             Ok(value) => value,
-            Err(_) => self.address.unwrap()
+            Err(_) => self.address.unwrap(),
         }
     }
     pub fn keys_path(self) -> String {
         match env::var("API_KEYS_PATH") {
             Ok(value) => value,
-            Err(_) => self.keys_path.unwrap()
+            Err(_) => self.keys_path.unwrap(),
 
         }
     }
     pub fn peer_address(self) -> String {
         match env::var("API_PEER_ADDRESS") {
             Ok(value) => value,
-            Err(_) => self.peer_address.unwrap()
+            Err(_) => self.peer_address.unwrap(),
 
         }
     }
@@ -71,7 +71,7 @@ impl Api {
     pub fn peers(self) -> Vec<SocketAddr> {
 
         match env::var("API_PEERS") {
-            Ok(value) => {vec![]}, // todo: add parse environment
+            Ok(value) => vec![], // todo: add parse environment
             Err(_) => {
                 let mut peers: Vec<SocketAddr> = vec![];
                 for peer in self.peers.unwrap() {
@@ -79,8 +79,8 @@ impl Api {
                         Ok(addr) => {
                             let mut a = addr;
                             peers.push(a.next().unwrap());
-                        },
-                        Err(e) => println!("Error: {:?}", e)
+                        }
+                        Err(e) => println!("Error: {:?}", e),
                     }
                 }
                 peers
@@ -93,7 +93,7 @@ impl Db {
     pub fn path(self) -> String {
         match env::var("DB_PATH") {
             Ok(value) => value,
-            Err(_) => self.path.unwrap()
+            Err(_) => self.path.unwrap(),
         }
     }
 }
@@ -120,12 +120,12 @@ pub fn config() -> Config {
 
 #[test]
 fn positive() {
-    assert_eq!("0.0.0.0:8000", config().api.address.unwrap().as_str())
+    assert_eq!(Some("127.0.0.1:8000".to_string()), config().api.address)
 }
 
 #[test]
 fn env_positive() {
     let address = "1.1.1.1:1231";
     env::set_var("API_ADDRESS", address);
-    assert_eq!(address, config().api.address().as_str())
+    assert_eq!(address, config().api().address().as_str())
 }

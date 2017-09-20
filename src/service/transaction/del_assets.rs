@@ -18,7 +18,7 @@ message! {
         const SIZE = 48;
 
         field pub_key:     &PublicKey  [00 => 32]
-        field asset:       Asset       [32 => 40]
+        field assets:      Vec<Asset>  [32 => 40]
         field seed:        u64         [40 => 48]
     }
 }
@@ -35,8 +35,8 @@ impl Transaction for TxDelAsset {
 
             if creator.balance() >= FEE_FOR_MINING {
                 creator.decrease(FEE_FOR_MINING);
-                println!("Asset {:?}", self.asset());
-                creator.del_assets(self.asset());
+                println!("Asset {:?}", self.assets());
+                creator.del_assets(self.assets());
                 println!("Wallet after mining asset: {:?}", creator);
                 schema.wallets().put(self.pub_key(), creator)
             }
@@ -50,19 +50,25 @@ impl Transaction for TxDelAsset {
 fn test_convert_from_json() {
     let json =
         r#"{
-    "body": {
-        "asset": {
-            "amount": 3,
-            "hash_id": "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f"
-        },
-        "pub_key": "cdfe0378c3b7614410c468b7179cd5ba2b4ff3b9e5e24965b1aa23c5f623d28c",
-        "seed": "13"
-    },
-    "message_id": 4,
-    "network_id": 0,
-    "protocol_version": 0,
-    "service_id": 1,
-    "signature": "501eece87348e14263a082f92c2bbc11aa02a216bd8a05073397d11add712ee7dc26c9868434e2992291fa924aefba4ae8dfeaa72fa229b31f49e439ce1f340a"
+  "body": {
+    "pub_key": "cdfe0378c3b7614410c468b7179cd5ba2b4ff3b9e5e24965b1aa23c5f623d28c",
+    "assets": [
+      {
+        "hash_id": "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f",
+        "amount": 2
+      },
+      {
+        "hash_id": "a8d5c97d-9978-444b-9947-7a95dfg31d0f",
+        "amount": 1
+      }
+    ],
+    "seed": "13"
+  },
+  "network_id": 0,
+  "protocol_version": 0,
+  "service_id": 1,
+  "message_id": 4,
+  "signature": "3db781e2e944668788abaa7a5d5add868f8548662bcf01360988730539790c3f71d6a7f593e979aae891162d0f39c807d3cef20f39ccb8d7a4c4040db5733b0f"
 }"#;
 
     let tx_add: TxDelAsset = ::serde_json::from_str(&json).unwrap();

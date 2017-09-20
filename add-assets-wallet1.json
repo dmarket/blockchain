@@ -1,0 +1,29 @@
+{
+  "body": {
+    "pub_key": "cdfe0378c3b7614410c468b7179cd5ba2b4ff3b9e5e24965b1aa23c5f623d28c",
+    "assets": [
+      {
+        "hash_id": "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f",
+        "amount": 3
+      },
+      {
+        "hash_id": "a8d5c97d-9978-444b-9947-7a95dfg31d0f",
+        "amount": 7
+      },
+      {
+        "hash_id": "a8d5c97d-9971-4b0b-9947-7a95dcb31d0f",
+        "amount": 34
+      },
+      {
+        "hash_id": "a8d5c97d-9912-444b-9947-7a95dfg31d0f",
+        "amount": 70
+      }
+    ],
+    "seed": "15"
+  },
+  "network_id": 0,
+  "protocol_version": 0,
+  "service_id": 1,
+  "message_id": 3,
+  "signature": "3db781e2e944668788abaa7a5d5add868f8548662bcf01360988730539790c3f71d6a7f593e979aae891162d0f39c807d3cef20f39ccb8d7a4c4040db5733b0f"
+}

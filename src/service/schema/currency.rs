@@ -5,7 +5,7 @@ use exonum::blockchain;
 use exonum::storage::{Fork, MapIndex};
 
 use service::wallet::Wallet;
-use super::{SERVICE_ID};
+use super::SERVICE_ID;
 
 pub struct CurrencySchema<'a> {
     pub view: &'a mut Fork,
@@ -23,4 +23,3 @@ impl<'a> CurrencySchema<'a> {
         self.wallets().get(pub_key)
     }
 }
-

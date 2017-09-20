@@ -20,6 +20,7 @@ use service::transaction::transfer::TxTransfer;
 use service::transaction::add_assets::TxAddAsset;
 use service::transaction::del_assets::TxDelAsset;
 use service::schema::currency::CurrencySchema;
+use service::wallet::Wallet;
 
 
 // Service identifier
@@ -36,7 +37,7 @@ const TX_DEL_ASSETS_ID: u16 = 4;
 #[derive(Clone)]
 struct CryptocurrencyApi {
     channel: ApiSender<NodeChannel>,
-    bc: Blockchain
+    bc: Blockchain,
 }
 
 #[serde(untagged)]
@@ -46,7 +47,6 @@ enum TransactionRequest {
     Transfer(TxTransfer),
     AddAsset(TxAddAsset),
     DelAsset(TxDelAsset),
-
 }
 
 impl Into<Box<Transaction>> for TransactionRequest {
@@ -64,17 +64,36 @@ impl Into<Box<Transaction>> for TransactionRequest {
 struct TransactionResponse {
     tx_hash: Hash,
 }
+/// Shortcut to get data on wallets.
+impl CryptocurrencyApi {
+    fn get_wallet(&self, pub_key: &PublicKey) -> Option<Wallet> {
+        let mut view = self.bc.fork();
+        let mut schema = CurrencySchema { view: &mut view };
+        schema.wallet(pub_key)
+    }
+
+    fn get_wallets(&self) -> Option<Vec<Wallet>> {
+        let mut view = self.bc.fork();
+        let mut schema = CurrencySchema { view: &mut view };
+        let idx = schema.wallets();
+        let wallets: Vec<Wallet> = idx.values().collect();
+        if wallets.is_empty() {
+            None
+        } else {
+            Some(wallets)
+        }
+    }
+}
 
 impl Api for CryptocurrencyApi {
     fn wire(&self, router: &mut Router) {
         let self_ = self.clone();
-
-        let tx_handler = move |req: &mut Request| -> IronResult<Response> {
+        let transaction = move |req: &mut Request| -> IronResult<Response> {
             match req.get::<bodyparser::Struct<TransactionRequest>>() {
-                Ok(Some(tx)) => {
-                    let tx: Box<Transaction> = tx.into();
-                    let tx_hash = tx.hash();
-                    self_.channel.send(tx).map_err(|e| ApiError::Events(e))?;
+                Ok(Some(transaction)) => {
+                    let transaction: Box<Transaction> = transaction.into();
+                    let tx_hash = transaction.hash();
+                    self_.channel.send(transaction).map_err(ApiError::Events)?;
                     let json = TransactionResponse { tx_hash };
                     self_.ok_response(&serde_json::to_value(&json).unwrap())
                 }
@@ -82,33 +101,38 @@ impl Api for CryptocurrencyApi {
                 Err(e) => Err(ApiError::IncorrectRequest(Box::new(e)))?,
             }
         };
-
         // Bind the transaction handler to a specific route.
-        let route_post = "/v1/wallets/transaction";
-        router.post(&route_post, tx_handler, "transaction");
 
-
+        // Gets status of the wallet corresponding to the public key.
         let self_ = self.clone();
-        let get_balance_handler = move |req: &mut Request| -> IronResult<Response> {
-            let ref pub_key_str = req.extensions.get::<Router>().unwrap().find("pub_key").unwrap_or("/");
-            let pub_key = PublicKey::from_hex(pub_key_str).unwrap();
-
-            let view = &mut self_.bc.fork();
-            let mut schema = CurrencySchema { view };
-
-            let wrapped_wallet = schema.wallet(&pub_key);
-
-            if wrapped_wallet.is_none() {
-                println!("Wallet not found: {:?}", pub_key);
-                return Err(ApiError::NotFound)?;
+        let wallet_info = move |req: &mut Request| -> IronResult<Response> {
+            let path = req.url.path();
+            let wallet_key = path.last().unwrap();
+            let public_key = PublicKey::from_hex(wallet_key).map_err(ApiError::FromHex)?;
+            if let Some(wallet) = self_.get_wallet(&public_key) {
+                self_.ok_response(&serde_json::to_value(wallet).unwrap())
+            } else {
+                self_.not_found_response(&serde_json::to_value("Wallet not found").unwrap())
             }
-
-            let wallet = wrapped_wallet.unwrap();
-
-            self_.ok_response(&serde_json::to_value(&wallet).unwrap())
         };
-    
-        router.get("/wallet/:pub_key", get_balance_handler, "get_balance");
+
+
+        // Gets status of all wallets.
+        let self_ = self.clone();
+        let wallets_info = move |_: &mut Request| -> IronResult<Response> {
+            if let Some(wallets) = self_.get_wallets() {
+                self_.ok_response(&serde_json::to_value(wallets).unwrap())
+            } else {
+                self_.not_found_response(
+                    &serde_json::to_value("Wallets database is empty")
+                        .unwrap(),
+                )
+            }
+        };
+
+        router.post("/wallets/transaction", transaction, "transaction");
+        router.get("/wallets", wallets_info, "wallets_info");
+        router.get("/wallet/:pub_key", wallet_info, "get_balance");
     }
 }
 
@@ -142,7 +166,7 @@ impl Service for CurrencyService {
         let mut router = Router::new();
         let api = CryptocurrencyApi {
             channel: ctx.node_channel().clone(),
-            bc: ctx.blockchain().clone()
+            bc: ctx.blockchain().clone(),
         };
         api.wire(&mut router);
         Some(Box::new(router))

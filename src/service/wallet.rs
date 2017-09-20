@@ -33,49 +33,48 @@ impl Wallet {
         Field::write(&balance, &mut self.raw, 32, 40);
     }
 
-    pub fn add_assets(&mut self, asset: Asset) {
+    pub fn add_assets(&mut self, asset_list: Vec<Asset>) {
         let mut assets = self.assets();
+        for asset in asset_list {
+            let mut is_add = false;
 
-//        let r = assets
-//            .into_iter()
-//            .filter(|el| { el.hash_id == asset.hash_id })
-//            .map(|&mut el| { el.amount += asset.amount });
+            for i in 0..assets.len() {
+                if assets[i].hash_id() == asset.hash_id() {
+                    let amount = asset.amount() + assets[i].amount();
+                    assets[i] = Asset::new(asset.hash_id(), amount);
+                    is_add = true;
+                    break;
+                }
+            }
 
-//        if r.len() == 0 { assets.push(asset); }
-
-        let mut is_add = false;
-
-        for i in 0..assets.len() {
-            if assets[i].hash_id() == asset.hash_id() {
-                let amount = asset.amount() + assets[i].amount();
-                assets[i] = Asset::new(asset.hash_id(), amount);
-                is_add = true;
-                break;
+            if !is_add {
+                assets.push(asset);
             }
         }
-
-        if !is_add {
-            assets.push(asset);
-        }
-        Field::write( &assets, &mut self.raw, 40, 48);
+        Field::write(&assets, &mut self.raw, 40, 48);
     }
 
-    pub fn del_assets(&mut self, asset: Asset) -> bool {
+    pub fn del_assets(&mut self, asset_list: Vec<Asset>) -> bool {
         let mut assets = self.assets();
-        for i in 0..assets.len() {
-            if assets[i].hash_id() == asset.hash_id() && assets[i].amount() >= asset.amount() {
-                let amount = assets[i].amount() - asset.amount();
-                if amount == 0 {
-                    assets.remove(i);
-                } else {
-                    assets[i] = Asset::new(asset.hash_id(), amount);
+        for asset in asset_list {
+            let mut is_del = false;
+            for i in 0..assets.len() {
+                if assets[i].hash_id() == asset.hash_id() && assets[i].amount() >= asset.amount() {
+                    let amount = assets[i].amount() - asset.amount();
+                    if amount == 0 {
+                        assets.remove(i);
+                    } else {
+                        assets[i] = Asset::new(asset.hash_id(), amount);
+                    }
+                    is_del = true;
+                    break;
                 }
-                Field::write( &assets, &mut self.raw, 40, 48);
-                return true;
+            }
+            if !is_del {
+                return false;
             }
         }
-
-        false
+        Field::write(&assets, &mut self.raw, 40, 48);
+        true
     }
 }
-

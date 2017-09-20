@@ -28,15 +28,13 @@ fn main() {
     let path = config::config().db().path();
     let db = Box::new(LevelDB::open(path, options).unwrap());
 
-    let services: Vec<Box<Service>> = vec![
-        Box::new(CurrencyService)
-    ];
+    let services: Vec<Box<Service>> = vec![Box::new(CurrencyService)];
     let blockchain = Blockchain::new(db, services);
 
     /** Create Keys */
     println!("Current node: {}", config::config().api().current_node());
-    let consensus_name:String = config::config().api().current_node() + "_consensus.json";
-    let service_name:String = config::config().api().current_node() + "_service.json";
+    let consensus_name: String = config::config().api().current_node() + "_consensus.json";
+    let service_name: String = config::config().api().current_node() + "_service.json";
 
     let consensus_keys = KeyPair::read(&consensus_name);
     let service_keys = KeyPair::read(&service_name);
@@ -60,9 +58,7 @@ fn main() {
     }
 
     /** Configure Node */
-    let genesis = GenesisConfig::new(
-        validators.into_iter()
-    );
+    let genesis = GenesisConfig::new(validators.into_iter());
     let api_cfg = NodeApiConfig {
         public_api_address: Some(config::config().api().address().parse().unwrap()),
         ..Default::default()
