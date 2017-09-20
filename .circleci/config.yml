@@ -28,6 +28,10 @@ jobs:
             - "/project/Cargo.lock"
 
       - run:
+          name: Install Fmt
+          command: cargo install rustfmt
+
+      - run:
           name: Run Fmt
           command: cargo fmt
 
