@@ -120,7 +120,7 @@ pub fn config() -> Config {
 
 #[test]
 fn positive() {
-    assert_eq!(Some("127.0.0.1:8000".to_string()), config().api.address)
+    assert_eq!(Some("node0".to_string()), config().api.current_node)
 }
 
 #[test]

@@ -71,8 +71,8 @@ fn test_create_keys() {
         public: p,
         secret: s,
     };
-    key.save("node3_service.json");
-    let new_key = KeyPair::read("node3_service.json");
+    key.save("test.json");
+    let new_key = KeyPair::read("test.json");
 
     assert_eq!(key.public, new_key.public);
     assert_eq!(key.secret, new_key.secret);

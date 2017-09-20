@@ -13,5 +13,5 @@ Cargo.lock
 /var/db/*
 !/var/db/.gitkeep
 
-#/var/keys/*
+/var/keys/test.json
 #!/var/keys/.gitkeep
