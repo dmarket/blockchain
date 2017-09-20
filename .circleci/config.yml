@@ -19,8 +19,8 @@ jobs:
 
       - run:
           name: Install Project Dependencies
-          command:
-            cargo install \
+          command: |
+            cargo install
             cargo install rustfmt
 
       - save_cache:
