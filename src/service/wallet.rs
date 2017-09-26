@@ -77,4 +77,22 @@ impl Wallet {
         Field::write(&assets, &mut self.raw, 40, 48);
         true
     }
+
+    pub fn in_wallet_assets(&mut self, asset_list: Vec<Asset>) -> bool {
+        let mut assets = self.assets();
+        for asset in asset_list {
+            let mut is_set = false;
+            for i in 0..assets.len() {
+                if assets[i].hash_id() == asset.hash_id() &&
+                   assets[i].amount() >= asset.amount()
+                {
+                    is_set = true;
+                }
+            }
+            if !is_set {
+                return false
+            }
+        }
+        true
+    }
 }

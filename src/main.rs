@@ -61,6 +61,7 @@ fn main() {
     let genesis = GenesisConfig::new(validators.into_iter());
     let api_cfg = NodeApiConfig {
         public_api_address: Some(config::config().api().address().parse().unwrap()),
+        private_api_address: Some(config::config().api().private_address().parse().unwrap()),
         ..Default::default()
     };
 

@@ -20,6 +20,7 @@ pub struct Config {
 pub struct Api {
     current_node: Option<String>,
     address: Option<String>,
+    private_address: Option<String>,
     keys_path: Option<String>,
     peer_address: Option<String>,
     peers: Option<Vec<String>>,
@@ -53,6 +54,14 @@ impl Api {
             Err(_) => self.address.unwrap(),
         }
     }
+
+    pub fn private_address(self) -> String {
+        match env::var("API_PRIVATE_ADDRESS") {
+            Ok(value) => value,
+            Err(_) => self.private_address.unwrap(),
+        }
+    }
+
     pub fn keys_path(self) -> String {
         match env::var("API_KEYS_PATH") {
             Ok(value) => value,

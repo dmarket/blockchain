@@ -1,10 +1,10 @@
 {
   "body": {
-    "pub_key": "f857f8b85a82a9cb390b38655178d3d932832ee7b654a35f444ee34dbf477328"
+    "pub_key": "22c59b41d317c458732273fc8a6383f5acdda66e1ea00fcfc2cf36efe3ef9ad7"
   },
   "network_id": 0,
   "protocol_version": 0,
   "service_id": 1,
   "message_id": 1,
-  "signature": "b094d47984a4f872b4665ad4b858ba78e2d7d5c68b7d619a704c3f688bdd053d231c43f45596e689a96a80a20eb834b6a91a7260695b89a0247850625cc3640f"
+  "signature": "28a5f5e18f0e4cb51afda1cd17a0fc7d56a1d118f77592fc872cc0e8c8dc07867a0b682b56462f5f230b59db35cb2ed4a2a70a2301fded96c44afa6a2ee8e103"
 }
