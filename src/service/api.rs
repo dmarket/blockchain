@@ -19,6 +19,7 @@ use service::transaction::create_wallet::TxCreateWallet;
 use service::transaction::transfer::TxTransfer;
 use service::transaction::add_assets::TxAddAsset;
 use service::transaction::del_assets::TxDelAsset;
+use service::transaction::trade_assets::TxTrade;
 use service::schema::currency::CurrencySchema;
 use service::wallet::Wallet;
 
@@ -29,10 +30,12 @@ const SERVICE_ID: u16 = 1;
 const TX_CREATE_WALLET_ID: u16 = 1;
 // Identifier for coins transfer transaction type
 const TX_TRANSFER_ID: u16 = 2;
-// Add Asset
+// Add Assets
 const TX_ADD_ASSETS_ID: u16 = 3;
-// Add Asset
+// Add Assets
 const TX_DEL_ASSETS_ID: u16 = 4;
+// Trade Assets
+const TX_TRADE_ASSETS_ID: u16 = 5;
 
 #[derive(Clone)]
 struct CryptocurrencyApi {
@@ -47,6 +50,7 @@ enum TransactionRequest {
     Transfer(TxTransfer),
     AddAsset(TxAddAsset),
     DelAsset(TxDelAsset),
+    TradeAsset(TxTrade),
 }
 
 impl Into<Box<Transaction>> for TransactionRequest {
@@ -56,6 +60,7 @@ impl Into<Box<Transaction>> for TransactionRequest {
             TransactionRequest::Transfer(trans) => Box::new(trans),
             TransactionRequest::AddAsset(trans) => Box::new(trans),
             TransactionRequest::DelAsset(trans) => Box::new(trans),
+            TransactionRequest::TradeAsset(trans) => Box::new(trans),
         }
     }
 }
@@ -153,6 +158,7 @@ impl Service for CurrencyService {
             TX_CREATE_WALLET_ID => Box::new(TxCreateWallet::from_raw(raw)?),
             TX_ADD_ASSETS_ID => Box::new(TxAddAsset::from_raw(raw)?),
             TX_DEL_ASSETS_ID => Box::new(TxDelAsset::from_raw(raw)?),
+            TX_TRADE_ASSETS_ID => Box::new(TxTrade::from_raw(raw)?),
             _ => {
                 return Err(encoding::Error::IncorrectMessageType {
                     message_type: raw.message_type(),

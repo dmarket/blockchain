@@ -83,14 +83,12 @@ impl Wallet {
         for asset in asset_list {
             let mut is_set = false;
             for i in 0..assets.len() {
-                if assets[i].hash_id() == asset.hash_id() &&
-                   assets[i].amount() >= asset.amount()
-                {
+                if assets[i].hash_id() == asset.hash_id() && assets[i].amount() >= asset.amount() {
                     is_set = true;
                 }
             }
             if !is_set {
-                return false
+                return false;
             }
         }
         true
