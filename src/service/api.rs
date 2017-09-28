@@ -145,7 +145,7 @@ pub struct CurrencyService;
 
 impl Service for CurrencyService {
     fn service_name(&self) -> &'static str {
-        "cryptocurrency"
+        "cryptocurrency/v1"
     }
 
     fn service_id(&self) -> u16 {
