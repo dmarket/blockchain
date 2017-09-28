@@ -25,7 +25,7 @@ use service::wallet::Wallet;
 
 
 // Service identifier
-const SERVICE_ID: u16 = 1;
+const SERVICE_ID: u16 = 2;
 // Identifier for wallet creation transaction type
 const TX_CREATE_WALLET_ID: u16 = 1;
 // Identifier for coins transfer transaction type

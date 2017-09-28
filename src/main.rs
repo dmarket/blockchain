@@ -5,6 +5,7 @@ extern crate serde_json;
 extern crate serde_derive;
 #[macro_use]
 extern crate exonum;
+extern crate exonum_configuration;
 extern crate router;
 extern crate bodyparser;
 extern crate iron;
@@ -16,6 +17,7 @@ mod keys;
 use exonum::blockchain::{Blockchain, Service, GenesisConfig, ValidatorKeys};
 use exonum::node::{Node, NodeConfig, NodeApiConfig};
 use exonum::storage::{LevelDB, LevelDBOptions};
+use exonum_configuration::ConfigurationService;
 use service::api::CurrencyService;
 use keys::{KeyPair, Disc};
 
@@ -28,7 +30,10 @@ fn main() {
     let path = config::config().db().path();
     let db = Box::new(LevelDB::open(path, options).unwrap());
 
-    let services: Vec<Box<Service>> = vec![Box::new(CurrencyService)];
+    let services: Vec<Box<Service>> = vec![
+        Box::new(ConfigurationService::new()),
+        Box::new(CurrencyService),
+    ];
     let blockchain = Blockchain::new(db, services);
 
     /** Create Keys */
