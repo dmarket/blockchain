@@ -64,7 +64,7 @@ fn test_transfer_convert_from_json() {
         r#"{
   "body": {
     "from": "cdfe0378c3b7614410c468b7179cd5ba2b4ff3b9e5e24965b1aa23c5f623d28c",
-    "to": "1111111111",
+    "to": "cdfe0378c3b7614410c468b7179cd5ba2b4ff3b9e5e24965b1aa23c5f623d28c",
     "amount": "13",
     "assets": [
       {
