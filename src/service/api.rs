@@ -15,6 +15,7 @@ use iron::prelude::*;
 use iron::Handler;
 use router::Router;
 
+use service::transaction::{TX_TRADE_ASSETS_ID, TX_DEL_ASSETS_ID, TX_ADD_ASSETS_ID, TX_CREATE_WALLET_ID, TX_TRANSFER_ID};
 use service::transaction::create_wallet::TxCreateWallet;
 use service::transaction::transfer::TxTransfer;
 use service::transaction::add_assets::TxAddAsset;
@@ -25,17 +26,8 @@ use service::wallet::Wallet;
 
 
 // Service identifier
-const SERVICE_ID: u16 = 2;
+pub const SERVICE_ID: u16 = 2;
 // Identifier for wallet creation transaction type
-const TX_CREATE_WALLET_ID: u16 = 1;
-// Identifier for coins transfer transaction type
-const TX_TRANSFER_ID: u16 = 2;
-// Add Assets
-const TX_ADD_ASSETS_ID: u16 = 3;
-// Add Assets
-const TX_DEL_ASSETS_ID: u16 = 4;
-// Trade Assets
-const TX_TRADE_ASSETS_ID: u16 = 5;
 
 #[derive(Clone)]
 struct CryptocurrencyApi {

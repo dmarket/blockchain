@@ -113,7 +113,7 @@ fn test_trade_convert_from_json() {
   },
   "network_id": 0,
   "protocol_version": 0,
-  "service_id": 1,
+  "service_id": 2,
   "message_id": 5,
   "signature": "100c4bf9d50bd2da4af8d65b7b35847b0258d59d62b993311af4ce86049fa5de6712847db7b1a62d217e8c289bdf7b151552fac2404f965383c2c07fc39a5409"
 }"#;

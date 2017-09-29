@@ -1,8 +1,9 @@
 [api]
 current_node = "node0"
-address = "10.42.58.208:8000"
-peer_address = "10.42.58.208:2000"
-peers = ["10.42.58.208:2000", "10.42.26.33:2000", "10.42.125.244:2000", "10.42.140.197:2000"]
+address = "0.0.0.0:8000"
+private_address = "0.0.0.0:8001"
+peer_address = "0.0.0.0:2000"
+peers = []
 keys_path = "./var/keys"
 
 [db]

@@ -1,4 +1,4 @@
 
-const SERVICE_ID: u16 = 1;
+use service::api::SERVICE_ID;
 
 pub mod currency;

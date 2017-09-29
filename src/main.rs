@@ -49,7 +49,7 @@ fn main() {
     let service_public_key = service_keys.public;
     let service_secret_key = service_keys.secret;
 
-    let nodenames = vec!["node0", "node1", "node2", "node3"];
+    let nodenames = vec!["node0"/*, "node1", "node2", "node3"*/];
     let mut validators: Vec<ValidatorKeys> = vec![];
     for name_prefix in nodenames {
         let consensus_name = name_prefix.to_string() + "_consensus.json";
