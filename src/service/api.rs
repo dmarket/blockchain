@@ -4,6 +4,7 @@ extern crate exonum;
 extern crate router;
 extern crate bodyparser;
 extern crate iron;
+extern crate nats;
 
 use exonum::blockchain::{Blockchain, Service, Transaction, ApiContext, ServiceContext, Schema};
 use exonum::node::{TransactionSend, ApiSender, NodeChannel};
@@ -14,6 +15,7 @@ use exonum::api::{Api, ApiError};
 use iron::prelude::*;
 use iron::Handler;
 use router::Router;
+use nats::Client;
 
 use service::transaction::{TX_TRADE_ASSETS_ID, TX_DEL_ASSETS_ID, TX_ADD_ASSETS_ID, TX_CREATE_WALLET_ID, TX_TRANSFER_ID};
 use service::transaction::create_wallet::TxCreateWallet;
@@ -171,12 +173,21 @@ impl Service for CurrencyService {
     }
 
     fn handle_commit(&self, ctx: &mut ServiceContext) {
-        let schema = Schema::new(ctx.snapshot());
-        if let Some(las_block) = schema.last_block() {
-            let mut list = schema.block_txs(las_block.height());
-            for el in list.iter() {
-                println!("{:?}", el);
-            }
+        match Client::new("nats://127.0.0.1:4222") {
+            Ok(mut client) => {
+                let schema = Schema::new(ctx.snapshot());
+                if let Some(las_block) = schema.last_block() {
+                    let mut list = schema.block_txs(las_block.height());
+                    for hash in list.iter() {
+                        match client.publish("transaction.commit", hash.to_hex().as_bytes()) {
+                            Ok(_) => println!("success published"),
+                            Err(e) => println!("{:?}", e)
+                        }
+                        println!("Made transaction {:?}", hash.to_hex());
+                    }
+                }
+            },
+            Err(e) => println!("NATS server error {:?}", e)
         }
     }
 }

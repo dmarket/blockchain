@@ -9,6 +9,7 @@ extern crate exonum_configuration;
 extern crate router;
 extern crate bodyparser;
 extern crate iron;
+extern crate nats;
 
 mod service;
 mod config;
