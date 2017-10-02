@@ -10,6 +10,8 @@ use super::{SERVICE_ID, TX_TRANSFER_ID};
 //use service::wallet::Wallet;
 use service::schema::currency::CurrencySchema;
 
+pub const FEE_FOR_TRANSFER: u64 = 1;
+
 message! {
     struct TxTransfer {
         const TYPE = SERVICE_ID;
@@ -32,21 +34,18 @@ impl Transaction for TxTransfer {
     fn execute(&self, view: &mut Fork) {
         let mut schema = CurrencySchema { view };
         let sender = schema.wallet(self.from());
-        let receiver = schema.wallet(self.to());
-        if let (Some(mut sender), Some(mut receiver)) = (sender, receiver) {
+        let receiver = schema.create_wallet(self.to());
+        if let (Some(mut sender), mut receiver) = (sender, receiver) {
             let amount = self.amount();
-            let mut update_wallet = false;
-            if amount > 0 && sender.balance() >= amount {
-                sender.decrease(amount);
-                receiver.increase(amount);
-                update_wallet = true;
-            }
-            if self.assets().len() > 0 && sender.in_wallet_assets(self.assets()) {
+            let update_amount = amount == 0 && sender.balance() >= FEE_FOR_TRANSFER || amount > 0 && sender.balance() >= amount + FEE_FOR_TRANSFER;
+            let update_assets = self.assets().len() == 0 || self.assets().len() > 0 && sender.in_wallet_assets(self.assets());
+            if update_amount && update_assets {
+                sender.decrease(amount + FEE_FOR_TRANSFER);
                 sender.del_assets(self.assets());
+                let mut receiver = schema.create_wallet(self.to());
+                receiver.increase(amount);
                 receiver.add_assets(self.assets());
-                update_wallet = true;
-            }
-            if update_wallet {
+
                 println!("Transfer between wallets: {:?} => {:?}", sender, receiver);
                 let mut wallets = schema.wallets();
                 wallets.put(self.from(), sender);
