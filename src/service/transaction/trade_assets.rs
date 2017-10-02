@@ -5,6 +5,7 @@ use exonum::storage::Fork;
 use exonum::crypto;
 use exonum::crypto::{PublicKey, Signature};
 use exonum::messages::Message;
+use serde_json::Value;
 
 
 use super::{SERVICE_ID, TX_TRADE_ASSETS_ID};
@@ -94,6 +95,11 @@ impl Transaction for TxTrade {
             }
         }
     }
+
+    fn info(&self) -> Value {
+        json!(self)
+    }
+
 }
 
 

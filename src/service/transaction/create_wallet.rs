@@ -4,6 +4,7 @@ use exonum::blockchain::Transaction;
 use exonum::storage::Fork;
 use exonum::crypto::PublicKey;
 use exonum::messages::Message;
+use serde_json::Value;
 
 use super::{SERVICE_ID, TX_CREATE_WALLET_ID, INIT_BALANCE};
 use service::wallet::{Wallet, Asset};
@@ -33,6 +34,11 @@ impl Transaction for TxCreateWallet {
             schema.wallets().put(self.pub_key(), wallet)
         }
     }
+
+    fn info(&self) -> Value {
+        json!(self)
+    }
+
 }
 
 #[test]

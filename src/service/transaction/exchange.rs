@@ -4,6 +4,7 @@ use exonum::blockchain::Transaction;
 use exonum::storage::Fork;
 use exonum::crypto::{PublicKey, Signature, verify};
 use exonum::messages::Message;
+use serde_json::Value;
 
 use super::{SERVICE_ID, TX_EXCHANGE_ID};
 use service::wallet::Asset;
@@ -83,6 +84,11 @@ impl Transaction for TxExchange {
             }
         }
     }
+
+    fn info(&self) -> Value {
+        json!(self)
+    }
+
 }
 
 
