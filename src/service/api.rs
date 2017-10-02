@@ -5,7 +5,7 @@ extern crate router;
 extern crate bodyparser;
 extern crate iron;
 
-use exonum::blockchain::{Blockchain, Service, Transaction, ApiContext};
+use exonum::blockchain::{Blockchain, Service, Transaction, ApiContext, ServiceContext, Schema};
 use exonum::node::{TransactionSend, ApiSender, NodeChannel};
 use exonum::messages::{RawTransaction, FromRaw};
 use exonum::crypto::{PublicKey, Hash, HexValue};
@@ -168,5 +168,15 @@ impl Service for CurrencyService {
         };
         api.wire(&mut router);
         Some(Box::new(router))
+    }
+
+    fn handle_commit(&self, ctx: &mut ServiceContext) {
+        let schema = Schema::new(ctx.snapshot());
+        if let Some(las_block) = schema.last_block() {
+            let mut list = schema.block_txs(las_block.height());
+            for el in list.iter() {
+                println!("{:?}", el);
+            }
+        }
     }
 }

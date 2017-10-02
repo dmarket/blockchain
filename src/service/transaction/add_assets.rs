@@ -11,6 +11,7 @@ use service::schema::currency::CurrencySchema;
 
 pub const FEE_FOR_MINING: u64 = 1;
 
+#[allow(dead_code)]
 message! {
     struct TxAddAsset {
         const TYPE = SERVICE_ID;
@@ -22,7 +23,6 @@ message! {
         field seed:        u64         [40 => 48]
     }
 }
-
 impl Transaction for TxAddAsset {
     fn verify(&self) -> bool {
         self.verify_signature(self.pub_key())
