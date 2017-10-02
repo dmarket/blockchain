@@ -21,3 +21,7 @@ pub mod del_assets;
 // Buy Transaction
 pub const  TX_TRADE_ASSETS_ID: u16 = 5;
 pub mod trade_assets;
+
+// Buy Transaction
+pub const  TX_EXCHANGE_ID: u16 = 6;
+pub mod exchange;
