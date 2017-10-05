@@ -25,7 +25,7 @@ use service::transaction::del_assets::TxDelAsset;
 use service::transaction::trade_assets::TxTrade;
 use service::schema::currency::CurrencySchema;
 use service::wallet::Wallet;
-
+use config;
 
 // Service identifier
 pub const SERVICE_ID: u16 = 2;
@@ -173,11 +173,11 @@ impl Service for CurrencyService {
     }
 
     fn handle_commit(&self, ctx: &mut ServiceContext) {
-        match Client::new("nats://127.0.0.1:4222") {
+        match Client::new(config::config().nats().addresses()) {
             Ok(mut client) => {
                 let schema = Schema::new(ctx.snapshot());
                 if let Some(las_block) = schema.last_block() {
-                    let mut list = schema.block_txs(las_block.height());
+                    let list = schema.block_txs(las_block.height());
                     for hash in list.iter() {
                         match client.publish("transaction.commit", hash.to_hex().as_bytes()) {
                             Ok(_) => println!("success published"),

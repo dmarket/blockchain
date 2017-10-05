@@ -8,3 +8,6 @@ keys_path = "./var/keys"
 
 [db]
 path = "./var/db"
+
+[nats]
+addresses = ["nats://nats:4222"]

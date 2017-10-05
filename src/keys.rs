@@ -45,7 +45,7 @@ impl Disc for KeyPair {
         let display = path.display();
 
         // Open a file in write-only mode, returns `io::Result<File>`
-        let mut file = match File::open(&path) {
+        let file = match File::open(&path) {
             Err(why) => panic!("couldn't open {}: {}", display, why.description()),
             Ok(file) => file,
         };
@@ -54,7 +54,7 @@ impl Disc for KeyPair {
 
         // read_line takes reads a line and writes to a string, so we give it one.
         let buffer_string = &mut String::new();
-        reader.read_line(buffer_string);
+        let _res = reader.read_line(buffer_string);
         let s = buffer_string.to_string();
         let keys: KeyPair = serde_json::from_str(&s).unwrap();
 

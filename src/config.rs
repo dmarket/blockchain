@@ -2,7 +2,6 @@ extern crate toml;
 
 use std::env;
 use std::result::Result;
-use std::io;
 use std::io::Error;
 use std::fs::File;
 use std::io::prelude::*;
@@ -14,6 +13,7 @@ use std::net::{ToSocketAddrs, SocketAddr};
 pub struct Config {
     api: Api,
     db: Db,
+    nats: Nats,
 }
 
 #[derive(Deserialize)]
@@ -31,6 +31,11 @@ pub struct Db {
     path: Option<String>,
 }
 
+#[derive(Deserialize)]
+pub struct Nats {
+    addresses: Option<Vec<String>>,
+}
+
 impl Config {
     pub fn api(self) -> Api {
         self.api
@@ -38,6 +43,7 @@ impl Config {
     pub fn db(self) -> Db {
         self.db
     }
+    pub fn nats(self) -> Nats { self.nats }
 }
 
 impl Api {
@@ -80,7 +86,7 @@ impl Api {
     pub fn peers(self) -> Vec<SocketAddr> {
 
         match env::var("API_PEERS") {
-            Ok(value) => vec![], // todo: add parse environment
+            Ok(_) => vec![], // todo: add parse environment
             Err(_) => {
                 let mut peers: Vec<SocketAddr> = vec![];
                 for peer in self.peers.unwrap() {
@@ -107,6 +113,11 @@ impl Db {
     }
 }
 
+impl Nats {
+    pub fn addresses(self) -> Vec<String> {
+        self.addresses.unwrap()
+    }
+}
 
 ///
 /// Load configuration
@@ -117,9 +128,9 @@ impl Db {
 /// assert_eq!("0.0.0.0:8000", read_config().ok().unwrap().api.address.unwrap().as_str())
 /// ```
 pub fn read_config() -> Result<Config, Error> {
-    let mut content: String = String::new();
+    let mut content = String::new();
     let mut f = File::open(Path::new("./etc/config.toml"))?;
-    f.read_to_string(&mut content);
+    let _res = f.read_to_string(&mut content);
     Ok(toml::from_str(content.as_str()).unwrap())
 }
 

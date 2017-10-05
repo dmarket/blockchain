@@ -10,8 +10,6 @@ use super::{SERVICE_ID, TX_EXCHANGE_ID};
 use service::wallet::Asset;
 use service::schema::currency::CurrencySchema;
 
-pub const FEE_FOR_TRADE: u64 = 1;
-
 encoding_struct! {
     struct Offer {
         const SIZE = 104;

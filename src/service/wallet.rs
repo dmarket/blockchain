@@ -79,7 +79,7 @@ impl Wallet {
     }
 
     pub fn in_wallet_assets(&mut self, asset_list: Vec<Asset>) -> bool {
-        let mut assets = self.assets();
+        let assets = self.assets();
         for asset in asset_list {
             let mut is_set = false;
             for i in 0..assets.len() {

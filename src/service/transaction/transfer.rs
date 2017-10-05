@@ -34,9 +34,7 @@ impl Transaction for TxTransfer {
 
     fn execute(&self, view: &mut Fork) {
         let mut schema = CurrencySchema { view };
-        let sender = schema.wallet(self.from());
-        let receiver = schema.create_wallet(self.to());
-        if let (Some(mut sender), mut receiver) = (sender, receiver) {
+        if let Some(mut sender) = schema.wallet(self.from()) {
             let amount = self.amount();
             let update_amount = amount == 0 && sender.balance() >= FEE_FOR_TRANSFER || amount > 0 && sender.balance() >= amount + FEE_FOR_TRANSFER;
             let update_assets = self.assets().len() == 0 || self.assets().len() > 0 && sender.in_wallet_assets(self.assets());
