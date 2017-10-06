@@ -8,7 +8,7 @@ use serde_json::Value;
 
 use super::{SERVICE_ID, TX_CREATE_WALLET_ID, INIT_BALANCE};
 use service::wallet::{Wallet, Asset};
-use service::schema::currency::CurrencySchema;
+use service::schema::wallet::WalletSchema;
 
 message! {
     struct TxCreateWallet {
@@ -26,7 +26,7 @@ impl Transaction for TxCreateWallet {
     }
 
     fn execute(&self, view: &mut Fork) {
-        let mut schema = CurrencySchema { view };
+        let mut schema = WalletSchema { view };
         if schema.wallet(self.pub_key()).is_none() {
             let assets: Vec<Asset> = vec![];
             let wallet = Wallet::new(self.pub_key(), INIT_BALANCE, assets);

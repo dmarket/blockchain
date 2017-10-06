@@ -8,7 +8,7 @@ use serde_json::Value;
 
 use super::{SERVICE_ID, TX_EXCHANGE_ID};
 use service::wallet::Asset;
-use service::schema::currency::CurrencySchema;
+use service::schema::wallet::WalletSchema;
 
 encoding_struct! {
     struct Offer {
@@ -49,7 +49,7 @@ impl Transaction for TxExchange {
     }
 
     fn execute(&self, view: &mut Fork) {
-        let mut schema = CurrencySchema { view };
+        let mut schema = WalletSchema { view };
         let sender = schema.wallet(self.offer().sender());
         let recipient = schema.wallet(self.offer().recipient());
         if let (Some(mut sender), Some(mut recipient)) = (sender, recipient) {

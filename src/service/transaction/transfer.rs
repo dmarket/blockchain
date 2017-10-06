@@ -9,7 +9,7 @@ use serde_json::Value;
 
 use super::{SERVICE_ID, TX_TRANSFER_ID};
 //use service::wallet::Wallet;
-use service::schema::currency::CurrencySchema;
+use service::schema::wallet::WalletSchema;
 
 pub const FEE_FOR_TRANSFER: u64 = 1;
 
@@ -33,7 +33,7 @@ impl Transaction for TxTransfer {
     }
 
     fn execute(&self, view: &mut Fork) {
-        let mut schema = CurrencySchema { view };
+        let mut schema = WalletSchema { view };
         if let Some(mut sender) = schema.wallet(self.from()) {
             let amount = self.amount();
             let update_amount = amount == 0 && sender.balance() >= FEE_FOR_TRANSFER || amount > 0 && sender.balance() >= amount + FEE_FOR_TRANSFER;

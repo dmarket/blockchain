@@ -36,5 +36,5 @@ curl http://127.0.0.1:8000/api/services/cryptocurrency/wallet/22c59b41d317c45873
 
 Transaction info: 
 ```
-curl http://127.0.0.1:8000/api/system/v1/transactions/84fceb5d517648b1169483bbfb75ea09ffdfd9fafc4ff710804cf51a24821572
+curl http://127.0.0.1:8000/api/system/v1/transactions/50929fa35ad167cad4a1b839405ab9d39f8f23a9513fad9fd27886c81a9c1bf4
 ```

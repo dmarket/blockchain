@@ -23,7 +23,7 @@ use service::transaction::transfer::TxTransfer;
 use service::transaction::add_assets::TxAddAsset;
 use service::transaction::del_assets::TxDelAsset;
 use service::transaction::trade_assets::TxTrade;
-use service::schema::currency::CurrencySchema;
+use service::schema::wallet::WalletSchema;
 use service::wallet::Wallet;
 use config;
 
@@ -67,13 +67,13 @@ struct TransactionResponse {
 impl CryptocurrencyApi {
     fn get_wallet(&self, pub_key: &PublicKey) -> Option<Wallet> {
         let mut view = self.bc.fork();
-        let mut schema = CurrencySchema { view: &mut view };
+        let mut schema = WalletSchema { view: &mut view };
         schema.wallet(pub_key)
     }
 
     fn get_wallets(&self) -> Option<Vec<Wallet>> {
         let mut view = self.bc.fork();
-        let mut schema = CurrencySchema { view: &mut view };
+        let mut schema = WalletSchema { view: &mut view };
         let idx = schema.wallets();
         let wallets: Vec<Wallet> = idx.values().collect();
         if wallets.is_empty() {

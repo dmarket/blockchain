@@ -1,4 +1,4 @@
 
 use service::api::SERVICE_ID;
 
-pub mod currency;
+pub mod wallet;

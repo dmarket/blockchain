@@ -7,12 +7,12 @@ use exonum::storage::{Fork, MapIndex};
 use service::wallet::{Wallet, Asset};
 use super::SERVICE_ID;
 
-pub struct CurrencySchema<'a> {
+pub struct WalletSchema<'a> {
     pub view: &'a mut Fork,
 }
 
 
-impl<'a> CurrencySchema<'a> {
+impl<'a> WalletSchema<'a> {
     pub fn wallets(&mut self) -> MapIndex<&mut Fork, PublicKey, Wallet> {
         let prefix = blockchain::gen_prefix(SERVICE_ID, 0, &());
         MapIndex::new(prefix, self.view)

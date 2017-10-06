@@ -8,7 +8,7 @@ use serde_json::Value;
 
 use super::{SERVICE_ID, TX_DEL_ASSETS_ID};
 use service::wallet::Asset;
-use service::schema::currency::CurrencySchema;
+use service::schema::wallet::WalletSchema;
 
 pub const FEE_FOR_MINING: u64 = 1;
 
@@ -30,7 +30,7 @@ impl Transaction for TxDelAsset {
     }
 
     fn execute(&self, view: &mut Fork) {
-        let mut schema = CurrencySchema { view };
+        let mut schema = WalletSchema { view };
         let creator = schema.wallet(self.pub_key());
         if let Some(mut creator) = creator {
 

@@ -10,7 +10,7 @@ use serde_json::Value;
 
 use super::{SERVICE_ID, TX_TRADE_ASSETS_ID};
 use service::wallet::Asset;
-use service::schema::currency::CurrencySchema;
+use service::schema::wallet::WalletSchema;
 
 pub const FEE_FOR_TRADE: u64 = 1;
 
@@ -69,7 +69,7 @@ impl Transaction for TxTrade {
     }
 
     fn execute(&self, view: &mut Fork) {
-        let mut schema = CurrencySchema { view };
+        let mut schema = WalletSchema { view };
         let buyer = schema.wallet(self.buyer());
         let seller = schema.wallet(self.offer().seller());
         if let (Some(mut buyer), Some(mut seller)) = (buyer, seller) {
