@@ -17,12 +17,13 @@ use iron::Handler;
 use router::Router;
 use nats::Client;
 
-use service::transaction::{TX_TRADE_ASSETS_ID, TX_DEL_ASSETS_ID, TX_ADD_ASSETS_ID, TX_CREATE_WALLET_ID, TX_TRANSFER_ID};
+use service::transaction::{TX_TRADE_ASSETS_ID, TX_DEL_ASSETS_ID, TX_ADD_ASSETS_ID, TX_CREATE_WALLET_ID, TX_TRANSFER_ID, TX_EXCHANGE_ID};
 use service::transaction::create_wallet::TxCreateWallet;
 use service::transaction::transfer::TxTransfer;
 use service::transaction::add_assets::TxAddAsset;
 use service::transaction::del_assets::TxDelAsset;
 use service::transaction::trade_assets::TxTrade;
+use service::transaction::exchange::TxExchange;
 use service::schema::wallet::WalletSchema;
 use service::wallet::Wallet;
 use config;
@@ -45,6 +46,7 @@ enum TransactionRequest {
     AddAsset(TxAddAsset),
     DelAsset(TxDelAsset),
     TradeAsset(TxTrade),
+    Exchange(TxExchange),
 }
 
 impl Into<Box<Transaction>> for TransactionRequest {
@@ -55,6 +57,7 @@ impl Into<Box<Transaction>> for TransactionRequest {
             TransactionRequest::AddAsset(trans) => Box::new(trans),
             TransactionRequest::DelAsset(trans) => Box::new(trans),
             TransactionRequest::TradeAsset(trans) => Box::new(trans),
+            TransactionRequest::Exchange(trans) => Box::new(trans),
         }
     }
 }
@@ -153,6 +156,7 @@ impl Service for CurrencyService {
             TX_ADD_ASSETS_ID => Box::new(TxAddAsset::from_raw(raw)?),
             TX_DEL_ASSETS_ID => Box::new(TxDelAsset::from_raw(raw)?),
             TX_TRADE_ASSETS_ID => Box::new(TxTrade::from_raw(raw)?),
+            TX_EXCHANGE_ID => Box::new(TxExchange::from_raw(raw)?),
             _ => {
                 return Err(encoding::Error::IncorrectMessageType {
                     message_type: raw.message_type(),

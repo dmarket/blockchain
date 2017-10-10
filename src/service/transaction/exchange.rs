@@ -11,16 +11,18 @@ use service::wallet::Asset;
 use service::schema::wallet::WalletSchema;
 
 encoding_struct! {
-    struct Offer {
-        const SIZE = 104;
+    struct ExchangeOffer {
+        const SIZE = 97;
 
         field sender:                 &PublicKey   [00 => 32]
         field sender_assets:          Vec<Asset>   [32 => 40]
         field sender_value:           u64          [40 => 48]
 
         field recipient:              &PublicKey   [48 => 80]
-        field recipient_assets:       Vec<Asset>   [88 => 96]
-        field recipient_value:        u64          [96 => 104]
+        field recipient_assets:       Vec<Asset>   [80 => 88]
+        field recipient_value:        u64          [88 => 96]
+
+        field fee_strategy:           u8           [96 => 97]
     }
 }
 
@@ -30,9 +32,9 @@ message! {
         const ID = TX_EXCHANGE_ID;
         const SIZE = 80;
 
-        field offer:             Offer        [00 => 08]
-        field seed:              u64          [08 => 16]
-        field sender_signature:  &Signature   [16 => 80]
+        field offer:             ExchangeOffer     [00 => 08]
+        field seed:              u64               [08 => 16]
+        field sender_signature:  &Signature        [16 => 80]
     }
 }
 
@@ -96,21 +98,22 @@ fn test_convert_from_json() {
         r#"{
   "body": {
     "offer": {
-        "sender": "83dbc25eea26578cfdae481b421b09faeb1b35b98451a30c9a6a33271503e61a",
-        "sender_assets": [{"hash_id": "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f", "amount":2}, {"hash_id": "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f", "amount":2}],
-        "sender_value": "10",
-        "recipient": "83dbc25eea26578cfdae481b421b09faeb1b35b98451a30c9a6a33271503e61a",
-        "recipient_assets": [{"hash_id": "a8d5c97d-9978-300b-9947-7a95dcb31d0f", "amount":2}, {"hash_id": "a8d5c97d-9978-310b-9947-7a95dcb31d0f", "amount":2}],
-        "recipient_value": "13"
+      "sender": "b52ed23433b2eb2377177ea658cd32d73de2641d3acfe9f9a33b7716c0480558",
+      "sender_assets": [{"hash_id": "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f","amount": 5},{"hash_id": "a8d5c97d-9978-4111-9947-7a95dcb31d0f","amount": 7}],
+      "sender_value": "37",
+      "recipient": "f0198865f6c249dad503abee4a06b59f8bc4f9ff31600fde8cc43b7229ef3207",
+      "recipient_assets": [{"hash_id": "a8d5c97d-9978-cccc-9947-7a95dcb31d0f","amount": 1}],
+      "recipient_value": "0",
+      "fee_strategy": 1
     },
-    "seed": "123123123123",
-    "sender_signature": "100c4bf9d50bd2da4af8d65b7b35847b0258d59d62b993311af4ce86049fa5de6712847db7b1a62d217e8c289bdf7b151552fac2404f965383c2c07fc39a5409"
+    "seed": "216",
+    "sender_signature": "96e934b718d50ca915e07561b36d15aa2c45f00fb1aad887ae33e3b9403c6197d0cc44ffd1f3353b5b9f7ad7bd8b750b49836401b313b1da0957ea833d8e3f03"
   },
   "network_id": 0,
   "protocol_version": 0,
   "service_id": 2,
   "message_id": 6,
-  "signature": "100c4bf9d50bd2da4af8d65b7b35847b0258d59d62b993311af4ce86049fa5de6712847db7b1a62d217e8c289bdf7b151552fac2404f965383c2c07fc39a5409"
+  "signature": "284b1e08e69d7dc622501c66cbc71841e1ae9a13a7a9e77d2411f2c571c2c6afa176510b8404573da922ae5488c91aa1163c7c9669fd2181fa31925825780a03"
 }"#;
 
     let tx_create_wallet: TxExchange = ::serde_json::from_str(&json).unwrap();
