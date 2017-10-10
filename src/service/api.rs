@@ -25,6 +25,7 @@ use service::transaction::del_assets::TxDelAsset;
 use service::transaction::trade_assets::TxTrade;
 use service::transaction::exchange::TxExchange;
 use service::schema::wallet::WalletSchema;
+use service::schema::asset::AssetSchema;
 use service::wallet::Wallet;
 use config;
 
@@ -85,6 +86,13 @@ impl CryptocurrencyApi {
             Some(wallets)
         }
     }
+
+    fn get_owner_for_asset(&self, asset_id: &str) -> Option<PublicKey> {
+        let mut view = self.bc.fork();
+        let mut schema = AssetSchema { view: &mut view };
+        schema.creator(&asset_id.to_string())
+
+    }
 }
 
 impl Api for CryptocurrencyApi {
@@ -132,9 +140,21 @@ impl Api for CryptocurrencyApi {
             }
         };
 
+        let self_ = self.clone();
+        let get_owner_for_asset_id = move |req: &mut Request| ->IronResult<Response> {
+            let path = req.url.path();
+            let asset_id = path.last().unwrap();
+            if let Some(owner) = self_.get_owner_for_asset(*asset_id) {
+                self_.ok_response(&serde_json::to_value(owner).unwrap())
+            } else {
+                self_.not_found_response(&serde_json::to_value("Asset not found").unwrap())
+            }
+        };
+
         router.post("/wallets/transaction", transaction, "transaction");
         router.get("/wallets", wallets_info, "wallets_info");
         router.get("/wallet/:pub_key", wallet_info, "get_balance");
+        router.get("/asset/:asset_id", get_owner_for_asset_id, "get_owner_for_asset_id");
     }
 }
 
