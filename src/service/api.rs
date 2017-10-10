@@ -12,6 +12,7 @@ use exonum::messages::{RawTransaction, FromRaw};
 use exonum::crypto::{PublicKey, Hash, HexValue};
 use exonum::encoding;
 use exonum::api::{Api, ApiError};
+use iron::headers::{AccessControlAllowOrigin};
 use iron::prelude::*;
 use iron::Handler;
 use router::Router;
@@ -105,7 +106,10 @@ impl Api for CryptocurrencyApi {
                     let tx_hash = transaction.hash();
                     self_.channel.send(transaction).map_err(ApiError::Events)?;
                     let json = TransactionResponse { tx_hash };
-                    self_.ok_response(&serde_json::to_value(&json).unwrap())
+                    let ok_res = self_.ok_response(&serde_json::to_value(&json).unwrap());
+                    let mut res = ok_res.unwrap();
+                    res.headers.set(AccessControlAllowOrigin::Any);
+                    Ok(res)
                 }
                 Ok(None) => Err(ApiError::IncorrectRequest("Empty request body".into()))?,
                 Err(e) => Err(ApiError::IncorrectRequest(Box::new(e)))?,
@@ -120,9 +124,15 @@ impl Api for CryptocurrencyApi {
             let wallet_key = path.last().unwrap();
             let public_key = PublicKey::from_hex(wallet_key).map_err(ApiError::FromHex)?;
             if let Some(wallet) = self_.get_wallet(&public_key) {
-                self_.ok_response(&serde_json::to_value(wallet).unwrap())
+                let res = self_.ok_response(&serde_json::to_value(wallet).unwrap());
+                let mut res = res.unwrap();
+                res.headers.set(AccessControlAllowOrigin::Any);
+                Ok(res)
             } else {
-                self_.not_found_response(&serde_json::to_value("Wallet not found").unwrap())
+                let res = self_.not_found_response(&serde_json::to_value("Wallet not found").unwrap());
+                let mut res = res.unwrap();
+                res.headers.set(AccessControlAllowOrigin::Any);
+                Ok(res)
             }
         };
 
@@ -131,12 +141,18 @@ impl Api for CryptocurrencyApi {
         let self_ = self.clone();
         let wallets_info = move |_: &mut Request| -> IronResult<Response> {
             if let Some(wallets) = self_.get_wallets() {
-                self_.ok_response(&serde_json::to_value(wallets).unwrap())
+                let res = self_.ok_response(&serde_json::to_value(wallets).unwrap());
+                let mut res = res.unwrap();
+                res.headers.set(AccessControlAllowOrigin::Any);
+                Ok(res)
             } else {
-                self_.not_found_response(
+                let res = self_.not_found_response(
                     &serde_json::to_value("Wallets database is empty")
                         .unwrap(),
-                )
+                );
+                let mut res = res.unwrap();
+                res.headers.set(AccessControlAllowOrigin::Any);
+                Ok(res)
             }
         };
 
@@ -145,9 +161,15 @@ impl Api for CryptocurrencyApi {
             let path = req.url.path();
             let asset_id = path.last().unwrap();
             if let Some(owner) = self_.get_owner_for_asset(*asset_id) {
-                self_.ok_response(&serde_json::to_value(owner).unwrap())
+                let res= self_.ok_response(&serde_json::to_value(owner).unwrap());
+                let mut res = res.unwrap();
+                res.headers.set(AccessControlAllowOrigin::Any);
+                Ok(res)
             } else {
-                self_.not_found_response(&serde_json::to_value("Asset not found").unwrap())
+                let res = self_.not_found_response(&serde_json::to_value("Asset not found").unwrap());
+                let mut res = res.unwrap();
+                res.headers.set(AccessControlAllowOrigin::Any);
+                Ok(res)
             }
         };
 
