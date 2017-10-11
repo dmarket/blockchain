@@ -12,6 +12,7 @@ use exonum::messages::{RawTransaction, FromRaw};
 use exonum::crypto::{PublicKey, Hash, HexValue};
 use exonum::encoding;
 use exonum::api::{Api, ApiError};
+use exonum::storage::{Fork};
 use iron::headers::{AccessControlAllowOrigin};
 use iron::prelude::*;
 use iron::Handler;
@@ -27,7 +28,7 @@ use service::transaction::trade_assets::TxTrade;
 use service::transaction::exchange::TxExchange;
 use service::schema::wallet::WalletSchema;
 use service::schema::asset::AssetSchema;
-use service::wallet::Wallet;
+use service::wallet::{Wallet, Asset};
 use config;
 
 // Service identifier
@@ -235,5 +236,16 @@ impl Service for CurrencyService {
             },
             Err(e) => println!("NATS server error {:?}", e)
         }
+    }
+
+    fn initialize(&self, fork: &mut Fork) -> serde_json::Value {
+        let mut schema = WalletSchema { view: fork };
+        let basic_wallet = PublicKey::from_hex("36a05e418393fb4b23819753f6e6dd51550ce030d53842c43dd1349857a96a61").unwrap();
+        let assets: Vec<Asset> = vec![];
+        let wallet = Wallet::new(&basic_wallet, 100_000_000_000, assets);
+        println!("Create the wallet: {:?}", wallet);
+        schema.wallets().put(&basic_wallet, wallet);
+
+        serde_json::Value::Null
     }
 }
