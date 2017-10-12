@@ -85,7 +85,9 @@ impl Transaction for TxTrade {
     }
 
     fn info(&self) -> Value {
-        json!(self)
+        json!({
+            "transaction_data": self,
+        })
     }
 
 }

@@ -36,7 +36,9 @@ impl Transaction for TxCreateWallet {
     }
 
     fn info(&self) -> Value {
-        json!(self)
+        json!({
+            "transaction_data": self,
+        })
     }
 
 }

@@ -54,7 +54,9 @@ impl Transaction for TxTransfer {
     }
 
     fn info(&self) -> Value {
-        json!(self)
+        json!({
+            "transaction_data": self,
+        })
     }
 
 }

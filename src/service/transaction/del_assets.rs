@@ -46,7 +46,9 @@ impl Transaction for TxDelAsset {
     }
 
     fn info(&self) -> Value {
-        json!(self)
+        json!({
+            "transaction_data": self,
+        })
     }
 
 }
