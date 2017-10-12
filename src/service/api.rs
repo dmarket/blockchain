@@ -68,6 +68,7 @@ impl Into<Box<Transaction>> for TransactionRequest {
 #[derive(Serialize, Deserialize)]
 struct TransactionResponse {
     tx_hash: Hash,
+    transaction_info: serde_json::Value,
 }
 /// Shortcut to get data on wallets.
 impl CryptocurrencyApi {
@@ -105,9 +106,13 @@ impl Api for CryptocurrencyApi {
                 Ok(Some(transaction)) => {
                     let transaction: Box<Transaction> = transaction.into();
                     let tx_hash = transaction.hash();
+                    let tx_info = transaction.info();
                     self_.channel.send(transaction).map_err(ApiError::Events)?;
-                    let json = TransactionResponse { tx_hash };
-                    let ok_res = self_.ok_response(&serde_json::to_value(&json).unwrap());
+                    let response_data = json!(TransactionResponse{
+                        tx_hash,
+                        transaction_info: tx_info,
+                    });
+                    let ok_res = self_.ok_response(&response_data);
                     let mut res = ok_res.unwrap();
                     res.headers.set(AccessControlAllowOrigin::Any);
                     Ok(res)

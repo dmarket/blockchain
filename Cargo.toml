@@ -7,10 +7,11 @@ authors = ["Ilya Sinyakin <sinyakin.ilya@gmail.com>"]
 iron = "0.5.1"
 bodyparser = "0.7.0"
 router = "0.5.1"
+nats="*"
 serde = "1.0"
 serde_json = "1.0"
 serde_derive = "1.0"
-exonum = "0.2"
 toml = "0.4.5"
+uuid = { version = "0.5", features = ["v5"] }
+exonum = "0.2"
 exonum-configuration = "0.2"
-nats="*"
