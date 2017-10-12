@@ -30,11 +30,11 @@ curl http://94.130.33.18:8000/api/explorer/v1/blocks?count=50&skip_empty_blocks=
 
 Wallet info:
 ```
-curl http://127.0.0.1:8000/api/services/cryptocurrency/wallets
-curl http://127.0.0.1:8000/api/services/cryptocurrency/wallet/22c59b41d317c458732273fc8a6383f5acdda66e1ea00fcfc2cf36efe3ef9ad7
+curl http://127.0.0.1:8000/api/services/cryptocurrency/v1/wallets
+curl http://127.0.0.1:8000/api/services/cryptocurrency/v1/wallet/faa7c54f1b7450d7f42c2dd8ace24655430d7ea587712bc8e0ba7102d034464c
 ```
 
 Transaction info: 
 ```
-curl http://127.0.0.1:8000/api/system/v1/transactions/50929fa35ad167cad4a1b839405ab9d39f8f23a9513fad9fd27886c81a9c1bf4
+curl http://127.0.0.1:8000/api/system/v1/transactions/2ee1050302dbfc6c8e762f68d334775922783dbe3224d78eec2afc3682423e08
 ```

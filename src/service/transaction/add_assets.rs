@@ -1,5 +1,6 @@
 extern crate exonum;
 
+use std::collections::HashMap;
 use exonum::blockchain::Transaction;
 use exonum::storage::Fork;
 use exonum::crypto::PublicKey;
@@ -9,6 +10,7 @@ use serde_json::Value;
 use super::{SERVICE_ID, TX_ADD_ASSETS_ID};
 use service::wallet::Asset;
 use service::schema::wallet::WalletSchema;
+use service::schema::asset::{AssetSchema, get_new_assets_id, external_internal};
 
 pub const FEE_FOR_MINING: u64 = 1;
 
@@ -30,23 +32,34 @@ impl Transaction for TxAddAsset {
     }
 
     fn execute(&self, view: &mut Fork) {
-        let mut schema = WalletSchema { view };
-        let creator = schema.wallet(self.pub_key());
+        let mut wallet_schema = WalletSchema { view };
+
+        let creator = wallet_schema.wallet(self.pub_key());
         if let Some(mut creator) = creator {
 
             if creator.balance() >= FEE_FOR_MINING {
+                let mut asset_schema = AssetSchema{ view: wallet_schema.view };
+                let map_assets = asset_schema.add_assets(&self.assets(), self.pub_key());
                 creator.decrease(FEE_FOR_MINING);
-                println!("Assets {:?}", self.assets());
-                creator.add_assets(self.assets());
-                println!("Wallet after mining asset: {:?}", creator);
-                schema.wallets().put(self.pub_key(), creator)
+                println!("Convert {:?}", map_assets);
+                let new_assets: Vec<Asset> = map_assets
+                    .iter()
+                    .map(|(_, asset)|{ Asset::new(asset.hash_id(),asset.amount())})
+                    .collect();
+                creator.add_assets(new_assets);
+
             }
+            println!("Wallet after mining asset: {:?}", creator);
+            wallet_schema.wallets().put(self.pub_key(), creator);
         }
 
     }
 
     fn info(&self) -> Value {
-        json!(self)
+        json!({
+            "transaction_data": self,
+            "external_internal": external_internal(&self.assets(), self.pub_key()),
+        })
     }
 
 }
