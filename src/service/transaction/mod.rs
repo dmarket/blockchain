@@ -1,4 +1,4 @@
-use service::api::{SERVICE_ID};
+use super::SERVICE_ID;
 //const SERVICE_ID: u16 = 1;
 
 // Create Wallet

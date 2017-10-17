@@ -1,5 +1,5 @@
 
-use service::api::SERVICE_ID;
+use super::SERVICE_ID;
 
 pub mod wallet;
 pub mod asset;

@@ -19,7 +19,7 @@ use exonum::blockchain::{Blockchain, Service, GenesisConfig, ValidatorKeys};
 use exonum::node::{Node, NodeConfig, NodeApiConfig};
 use exonum::storage::{LevelDB, LevelDBOptions};
 use exonum_configuration::ConfigurationService;
-use service::api::CurrencyService;
+use service::CurrencyService;
 use keys::{KeyPair, Disc};
 
 fn main() {
