@@ -31,7 +31,7 @@ use self::transaction::trade_assets::TxTrade;
 use self::transaction::exchange::TxExchange;
 use self::schema::wallet::WalletSchema;
 use self::wallet::{Wallet, Asset};
-use self::api::CryptocurrencyApi;
+use self::api::ServiceApi;
 
 // Service identifier
 pub const SERVICE_ID: u16 = 2;
@@ -67,9 +67,9 @@ impl Service for CurrencyService {
 
     fn public_api_handler(&self, ctx: &ApiContext) -> Option<Box<Handler>> {
         let mut router = Router::new();
-        let api = CryptocurrencyApi {
+        let api = ServiceApi {
             channel: ctx.node_channel().clone(),
-            bc: ctx.blockchain().clone(),
+            blockchain: ctx.blockchain().clone(),
         };
         api.wire(&mut router);
         Some(Box::new(router))
