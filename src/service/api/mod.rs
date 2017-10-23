@@ -22,7 +22,7 @@ impl Api for ServiceApi {
         let self_ = self.clone();
         let api = TransactionApi {
             channel: self_.channel,
-            bc: self_.blockchain,
+            blockchain: self_.blockchain,
         };
         api.wire(router);
 
