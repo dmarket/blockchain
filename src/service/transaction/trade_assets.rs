@@ -9,8 +9,9 @@ use serde_json::Value;
 
 
 use super::{SERVICE_ID, TX_TRADE_ASSETS_ID};
-use service::wallet::Asset;
-use service::schema::wallet::WalletSchema;
+use super::wallet::Asset;
+use super::schema::wallet::WalletSchema;
+use super::schema::transaction_status::{TxStatusSchema, TxStatus};
 
 pub const FEE_FOR_TRADE: u64 = 1;
 
@@ -64,7 +65,7 @@ impl Transaction for TxTrade {
             let price = self.offer().price();
             let assets = self.offer().assets();
             println!("{:?} => {:?}", buyer, seller);
-
+            let mut tx_status = TxStatus::Fail;
             if (buyer.balance() >= price + FEE_FOR_TRADE) && seller.in_wallet_assets(assets) {
                 println!("--   Trade transaction   --");
                 println!("Seller's balance before transaction : {:?}", seller);
@@ -80,7 +81,10 @@ impl Transaction for TxTrade {
                 let mut wallets = schema.wallets();
                 wallets.put(self.buyer(), buyer);
                 wallets.put(self.offer().seller(), seller);
+                tx_status = TxStatus::Success;
             }
+            let mut tx_status_schema = TxStatusSchema{view: schema.view};
+            tx_status_schema.set_status(&self.hash(), tx_status);
         }
     }
 

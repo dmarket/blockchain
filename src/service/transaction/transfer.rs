@@ -8,8 +8,8 @@ use service::wallet::Asset;
 use serde_json::Value;
 
 use super::{SERVICE_ID, TX_TRANSFER_ID};
-//use service::wallet::Wallet;
-use service::schema::wallet::WalletSchema;
+use super::schema::wallet::WalletSchema;
+use super::schema::transaction_status::{TxStatusSchema, TxStatus};
 
 pub const FEE_FOR_TRANSFER: u64 = 1;
 
@@ -34,6 +34,7 @@ impl Transaction for TxTransfer {
 
     fn execute(&self, view: &mut Fork) {
         let mut schema = WalletSchema { view };
+        let mut tx_status = TxStatus::Fail;
         if let Some(mut sender) = schema.wallet(self.from()) {
             let amount = self.amount();
             let update_amount = amount == 0 && sender.balance() >= FEE_FOR_TRANSFER || amount > 0 && sender.balance() >= amount + FEE_FOR_TRANSFER;
@@ -49,8 +50,11 @@ impl Transaction for TxTransfer {
                 let mut wallets = schema.wallets();
                 wallets.put(self.from(), sender);
                 wallets.put(self.to(), receiver);
+                tx_status = TxStatus::Success;
             }
         }
+        let mut tx_status_schema = TxStatusSchema{view: schema.view};
+        tx_status_schema.set_status(&self.hash(), tx_status);
     }
 
     fn info(&self) -> Value {

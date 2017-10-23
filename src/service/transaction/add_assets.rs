@@ -8,9 +8,10 @@ use exonum::messages::Message;
 use serde_json::Value;
 
 use super::{SERVICE_ID, TX_ADD_ASSETS_ID};
-use service::wallet::Asset;
-use service::schema::wallet::WalletSchema;
-use service::schema::asset::{AssetSchema, get_new_assets_id, external_internal};
+use super::wallet::Asset;
+use super::schema::wallet::WalletSchema;
+use super::schema::asset::{AssetSchema, get_new_assets_id, external_internal};
+use super::schema::transaction_status::{TxStatusSchema, TxStatus};
 
 pub const FEE_FOR_MINING: u64 = 1;
 
@@ -33,7 +34,7 @@ impl Transaction for TxAddAsset {
 
     fn execute(&self, view: &mut Fork) {
         let mut wallet_schema = WalletSchema { view };
-
+        let mut tx_status = TxStatus::Fail;
         let creator = wallet_schema.wallet(self.pub_key());
         if let Some(mut creator) = creator {
 
@@ -47,12 +48,13 @@ impl Transaction for TxAddAsset {
                     .map(|(_, asset)|{ Asset::new(asset.hash_id(),asset.amount())})
                     .collect();
                 creator.add_assets(new_assets);
-
+                tx_status = TxStatus::Success;
             }
             println!("Wallet after mining asset: {:?}", creator);
             wallet_schema.wallets().put(self.pub_key(), creator);
         }
-
+        let mut tx_status_schema = TxStatusSchema{view: wallet_schema.view};
+        tx_status_schema.set_status(&self.hash(), tx_status);
     }
 
     fn info(&self) -> Value {

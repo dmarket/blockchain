@@ -7,8 +7,9 @@ use exonum::messages::Message;
 use serde_json::Value;
 
 use super::{SERVICE_ID, TX_EXCHANGE_ID};
-use service::wallet::Asset;
-use service::schema::wallet::WalletSchema;
+use super::wallet::Asset;
+use super::schema::wallet::WalletSchema;
+use super::schema::transaction_status::{TxStatusSchema, TxStatus};
 
 encoding_struct! {
     struct ExchangeOffer {
@@ -52,6 +53,7 @@ impl Transaction for TxExchange {
 
     fn execute(&self, view: &mut Fork) {
         let mut schema = WalletSchema { view };
+        let mut tx_status = TxStatus::Fail;
         let sender = schema.wallet(self.offer().sender());
         let recipient = schema.wallet(self.offer().recipient());
         if let (Some(mut sender), Some(mut recipient)) = (sender, recipient) {
@@ -81,8 +83,11 @@ impl Transaction for TxExchange {
                 let mut wallets = schema.wallets();
                 wallets.put(self.offer().sender(), sender);
                 wallets.put(self.offer().recipient(), recipient);
+                tx_status = TxStatus::Success;
             }
         }
+        let mut tx_status_schema = TxStatusSchema{view: schema.view};
+        tx_status_schema.set_status(&self.hash(), tx_status);
     }
 
     fn info(&self) -> Value {

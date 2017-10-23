@@ -7,8 +7,9 @@ use exonum::messages::Message;
 use serde_json::Value;
 
 use super::{SERVICE_ID, TX_CREATE_WALLET_ID, INIT_BALANCE};
-use service::wallet::{Wallet, Asset};
-use service::schema::wallet::WalletSchema;
+use super::wallet::{Wallet, Asset};
+use super::schema::wallet::WalletSchema;
+use super::schema::transaction_status::{TxStatusSchema, TxStatus};
 
 message! {
     struct TxCreateWallet {
@@ -27,12 +28,16 @@ impl Transaction for TxCreateWallet {
 
     fn execute(&self, view: &mut Fork) {
         let mut schema = WalletSchema { view };
+        let mut tx_status = TxStatus::Fail;
         if schema.wallet(self.pub_key()).is_none() {
             let assets: Vec<Asset> = vec![];
             let wallet = Wallet::new(self.pub_key(), INIT_BALANCE, assets);
             println!("Create the wallet: {:?}", wallet);
-            schema.wallets().put(self.pub_key(), wallet)
+            schema.wallets().put(self.pub_key(), wallet);
+            tx_status = TxStatus::Success;
         }
+        let mut tx_status_schema = TxStatusSchema{view: schema.view};
+        tx_status_schema.set_status(&self.hash(), tx_status);
     }
 
     fn info(&self) -> Value {

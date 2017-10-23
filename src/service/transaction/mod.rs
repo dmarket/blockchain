@@ -1,3 +1,6 @@
+use super::schema;
+use super::wallet;
+
 use super::SERVICE_ID;
 //const SERVICE_ID: u16 = 1;
 
