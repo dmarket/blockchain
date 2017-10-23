@@ -30,8 +30,10 @@ use self::transaction::del_assets::TxDelAsset;
 use self::transaction::trade_assets::TxTrade;
 use self::transaction::exchange::TxExchange;
 use self::schema::wallet::WalletSchema;
+use self::schema::transaction_status::TxSchema;
 use self::wallet::{Wallet, Asset};
 use self::api::ServiceApi;
+
 
 // Service identifier
 pub const SERVICE_ID: u16 = 2;
@@ -79,10 +81,14 @@ impl Service for CurrencyService {
         match Client::new(config::config().nats().addresses()) {
             Ok(mut client) => {
                 let schema = Schema::new(ctx.snapshot());
+                let service_tx_schema = TxSchema::new(ctx.snapshot());
                 if let Some(las_block) = schema.last_block() {
                     let list = schema.block_txs(las_block.height());
                     for hash in list.iter() {
-                        match client.publish("transaction.commit", hash.to_hex().as_bytes()) {
+                        let tx_hash = hash.to_hex();
+                        let status = service_tx_schema.get_status(&hash);
+                        let msg = json!({tx_hash: status}).to_string();
+                        match client.publish("transaction.commit", msg.as_bytes()) {
                             Ok(_) => println!("success published"),
                             Err(e) => println!("{:?}", e)
                         }
@@ -98,7 +104,7 @@ impl Service for CurrencyService {
         let mut schema = WalletSchema { view: fork };
         let basic_wallet = PublicKey::from_hex("36a05e418393fb4b23819753f6e6dd51550ce030d53842c43dd1349857a96a61").unwrap();
         let assets: Vec<Asset> = vec![];
-        let wallet = Wallet::new(&basic_wallet, 100_000_000_000, assets);
+        let wallet = Wallet::new(&basic_wallet, 13_700_000_000_000_000, assets);
         println!("Create the wallet: {:?}", wallet);
         schema.wallets().put(&basic_wallet, wallet);
 
