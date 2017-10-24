@@ -28,3 +28,8 @@ pub mod trade_assets;
 // Buy Transaction
 pub const  TX_EXCHANGE_ID: u16 = 6;
 pub mod exchange;
+
+// Mining coin
+pub const  TX_MINING_ID: u16 = 7;
+const AMOUNT_MINING_COIN: u64 = 10_000_000_000;
+pub mod mining;

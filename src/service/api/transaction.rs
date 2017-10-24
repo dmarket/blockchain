@@ -19,6 +19,7 @@ use service::transaction::add_assets::TxAddAsset;
 use service::transaction::del_assets::TxDelAsset;
 use service::transaction::trade_assets::TxTrade;
 use service::transaction::exchange::TxExchange;
+use service::transaction::mining::TxMining;
 use service::schema::transaction_status::{TxStatusSchema, TxStatus};
 
 
@@ -37,6 +38,7 @@ enum TransactionRequest {
     DelAsset(TxDelAsset),
     TradeAsset(TxTrade),
     Exchange(TxExchange),
+    Mining(TxMining),
 }
 
 impl Into<Box<Transaction>> for TransactionRequest {
@@ -48,6 +50,7 @@ impl Into<Box<Transaction>> for TransactionRequest {
             TransactionRequest::DelAsset(trans) => Box::new(trans),
             TransactionRequest::TradeAsset(trans) => Box::new(trans),
             TransactionRequest::Exchange(trans) => Box::new(trans),
+            TransactionRequest::Mining(trans) => Box::new(trans),
         }
     }
 }

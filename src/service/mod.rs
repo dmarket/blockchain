@@ -22,13 +22,15 @@ use router::Router;
 use nats::Client;
 use config;
 
-use self::transaction::{TX_TRADE_ASSETS_ID, TX_DEL_ASSETS_ID, TX_ADD_ASSETS_ID, TX_CREATE_WALLET_ID, TX_TRANSFER_ID, TX_EXCHANGE_ID};
+use self::transaction::{TX_TRADE_ASSETS_ID, TX_DEL_ASSETS_ID, TX_ADD_ASSETS_ID, TX_CREATE_WALLET_ID,
+                        TX_TRANSFER_ID, TX_EXCHANGE_ID, TX_MINING_ID};
 use self::transaction::create_wallet::TxCreateWallet;
 use self::transaction::transfer::TxTransfer;
 use self::transaction::add_assets::TxAddAsset;
 use self::transaction::del_assets::TxDelAsset;
 use self::transaction::trade_assets::TxTrade;
 use self::transaction::exchange::TxExchange;
+use self::transaction::mining::TxMining;
 use self::schema::wallet::WalletSchema;
 use self::schema::transaction_status::TxSchema;
 use self::wallet::{Wallet, Asset};
@@ -52,12 +54,13 @@ impl Service for CurrencyService {
 
     fn tx_from_raw(&self, raw: RawTransaction) -> Result<Box<Transaction>, encoding::Error> {
         let trans: Box<Transaction> = match raw.message_type() {
-            TX_TRANSFER_ID => Box::new(TxTransfer::from_raw(raw)?),
+            TX_TRANSFER_ID      => Box::new(TxTransfer::from_raw(raw)?),
             TX_CREATE_WALLET_ID => Box::new(TxCreateWallet::from_raw(raw)?),
-            TX_ADD_ASSETS_ID => Box::new(TxAddAsset::from_raw(raw)?),
-            TX_DEL_ASSETS_ID => Box::new(TxDelAsset::from_raw(raw)?),
-            TX_TRADE_ASSETS_ID => Box::new(TxTrade::from_raw(raw)?),
-            TX_EXCHANGE_ID => Box::new(TxExchange::from_raw(raw)?),
+            TX_ADD_ASSETS_ID    => Box::new(TxAddAsset::from_raw(raw)?),
+            TX_DEL_ASSETS_ID    => Box::new(TxDelAsset::from_raw(raw)?),
+            TX_TRADE_ASSETS_ID  => Box::new(TxTrade::from_raw(raw)?),
+            TX_EXCHANGE_ID      => Box::new(TxExchange::from_raw(raw)?),
+            TX_MINING_ID        => Box::new(TxMining::from_raw(raw)?),
             _ => {
                 return Err(encoding::Error::IncorrectMessageType {
                     message_type: raw.message_type(),
