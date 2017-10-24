@@ -15,9 +15,10 @@ message! {
     struct TxMining {
         const TYPE = SERVICE_ID;
         const ID = TX_MINING_ID;
-        const SIZE = 32;
+        const SIZE = 40;
 
         field pub_key:     &PublicKey  [00 => 32]
+        field seed:        u64         [32 => 40]
     }
 }
 
@@ -59,14 +60,16 @@ fn test_convert_from_json() {
     let json =
         r#"{
   "body": {
-    "pub_key": "83dbc25eea26578cfdae481b421b09faeb1b35b98451a30c9a6a33271503e61a"
+    "pub_key": "36a05e418393fb4b23819753f6e6dd51550ce030d53842c43dd1349857a96a61",
+    "seed": "25"
   },
   "network_id": 0,
   "protocol_version": 0,
   "service_id": 2,
   "message_id": 7,
-  "signature": "100c4bf9d50bd2da4af8d65b7b35847b0258d59d62b993311af4ce86049fa5de6712847db7b1a62d217e8c289bdf7b151552fac2404f965383c2c07fc39a5409"
-}"#;
+  "signature": "b609d76fb7861a914e89d68e61d16b7f395755b4cd78404205255814683ac3a92257da379cb10eba09fbd4c3ac6253abcca9fb47c9825f274cde95cfcc8a120b"
+}
+"#;
 
     let tx_mining: TxMining = ::serde_json::from_str(&json).unwrap();
 }
