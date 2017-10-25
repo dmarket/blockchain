@@ -10,4 +10,4 @@ keys_path = "./var/keys"
 path = "./var/db"
 
 [nats]
-addresses = ["nats://0.0.0.0:4222"]
+addresses = ["nats://vRJY4vOIoNSsG72F:UCF0IsKwMlYON4g7@35.197.200.238:4222"]
