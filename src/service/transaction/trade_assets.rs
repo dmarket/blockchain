@@ -42,7 +42,6 @@ message! {
 impl TxTrade {
     fn offer_verify(&self) -> bool {
         *self.buyer() != *self.offer().seller() &&
-        self.verify_signature(self.buyer()) &&
         verify(
             self.seller_signature(),
             &self.offer().raw,

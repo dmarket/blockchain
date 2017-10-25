@@ -15,7 +15,8 @@ mod service;
 mod config;
 mod keys;
 
-use exonum::blockchain::{Blockchain, Service, GenesisConfig, ValidatorKeys};
+use exonum::blockchain::{Blockchain, Service, GenesisConfig, ValidatorKeys,
+                         ConsensusConfig, TimeoutAdjusterConfig};
 use exonum::node::{Node, NodeConfig, NodeApiConfig};
 use exonum::storage::{LevelDB, LevelDBOptions};
 use exonum_configuration::ConfigurationService;
@@ -63,8 +64,19 @@ fn main() {
         });
     }
 
+    let consensus_config = ConsensusConfig {
+        round_timeout: 3000,
+        status_timeout: 5000,
+        peers_timeout: 10_000,
+        txs_block_limit: 1000,
+        timeout_adjuster: TimeoutAdjusterConfig::Dynamic {
+            min: 200,
+            max: 1000,
+            threshold: 1,
+        }
+    };
     /** Configure Node */
-    let genesis = GenesisConfig::new(validators.into_iter());
+    let genesis = GenesisConfig::new_with_consensus(consensus_config, validators.into_iter());
     let api_cfg = NodeApiConfig {
         public_api_address: Some(config::config().api().address().parse().unwrap()),
         private_api_address: Some(config::config().api().private_address().parse().unwrap()),
