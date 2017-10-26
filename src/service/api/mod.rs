@@ -1,6 +1,7 @@
 pub mod transaction;
 pub mod asset;
 pub mod wallet;
+pub mod hash;
 
 use exonum::blockchain::Blockchain;
 use exonum::node::{ApiSender, NodeChannel};
@@ -10,6 +11,7 @@ use router::Router;
 use self::transaction::TransactionApi;
 use self::asset::AssetApi;
 use self::wallet::WalletApi;
+use self::hash::HashApi;
 
 #[derive(Clone)]
 pub struct ServiceApi {
@@ -34,6 +36,9 @@ impl Api for ServiceApi {
         let api = WalletApi {
             blockchain: self.clone().blockchain,
         };
+        api.wire(router);
+
+        let api = HashApi {};
         api.wire(router);
     }
 }

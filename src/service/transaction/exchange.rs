@@ -38,6 +38,11 @@ message! {
         field sender_signature:  &Signature        [16 => 80]
     }
 }
+impl TxExchange {
+    pub fn get_offer_raw(&self) -> Vec<u8> {
+        self.offer().raw
+    }
+}
 
 impl Transaction for TxExchange {
     fn verify(&self) -> bool {

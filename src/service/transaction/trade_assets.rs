@@ -48,6 +48,10 @@ impl TxTrade {
             self.offer().seller()
         )
     }
+
+    pub fn get_offer_raw(&self) -> Vec<u8> {
+        self.offer().raw
+    }
 }
 
 impl Transaction for TxTrade {
@@ -92,7 +96,6 @@ impl Transaction for TxTrade {
             "transaction_data": self,
         })
     }
-
 }
 
 
