@@ -79,14 +79,12 @@ impl Wallet {
         true
     }
 
-    fn allow_amount(&self, input_asset: &Asset) -> bool {
+    fn allow_amount(&self, input_asset: Asset) -> bool {
         self.assets().into_iter()
-            .filter(|asset| asset.hash_id() == input_asset.hash_id() && asset.amount() >= input_asset.amount())
-            .collect::<Vec<_>>()
-            .is_empty()
+            .any(|asset| asset.hash_id() == input_asset.hash_id() && asset.amount() >= input_asset.amount())
     }
 
     pub fn in_wallet_assets(&self, asset_list: Vec<Asset>) -> bool {
-        !asset_list.into_iter().filter(|a| self.allow_amount(a)).collect::<Vec<_>>().is_empty()
+        !asset_list.into_iter().any(|a| self.allow_amount(a))
     }
 }
