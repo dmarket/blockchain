@@ -38,7 +38,7 @@ impl Transaction for TxAddAsset {
 
             if creator.balance() >= FEE_FOR_MINING {
                 let mut asset_schema = AssetSchema{ view: wallet_schema.view };
-                let map_assets = asset_schema.add_assets(&self.assets(), self.pub_key());
+                let map_assets = asset_schema.add_assets(self.assets(), self.pub_key());
                 creator.decrease(FEE_FOR_MINING);
                 println!("Convert {:?}", map_assets);
                 let new_assets: Vec<Asset> = map_assets
@@ -58,7 +58,7 @@ impl Transaction for TxAddAsset {
     fn info(&self) -> Value {
         json!({
             "transaction_data": self,
-            "external_internal": external_internal(&self.assets(), self.pub_key()),
+            "external_internal": external_internal(self.assets(), self.pub_key()),
         })
     }
 

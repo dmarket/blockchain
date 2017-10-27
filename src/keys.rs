@@ -31,7 +31,7 @@ impl Disc for KeyPair {
         };
         let s = json!(self);
 
-        match file.write_all(&s.to_string().as_bytes()) {
+        match file.write_all(s.to_string().as_bytes()) {
             Err(why) => panic!("couldn't write to {}: {}", display, why.description()),
             Ok(_) => println!("successfully wrote to {}", display),
         };

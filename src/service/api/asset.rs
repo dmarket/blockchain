@@ -24,7 +24,7 @@ impl AssetApi {
     fn get_owner_for_asset(&self, asset_id: &str) -> Option<PublicKey> {
         let mut view = self.blockchain.fork();
         let mut schema = AssetSchema { view: &mut view };
-        schema.creator(&asset_id.to_string())
+        schema.creator(asset_id.to_string())
 
     }
 }

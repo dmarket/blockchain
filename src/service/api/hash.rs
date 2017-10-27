@@ -56,7 +56,7 @@ struct TransactionHashResponse {
 }
 
 impl HashApi {
-    pub fn to_hex_string(bytes: Vec<u8>) -> String {
+    pub fn hex_string(bytes: Vec<u8>) -> String {
         let strs: Vec<String> = bytes.iter()
             .map(|b| format!("{:02x}", b))
             .collect();
@@ -71,7 +71,7 @@ impl Api for HashApi {
             match request.get::<bodyparser::Struct<TransactionRequest>>() {
                 Ok(Some(transaction)) => {
                     let transaction: Box<Transaction> = transaction.into();
-                    let hash = HashApi::to_hex_string(transaction.raw().body().to_vec());
+                    let hash = HashApi::hex_string(transaction.raw().body().to_vec());
                     let response_data = json!(TransactionHashResponse{hash});
                     let ok_res = self_.ok_response(&response_data);
                     let mut res = ok_res.unwrap();
@@ -102,7 +102,7 @@ impl Api for HashApi {
                             },
                         _ => vec![]
                     };
-                    let hash = HashApi::to_hex_string(vec_hash);
+                    let hash = HashApi::hex_string(vec_hash);
                     let response_data = json!(TransactionHashResponse{hash});
                     let ok_res = self_.ok_response(&response_data);
                     let mut res = ok_res.unwrap();

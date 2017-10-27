@@ -76,7 +76,8 @@ fn main() {
             threshold: 1,
         }
     };
-    /** Configure Node */
+
+    /* Configure Node */
     let genesis = GenesisConfig::new_with_consensus(consensus_config, validators.into_iter());
     let api_cfg = NodeApiConfig {
         public_api_address: Some(config::config().api().address().parse().unwrap()),

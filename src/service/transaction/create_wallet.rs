@@ -28,14 +28,15 @@ impl Transaction for TxCreateWallet {
 
     fn execute(&self, view: &mut Fork) {
         let mut schema = WalletSchema { view };
-        let mut tx_status = TxStatus::Fail;
-        if schema.wallet(self.pub_key()).is_none() {
+        let tx_status = if schema.wallet(self.pub_key()).is_none() {
             let assets: Vec<Asset> = vec![];
             let wallet = Wallet::new(self.pub_key(), INIT_BALANCE, assets);
             println!("Create the wallet: {:?}", wallet);
             schema.wallets().put(self.pub_key(), wallet);
-            tx_status = TxStatus::Success;
-        }
+            TxStatus::Success
+        } else {
+            TxStatus::Fail
+        };
         let mut tx_status_schema = TxStatusSchema{view: schema.view};
         tx_status_schema.set_status(&self.hash(), tx_status);
     }

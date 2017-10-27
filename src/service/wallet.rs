@@ -7,8 +7,8 @@ encoding_struct!{
     struct Asset {
         const SIZE = 12;
 
-        field hash_id:    &str      [00 => 08]
-        field amount:      u32      [08 => 12]
+        field hash_id:    &str      [00 => 8]
+        field amount:      u32      [8 => 12]
     }
 }
 
@@ -79,10 +79,21 @@ impl Wallet {
     }
 
     pub fn in_wallet_assets(&mut self, asset_list: Vec<Asset>) -> bool {
+        // Must be better use it
+        /*
+        !asset_list.into_iter().filter(|a1| {
+            let condition: bool = self.assets().into_iter()
+                .filter(|a2| a2.hash_id() == a1.hash_id() && a2.amount() >= a1.amount())
+                .collect()
+                .is_empty();
+            !condition
+        }).collect().is_empty()
+        */
         let assets = self.assets();
         for asset in asset_list {
             let mut is_set = false;
-            for i in 0..assets.len() {
+            let assets_from_wallet = &assets;
+            for (i, _) in assets_from_wallet.into_iter().enumerate() {
                 if assets[i].hash_id() == asset.hash_id() && assets[i].amount() >= asset.amount() {
                     is_set = true;
                 }

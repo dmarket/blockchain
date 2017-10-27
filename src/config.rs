@@ -115,7 +115,14 @@ impl Db {
 
 impl Nats {
     pub fn addresses(self) -> Vec<String> {
-        self.addresses.unwrap()
+        match env::var("NATS_ADDRESSES") {
+            Ok(addresses) => addresses.split(',').into_iter()
+                .map(|a| a.to_string())
+                .collect(),
+            Err(_) => {
+                self.addresses.unwrap()
+            }
+        }
     }
 }
 

@@ -33,8 +33,8 @@ message! {
         const ID = TX_EXCHANGE_ID;
         const SIZE = 80;
 
-        field offer:             ExchangeOffer     [00 => 08]
-        field seed:              u64               [08 => 16]
+        field offer:             ExchangeOffer     [00 => 8]
+        field seed:              u64               [8 => 16]
         field sender_signature:  &Signature        [16 => 80]
     }
 }
