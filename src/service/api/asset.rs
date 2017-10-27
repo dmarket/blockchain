@@ -25,7 +25,6 @@ impl AssetApi {
         let mut view = self.blockchain.fork();
         let mut schema = AssetSchema { view: &mut view };
         schema.creator(asset_id.to_string())
-
     }
 }
 

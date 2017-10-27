@@ -58,6 +58,7 @@ impl Wallet {
         let mut assets = self.assets();
         for asset in asset_list {
             let mut is_del = false;
+            //for (i, a) in assets.iter_mut().enumerate() {
             for i in 0..assets.len() {
                 if assets[i].hash_id() == asset.hash_id() && assets[i].amount() >= asset.amount() {
                     let amount = assets[i].amount() - asset.amount();
@@ -78,30 +79,14 @@ impl Wallet {
         true
     }
 
-    pub fn in_wallet_assets(&mut self, asset_list: Vec<Asset>) -> bool {
-        // Must be better use it
-        /*
-        !asset_list.into_iter().filter(|a1| {
-            let condition: bool = self.assets().into_iter()
-                .filter(|a2| a2.hash_id() == a1.hash_id() && a2.amount() >= a1.amount())
-                .collect()
-                .is_empty();
-            !condition
-        }).collect().is_empty()
-        */
-        let assets = self.assets();
-        for asset in asset_list {
-            let mut is_set = false;
-            let assets_from_wallet = &assets;
-            for (i, _) in assets_from_wallet.into_iter().enumerate() {
-                if assets[i].hash_id() == asset.hash_id() && assets[i].amount() >= asset.amount() {
-                    is_set = true;
-                }
-            }
-            if !is_set {
-                return false;
-            }
-        }
-        true
+    fn allow_amount(&self, input_asset: &Asset) -> bool {
+        self.assets().into_iter()
+            .filter(|asset| asset.hash_id() == input_asset.hash_id() && asset.amount() >= input_asset.amount())
+            .collect::<Vec<_>>()
+            .is_empty()
+    }
+
+    pub fn in_wallet_assets(&self, asset_list: Vec<Asset>) -> bool {
+        !asset_list.into_iter().filter(|a| self.allow_amount(a)).collect::<Vec<_>>().is_empty()
     }
 }
