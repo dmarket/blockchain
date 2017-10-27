@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 extern crate serde;
 #[macro_use]
 extern crate serde_json;

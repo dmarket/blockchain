@@ -1,6 +1,5 @@
 extern crate exonum;
 
-use std::collections::HashMap;
 use exonum::blockchain::Transaction;
 use exonum::storage::Fork;
 use exonum::crypto::PublicKey;
@@ -10,12 +9,11 @@ use serde_json::Value;
 use super::{SERVICE_ID, TX_ADD_ASSETS_ID};
 use super::wallet::Asset;
 use super::schema::wallet::WalletSchema;
-use super::schema::asset::{AssetSchema, get_new_assets_id, external_internal};
+use super::schema::asset::{AssetSchema, external_internal};
 use super::schema::transaction_status::{TxStatusSchema, TxStatus};
 
 pub const FEE_FOR_MINING: u64 = 1;
 
-#[allow(dead_code)]
 message! {
     struct TxAddAsset {
         const TYPE = SERVICE_ID;

@@ -2,7 +2,6 @@ extern crate exonum;
 
 use exonum::blockchain::Transaction;
 use exonum::storage::Fork;
-use exonum::crypto;
 use exonum::crypto::{PublicKey, Signature, verify};
 use exonum::messages::Message;
 use serde_json::Value;
