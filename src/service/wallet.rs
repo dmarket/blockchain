@@ -62,7 +62,7 @@ impl Wallet {
 
     pub fn del_assets(&mut self, asset_list: Vec<Asset>) -> bool {
         if !self.in_wallet_assets(asset_list.clone()) {
-            false
+            return false;
         }
         let mut assets = self.assets();
         for asset in asset_list {
@@ -129,7 +129,7 @@ fn add_assets_test() {
 }
 
 #[test]
-fn add_assets_test() {
+fn del_assets_test() {
     let (pub_key, _) = ::exonum::crypto::gen_keypair();
     let mut wallet = Wallet::new(
         &pub_key,
@@ -142,7 +142,7 @@ fn add_assets_test() {
     );
 
     assert!(wallet.del_assets(vec![Asset::new("test_hash2", 15)]));
-    assert!(!wallet.add_assets(vec![Asset::new("test_hash4", 3)]));
     assert!(wallet.in_wallet_assets(vec![Asset::new("test_hash2", 15)]));
-    assert!(!wallet.in_wallet_assets(vec![Asset::new("test_hash4", 1)]));
+    assert!(!wallet.del_assets(vec![Asset::new("test_hash4", 3)]));
+    assert!(!wallet.del_assets(vec![Asset::new("test_hash3", 31)]));
 }
