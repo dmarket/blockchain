@@ -98,6 +98,8 @@ impl Transaction for TxExchange {
     fn info(&self) -> Value {
         json!({
             "transaction_data": self,
+            "tx_fee": 0,
+
         })
     }
 

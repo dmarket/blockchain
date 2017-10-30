@@ -48,6 +48,7 @@ impl Transaction for TxDelAsset {
     fn info(&self) -> Value {
         json!({
             "transaction_data": self,
+            "tx_fee": FEE_FOR_MINING,
         })
     }
 

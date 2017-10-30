@@ -12,7 +12,7 @@ use super::wallet::Asset;
 use super::schema::wallet::WalletSchema;
 use super::schema::transaction_status::{TxStatusSchema, TxStatus};
 
-pub const FEE_FOR_TRADE: u64 = 1;
+pub const FEE_FOR_TRADE: f64 = 0.025;
 
 encoding_struct! {
     struct TradeOffer {
@@ -51,6 +51,10 @@ impl TxTrade {
     pub fn get_offer_raw(&self) -> Vec<u8> {
         self.offer().raw
     }
+
+    fn get_fee(&self) -> u64 {
+        ((self.offer().price() as f64) * FEE_FOR_TRADE).round() as u64
+    }
 }
 
 impl Transaction for TxTrade {
@@ -66,17 +70,17 @@ impl Transaction for TxTrade {
         if let (Some(mut buyer), Some(mut seller)) = (buyer, seller) {
             let price = self.offer().price();
             let assets = self.offer().assets();
-            println!("{:?} => {:?}", buyer, seller);
-            let tx_status = if (buyer.balance() >= price + FEE_FOR_TRADE) && seller.in_wallet_assets(assets) {
+            println!("Buyer {:?} => Seller {:?}", buyer, seller);
+            let tx_status = if (buyer.balance() >= price) && seller.in_wallet_assets(assets) {
                 println!("--   Trade transaction   --");
                 println!("Seller's balance before transaction : {:?}", seller);
                 println!("Buyer's balance before transaction : {:?}", buyer);
                 let assets = self.offer().assets();
                 seller.del_assets(assets);
-                seller.increase(price);
+                seller.increase(price - self.get_fee());
                 let assets = self.offer().assets();
                 buyer.add_assets(assets);
-                buyer.decrease(price + FEE_FOR_TRADE);
+                buyer.decrease(price);
                 println!("Seller's balance after transaction : {:?}", seller);
                 println!("Buyer's balance after transaction : {:?}", buyer);
                 let mut wallets = schema.wallets();
@@ -92,6 +96,7 @@ impl Transaction for TxTrade {
     fn info(&self) -> Value {
         json!({
             "transaction_data": self,
+            "tx_fee": self.get_fee(),
         })
     }
 }

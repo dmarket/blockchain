@@ -59,6 +59,7 @@ impl Transaction for TxAddAsset {
         json!({
             "transaction_data": self,
             "external_internal": external_internal(self.assets(), self.pub_key()),
+            "tx_fee": FEE_FOR_MINING,
         })
     }
 
