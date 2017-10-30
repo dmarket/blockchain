@@ -46,45 +46,35 @@ impl Wallet {
     pub fn add_assets(&mut self, asset_list: Vec<Asset>) {
         let mut assets = self.assets();
         for asset in asset_list {
-            let mut is_add = false;
-            for i in 0..assets.len() {
-                if assets[i].hash_id() == asset.hash_id() {
-                    let amount = asset.amount() + assets[i].amount();
-                    assets[i] = Asset::new(asset.hash_id(), amount);
-                    is_add = true;
-                    break;
+            assets = assets.into_iter().map(|a| {
+                if a.is_eq(&asset) {
+                    Asset::new(a.hash_id(), a.amount() + asset.amount())
+                } else {
+                    a
                 }
-            }
-            if !is_add {
-                assets.push(asset);
-            }
+            }).collect::<Vec<_>>();
         }
         Field::write(&assets, &mut self.raw, 40, 48);
     }
 
     pub fn del_assets(&mut self, asset_list: Vec<Asset>) -> bool {
+        let result = self.in_wallet_assets(asset_list.clone());
         let mut assets = self.assets();
         for asset in asset_list {
-            let mut is_del = false;
-            //for (i, a) in assets.iter_mut().enumerate() {
-            for i in 0..assets.len() {
-                if assets[i].hash_id() == asset.hash_id() && assets[i].amount() >= asset.amount() {
-                    let amount = assets[i].amount() - asset.amount();
+            assets = assets.into_iter().filter_map(|mut a| {
+                if a.is_eq(&asset) && a.is_available_to_transfer(&asset) {
+                    let amount = a.amount() - asset.amount();
                     if amount == 0 {
-                        assets.remove(i);
+                        return None;
                     } else {
-                        assets[i] = Asset::new(asset.hash_id(), amount);
+                        a = Asset::new(a.hash_id(), amount);
                     }
-                    is_del = true;
-                    break;
                 }
-            }
-            if !is_del {
-                return false;
-            }
+                Some(a)
+            }).collect::<Vec<_>>();
         }
         Field::write(&assets, &mut self.raw, 40, 48);
-        true
+        result
     }
 
     fn allow_amount(&self, input_asset: &Asset) -> bool {
