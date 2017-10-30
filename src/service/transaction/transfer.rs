@@ -95,5 +95,5 @@ fn test_transfer_convert_from_json() {
   "signature": "3db781e2e944668788abaa7a5d5add868f8548662bcf01360988730539790c3f71d6a7f593e979aae891162d0f39c807d3cef20f39ccb8d7a4c4040db5733b0f"
 }"#;
 
-    let tx_add: TxTransfer = ::serde_json::from_str(&json).unwrap();
+    let _: TxTransfer = ::serde_json::from_str(&json).unwrap();
 }

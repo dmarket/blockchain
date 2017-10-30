@@ -83,6 +83,22 @@ impl Wallet {
     }
 
     pub fn in_wallet_assets(&self, asset_list: Vec<Asset>) -> bool {
-        !asset_list.into_iter().any(|a| self.allow_amount(&a))
+        asset_list.into_iter().any(|a| self.allow_amount(&a))
     }
+}
+
+#[test]
+fn in_wallet_assets_test() {
+    let (pub_key, _) = ::exonum::crypto::gen_keypair();
+    let wallet = Wallet::new(
+        &pub_key,
+        1000,
+        vec![
+            Asset::new("test_hash1", 30),
+            Asset::new("test_hash2", 30),
+            Asset::new("test_hash3", 30)
+        ]
+    );
+    assert!(wallet.in_wallet_assets(vec![Asset::new("test_hash2", 3)]));
+    assert!(!wallet.in_wallet_assets(vec![Asset::new("test_hash2", 33)]));
 }

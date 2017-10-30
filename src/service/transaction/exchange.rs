@@ -130,5 +130,5 @@ fn test_convert_from_json() {
   "signature": "284b1e08e69d7dc622501c66cbc71841e1ae9a13a7a9e77d2411f2c571c2c6afa176510b8404573da922ae5488c91aa1163c7c9669fd2181fa31925825780a03"
 }"#;
 
-    let tx_create_wallet: TxExchange = ::serde_json::from_str(&json).unwrap();
+    let _: TxExchange = ::serde_json::from_str(&json).unwrap();
 }

@@ -72,5 +72,5 @@ fn test_convert_from_json() {
 }
 "#;
 
-    let tx_mining: TxMining = ::serde_json::from_str(&json).unwrap();
+    let _: TxMining = ::serde_json::from_str(&json).unwrap();
 }
