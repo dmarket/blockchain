@@ -66,34 +66,86 @@ impl Transaction for TxTransfer {
 
 }
 
+#[cfg(test)]
+use exonum::storage::{MemoryDB, Database};
+#[cfg(test)]
+use service::wallet::Wallet;
 
 
-#[test]
-fn test_transfer_convert_from_json() {
-    let json =
-        r#"{
+#[cfg(test)]
+fn get_json() -> String {
+    r#"{
   "body": {
-    "from": "cdfe0378c3b7614410c468b7179cd5ba2b4ff3b9e5e24965b1aa23c5f623d28c",
-    "to": "cdfe0378c3b7614410c468b7179cd5ba2b4ff3b9e5e24965b1aa23c5f623d28c",
-    "amount": "13",
+    "from": "739fe1c8507aac54b5d4af116544fec304cf8b0f759d0bce39a7934630c0457e",
+    "to": "c08575875170900ac946fc9c0c521bea3d61c138380512cc8d1f55ba27289d27",
+    "amount": "3",
     "assets": [
       {
         "hash_id": "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f",
-        "amount": 2
-      },
-      {
-        "hash_id": "a8d5c97d-9978-444b-9947-7a95dfg31d0f",
-        "amount": 1
+        "amount": 3
       }
     ],
-    "seed": "13"
+    "seed": "123"
   },
   "network_id": 0,
   "protocol_version": 0,
   "service_id": 2,
   "message_id": 2,
-  "signature": "3db781e2e944668788abaa7a5d5add868f8548662bcf01360988730539790c3f71d6a7f593e979aae891162d0f39c807d3cef20f39ccb8d7a4c4040db5733b0f"
-}"#;
+  "signature": "4f9c0a9ddb32a1d8e61d3b656dec5786fb447c19362853ddac67a2c4f48c9ad65a377ee86a02727a27a35d16a14dea84f6920878ab82a6e850e8e7814bb64701"
+}"#.to_string()
+}
 
-    let _: TxTransfer = ::serde_json::from_str(&json).unwrap();
+#[test]
+fn test_convert_from_json() {
+    let tx: TxTransfer = ::serde_json::from_str(&get_json()).unwrap();
+    assert!(tx.verify());
+    assert_eq!(
+        Asset::new("a8d5c97d-9978-4b0b-9947-7a95dcb31d0f",3),
+        tx.assets()[0]
+    );
+    assert_eq!(3, tx.amount());
+}
+
+#[test]
+fn positive_send_staff_test() {
+    let tx: TxTransfer = ::serde_json::from_str(&get_json()).unwrap();
+
+    let db = Box::new(MemoryDB::new());
+    let mut wallet_schema = WalletSchema { view: &mut db.fork() };
+
+    let from = Wallet::new(
+        tx.from(),
+        100,
+        vec![
+            Asset::new("a8d5c97d-9978-4b0b-9947-7a95dcb31d0f",100),
+        ],
+    );
+    wallet_schema.wallets().put(tx.from(), from);
+
+    tx.execute(&mut wallet_schema.view);
+
+    let from = wallet_schema.wallet(tx.from());
+    let to = wallet_schema.wallet(tx.to());
+    if let (Some(from), Some(to)) = (from, to) {
+        assert_eq!(96, from.balance());
+        assert_eq!(3, to.balance());
+        assert_eq!(
+            vec![Asset::new("a8d5c97d-9978-4b0b-9947-7a95dcb31d0f", 97),],
+            from.assets()
+        );
+        assert_eq!(
+            vec![
+                Asset::new("a8d5c97d-9978-4b0b-9947-7a95dcb31d0f", 3),
+            ],
+            to.assets()
+        );
+    } else {
+        panic!("Something wrong!!!");
+    }
+
+}
+#[test]
+fn transfer_info_test() {
+    let tx: TxTransfer = ::serde_json::from_str(&get_json()).unwrap();
+    assert_eq!(FEE_FOR_TRANSFER, tx.info()["tx_fee"]);
 }

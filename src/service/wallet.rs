@@ -88,7 +88,7 @@ impl Wallet {
     }
 
     pub fn in_wallet_assets(&self, asset_list: Vec<Asset>) -> bool {
-        asset_list.into_iter().any(|a| self.allow_amount(&a))
+        asset_list.into_iter().all(|a| self.allow_amount(&a))
     }
 }
 
@@ -107,6 +107,14 @@ fn in_wallet_assets_test() {
     assert!(wallet.in_wallet_assets(vec![Asset::new("test_hash2", 3)]));
     assert!(!wallet.in_wallet_assets(vec![Asset::new("test_hash2", 33)]));
     assert!(!wallet.in_wallet_assets(vec![Asset::new("test_hash4", 1)]));
+    assert!(!wallet.in_wallet_assets(vec![
+        Asset::new("test_hash1", 1),
+        Asset::new("test_hash4", 1)
+    ]));
+    assert!(!wallet.in_wallet_assets(vec![
+        Asset::new("test_hash1", 1),
+        Asset::new("test_hash3", 31)
+    ]));
 }
 
 #[test]
@@ -145,4 +153,9 @@ fn del_assets_test() {
     assert!(wallet.in_wallet_assets(vec![Asset::new("test_hash2", 15)]));
     assert!(!wallet.del_assets(vec![Asset::new("test_hash4", 3)]));
     assert!(!wallet.del_assets(vec![Asset::new("test_hash3", 31)]));
+    assert!(!wallet.del_assets(vec![
+        Asset::new("test_hash1", 10),
+        Asset::new("test_hash3", 31),
+    ]));
+    assert!(wallet.in_wallet_assets(vec![Asset::new("test_hash1", 30)]));
 }

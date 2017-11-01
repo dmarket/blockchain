@@ -7,7 +7,7 @@ use exonum::messages::Message;
 use serde_json::Value;
 
 use super::{SERVICE_ID, TX_MINING_ID, AMOUNT_MINING_COIN};
-use super::wallet::{Wallet, Asset};
+use super::wallet::Wallet;
 use super::schema::wallet::WalletSchema;
 use super::schema::transaction_status::{TxStatusSchema, TxStatus};
 
@@ -36,8 +36,7 @@ impl Transaction for TxMining {
             schema.wallets().put(self.pub_key(), wallet);
             tx_status = TxStatus::Success;
         } else {
-            let assets: Vec<Asset> = vec![];
-            let wallet = Wallet::new(self.pub_key(), AMOUNT_MINING_COIN, assets);
+            let wallet = Wallet::new(self.pub_key(), AMOUNT_MINING_COIN, vec![]);
             println!("Create the wallet: {:?}", wallet);
             schema.wallets().put(self.pub_key(), wallet);
             tx_status = TxStatus::Success;
@@ -55,22 +54,51 @@ impl Transaction for TxMining {
     }
 
 }
+#[cfg(test)]
+use exonum::storage::{MemoryDB, Database};
 
-#[test]
-fn test_convert_from_json() {
-    let json =
-        r#"{
+#[cfg(test)]
+fn get_json() -> String {
+    r#"{
   "body": {
-    "pub_key": "36a05e418393fb4b23819753f6e6dd51550ce030d53842c43dd1349857a96a61",
-    "seed": "25"
+    "pub_key": "e61b4b9945defd1878d7575ddc50993f6a074cdfcafc47d15cba46860cab0060",
+    "seed": "43"
   },
   "network_id": 0,
   "protocol_version": 0,
   "service_id": 2,
   "message_id": 7,
-  "signature": "b609d76fb7861a914e89d68e61d16b7f395755b4cd78404205255814683ac3a92257da379cb10eba09fbd4c3ac6253abcca9fb47c9825f274cde95cfcc8a120b"
+  "signature": "671540cb1bf737c109e7ba7f90364cafa4064f8e7d54cdc74ae31711061efc2f3116be128a09d642970980f87beb19f948f5148f0cd544ba926c2acd304b6d09"
+}"#.to_string()
 }
-"#;
 
-    let _: TxMining = ::serde_json::from_str(&json).unwrap();
+#[test]
+fn test_convert_from_json() {
+    let tx: TxMining = ::serde_json::from_str(&get_json()).unwrap();
+    assert!(tx.verify());
+}
+
+#[test]
+fn mining_test() {
+    let tx: TxMining = ::serde_json::from_str(&get_json()).unwrap();
+
+    let db = Box::new(MemoryDB::new());
+    let mut wallet_schema = WalletSchema { view: &mut db.fork() };
+
+    let wallet = Wallet::new(tx.pub_key(), 100, vec![]);
+    wallet_schema.wallets().put(tx.pub_key(), wallet);
+
+    tx.execute(&mut wallet_schema.view);
+
+    if let Some(wallet) = wallet_schema.wallet(tx.pub_key()) {
+        assert_eq!(AMOUNT_MINING_COIN+100, wallet.balance());
+    } else {
+        panic!("Something wrong!!!");
+    }
+}
+
+#[test]
+fn mining_coin_info_test() {
+    let tx: TxMining = ::serde_json::from_str(&get_json()).unwrap();
+    assert_eq!(0, tx.info()["tx_fee"]);
 }
