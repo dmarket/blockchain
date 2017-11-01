@@ -37,8 +37,10 @@ impl Transaction for TxTransfer {
         let mut tx_status = TxStatus::Fail;
         if let Some(mut sender) = schema.wallet(self.from()) {
             let amount = self.amount();
-            let update_amount = amount == 0 && sender.balance() >= FEE_FOR_TRANSFER || amount > 0 && sender.balance() >= amount + FEE_FOR_TRANSFER;
-            let update_assets = self.assets().is_empty() || !self.assets().is_empty() && sender.in_wallet_assets(self.assets());
+            let update_amount = amount == 0 && sender.balance() >= FEE_FOR_TRANSFER ||
+                amount > 0 && sender.balance() >= amount + FEE_FOR_TRANSFER;
+            let update_assets = self.assets().is_empty() ||
+                !self.assets().is_empty() && sender.in_wallet_assets(self.assets());
             if update_amount && update_assets {
                 sender.decrease(amount + FEE_FOR_TRANSFER);
                 sender.del_assets(self.assets());
@@ -53,7 +55,7 @@ impl Transaction for TxTransfer {
                 tx_status = TxStatus::Success;
             }
         }
-        let mut tx_status_schema = TxStatusSchema{view: schema.view};
+        let mut tx_status_schema = TxStatusSchema { view: schema.view };
         tx_status_schema.set_status(&self.hash(), tx_status);
     }
 
@@ -63,7 +65,6 @@ impl Transaction for TxTransfer {
             "tx_fee": FEE_FOR_TRANSFER,
         })
     }
-
 }
 
 #[cfg(test)]

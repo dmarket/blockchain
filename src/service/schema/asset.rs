@@ -18,7 +18,9 @@ pub fn generate_asset_id(external_asset_id: &str, pub_key: &PublicKey) -> String
     let s = HexValue::to_hex(pub_key);
     let ful_s = s + external_asset_id;
 
-    Uuid::new_v5(&uuid::NAMESPACE_DNS, &ful_s).hyphenated().to_string()
+    Uuid::new_v5(&uuid::NAMESPACE_DNS, &ful_s)
+        .hyphenated()
+        .to_string()
 }
 
 pub fn get_new_assets_id(assets: Vec<Asset>, pub_key: &PublicKey) -> HashMap<String, Asset> {
@@ -58,12 +60,16 @@ impl<'a> AssetSchema<'a> {
                 self.assets().put(&asset_id, *pub_key);
                 println!("Add asset {:?} for wallet: {:?}", asset_id, pub_key);
                 true
-            },
-            Some(_) => true
+            }
+            Some(_) => true,
         }
     }
 
-    pub fn add_assets(&mut self, assets: Vec<Asset>, pub_key: &PublicKey) -> HashMap<String, Asset> {
+    pub fn add_assets(
+        &mut self,
+        assets: Vec<Asset>,
+        pub_key: &PublicKey,
+    ) -> HashMap<String, Asset> {
         let mut map_asset_id: HashMap<String, Asset> = HashMap::new();
         for asset in assets {
             let new_hash_id = generate_asset_id(asset.hash_id(), pub_key);

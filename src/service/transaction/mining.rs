@@ -42,7 +42,7 @@ impl Transaction for TxMining {
             tx_status = TxStatus::Success;
 
         }
-        let mut tx_status_schema = TxStatusSchema{view: schema.view};
+        let mut tx_status_schema = TxStatusSchema { view: schema.view };
         tx_status_schema.set_status(&self.hash(), tx_status);
     }
 
@@ -52,7 +52,6 @@ impl Transaction for TxMining {
             "tx_fee": 0,
         })
     }
-
 }
 #[cfg(test)]
 use exonum::storage::{MemoryDB, Database};

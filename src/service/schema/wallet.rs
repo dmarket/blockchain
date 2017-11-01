@@ -31,8 +31,8 @@ impl<'a> WalletSchema<'a> {
                 println!("Create the wallet: {:?}", wallet);
                 self.wallets().put(pub_key, wallet.clone());
                 wallet
-            },
-            Some(wallet) => wallet
+            }
+            Some(wallet) => wallet,
         }
     }
 }

@@ -36,7 +36,7 @@ impl Transaction for TxCreateWallet {
         } else {
             TxStatus::Fail
         };
-        let mut tx_status_schema = TxStatusSchema{view: schema.view};
+        let mut tx_status_schema = TxStatusSchema { view: schema.view };
         tx_status_schema.set_status(&self.hash(), tx_status);
     }
 
@@ -46,14 +46,13 @@ impl Transaction for TxCreateWallet {
             "tx_fee": 0,
         })
     }
-
 }
 #[cfg(test)]
 use exonum::storage::{MemoryDB, Database};
 
 #[cfg(test)]
 fn get_json() -> String {
-r#"{
+    r#"{
   "body": {
     "pub_key": "06f2b8853d37d317639132d3e9646adee97c56dcbc3899bfb2b074477d7ef31a"
   },

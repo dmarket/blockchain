@@ -8,7 +8,7 @@ extern crate iron;
 use exonum::blockchain::Transaction;
 use exonum::api::{Api, ApiError};
 use exonum::messages::FromRaw;
-use iron::headers::{AccessControlAllowOrigin};
+use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use router::Router;
 
@@ -57,9 +57,7 @@ struct TransactionHashResponse {
 
 impl HashApi {
     pub fn hex_string(bytes: Vec<u8>) -> String {
-        let strs: Vec<String> = bytes.iter()
-            .map(|b| format!("{:02x}", b))
-            .collect();
+        let strs: Vec<String> = bytes.iter().map(|b| format!("{:02x}", b)).collect();
         strs.join("")
     }
 }
@@ -72,7 +70,7 @@ impl Api for HashApi {
                 Ok(Some(transaction)) => {
                     let transaction: Box<Transaction> = transaction.into();
                     let hash = HashApi::hex_string(transaction.raw().body().to_vec());
-                    let response_data = json!(TransactionHashResponse{hash});
+                    let response_data = json!(TransactionHashResponse { hash });
                     let ok_res = self_.ok_response(&response_data);
                     let mut res = ok_res.unwrap();
                     res.headers.set(AccessControlAllowOrigin::Any);
@@ -90,20 +88,22 @@ impl Api for HashApi {
                     let transaction: Box<Transaction> = transaction.into();
                     let raw_ = transaction.raw().clone();
                     let vec_hash = match transaction.raw().message_type() {
-                        TX_EXCHANGE_ID =>
+                        TX_EXCHANGE_ID => {
                             match TxExchange::from_raw(raw_) {
                                 Ok(exchange) => exchange.get_offer_raw(),
-                                Err(_) => vec![]
-                            },
-                        TX_TRADE_ASSETS_ID =>
+                                Err(_) => vec![],
+                            }
+                        }
+                        TX_TRADE_ASSETS_ID => {
                             match TxTrade::from_raw(raw_) {
                                 Ok(trade) => trade.get_offer_raw(),
-                                Err(_) => vec![]
-                            },
-                        _ => vec![]
+                                Err(_) => vec![],
+                            }
+                        }
+                        _ => vec![],
                     };
                     let hash = HashApi::hex_string(vec_hash);
-                    let response_data = json!(TransactionHashResponse{hash});
+                    let response_data = json!(TransactionHashResponse { hash });
                     let ok_res = self_.ok_response(&response_data);
                     let mut res = ok_res.unwrap();
                     res.headers.set(AccessControlAllowOrigin::Any);

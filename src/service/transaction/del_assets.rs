@@ -51,7 +51,6 @@ impl Transaction for TxDelAsset {
             "tx_fee": FEE_FOR_MINING,
         })
     }
-
 }
 
 
@@ -62,7 +61,7 @@ use exonum::storage::{MemoryDB, Database};
 
 #[cfg(test)]
 fn get_json() -> String {
-r#"{
+    r#"{
   "body": {
     "pub_key": "1d9c731ebac3d7da9482470ae8b13a839cb05ef4f21f8d119e2c4bf175333cf7",
     "assets": [

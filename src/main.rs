@@ -16,8 +16,8 @@ mod service;
 mod config;
 mod keys;
 
-use exonum::blockchain::{Blockchain, Service, GenesisConfig, ValidatorKeys,
-                         ConsensusConfig, TimeoutAdjusterConfig};
+use exonum::blockchain::{Blockchain, Service, GenesisConfig, ValidatorKeys, ConsensusConfig,
+                         TimeoutAdjusterConfig};
 use exonum::node::{Node, NodeConfig, NodeApiConfig};
 use exonum::storage::{LevelDB, LevelDBOptions};
 use exonum_configuration::ConfigurationService;
@@ -52,7 +52,7 @@ fn main() {
     let service_public_key = service_keys.public;
     let service_secret_key = service_keys.secret;
 
-    let nodenames = vec!["node0"/*, "node1", "node2", "node3"*/];
+    let nodenames = vec!["node0" /*, "node1", "node2", "node3"*/];
     let mut validators: Vec<ValidatorKeys> = vec![];
     for name_prefix in nodenames {
         let consensus_name = name_prefix.to_string() + "_consensus.json";
@@ -74,7 +74,7 @@ fn main() {
             min: 200,
             max: 1000,
             threshold: 1,
-        }
+        },
     };
 
     /* Configure Node */

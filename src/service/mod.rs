@@ -16,14 +16,14 @@ use exonum::messages::{RawTransaction, FromRaw};
 use exonum::crypto::{PublicKey, HexValue};
 use exonum::encoding;
 use exonum::api::Api;
-use exonum::storage::{Fork};
+use exonum::storage::Fork;
 use iron::Handler;
 use router::Router;
 use nats::Client;
 use config;
 
-use self::transaction::{TX_TRADE_ASSETS_ID, TX_DEL_ASSETS_ID, TX_ADD_ASSETS_ID, TX_CREATE_WALLET_ID,
-                        TX_TRANSFER_ID, TX_EXCHANGE_ID, TX_MINING_ID};
+use self::transaction::{TX_TRADE_ASSETS_ID, TX_DEL_ASSETS_ID, TX_ADD_ASSETS_ID,
+                        TX_CREATE_WALLET_ID, TX_TRANSFER_ID, TX_EXCHANGE_ID, TX_MINING_ID};
 use self::transaction::create_wallet::TxCreateWallet;
 use self::transaction::transfer::TxTransfer;
 use self::transaction::add_assets::TxAddAsset;
@@ -54,13 +54,13 @@ impl Service for CurrencyService {
 
     fn tx_from_raw(&self, raw: RawTransaction) -> Result<Box<Transaction>, encoding::Error> {
         let trans: Box<Transaction> = match raw.message_type() {
-            TX_TRANSFER_ID      => Box::new(TxTransfer::from_raw(raw)?),
+            TX_TRANSFER_ID => Box::new(TxTransfer::from_raw(raw)?),
             TX_CREATE_WALLET_ID => Box::new(TxCreateWallet::from_raw(raw)?),
-            TX_ADD_ASSETS_ID    => Box::new(TxAddAsset::from_raw(raw)?),
-            TX_DEL_ASSETS_ID    => Box::new(TxDelAsset::from_raw(raw)?),
-            TX_TRADE_ASSETS_ID  => Box::new(TxTrade::from_raw(raw)?),
-            TX_EXCHANGE_ID      => Box::new(TxExchange::from_raw(raw)?),
-            TX_MINING_ID        => Box::new(TxMining::from_raw(raw)?),
+            TX_ADD_ASSETS_ID => Box::new(TxAddAsset::from_raw(raw)?),
+            TX_DEL_ASSETS_ID => Box::new(TxDelAsset::from_raw(raw)?),
+            TX_TRADE_ASSETS_ID => Box::new(TxTrade::from_raw(raw)?),
+            TX_EXCHANGE_ID => Box::new(TxExchange::from_raw(raw)?),
+            TX_MINING_ID => Box::new(TxMining::from_raw(raw)?),
             _ => {
                 return Err(encoding::Error::IncorrectMessageType {
                     message_type: raw.message_type(),
@@ -90,22 +90,26 @@ impl Service for CurrencyService {
                     for hash in list.iter() {
                         let tx_hash = hash.to_hex();
                         let status = service_tx_schema.get_status(&hash);
-                        let msg = json!({tx_hash: status}).to_string();
+                        let msg = json!({
+                            tx_hash: status
+                        }).to_string();
                         match client.publish("transaction.commit", msg.as_bytes()) {
                             Ok(_) => println!("success published"),
-                            Err(e) => println!("{:?}", e)
+                            Err(e) => println!("{:?}", e),
                         }
                         println!("Made transaction {:?}", hash.to_hex());
                     }
                 }
-            },
-            Err(e) => println!("NATS server error {:?}", e)
+            }
+            Err(e) => println!("NATS server error {:?}", e),
         }
     }
 
     fn initialize(&self, fork: &mut Fork) -> serde_json::Value {
         let mut schema = WalletSchema { view: fork };
-        let basic_wallet = PublicKey::from_hex("36a05e418393fb4b23819753f6e6dd51550ce030d53842c43dd1349857a96a61").unwrap();
+        let basic_wallet = PublicKey::from_hex(
+            "36a05e418393fb4b23819753f6e6dd51550ce030d53842c43dd1349857a96a61",
+        ).unwrap();
         let assets: Vec<Asset> = vec![];
         let wallet = Wallet::new(&basic_wallet, 13_700_000_000_000_000, assets);
         println!("Create the wallet: {:?}", wallet);

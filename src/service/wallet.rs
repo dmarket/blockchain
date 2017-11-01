@@ -47,14 +47,15 @@ impl Wallet {
         let mut assets = self.assets();
         let mut new_assets = asset_list.clone();
         for (i, asset) in asset_list.into_iter().enumerate() {
-            assets = assets.into_iter().map(|a| {
-                if a.is_eq(&asset) {
+            assets = assets
+                .into_iter()
+                .map(|a| if a.is_eq(&asset) {
                     new_assets.remove(i);
                     Asset::new(a.hash_id(), a.amount() + asset.amount())
                 } else {
                     a
-                }
-            }).collect::<Vec<_>>();
+                })
+                .collect::<Vec<_>>();
         }
         assets.extend(new_assets);
         Field::write(&assets, &mut self.raw, 40, 48);
@@ -66,25 +67,29 @@ impl Wallet {
         }
         let mut assets = self.assets();
         for asset in asset_list {
-            assets = assets.into_iter().filter_map(|mut a| {
-                if a.is_eq(&asset) && a.is_available_to_transfer(&asset) {
-                    let amount = a.amount() - asset.amount();
-                    if amount == 0 {
-                        return None;
-                    } else {
-                        a = Asset::new(a.hash_id(), amount);
+            assets = assets
+                .into_iter()
+                .filter_map(|mut a| {
+                    if a.is_eq(&asset) && a.is_available_to_transfer(&asset) {
+                        let amount = a.amount() - asset.amount();
+                        if amount == 0 {
+                            return None;
+                        } else {
+                            a = Asset::new(a.hash_id(), amount);
+                        }
                     }
-                }
-                Some(a)
-            }).collect::<Vec<_>>();
+                    Some(a)
+                })
+                .collect::<Vec<_>>();
         }
         Field::write(&assets, &mut self.raw, 40, 48);
         true
     }
 
     fn allow_amount(&self, input_asset: &Asset) -> bool {
-        self.assets().into_iter()
-            .any(|asset| asset.is_eq(input_asset) && asset.is_available_to_transfer(input_asset))
+        self.assets().into_iter().any(|asset| {
+            asset.is_eq(input_asset) && asset.is_available_to_transfer(input_asset)
+        })
     }
 
     pub fn in_wallet_assets(&self, asset_list: Vec<Asset>) -> bool {
@@ -101,19 +106,19 @@ fn in_wallet_assets_test() {
         vec![
             Asset::new("test_hash1", 30),
             Asset::new("test_hash2", 30),
-            Asset::new("test_hash3", 30)
-        ]
+            Asset::new("test_hash3", 30),
+        ],
     );
     assert!(wallet.in_wallet_assets(vec![Asset::new("test_hash2", 3)]));
     assert!(!wallet.in_wallet_assets(vec![Asset::new("test_hash2", 33)]));
     assert!(!wallet.in_wallet_assets(vec![Asset::new("test_hash4", 1)]));
     assert!(!wallet.in_wallet_assets(vec![
         Asset::new("test_hash1", 1),
-        Asset::new("test_hash4", 1)
+        Asset::new("test_hash4", 1),
     ]));
     assert!(!wallet.in_wallet_assets(vec![
         Asset::new("test_hash1", 1),
-        Asset::new("test_hash3", 31)
+        Asset::new("test_hash3", 31),
     ]));
 }
 
@@ -126,8 +131,8 @@ fn add_assets_test() {
         vec![
             Asset::new("test_hash1", 30),
             Asset::new("test_hash2", 30),
-            Asset::new("test_hash3", 30)
-        ]
+            Asset::new("test_hash3", 30),
+        ],
     );
 
     wallet.add_assets(vec![Asset::new("test_hash2", 3)]);
@@ -145,8 +150,8 @@ fn del_assets_test() {
         vec![
             Asset::new("test_hash1", 30),
             Asset::new("test_hash2", 30),
-            Asset::new("test_hash3", 30)
-        ]
+            Asset::new("test_hash3", 30),
+        ],
     );
 
     assert!(wallet.del_assets(vec![Asset::new("test_hash2", 15)]));

@@ -43,7 +43,9 @@ impl Config {
     pub fn db(self) -> Db {
         self.db
     }
-    pub fn nats(self) -> Nats { self.nats }
+    pub fn nats(self) -> Nats {
+        self.nats
+    }
 }
 
 impl Api {
@@ -116,12 +118,14 @@ impl Db {
 impl Nats {
     pub fn addresses(self) -> Vec<String> {
         match env::var("NATS_ADDRESSES") {
-            Ok(addresses) => addresses.split(',').into_iter()
-                .map(|a| a.to_string())
-                .collect(),
-            Err(_) => {
-                self.addresses.unwrap()
+            Ok(addresses) => {
+                addresses
+                    .split(',')
+                    .into_iter()
+                    .map(|a| a.to_string())
+                    .collect()
             }
+            Err(_) => self.addresses.unwrap(),
         }
     }
 }

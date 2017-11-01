@@ -35,11 +35,10 @@ impl<'a> TxStatusSchema<'a> {
         let status = match status {
             TxStatus::Fail => 0u8,
             TxStatus::Success => 1u8,
-            TxStatus::Pending => 2u8
+            TxStatus::Pending => 2u8,
         };
         self.txs().put(tx_hash, status);
     }
-
 }
 
 #[derive(Debug)]
@@ -70,5 +69,4 @@ where
             Some(_) | None => None,
         }
     }
-
 }

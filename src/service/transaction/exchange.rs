@@ -47,12 +47,12 @@ impl TxExchange {
 impl Transaction for TxExchange {
     fn verify(&self) -> bool {
         *self.offer().sender() != *self.offer().recipient() &&
-        self.verify_signature(self.offer().recipient()) &&
-        verify(
-            self.sender_signature(),
-            &self.offer().raw,
-            self.offer().sender()
-        )
+            self.verify_signature(self.offer().recipient()) &&
+            verify(
+                self.sender_signature(),
+                &self.offer().raw,
+                self.offer().sender(),
+            )
 
     }
 
@@ -91,7 +91,7 @@ impl Transaction for TxExchange {
                 tx_status = TxStatus::Success;
             }
         }
-        let mut tx_status_schema = TxStatusSchema{view: schema.view};
+        let mut tx_status_schema = TxStatusSchema { view: schema.view };
         tx_status_schema.set_status(&self.hash(), tx_status);
     }
 
@@ -102,7 +102,6 @@ impl Transaction for TxExchange {
 
         })
     }
-
 }
 
 
@@ -184,7 +183,10 @@ fn positive_exchange_test() {
     );
 
     wallet_schema.wallets().put(tx.offer().sender(), sender);
-    wallet_schema.wallets().put(tx.offer().recipient(), recipient);
+    wallet_schema.wallets().put(
+        tx.offer().recipient(),
+        recipient,
+    );
 
     tx.execute(&mut wallet_schema.view);
 

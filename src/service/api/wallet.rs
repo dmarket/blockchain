@@ -8,7 +8,7 @@ extern crate iron;
 use exonum::blockchain::Blockchain;
 use exonum::crypto::{PublicKey, HexValue};
 use exonum::api::{Api, ApiError};
-use iron::headers::{AccessControlAllowOrigin};
+use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use router::Router;
 
@@ -54,7 +54,8 @@ impl Api for WalletApi {
                 res.headers.set(AccessControlAllowOrigin::Any);
                 Ok(res)
             } else {
-                let res = self_.not_found_response(&serde_json::to_value("Wallet not found").unwrap());
+                let res =
+                    self_.not_found_response(&serde_json::to_value("Wallet not found").unwrap());
                 let mut res = res.unwrap();
                 res.headers.set(AccessControlAllowOrigin::Any);
                 Ok(res)

@@ -28,14 +28,10 @@ impl Api for ServiceApi {
         };
         api.wire(router);
 
-        let api = AssetApi {
-            blockchain: self.clone().blockchain,
-        };
+        let api = AssetApi { blockchain: self.clone().blockchain };
         api.wire(router);
 
-        let api = WalletApi {
-            blockchain: self.clone().blockchain,
-        };
+        let api = WalletApi { blockchain: self.clone().blockchain };
         api.wire(router);
 
         let api = HashApi {};

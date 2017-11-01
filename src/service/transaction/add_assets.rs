@@ -37,13 +37,13 @@ impl Transaction for TxAddAsset {
         if let Some(mut creator) = creator {
 
             if creator.balance() >= FEE_FOR_MINING {
-                let mut asset_schema = AssetSchema{ view: wallet_schema.view };
+                let mut asset_schema = AssetSchema { view: wallet_schema.view };
                 let map_assets = asset_schema.add_assets(self.assets(), self.pub_key());
                 creator.decrease(FEE_FOR_MINING);
                 println!("Convert {:?}", map_assets);
                 let new_assets: Vec<Asset> = map_assets
                     .iter()
-                    .map(|(_, asset)|{ Asset::new(asset.hash_id(),asset.amount())})
+                    .map(|(_, asset)| Asset::new(asset.hash_id(), asset.amount()))
                     .collect();
                 creator.add_assets(new_assets);
                 tx_status = TxStatus::Success;
@@ -51,7 +51,7 @@ impl Transaction for TxAddAsset {
             println!("Wallet after mining asset: {:?}", creator);
             wallet_schema.wallets().put(self.pub_key(), creator);
         }
-        let mut tx_status_schema = TxStatusSchema{view: wallet_schema.view};
+        let mut tx_status_schema = TxStatusSchema { view: wallet_schema.view };
         tx_status_schema.set_status(&self.hash(), tx_status);
     }
 
@@ -62,7 +62,6 @@ impl Transaction for TxAddAsset {
             "tx_fee": FEE_FOR_MINING,
         })
     }
-
 }
 
 #[cfg(test)]

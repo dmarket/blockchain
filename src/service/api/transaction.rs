@@ -9,7 +9,7 @@ use exonum::blockchain::{Blockchain, Transaction};
 use exonum::node::{TransactionSend, ApiSender, NodeChannel};
 use exonum::crypto::{Hash, HexValue};
 use exonum::api::{Api, ApiError};
-use iron::headers::{AccessControlAllowOrigin};
+use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use router::Router;
 
@@ -59,11 +59,11 @@ impl Into<Box<Transaction>> for TransactionRequest {
 struct TransactionResponse {
     tx_hash: Hash,
     transaction_info: serde_json::Value,
-    tx_status: String
+    tx_status: String,
 }
 
 impl TransactionApi {
-    fn get_status (&self, tx_hash: &Hash) -> Option<TxStatus> {
+    fn get_status(&self, tx_hash: &Hash) -> Option<TxStatus> {
         let mut view = self.blockchain.fork();
         let mut schema = TxStatusSchema { view: &mut view };
         schema.get_status(tx_hash)
@@ -80,10 +80,10 @@ impl Api for TransactionApi {
                     let tx_hash = transaction.hash();
                     let tx_info = transaction.info();
                     self_.channel.send(transaction).map_err(ApiError::Events)?;
-                    let response_data = json!(TransactionResponse{
+                    let response_data = json!(TransactionResponse {
                         tx_hash,
                         transaction_info: tx_info,
-                        tx_status: "pending".to_string()
+                        tx_status: "pending".to_string(),
                     });
                     let ok_res = self_.ok_response(&response_data);
                     let mut res = ok_res.unwrap();
@@ -102,12 +102,16 @@ impl Api for TransactionApi {
             let tx_hash_str = path.last().unwrap();
             let tx_hash = Hash::from_hex(tx_hash_str).unwrap();
             if let Some(status) = self_.get_status(&tx_hash) {
-                let res= self_.ok_response(&json!({"tx_status": status}));
+                let res = self_.ok_response(&json!({
+                    "tx_status": status
+                }));
                 let mut res = res.unwrap();
                 res.headers.set(AccessControlAllowOrigin::Any);
                 Ok(res)
             } else {
-                let res = self_.not_found_response(&serde_json::to_value("Transaction hash not found").unwrap());
+                let res = self_.not_found_response(
+                    &serde_json::to_value("Transaction hash not found").unwrap(),
+                );
                 let mut res = res.unwrap();
                 res.headers.set(AccessControlAllowOrigin::Any);
                 Ok(res)

@@ -41,11 +41,11 @@ message! {
 impl TxTrade {
     fn offer_verify(&self) -> bool {
         *self.buyer() != *self.offer().seller() &&
-        verify(
-            self.seller_signature(),
-            &self.offer().raw,
-            self.offer().seller()
-        )
+            verify(
+                self.seller_signature(),
+                &self.offer().raw,
+                self.offer().seller(),
+            )
     }
 
     pub fn get_offer_raw(&self) -> Vec<u8> {
@@ -59,8 +59,7 @@ impl TxTrade {
 
 impl Transaction for TxTrade {
     fn verify(&self) -> bool {
-        self.offer_verify() &&
-        self.verify_signature(self.buyer())
+        self.offer_verify() && self.verify_signature(self.buyer())
     }
 
     fn execute(&self, view: &mut Fork) {
@@ -87,8 +86,10 @@ impl Transaction for TxTrade {
                 wallets.put(self.buyer(), buyer);
                 wallets.put(self.offer().seller(), seller);
                 TxStatus::Success
-            } else { TxStatus::Fail };
-            let mut tx_status_schema = TxStatusSchema{view: schema.view};
+            } else {
+                TxStatus::Fail
+            };
+            let mut tx_status_schema = TxStatusSchema { view: schema.view };
             tx_status_schema.set_status(&self.hash(), tx_status);
         }
     }
@@ -108,7 +109,7 @@ use service::wallet::Wallet;
 
 #[cfg(test)]
 fn get_json() -> String {
-        r#"{
+    r#"{
   "body": {
     "buyer": "f2ab7abcae9363496ccc458a30ec0a58200d9890a12fdfeca35010da6b276e19",
     "offer": {
