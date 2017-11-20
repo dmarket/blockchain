@@ -1,0 +1,10 @@
+{
+  "body": {
+    "pub_key": "739fe1c8507aac54b5d4af116544fec304cf8b0f759d0bce39a7934630c0457e"
+  },
+  "network_id": 0,
+  "protocol_version": 0,
+  "service_id": 2,
+  "message_id": 1,
+  "signature": "af415eb4b1a7a244bf1cb9ef328e4773660b794c92ba57dd844f90e7d90b47da56f9d8ce8e87cd9fe3d9762cb74f43e4463f4a9bf2c8d1cfc50a9212d85bd40c"
+}

@@ -1,55 +1,40 @@
-# Dmarket Blockchain
 
-Install exomun framework:
-```
-cargo build
-```
+# Dmarket Cryptocurrency Tutorial
 
-Start node service:
-```
+Dmarket Blockchain test version uses [Exonum](https://github.com/exonum/exonum) framework(v0.2).
+
+## Prerequisites
+
+To run this example you need to install [Rust](https://www.rust-lang.org/en-US/)
+compiler and [third-party libraries](http://exonum.com/doc/get-started/install/).
+
+## Build & Run
+
+### Blockchain Node
+
+To build and run a single node use:
+
+```sh
+# clone the repository with blockchain node
+git clone git@github.com:suntechsoft/dmarket-blockchain.git
+cd dmarket-blockchain
+
+# build and run
 cargo run
 ```
 
+Now the node is listening HTTP requests on `localhost:8000`.
 
-Create Wallets:
-```
-curl -H "Content-Type: application/json" -X POST -d @create-wallet-1.json http://127.0.0.1:8000/api/services/cryptocurrency/v1/wallets/transaction
-curl -H "Content-Type: application/json" -X POST -d @create-wallet-2.json http://127.0.0.1:8000/api/services/cryptocurrency/v1/wallets/transaction
-```
+### Sample Transactions & Read Requests
 
-Send 10 coin:
-```
-curl -H "Content-Type: application/json" -X POST -d @transfer-funds.json http://127.0.0.1:8000/api/services/cryptocurrency/v1/wallets/transaction
-```
+When node is launched, you can use transaction examples to check that it works properly.
+A simplest way to do this is launching the [`test.sh`](examples/test.sh)
+script in the **examples** directory. This script creates two wallets, performs a transfer
+among them, and then verifies that the wallet status was correctly updated.
 
-Block info:
-```
-curl http://127.0.0.1:8000/api/explorer/v1/blocks/6026
-curl http://94.130.33.18:8000/api/explorer/v1/blocks?count=50&skip_empty_blocks=true&latest=44000  
-```
+Alternatively, you may use command-line utilities, such as `curl`, to manually POST transactions
+on [the transaction endpoint](http://127.0.0.1:8000/api/services/cryptocurrency/v1/wallets/transaction).
 
-Wallet info:
-```
-curl http://127.0.0.1:8000/api/services/cryptocurrency/v1/wallets
-curl http://127.0.0.1:8000/api/services/cryptocurrency/v1/wallet/faa7c54f1b7450d7f42c2dd8ace24655430d7ea587712bc8e0ba7102d034464c
-```
+## License
 
-Transaction info: 
-```
-curl http://127.0.0.1:8000/api/system/v1/transactions/1a7ddbb85d07c9a95aaac65df5d90aa4f9a422bad0265a0ae691164ae7820b5a
-```
-Transaction status: 
-```
-curl http://127.0.0.1:8000/api/services/cryptocurrency/v1/transaction/51a90626d2311a01aae75ce12a1566d4e4f19a08459b377a3c3df1671a17ae1f
-```
-
-Creator for Asset:
-```
-curl http://127.0.0.1:8000/api/services/cryptocurrency/v1/asset/
-```
-
-Transactions Hash  and Offer Hash
-```
-curl -H "Content-Type: application/json" -X POST -d @create-wallet-1.json http://127.0.0.1:8000/api/services/cryptocurrency/v1/hash
-curl -H "Content-Type: application/json" -X POST -d @create-wallet-1.json http://127.0.0.1:8000/api/services/cryptocurrency/v1/hash/offer
-```
+DMarket Cryptocurrency is licensed under the MIT License . See [LICENSE](LICENSE) for details.

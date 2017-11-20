@@ -1,0 +1,26 @@
+{
+  "body": {
+    "buyer": "1ba9d70af01cb80485ce11d3c542a23bb963872af991a5f771f1ca1757a29702",
+    "offer": {
+      "seller": "1b4ff6ea64068ded4adc777172b99c8da8f64366a909a29c0fdc9ac0eb3e86ec",
+      "assets": [
+        {
+          "hash_id": "14d496e5-30da-5360-a9a1-6569c8f97884",
+          "amount": 5
+        },
+        {
+          "hash_id": "16c64ad5-679c-5754-9364-4b89e3b768ae",
+          "amount": 1
+        }
+      ],
+      "price": "20"
+    },
+    "seed": "45",
+    "seller_signature": "9df77b4513304f66cbaaabcf0986680e11c4d3e0cb7047db4fea82eb312757c6f6365c55340bad2a9924be8dc3115065ed37f963b5864f57c06fb4761750fc00"
+  },
+  "network_id": 0,
+  "protocol_version": 0,
+  "service_id": 2,
+  "message_id": 5,
+  "signature": "6a7465e9a3c9c0f4d9c440e98069977fa4a8ae21362263f99e66fde318b4f4c6bafd1f813436d72d0a1127d7bea8b5b4b53c7bde83d16a3bc921a3a9676b3b0d"
+}

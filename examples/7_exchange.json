@@ -1,0 +1,34 @@
+{
+  "body": {
+    "offer": {
+      "sender": "1b4ff6ea64068ded4adc777172b99c8da8f64366a909a29c0fdc9ac0eb3e86ec",
+      "sender_assets": [
+        {
+          "hash_id": "14d496e5-30da-5360-a9a1-6569c8f97884",
+          "amount": 3
+        },
+        {
+          "hash_id": "dc4fc26f-e6c9-5be4-9ba1-4f98307c3d59",
+          "amount": 1
+        }
+      ],
+      "sender_value": "37",
+      "recipient": "1ba9d70af01cb80485ce11d3c542a23bb963872af991a5f771f1ca1757a29702",
+      "recipient_assets": [
+        {
+          "hash_id": "16c64ad5-679c-5754-9364-4b89e3b768ae",
+          "amount": 1
+        }
+      ],
+      "recipient_value": "0",
+      "fee_strategy": 1
+    },
+    "seed": "163",
+    "sender_signature": "586407bb2a51b024b9b7803b96b8f37cedd351a3f5d0a3e0ac63f71f5e2a07542b8c6e687174796a5c752f4cf79f716909c513b6f58da45f9a954a4720079a03"
+  },
+  "network_id": 0,
+  "protocol_version": 0,
+  "service_id": 2,
+  "message_id": 6,
+  "signature": "a3a48284617fb3b7fb1ec9cd16870808766f47c9f796ddc98c5883b13e22332d504651bff95a75ae0e48df49f9f2f58c89c79cdfcf5f08a969c0eb86ea44ab0f"
+}
