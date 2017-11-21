@@ -1,9 +1,8 @@
 extern crate serde;
 use exonum::crypto::Hash;
-use exonum::blockchain;
 use exonum::storage::{Fork, MapIndex, Snapshot};
 
-use super::SERVICE_ID;
+use service::SERVICE_NAME;
 
 pub struct TxStatusSchema<'a> {
     pub view: &'a mut Fork,
@@ -17,8 +16,8 @@ pub enum TxStatus {
 
 impl<'a> TxStatusSchema<'a> {
     pub fn txs(&mut self) -> MapIndex<&mut Fork, Hash, u8> {
-        let prefix = blockchain::gen_prefix(SERVICE_ID, 2, &());
-        MapIndex::new(prefix, self.view)
+        let key = SERVICE_NAME.to_string().replace("/", "_") + ".transactions";
+        MapIndex::new(key, &mut self.view)
     }
 
     // Utility method to quickly get a separate wallet from the storage
@@ -55,8 +54,8 @@ where
     }
 
     pub fn txs(&self) -> MapIndex<&T, Hash, u8> {
-        let prefix = blockchain::gen_prefix(SERVICE_ID, 2, &());
-        MapIndex::new(prefix, &self.view)
+        let key = SERVICE_NAME.to_string().replace("/", "_") + ".transactions";
+        MapIndex::new(key, &self.view)
 
     }
 

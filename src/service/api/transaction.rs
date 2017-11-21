@@ -6,7 +6,7 @@ extern crate bodyparser;
 extern crate iron;
 
 use exonum::blockchain::{Blockchain, Transaction};
-use exonum::node::{TransactionSend, ApiSender, NodeChannel};
+use exonum::node::{TransactionSend, ApiSender};
 use exonum::crypto::{Hash, HexValue};
 use exonum::api::{Api, ApiError};
 use iron::headers::AccessControlAllowOrigin;
@@ -25,7 +25,7 @@ use service::schema::transaction_status::{TxStatusSchema, TxStatus};
 
 #[derive(Clone)]
 pub struct TransactionApi {
-    pub channel: ApiSender<NodeChannel>,
+    pub channel: ApiSender,
     pub blockchain: Blockchain,
 }
 
@@ -79,7 +79,7 @@ impl Api for TransactionApi {
                     let transaction: Box<Transaction> = transaction.into();
                     let tx_hash = transaction.hash();
                     let tx_info = transaction.info();
-                    self_.channel.send(transaction).map_err(ApiError::Events)?;
+                    self_.channel.send(transaction).map_err(ApiError::Io)?;
                     let response_data = json!(TransactionResponse {
                         tx_hash,
                         transaction_info: tx_info,

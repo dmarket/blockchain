@@ -1,11 +1,10 @@
 extern crate exonum;
 
 use exonum::crypto::PublicKey;
-use exonum::blockchain;
 use exonum::storage::{Fork, MapIndex};
 
 use service::wallet::{Wallet, Asset};
-use super::SERVICE_ID;
+use service::SERVICE_NAME;
 
 pub struct WalletSchema<'a> {
     pub view: &'a mut Fork,
@@ -14,8 +13,8 @@ pub struct WalletSchema<'a> {
 
 impl<'a> WalletSchema<'a> {
     pub fn wallets(&mut self) -> MapIndex<&mut Fork, PublicKey, Wallet> {
-        let prefix = blockchain::gen_prefix(SERVICE_ID, 0, &());
-        MapIndex::new(prefix, self.view)
+        let key = SERVICE_NAME.to_string().replace("/", "_") + ".wallets";
+        MapIndex::new(key, self.view)
     }
 
     // Utility method to quickly get a separate wallet from the storage
@@ -36,3 +35,4 @@ impl<'a> WalletSchema<'a> {
         }
     }
 }
+

@@ -3,12 +3,11 @@ extern crate uuid;
 
 use std::collections::HashMap;
 use exonum::crypto::{PublicKey, HexValue};
-use exonum::blockchain;
 use exonum::storage::{Fork, MapIndex};
 use self::uuid::Uuid;
 
 use service::wallet::Asset;
-use super::SERVICE_ID;
+use service::SERVICE_NAME;
 
 pub struct AssetSchema<'a> {
     pub view: &'a mut Fork,
@@ -45,8 +44,8 @@ pub fn external_internal(assets: Vec<Asset>, pub_key: &PublicKey) -> HashMap<Str
 
 impl<'a> AssetSchema<'a> {
     pub fn assets(&mut self) -> MapIndex<&mut Fork, String, PublicKey> {
-        let prefix = blockchain::gen_prefix(SERVICE_ID, 1, &());
-        MapIndex::new(prefix, self.view)
+        let key = SERVICE_NAME.to_string().replace("/", "_") + ".assets";
+        MapIndex::new(key, self.view)
     }
 
     // Utility method to quickly get a separate wallet from the storage

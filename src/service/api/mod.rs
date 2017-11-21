@@ -4,7 +4,7 @@ pub mod wallet;
 pub mod hash;
 
 use exonum::blockchain::Blockchain;
-use exonum::node::{ApiSender, NodeChannel};
+use exonum::node::{ApiSender};
 use exonum::api::Api;
 use router::Router;
 
@@ -15,7 +15,7 @@ use self::hash::HashApi;
 
 #[derive(Clone)]
 pub struct ServiceApi {
-    pub channel: ApiSender<NodeChannel>,
+    pub channel: ApiSender,
     pub blockchain: Blockchain,
 }
 

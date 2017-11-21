@@ -19,7 +19,7 @@ mod keys;
 use exonum::blockchain::{Blockchain, Service, GenesisConfig, ValidatorKeys, ConsensusConfig,
                          TimeoutAdjusterConfig};
 use exonum::node::{Node, NodeConfig, NodeApiConfig};
-use exonum::storage::{LevelDB, LevelDBOptions};
+use exonum::storage::{RocksDB, RocksDBOptions};
 use exonum_configuration::ConfigurationService;
 use service::CurrencyService;
 use keys::{KeyPair, Disc};
@@ -27,11 +27,11 @@ use keys::{KeyPair, Disc};
 fn main() {
     exonum::helpers::init_logger().unwrap();
 
-    let mut options = LevelDBOptions::new();
-    options.create_if_missing = true;
+    let mut options = RocksDBOptions::default();
+    options.create_if_missing(true);
 
     let path = config::config().db().path();
-    let db = Box::new(LevelDB::open(path, options).unwrap());
+    let db = Box::new(RocksDB::open(path, options).unwrap());
 
     let services: Vec<Box<Service>> = vec![
         Box::new(ConfigurationService::new()),
@@ -102,6 +102,6 @@ fn main() {
         services_configs: Default::default(),
     };
 
-    let mut node = Node::new(blockchain, node_cfg);
+    let node = Node::new(blockchain, node_cfg);
     node.run().unwrap();
 }
