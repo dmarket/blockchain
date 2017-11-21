@@ -39,7 +39,7 @@ use self::api::ServiceApi;
 
 // Service identifier
 pub const SERVICE_ID: u16 = 2;
-pub const SERVICE_NAME: &str = "cryptocurrencty/v1";
+pub const SERVICE_NAME: &str = "cryptocurrency/v1";
 // Identifier for wallet creation transaction type
 
 pub struct CurrencyService;

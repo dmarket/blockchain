@@ -79,7 +79,7 @@ impl Api for TransactionApi {
                     let transaction: Box<Transaction> = transaction.into();
                     let tx_hash = transaction.hash();
                     let tx_info = transaction.info();
-                    self_.channel.send(transaction).map_err(ApiError::Io)?;
+                    self_.channel.send(transaction).map_err(ApiError::from)?;
                     let response_data = json!(TransactionResponse {
                         tx_hash,
                         transaction_info: tx_info,
