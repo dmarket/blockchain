@@ -2,6 +2,7 @@ use std::sync::{Once, ONCE_INIT};
 use std::sync::mpsc;
 use std::sync::mpsc::{Sender, Receiver};
 use std::thread;
+use std::time::{Duration, Instant};
 
 use nats::Client;
 
@@ -16,6 +17,13 @@ type PublishPair = (String, String);
 
 static ONCE: Once = ONCE_INIT;
 static mut PIPE: *mut Pipe = 0_usize as *mut _;
+
+const DISCARD_MODE_SECONDS: u64 = 5;
+
+enum Mode {
+    Publish,
+    Discard(Instant),
+}
 
 struct Pipe {
     thread: thread::JoinHandle<()>,
@@ -38,16 +46,40 @@ impl Pipe {
     }
 
     fn work(receiver: Receiver<PublishPair>) {
-        match Client::new(config::config().nats().addresses()) {
-            Ok(mut client) => {
-                for pair in receiver {
+        let mut client = match Client::new(config::config().nats().addresses()) {
+            Ok(client) => client,
+            Err(e) => {
+                println!("Error when creating NATS client: {:?}", e);
+                return;
+            }
+        };
+
+        let mut mode = Mode::Publish;
+        let discard_duration = Duration::from_secs(DISCARD_MODE_SECONDS);
+
+        let mut process_pair = |pair: PublishPair|{
+            match mode {
+                Mode::Publish => {
                     match client.publish(&pair.0, pair.1.as_bytes()) {
                         Ok(_) => println!("success published"),
-                        Err(e) => println!("{:?}", e),
+                        Err(e) => {
+                            println!("{:?}", e);
+                            println!("Discarding messages for {} seconds.",
+                                     DISCARD_MODE_SECONDS);
+                            mode = Mode::Discard(Instant::now());
+                        }
                     }
                 }
+                Mode::Discard(begin) if begin.elapsed() < discard_duration => (),
+                Mode::Discard(_) => {
+                    println!("Accepting messages again.");
+                    mode = Mode::Publish;
+                }
             }
-            Err(e) => println!("NATS server error {:?}", e),
+        };
+
+        for pair in receiver {
+            process_pair(pair);
         }
     }
 }
