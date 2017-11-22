@@ -11,3 +11,4 @@ path = "./var/db"
 
 [nats]
 addresses = ["nats://vRJY4vOIoNSsG72F:UCF0IsKwMlYON4g7@35.197.200.238:4222"]
+queuename = "transaction.commit"

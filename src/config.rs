@@ -34,6 +34,7 @@ pub struct Db {
 #[derive(Deserialize)]
 pub struct Nats {
     addresses: Option<Vec<String>>,
+    queuename: Option<String>,
 }
 
 impl Config {
@@ -126,6 +127,16 @@ impl Nats {
                     .collect()
             }
             Err(_) => self.addresses.unwrap(),
+        }
+    }
+
+    pub fn queuename(self) -> String {
+        match env::var("NATS_QUEUENAME") {
+            Ok(queuename) => queuename,
+            Err(_) if self.queuename.is_none() => {
+                "dmbc.transaction.commit".to_string()
+            }
+            Err(_) => self.queuename.unwrap(),
         }
     }
 }

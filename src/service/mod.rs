@@ -1,15 +1,9 @@
-extern crate serde;
-extern crate serde_json;
-extern crate exonum;
-extern crate router;
-extern crate bodyparser;
-extern crate iron;
-extern crate nats;
-
 pub mod transaction;
 pub mod schema;
 pub mod wallet;
 pub mod api;
+
+mod nats;
 
 use exonum::blockchain::{Service, Transaction, ApiContext, ServiceContext, Schema};
 use exonum::messages::{RawTransaction, FromRaw};
@@ -19,8 +13,7 @@ use exonum::api::Api;
 use exonum::storage::Fork;
 use iron::Handler;
 use router::Router;
-use nats::Client;
-use config;
+use serde_json;
 
 use self::transaction::{TX_TRADE_ASSETS_ID, TX_DEL_ASSETS_ID, TX_ADD_ASSETS_ID,
                         TX_CREATE_WALLET_ID, TX_TRANSFER_ID, TX_EXCHANGE_ID, TX_MINING_ID};
@@ -35,7 +28,7 @@ use self::schema::wallet::WalletSchema;
 use self::schema::transaction_status::TxSchema;
 use self::wallet::{Wallet, Asset};
 use self::api::ServiceApi;
-
+use config;
 
 // Service identifier
 pub const SERVICE_ID: u16 = 2;
@@ -82,27 +75,20 @@ impl Service for CurrencyService {
     }
 
     fn handle_commit(&self, ctx: &mut ServiceContext) {
-        match Client::new(config::config().nats().addresses()) {
-            Ok(mut client) => {
-                let schema = Schema::new(ctx.snapshot());
-                let service_tx_schema = TxSchema::new(ctx.snapshot());
-                if let Some(las_block) = schema.last_block() {
-                    let list = schema.block_txs(las_block.height());
-                    for hash in list.iter() {
-                        let tx_hash = hash.to_hex();
-                        let status = service_tx_schema.get_status(&hash);
-                        let msg = json!({
-                            tx_hash: status
-                        }).to_string();
-                        match client.publish("transaction.commit", msg.as_bytes()) {
-                            Ok(_) => println!("success published"),
-                            Err(e) => println!("{:?}", e),
-                        }
-                        println!("Made transaction {:?}", hash.to_hex());
-                    }
-                }
+        let schema = Schema::new(ctx.snapshot());
+        let service_tx_schema = TxSchema::new(ctx.snapshot());
+        if let Some(las_block) = schema.last_block() {
+            let list = schema.block_txs(las_block.height());
+            for hash in list.iter() {
+                let tx_hash = hash.to_hex();
+                let status = service_tx_schema.get_status(&hash);
+                let msg = json!({
+                    tx_hash: status
+                }).to_string();
+                let queuename = config::config().nats().queuename();
+                nats::publish(queuename, msg);
+                println!("Made transaction {:?}", hash.to_hex());
             }
-            Err(e) => println!("NATS server error {:?}", e),
         }
     }
 
