@@ -33,6 +33,7 @@ pub struct Db {
 
 #[derive(Deserialize)]
 pub struct Nats {
+    enabled: Option<bool>,
     addresses: Option<Vec<String>>,
     queuename: Option<String>,
 }
@@ -117,6 +118,17 @@ impl Db {
 }
 
 impl Nats {
+    pub fn enabled(self) -> bool {
+        match env::var("NATS_ENABLED") {
+            Ok(value) => if value == "false" {
+                false
+            } else {
+                true
+            },
+            Err(_) => self.enabled.unwrap(),
+        }
+    }
+
     pub fn addresses(self) -> Vec<String> {
         match env::var("NATS_ADDRESSES") {
             Ok(addresses) => {

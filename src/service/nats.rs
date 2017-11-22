@@ -10,13 +10,13 @@ use config;
 
 pub fn publish(subject: String, msg: String) {
     let pipe = Pipe::get();
-    pipe.sender.send((subject, msg)).unwrap();
+    pipe.as_ref().map(|p| p.sender.send((subject, msg)).unwrap());
 }
 
 type PublishPair = (String, String);
 
 static ONCE: Once = ONCE_INIT;
-static mut PIPE: *mut Pipe = 0_usize as *mut _;
+static mut PIPE: *mut Option<Pipe> = 0_usize as *mut _;
 
 const DISCARD_MODE_SECONDS: u64 = 5;
 
@@ -31,15 +31,21 @@ struct Pipe {
 }
 
 impl Pipe {
-    fn get<'a>() -> &'a Self {
+    fn get<'a>() -> &'a Option<Self> {
         unsafe {
             ONCE.call_once(||{
-                let (sender, receiver) = mpsc::channel();
-                let thread = thread::Builder::new()
-                    .name("NATS sender".to_string())
-                    .spawn(|| Pipe::work(receiver))
-                    .unwrap();
-                PIPE = Box::into_raw(Box::new(Pipe{ thread, sender }));
+                let pipe = if config::config().nats().enabled() {
+                    let (sender, receiver) = mpsc::channel();
+                    let thread = thread::Builder::new()
+                        .name("NATS sender".to_string())
+                        .spawn(|| Pipe::work(receiver))
+                        .unwrap();
+                    Some(Pipe{ thread, sender })
+                } else {
+                    None
+                };
+
+                PIPE = Box::into_raw(Box::new(pipe));
             });
             &*PIPE
         }
