@@ -70,12 +70,12 @@ impl Transaction for TxTrade {
             let price = self.offer().price();
             let assets = self.offer().assets();
             println!("Buyer {:?} => Seller {:?}", buyer, seller);
-            let tx_status = if (buyer.balance() >= price) && seller.in_wallet_assets(assets) {
+            let tx_status = if (buyer.balance() >= price) && seller.in_wallet_assets(&assets) {
                 println!("--   Trade transaction   --");
                 println!("Seller's balance before transaction : {:?}", seller);
                 println!("Buyer's balance before transaction : {:?}", buyer);
                 let assets = self.offer().assets();
-                seller.del_assets(assets);
+                seller.del_assets(&assets);
                 seller.increase(price - self.get_fee());
                 let assets = self.offer().assets();
                 buyer.add_assets(assets);

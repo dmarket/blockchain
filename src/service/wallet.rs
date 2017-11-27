@@ -3,12 +3,21 @@ extern crate exonum;
 use exonum::crypto::PublicKey;
 use exonum::encoding::Field;
 
-encoding_struct!{
+encoding_struct! {
     struct Asset {
         const SIZE = 12;
 
-        field hash_id:    &str      [00 => 8]
-        field amount:      u32      [8 => 12]
+        field hash_id: &str [0 =>  8]
+        field amount:  u32 [8 => 12]
+    }
+}
+
+encoding_struct! {
+    struct AssetInfo {
+        const SIZE = 36;
+
+        field creator: &PublicKey [0  => 32]
+        field amount:  u32        [32 => 36]
     }
 }
 
@@ -16,9 +25,9 @@ encoding_struct! {
     struct Wallet {
         const SIZE = 48;
 
-        field pub_key:            &PublicKey          [00 => 32]
-        field balance:            u64                 [32 => 40]
-        field assets:             Vec<Asset>          [40 => 48]
+        field pub_key: &PublicKey [00 => 32]
+        field balance: u64        [32 => 40]
+        field assets:  Vec<Asset> [40 => 48]
     }
 }
 
@@ -61,8 +70,8 @@ impl Wallet {
         Field::write(&assets, &mut self.raw, 40, 48);
     }
 
-    pub fn del_assets(&mut self, asset_list: Vec<Asset>) -> bool {
-        if !self.in_wallet_assets(asset_list.clone()) {
+    pub fn del_assets(&mut self, asset_list: &[Asset]) -> bool {
+        if !self.in_wallet_assets(asset_list) {
             return false;
         }
         let mut assets = self.assets();
@@ -70,7 +79,7 @@ impl Wallet {
             assets = assets
                 .into_iter()
                 .filter_map(|mut a| {
-                    if a.is_eq(&asset) && a.is_available_to_transfer(&asset) {
+                    if a.is_eq(asset) && a.is_available_to_transfer(asset) {
                         let amount = a.amount() - asset.amount();
                         if amount == 0 {
                             return None;
@@ -92,7 +101,7 @@ impl Wallet {
         })
     }
 
-    pub fn in_wallet_assets(&self, asset_list: Vec<Asset>) -> bool {
+    pub fn in_wallet_assets(&self, asset_list: &[Asset]) -> bool {
         asset_list.into_iter().all(|a| self.allow_amount(&a))
     }
 }
@@ -109,14 +118,14 @@ fn in_wallet_assets_test() {
             Asset::new("test_hash3", 30),
         ],
     );
-    assert!(wallet.in_wallet_assets(vec![Asset::new("test_hash2", 3)]));
-    assert!(!wallet.in_wallet_assets(vec![Asset::new("test_hash2", 33)]));
-    assert!(!wallet.in_wallet_assets(vec![Asset::new("test_hash4", 1)]));
-    assert!(!wallet.in_wallet_assets(vec![
+    assert!(wallet.in_wallet_assets(&vec![Asset::new("test_hash2", 3)]));
+    assert!(!wallet.in_wallet_assets(&vec![Asset::new("test_hash2", 33)]));
+    assert!(!wallet.in_wallet_assets(&vec![Asset::new("test_hash4", 1)]));
+    assert!(!wallet.in_wallet_assets(&vec![
         Asset::new("test_hash1", 1),
         Asset::new("test_hash4", 1),
     ]));
-    assert!(!wallet.in_wallet_assets(vec![
+    assert!(!wallet.in_wallet_assets(&vec![
         Asset::new("test_hash1", 1),
         Asset::new("test_hash3", 31),
     ]));
@@ -137,8 +146,8 @@ fn add_assets_test() {
 
     wallet.add_assets(vec![Asset::new("test_hash2", 3)]);
     wallet.add_assets(vec![Asset::new("test_hash4", 3)]);
-    assert!(wallet.in_wallet_assets(vec![Asset::new("test_hash2", 33)]));
-    assert!(wallet.in_wallet_assets(vec![Asset::new("test_hash4", 3)]));
+    assert!(wallet.in_wallet_assets(&vec![Asset::new("test_hash2", 33)]));
+    assert!(wallet.in_wallet_assets(&vec![Asset::new("test_hash4", 3)]));
 }
 
 #[test]
@@ -154,13 +163,14 @@ fn del_assets_test() {
         ],
     );
 
-    assert!(wallet.del_assets(vec![Asset::new("test_hash2", 15)]));
-    assert!(wallet.in_wallet_assets(vec![Asset::new("test_hash2", 15)]));
-    assert!(!wallet.del_assets(vec![Asset::new("test_hash4", 3)]));
-    assert!(!wallet.del_assets(vec![Asset::new("test_hash3", 31)]));
-    assert!(!wallet.del_assets(vec![
+    assert!(wallet.del_assets(&vec![Asset::new("test_hash2", 15)]));
+    assert!(wallet.in_wallet_assets(&vec![Asset::new("test_hash2", 15)]));
+    assert!(!wallet.del_assets(&vec![Asset::new("test_hash4", 3)]));
+    assert!(!wallet.del_assets(&vec![Asset::new("test_hash3", 31)]));
+    assert!(!wallet.del_assets(&vec![
         Asset::new("test_hash1", 10),
         Asset::new("test_hash3", 31),
     ]));
-    assert!(wallet.in_wallet_assets(vec![Asset::new("test_hash1", 30)]));
+    assert!(wallet.in_wallet_assets(&vec![Asset::new("test_hash1", 30)]));
 }
+

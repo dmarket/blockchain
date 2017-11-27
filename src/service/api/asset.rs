@@ -6,12 +6,12 @@ extern crate bodyparser;
 extern crate iron;
 
 use exonum::blockchain::Blockchain;
-use exonum::crypto::PublicKey;
 use exonum::api::Api;
 use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use router::Router;
 
+use service::wallet::AssetInfo;
 use service::schema::asset::AssetSchema;
 
 #[derive(Clone)]
@@ -21,10 +21,10 @@ pub struct AssetApi {
 
 /// Shortcut to get data on wallets.
 impl AssetApi {
-    fn get_owner_for_asset(&self, asset_id: &str) -> Option<PublicKey> {
+    fn get_owner_for_asset(&self, asset_id: &str) -> Option<AssetInfo> {
         let mut view = self.blockchain.fork();
         let mut schema = AssetSchema { view: &mut view };
-        schema.creator(asset_id.to_string())
+        schema.info(asset_id)
     }
 }
 

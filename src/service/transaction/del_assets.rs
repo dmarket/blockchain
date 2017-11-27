@@ -8,6 +8,7 @@ use serde_json::Value;
 
 use super::{SERVICE_ID, TX_DEL_ASSETS_ID};
 use service::wallet::Asset;
+use service::schema::asset::AssetSchema;
 use service::schema::wallet::WalletSchema;
 
 pub const FEE_FOR_MINING: u64 = 1;
@@ -30,19 +31,28 @@ impl Transaction for TxDelAsset {
     }
 
     fn execute(&self, view: &mut Fork) {
-        let mut schema = WalletSchema { view };
-        let creator = schema.wallet(self.pub_key());
-        if let Some(mut creator) = creator {
-
-            if creator.balance() >= FEE_FOR_MINING {
-                creator.decrease(FEE_FOR_MINING);
-                println!("Asset {:?}", self.assets());
-                creator.del_assets(self.assets());
-                println!("Wallet after delete assets: {:?}", creator);
-                schema.wallets().put(self.pub_key(), creator)
+        let mut schema = AssetSchema{view};
+        for a in self.assets() {
+            match schema.info(a.hash_id()) {
+                Some(ref info) if info.creator() != self.pub_key() => return,
+                _ => (),
             }
         }
 
+        let mut schema = WalletSchema{ view: schema.view };
+        match schema.wallet(self.pub_key()) {
+            Some(mut creator) => if creator.balance() >= FEE_FOR_MINING {
+                creator.decrease(FEE_FOR_MINING);
+                println!("Asset {:?}", self.assets());
+                creator.del_assets(&self.assets());
+                println!("Wallet after delete assets: {:?}", creator);
+                schema.wallets().put(self.pub_key(), creator);
+            }
+            _ => return
+        }
+
+        let mut schema = AssetSchema{ view: schema.view };
+        schema.del_assets(&self.assets());
     }
 
     fn info(&self) -> Value {
@@ -110,10 +120,10 @@ fn positive_delete_assets_test() {
     tx_del.execute(&mut wallet_schema.view);
 
     if let Some(wallet) = wallet_schema.wallet(tx_del.pub_key()) {
-        assert!(wallet.in_wallet_assets(vec![
+        assert!(wallet.in_wallet_assets(&vec![
             Asset::new("asset_1", 55)
         ]));
-        assert!(!wallet.in_wallet_assets(vec![
+        assert!(!wallet.in_wallet_assets(&vec![
             Asset::new("asset_2", 0)
         ]));
     } else {
@@ -138,7 +148,7 @@ fn negative_delete_assets_test() {
     tx_del.execute(&mut wallet_schema.view);
 
     if let Some(wallet) = wallet_schema.wallet(tx_del.pub_key()) {
-        assert!(wallet.in_wallet_assets(vec![
+        assert!(wallet.in_wallet_assets(&vec![
             Asset::new("asset_1", 400)
         ]));
     } else {

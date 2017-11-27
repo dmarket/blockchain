@@ -40,10 +40,10 @@ impl Transaction for TxTransfer {
             let update_amount = amount == 0 && sender.balance() >= FEE_FOR_TRANSFER ||
                 amount > 0 && sender.balance() >= amount + FEE_FOR_TRANSFER;
             let update_assets = self.assets().is_empty() ||
-                !self.assets().is_empty() && sender.in_wallet_assets(self.assets());
+                !self.assets().is_empty() && sender.in_wallet_assets(&self.assets());
             if update_amount && update_assets {
                 sender.decrease(amount + FEE_FOR_TRANSFER);
-                sender.del_assets(self.assets());
+                sender.del_assets(&self.assets());
                 let mut receiver = schema.create_wallet(self.to());
                 receiver.increase(amount);
                 receiver.add_assets(self.assets());

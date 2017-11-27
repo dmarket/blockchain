@@ -56,7 +56,6 @@ where
     pub fn txs(&self) -> MapIndex<&T, Hash, u8> {
         let key = SERVICE_NAME.to_string().replace("/", "_") + ".transactions";
         MapIndex::new(key, &self.view)
-
     }
 
     // Utility method to quickly get a separate wallet from the storage
