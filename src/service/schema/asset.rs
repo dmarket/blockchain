@@ -52,12 +52,7 @@ impl<'a> AssetSchema<'a> {
         self.assets().get(&asset_id.to_string())
     }
 
-    pub fn add_asset(&mut self,
-                     asset_id: &str,
-                     creator: &PublicKey,
-                     amount: u32)
-        -> bool
-    {
+    pub fn add_asset(&mut self, asset_id: &str, creator: &PublicKey, amount: u32) -> bool {
         match self.info(asset_id) {
             None => {
                 let info = AssetInfo::new(creator, amount);
@@ -65,15 +60,15 @@ impl<'a> AssetSchema<'a> {
                 println!("Add asset {:?} for wallet: {:?}", asset_id, creator);
                 true
             }
-            Some(_) => true
+            Some(_) => true,
         }
     }
 
-    pub fn add_assets(&mut self,
-                      assets: Vec<Asset>,
-                      pub_key: &PublicKey)
-        -> HashMap<String, Asset>
-    {
+    pub fn add_assets(
+        &mut self,
+        assets: Vec<Asset>,
+        pub_key: &PublicKey,
+    ) -> HashMap<String, Asset> {
         let mut map_asset_id: HashMap<String, Asset> = HashMap::new();
         for asset in assets {
             let new_hash_id = generate_asset_id(asset.hash_id(), pub_key);
@@ -101,4 +96,3 @@ impl<'a> AssetSchema<'a> {
         }
     }
 }
-

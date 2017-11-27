@@ -119,7 +119,9 @@ fn in_wallet_assets_test() {
         ],
     );
     assert!(wallet.in_wallet_assets(&vec![Asset::new("test_hash2", 3)]));
-    assert!(!wallet.in_wallet_assets(&vec![Asset::new("test_hash2", 33)]));
+    assert!(!wallet.in_wallet_assets(
+        &vec![Asset::new("test_hash2", 33)],
+    ));
     assert!(!wallet.in_wallet_assets(&vec![Asset::new("test_hash4", 1)]));
     assert!(!wallet.in_wallet_assets(&vec![
         Asset::new("test_hash1", 1),
@@ -173,4 +175,3 @@ fn del_assets_test() {
     ]));
     assert!(wallet.in_wallet_assets(&vec![Asset::new("test_hash1", 30)]));
 }
-

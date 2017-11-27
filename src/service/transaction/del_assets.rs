@@ -7,7 +7,7 @@ use exonum::messages::Message;
 use serde_json::Value;
 
 use super::{SERVICE_ID, TX_DEL_ASSETS_ID};
-use service::wallet::{Asset};
+use service::wallet::Asset;
 use service::schema::asset::AssetSchema;
 use service::schema::wallet::WalletSchema;
 
@@ -35,7 +35,7 @@ impl Transaction for TxDelAsset {
         // all wallets for this asset id is equal to the amonut stored in the
         // AssetInfo associated with this asset id.
 
-        let mut schema = AssetSchema{view};
+        let mut schema = AssetSchema { view };
         for a in self.assets() {
             match schema.info(a.hash_id()) {
                 Some(ref info) if info.creator() != self.pub_key() => return,
@@ -44,19 +44,21 @@ impl Transaction for TxDelAsset {
             }
         }
 
-        let mut schema = WalletSchema{ view: schema.view };
+        let mut schema = WalletSchema { view: schema.view };
         match schema.wallet(self.pub_key()) {
-            Some(mut creator) => if creator.balance() >= FEE_FOR_MINING {
-                creator.decrease(FEE_FOR_MINING);
-                println!("Asset {:?}", self.assets());
-                creator.del_assets(&self.assets());
-                println!("Wallet after delete assets: {:?}", creator);
-                schema.wallets().put(self.pub_key(), creator);
+            Some(mut creator) => {
+                if creator.balance() >= FEE_FOR_MINING {
+                    creator.decrease(FEE_FOR_MINING);
+                    println!("Asset {:?}", self.assets());
+                    creator.del_assets(&self.assets());
+                    println!("Wallet after delete assets: {:?}", creator);
+                    schema.wallets().put(self.pub_key(), creator);
+                }
             }
-            _ => return
+            _ => return,
         }
 
-        let mut schema = AssetSchema{ view: schema.view };
+        let mut schema = AssetSchema { view: schema.view };
         schema.del_assets(&self.assets());
     }
 
@@ -114,8 +116,14 @@ fn positive_delete_assets_test() {
     let db = Box::new(MemoryDB::new());
 
     let mut asset_schema = AssetSchema { view: &mut db.fork() };
-    asset_schema.assets().put(&"asset_1".to_string(), AssetInfo::new(tx_del.pub_key(), 100));
-    asset_schema.assets().put(&"asset_2".to_string(), AssetInfo::new(tx_del.pub_key(), 17));
+    asset_schema.assets().put(
+        &"asset_1".to_string(),
+        AssetInfo::new(tx_del.pub_key(), 100),
+    );
+    asset_schema.assets().put(
+        &"asset_2".to_string(),
+        AssetInfo::new(tx_del.pub_key(), 17),
+    );
     {
         let assets = asset_schema.assets();
         for info in assets.iter() {
@@ -177,4 +185,3 @@ fn add_asset_info_test() {
     let tx: TxDelAsset = ::serde_json::from_str(&get_json()).unwrap();
     assert_eq!(FEE_FOR_MINING, tx.info()["tx_fee"]);
 }
-

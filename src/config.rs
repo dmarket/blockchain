@@ -120,11 +120,7 @@ impl Db {
 impl Nats {
     pub fn enabled(self) -> bool {
         match env::var("NATS_ENABLED") {
-            Ok(value) => if value == "false" {
-                false
-            } else {
-                true
-            },
+            Ok(value) => if value == "false" { false } else { true },
             Err(_) => self.enabled.unwrap(),
         }
     }
@@ -145,9 +141,7 @@ impl Nats {
     pub fn queuename(self) -> String {
         match env::var("NATS_QUEUENAME") {
             Ok(queuename) => queuename,
-            Err(_) if self.queuename.is_none() => {
-                "dmbc.transaction.commit".to_string()
-            }
+            Err(_) if self.queuename.is_none() => "dmbc.transaction.commit".to_string(),
             Err(_) => self.queuename.unwrap(),
         }
     }
