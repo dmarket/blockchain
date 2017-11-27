@@ -7,7 +7,7 @@ use exonum::messages::Message;
 use serde_json::Value;
 
 use super::{SERVICE_ID, TX_DEL_ASSETS_ID};
-use service::wallet::{Asset, AssetInfo};
+use service::wallet::{Asset};
 use service::schema::asset::AssetSchema;
 use service::schema::wallet::WalletSchema;
 
