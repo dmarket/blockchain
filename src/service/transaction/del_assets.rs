@@ -31,10 +31,15 @@ impl Transaction for TxDelAsset {
     }
 
     fn execute(&self, view: &mut Fork) {
+        // Invariant: for an asset id, the sum of amounts for all assets in
+        // all wallets for this asset id is equal to the amonut stored in the
+        // AssetInfo associated with this asset id.
+
         let mut schema = AssetSchema{view};
         for a in self.assets() {
             match schema.info(a.hash_id()) {
                 Some(ref info) if info.creator() != self.pub_key() => return,
+                None => return,
                 _ => (),
             }
         }
