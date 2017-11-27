@@ -7,7 +7,7 @@ use exonum::messages::Message;
 use serde_json::Value;
 
 use super::{SERVICE_ID, TX_DEL_ASSETS_ID};
-use service::wallet::Asset;
+use service::wallet::{Asset, AssetInfo};
 use service::schema::asset::AssetSchema;
 use service::schema::wallet::WalletSchema;
 
@@ -112,7 +112,18 @@ fn positive_delete_assets_test() {
     let tx_del: TxDelAsset = ::serde_json::from_str(&get_json()).unwrap();
 
     let db = Box::new(MemoryDB::new());
-    let mut wallet_schema = WalletSchema { view: &mut db.fork() };
+
+    let mut asset_schema = AssetSchema { view: &mut db.fork() };
+    asset_schema.assets().put(&"asset_1".to_string(), AssetInfo::new(tx_del.pub_key(), 100));
+    asset_schema.assets().put(&"asset_2".to_string(), AssetInfo::new(tx_del.pub_key(), 17));
+    {
+        let assets = asset_schema.assets();
+        for info in assets.iter() {
+            println!("Put info: {:?}", info);
+        }
+    }
+
+    let mut wallet_schema = WalletSchema { view: &mut asset_schema.view };
 
     let assets = vec![
         Asset::new("asset_1", 100),
@@ -166,3 +177,4 @@ fn add_asset_info_test() {
     let tx: TxDelAsset = ::serde_json::from_str(&get_json()).unwrap();
     assert_eq!(FEE_FOR_MINING, tx.info()["tx_fee"]);
 }
+
