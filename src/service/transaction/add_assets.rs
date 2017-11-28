@@ -13,6 +13,7 @@ use super::schema::asset::{AssetSchema, external_internal};
 use super::schema::transaction_status::{TxStatusSchema, TxStatus};
 
 pub const FEE_FOR_MINING: u64 = 1;
+pub const ASSET_HASH_ID_MAX_LENGTH: usize = 10 * 1024; // 10 KBytes
 
 message! {
     struct TxAddAsset {
@@ -27,6 +28,11 @@ message! {
 }
 impl Transaction for TxAddAsset {
     fn verify(&self) -> bool {
+        for asset in self.assets().iter() {
+            if asset.hash_id().chars().count() > ASSET_HASH_ID_MAX_LENGTH {
+                return false;
+            }
+        }
         self.verify_signature(self.pub_key())
     }
 
