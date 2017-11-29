@@ -47,10 +47,9 @@ impl Transaction for TxDelAsset {
         let mut schema = WalletSchema { view: schema.view };
         match schema.wallet(self.pub_key()) {
             Some(mut creator) => {
-                if creator.balance() >= FEE_FOR_MINING {
+                if creator.balance() >= FEE_FOR_MINING && creator.del_assets(&self.assets()) {
                     creator.decrease(FEE_FOR_MINING);
                     println!("Asset {:?}", self.assets());
-                    creator.del_assets(&self.assets());
                     println!("Wallet after delete assets: {:?}", creator);
                     schema.wallets().put(self.pub_key(), creator);
                 }
