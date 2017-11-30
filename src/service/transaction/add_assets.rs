@@ -26,6 +26,7 @@ message! {
         field seed:        u64         [40 => 48]
     }
 }
+
 impl Transaction for TxAddAsset {
     fn verify(&self) -> bool {
         for asset in self.assets().iter() {
@@ -41,7 +42,6 @@ impl Transaction for TxAddAsset {
         let mut tx_status = TxStatus::Fail;
         let creator = wallet_schema.wallet(self.pub_key());
         if let Some(mut creator) = creator {
-
             if creator.balance() >= FEE_FOR_MINING {
                 let mut asset_schema = AssetSchema { view: wallet_schema.view };
                 let map_assets = asset_schema.add_assets(self.assets(), self.pub_key());
@@ -122,12 +122,12 @@ fn add_assets_test() {
     wallet_schema.wallets().put(tx_add.pub_key(), wallet);
 
     if let Some(wallet) = wallet_schema.wallet(tx_add.pub_key()) {
-        assert!(wallet.in_wallet_assets(vec![Asset::new(internal_a_id_1, 3)]));
+        assert!(wallet.in_wallet_assets(&vec![Asset::new(internal_a_id_1, 3)]));
         tx_add.execute(&mut wallet_schema.view);
         if let Some(wallet) = wallet_schema.wallet(tx_add.pub_key()) {
             assert_eq!(100 - FEE_FOR_MINING, wallet.balance());
-            assert!(wallet.in_wallet_assets(vec![Asset::new(internal_a_id_1, 20),]));
-            assert!(wallet.in_wallet_assets(vec![Asset::new(internal_a_id_2, 45),]));
+            assert!(wallet.in_wallet_assets(&vec![Asset::new(internal_a_id_1, 20),]));
+            assert!(wallet.in_wallet_assets(&vec![Asset::new(internal_a_id_2, 45),]));
         } else {
             assert!(false);
         }

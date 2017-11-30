@@ -35,4 +35,3 @@ impl<'a> WalletSchema<'a> {
         }
     }
 }
-

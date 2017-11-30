@@ -6,7 +6,7 @@ use exonum::crypto::{PublicKey, HexValue};
 use exonum::storage::{Fork, MapIndex};
 use self::uuid::Uuid;
 
-use service::wallet::Asset;
+use service::wallet::{Asset, AssetInfo};
 use service::SERVICE_NAME;
 
 pub struct AssetSchema<'a> {
@@ -43,21 +43,21 @@ pub fn external_internal(assets: Vec<Asset>, pub_key: &PublicKey) -> HashMap<Str
 }
 
 impl<'a> AssetSchema<'a> {
-    pub fn assets(&mut self) -> MapIndex<&mut Fork, String, PublicKey> {
+    pub fn assets(&mut self) -> MapIndex<&mut Fork, String, AssetInfo> {
         let key = SERVICE_NAME.to_string().replace("/", "_") + ".assets";
         MapIndex::new(key, self.view)
     }
 
-    // Utility method to quickly get a separate wallet from the storage
-    pub fn creator(&mut self, asset_id: String) -> Option<PublicKey> {
-        self.assets().get(&asset_id)
+    pub fn info(&mut self, asset_id: &str) -> Option<AssetInfo> {
+        self.assets().get(&asset_id.to_string())
     }
 
-    pub fn add_asset(&mut self, asset_id: String, pub_key: &PublicKey) -> bool {
-        match self.creator(asset_id.clone()) {
+    pub fn add_asset(&mut self, asset_id: &str, creator: &PublicKey, amount: u32) -> bool {
+        match self.info(asset_id) {
             None => {
-                self.assets().put(&asset_id, *pub_key);
-                println!("Add asset {:?} for wallet: {:?}", asset_id, pub_key);
+                let info = AssetInfo::new(creator, amount);
+                self.assets().put(&asset_id.to_string(), info);
+                println!("Add asset {:?} for wallet: {:?}", asset_id, creator);
                 true
             }
             Some(_) => true,
@@ -73,10 +73,26 @@ impl<'a> AssetSchema<'a> {
         for asset in assets {
             let new_hash_id = generate_asset_id(asset.hash_id(), pub_key);
             let new_asset = Asset::new(&new_hash_id, asset.amount());
-            self.add_asset(new_hash_id, pub_key);
+            self.add_asset(&new_hash_id, pub_key, asset.amount());
             map_asset_id.insert(asset.hash_id().to_string(), new_asset);
         }
 
         map_asset_id
+    }
+
+    pub fn del_assets(&mut self, deleted: &[Asset]) {
+        let mut infos = self.assets();
+        for asset in deleted {
+            let info = match infos.get(&asset.hash_id().to_string()) {
+                Some(info) => info,
+                _ => continue,
+            };
+            let amount = info.amount() - asset.amount();
+            let info = AssetInfo::new(info.creator(), amount);
+            match info.amount() {
+                0 => infos.remove(&asset.hash_id().to_string()),
+                _ => infos.put(&asset.hash_id().to_string(), info),
+            }
+        }
     }
 }

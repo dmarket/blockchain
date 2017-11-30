@@ -4,7 +4,7 @@ pub mod wallet;
 pub mod hash;
 
 use exonum::blockchain::Blockchain;
-use exonum::node::{ApiSender};
+use exonum::node::ApiSender;
 use exonum::api::Api;
 use router::Router;
 

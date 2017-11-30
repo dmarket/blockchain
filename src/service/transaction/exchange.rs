@@ -63,9 +63,9 @@ impl Transaction for TxExchange {
         let recipient = schema.wallet(self.offer().recipient());
         if let (Some(mut sender), Some(mut recipient)) = (sender, recipient) {
             if sender.balance() >= self.offer().sender_value() &&
-                sender.in_wallet_assets(self.offer().sender_assets()) &&
+                sender.in_wallet_assets(&self.offer().sender_assets()) &&
                 recipient.balance() >= self.offer().recipient_value() &&
-                recipient.in_wallet_assets(self.offer().recipient_assets())
+                recipient.in_wallet_assets(&self.offer().recipient_assets())
             {
                 println!("--   Exchange transaction   --");
                 println!("Sender's balance before transaction : {:?}", sender);
@@ -77,11 +77,11 @@ impl Transaction for TxExchange {
                 sender.increase(self.offer().recipient_value());
                 recipient.decrease(self.offer().recipient_value());
 
-                sender.del_assets(self.offer().sender_assets());
+                sender.del_assets(&self.offer().sender_assets());
                 recipient.add_assets(self.offer().sender_assets());
 
                 sender.add_assets(self.offer().recipient_assets());
-                recipient.del_assets(self.offer().recipient_assets());
+                recipient.del_assets(&self.offer().recipient_assets());
 
                 println!("Sender's balance before transaction : {:?}", sender);
                 println!("Recipient's balance before transaction : {:?}", recipient);
@@ -195,22 +195,22 @@ fn positive_exchange_test() {
     if let (Some(sender), Some(recipient)) = (sender, recipient) {
         assert_eq!(63, sender.balance());
         assert_eq!(137, recipient.balance());
-        assert!(sender.in_wallet_assets(vec![
+        assert!(sender.in_wallet_assets(&vec![
             Asset::new("a8d5c97d-9978-4b0b-9947-7a95dcb31d0f", 95),
             Asset::new("a8d5c97d-9978-4111-9947-7a95dcb31d0f", 93),
             Asset::new("a8d5c97d-9978-cccc-9947-7a95dcb31d0f", 1),
         ]));
-        assert!(recipient.in_wallet_assets(vec![
+        assert!(recipient.in_wallet_assets(&vec![
             Asset::new("a8d5c97d-9978-4b0b-9947-7a95dcb31d0f", 5),
             Asset::new("a8d5c97d-9978-4111-9947-7a95dcb31d0f", 7),
             Asset::new("a8d5c97d-9978-cccc-9947-7a95dcb31d0f", 99),
         ]));
-        assert!(!sender.in_wallet_assets(vec![
+        assert!(!sender.in_wallet_assets(&vec![
             Asset::new("a8d5c97d-9978-4b0b-9947-7a95dcb31d0f", 96),
             Asset::new("a8d5c97d-9978-4111-9947-7a95dcb31d0f", 94),
             Asset::new("a8d5c97d-9978-cccc-9947-7a95dcb31d0f", 12),
         ]));
-        assert!(!recipient.in_wallet_assets(vec![
+        assert!(!recipient.in_wallet_assets(&vec![
             Asset::new("a8d5c97d-9978-4b0b-9947-7a95dcb31d0f", 3),
             Asset::new("a8d5c97d-9978-4111-9947-7a95dcb31d0f", 1),
             Asset::new("a8d5c97d-9978-cccc-9947-7a95dcb31d0f", 111),

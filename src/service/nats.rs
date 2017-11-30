@@ -10,7 +10,9 @@ use config;
 
 pub fn publish(subject: String, msg: String) {
     let pipe = Pipe::get();
-    pipe.as_ref().map(|p| p.sender.send((subject, msg)).unwrap());
+    pipe.as_ref().map(
+        |p| p.sender.send((subject, msg)).unwrap(),
+    );
 }
 
 type PublishPair = (String, String);
@@ -33,14 +35,14 @@ struct Pipe {
 impl Pipe {
     fn get<'a>() -> &'a Option<Self> {
         unsafe {
-            ONCE.call_once(||{
+            ONCE.call_once(|| {
                 let pipe = if config::config().nats().enabled() {
                     let (sender, receiver) = mpsc::channel();
                     let thread = thread::Builder::new()
                         .name("NATS sender".to_string())
                         .spawn(|| Pipe::work(receiver))
                         .unwrap();
-                    Some(Pipe{ thread, sender })
+                    Some(Pipe { thread, sender })
                 } else {
                     None
                 };
@@ -63,24 +65,21 @@ impl Pipe {
         let mut mode = Mode::Publish;
         let discard_duration = Duration::from_secs(DISCARD_MODE_SECONDS);
 
-        let mut process_pair = |pair: PublishPair|{
-            match mode {
-                Mode::Publish => {
-                    match client.publish(&pair.0, pair.1.as_bytes()) {
-                        Ok(_) => println!("success published"),
-                        Err(e) => {
-                            println!("{:?}", e);
-                            println!("Discarding messages for {} seconds.",
-                                     DISCARD_MODE_SECONDS);
-                            mode = Mode::Discard(Instant::now());
-                        }
+        let mut process_pair = |pair: PublishPair| match mode {
+            Mode::Publish => {
+                match client.publish(&pair.0, pair.1.as_bytes()) {
+                    Ok(_) => println!("success published"),
+                    Err(e) => {
+                        println!("{:?}", e);
+                        println!("Discarding messages for {} seconds.", DISCARD_MODE_SECONDS);
+                        mode = Mode::Discard(Instant::now());
                     }
                 }
-                Mode::Discard(begin) if begin.elapsed() < discard_duration => (),
-                Mode::Discard(_) => {
-                    println!("Accepting messages again.");
-                    mode = Mode::Publish;
-                }
+            }
+            Mode::Discard(begin) if begin.elapsed() < discard_duration => (),
+            Mode::Discard(_) => {
+                println!("Accepting messages again.");
+                mode = Mode::Publish;
             }
         };
 
@@ -89,4 +88,3 @@ impl Pipe {
         }
     }
 }
-
