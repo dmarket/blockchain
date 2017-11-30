@@ -39,6 +39,13 @@ impl Asset {
     pub fn is_available_to_transfer(&self, other: &Asset) -> bool {
         self.amount() >= other.amount()
     }
+
+    pub fn count(assets: &[Asset]) -> u64 {
+        assets.iter().fold(
+            0,
+            |acc, asset| acc + asset.amount() as u64,
+        )
+    }
 }
 
 impl Wallet {

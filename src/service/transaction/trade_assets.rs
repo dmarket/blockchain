@@ -2,17 +2,19 @@ extern crate exonum;
 
 use exonum::blockchain::Transaction;
 use exonum::storage::Fork;
-use exonum::crypto::{PublicKey, Signature, verify};
+use exonum::crypto;
+use exonum::crypto::{PublicKey, Signature};
 use exonum::messages::Message;
 use serde_json::Value;
 
+use service::transaction::{TRANSACTION_FEE, PER_ASSET_FEE};
 
 use super::{SERVICE_ID, TX_TRADE_ASSETS_ID};
 use super::wallet::Asset;
 use super::schema::wallet::WalletSchema;
 use super::schema::transaction_status::{TxStatusSchema, TxStatus};
 
-pub const FEE_FOR_TRADE: f64 = 0.025;
+const FEE_FOR_TRADE: f64 = 0.025;
 
 encoding_struct! {
     struct TradeOffer {
@@ -41,7 +43,7 @@ message! {
 impl TxTrade {
     fn offer_verify(&self) -> bool {
         *self.buyer() != *self.offer().seller() &&
-            verify(
+            crypto::verify(
                 self.seller_signature(),
                 &self.offer().raw,
                 self.offer().seller(),
@@ -53,7 +55,9 @@ impl TxTrade {
     }
 
     fn get_fee(&self) -> u64 {
-        ((self.offer().price() as f64) * FEE_FOR_TRADE).round() as u64
+        //todo: необходимо определится с генергацией fee
+        let price_fee = ((self.offer().price() as f64) * FEE_FOR_TRADE).round() as u64;
+        price_fee + TRANSACTION_FEE + PER_ASSET_FEE * Asset::count(&self.offer().assets())
     }
 }
 
@@ -70,13 +74,16 @@ impl Transaction for TxTrade {
             let price = self.offer().price();
             let assets = self.offer().assets();
             println!("Buyer {:?} => Seller {:?}", buyer, seller);
-            let tx_status = if (buyer.balance() >= price) && seller.in_wallet_assets(&assets) {
+            let tx_status = if (buyer.balance() >= price) && seller.in_wallet_assets(&assets) &&
+                seller.balance() + price >= self.get_fee() //todo: необходимо определится с генергацией fee
+            {
                 println!("--   Trade transaction   --");
                 println!("Seller's balance before transaction : {:?}", seller);
                 println!("Buyer's balance before transaction : {:?}", buyer);
                 let assets = self.offer().assets();
                 seller.del_assets(&assets);
-                seller.increase(price - self.get_fee());
+                seller.increase(price);
+                seller.decrease(self.get_fee());
                 let assets = self.offer().assets();
                 buyer.add_assets(assets);
                 buyer.decrease(price);
@@ -155,13 +162,13 @@ fn positive_trade_test() {
 
     let seller = Wallet::new(
         tx.offer().seller(),
-        0,
+        tx.get_fee(),
         vec![
             Asset::new("a4826063-d7bb-57a3-a119-3ba03a51b7fa", 10),
             Asset::new("a007f130-ceea-5939-b616-3aaf7185a164", 7),
         ],
     );
-    let buyer = Wallet::new(tx.buyer(), 100, vec![]);
+    let buyer = Wallet::new(tx.buyer(), 3000, vec![]);
 
     wallet_schema.wallets().put(tx.offer().seller(), seller);
     wallet_schema.wallets().put(tx.buyer(), buyer);
@@ -171,8 +178,8 @@ fn positive_trade_test() {
     let seller = wallet_schema.wallet(tx.offer().seller());
     let buyer = wallet_schema.wallet(tx.buyer());
     if let (Some(seller), Some(buyer)) = (seller, buyer) {
-        assert_eq!(12, buyer.balance());
-        assert_eq!(88 - tx.get_fee(), seller.balance());
+        assert_eq!(2912, buyer.balance());
+        assert_eq!(88, seller.balance());
         assert_eq!(
             vec![Asset::new("a4826063-d7bb-57a3-a119-3ba03a51b7fa", 5),],
             seller.assets()

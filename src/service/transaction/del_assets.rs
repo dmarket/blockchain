@@ -6,12 +6,12 @@ use exonum::crypto::PublicKey;
 use exonum::messages::Message;
 use serde_json::Value;
 
+use service::transaction::{TRANSACTION_FEE, PER_ASSET_FEE};
+
 use super::{SERVICE_ID, TX_DEL_ASSETS_ID};
 use service::wallet::Asset;
 use service::schema::asset::AssetSchema;
 use service::schema::wallet::WalletSchema;
-
-pub const FEE_FOR_MINING: u64 = 1;
 
 message! {
     struct TxDelAsset {
@@ -22,6 +22,12 @@ message! {
         field pub_key:     &PublicKey  [00 => 32]
         field assets:      Vec<Asset>  [32 => 40]
         field seed:        u64         [40 => 48]
+    }
+}
+
+impl TxDelAsset {
+    fn get_fee(&self) -> u64 {
+        TRANSACTION_FEE + PER_ASSET_FEE * Asset::count(&self.assets())
     }
 }
 
@@ -47,8 +53,8 @@ impl Transaction for TxDelAsset {
         let mut schema = WalletSchema { view: schema.view };
         match schema.wallet(self.pub_key()) {
             Some(mut creator) => {
-                if creator.balance() >= FEE_FOR_MINING && creator.del_assets(&self.assets()) {
-                    creator.decrease(FEE_FOR_MINING);
+                if creator.balance() >= self.get_fee() && creator.del_assets(&self.assets()) {
+                    creator.decrease(self.get_fee());
                     println!("Asset {:?}", self.assets());
                     println!("Wallet after delete assets: {:?}", creator);
                     schema.wallets().put(self.pub_key(), creator);
@@ -64,7 +70,7 @@ impl Transaction for TxDelAsset {
     fn info(&self) -> Value {
         json!({
             "transaction_data": self,
-            "tx_fee": FEE_FOR_MINING,
+            "tx_fee": self.get_fee(),
         })
     }
 }
@@ -140,7 +146,7 @@ mod test {
             Asset::new("asset_2", 17),
         ];
 
-        let wallet = Wallet::new(tx_del.pub_key(), 100, assets);
+        let wallet = Wallet::new(tx_del.pub_key(), 2000, assets);
         wallet_schema.wallets().put(tx_del.pub_key(), wallet);
 
         tx_del.execute(&mut wallet_schema.view);
@@ -185,7 +191,6 @@ mod test {
     #[test]
     fn add_asset_info_test() {
         let tx: TxDelAsset = ::serde_json::from_str(&get_json()).unwrap();
-        assert_eq!(FEE_FOR_MINING, tx.info()["tx_fee"]);
+        assert_eq!(tx.get_fee(), tx.info()["tx_fee"]);
     }
-
 }

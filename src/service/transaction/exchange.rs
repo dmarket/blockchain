@@ -6,6 +6,8 @@ use exonum::crypto::{PublicKey, Signature, verify};
 use exonum::messages::Message;
 use serde_json::Value;
 
+use service::transaction::TRANSACTION_FEE;
+
 use super::{SERVICE_ID, TX_EXCHANGE_ID};
 use super::wallet::Asset;
 use super::schema::wallet::WalletSchema;
@@ -38,9 +40,14 @@ message! {
         field sender_signature:  &Signature        [16 => 80]
     }
 }
+
 impl TxExchange {
     pub fn get_offer_raw(&self) -> Vec<u8> {
         self.offer().raw
+    }
+
+    fn get_fee(&self) -> u64 {
+        TRANSACTION_FEE
     }
 }
 
