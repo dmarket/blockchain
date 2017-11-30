@@ -7,11 +7,11 @@ use exonum::messages::Message;
 use service::wallet::Asset;
 use serde_json::Value;
 
+use service::transaction::{TRANSACTION_FEE, PER_ASSET_FEE};
+
 use super::{SERVICE_ID, TX_TRANSFER_ID};
 use super::schema::wallet::WalletSchema;
 use super::schema::transaction_status::{TxStatusSchema, TxStatus};
-
-pub const FEE_FOR_TRANSFER: u64 = 1;
 
 message! {
     struct TxTransfer {
@@ -27,6 +27,12 @@ message! {
     }
 }
 
+impl TxTransfer {
+    fn get_fee(&self) -> u64 {
+        TRANSACTION_FEE + PER_ASSET_FEE * Asset::count(&self.assets())
+    }
+}
+
 impl Transaction for TxTransfer {
     fn verify(&self) -> bool {
         (*self.from() != *self.to()) && self.verify_signature(self.from())
@@ -37,12 +43,12 @@ impl Transaction for TxTransfer {
         let mut tx_status = TxStatus::Fail;
         if let Some(mut sender) = schema.wallet(self.from()) {
             let amount = self.amount();
-            let update_amount = amount == 0 && sender.balance() >= FEE_FOR_TRANSFER ||
-                amount > 0 && sender.balance() >= amount + FEE_FOR_TRANSFER;
+            let update_amount = amount == 0 && sender.balance() >= self.get_fee() ||
+                amount > 0 && sender.balance() >= amount + self.get_fee();
             let update_assets = self.assets().is_empty() ||
                 !self.assets().is_empty() && sender.in_wallet_assets(self.assets());
             if update_amount && update_assets {
-                sender.decrease(amount + FEE_FOR_TRANSFER);
+                sender.decrease(amount + self.get_fee());
                 sender.del_assets(self.assets());
                 let mut receiver = schema.create_wallet(self.to());
                 receiver.increase(amount);
@@ -62,7 +68,7 @@ impl Transaction for TxTransfer {
     fn info(&self) -> Value {
         json!({
             "transaction_data": self,
-            "tx_fee": FEE_FOR_TRANSFER,
+            "tx_fee": self.get_fee(),
         })
     }
 }
@@ -116,7 +122,7 @@ fn positive_send_staff_test() {
 
     let from = Wallet::new(
         tx.from(),
-        100,
+        2000,
         vec![
             Asset::new("a8d5c97d-9978-4b0b-9947-7a95dcb31d0f",100),
         ],
@@ -128,7 +134,7 @@ fn positive_send_staff_test() {
     let from = wallet_schema.wallet(tx.from());
     let to = wallet_schema.wallet(tx.to());
     if let (Some(from), Some(to)) = (from, to) {
-        assert_eq!(96, from.balance());
+        assert_eq!(994, from.balance());
         assert_eq!(3, to.balance());
         assert_eq!(
             vec![Asset::new("a8d5c97d-9978-4b0b-9947-7a95dcb31d0f", 97),],
@@ -148,5 +154,5 @@ fn positive_send_staff_test() {
 #[test]
 fn transfer_info_test() {
     let tx: TxTransfer = ::serde_json::from_str(&get_json()).unwrap();
-    assert_eq!(FEE_FOR_TRANSFER, tx.info()["tx_fee"]);
+    assert_eq!(tx.get_fee(), tx.info()["tx_fee"]);
 }

@@ -6,6 +6,8 @@ use exonum::crypto::PublicKey;
 use exonum::messages::Message;
 use serde_json::Value;
 
+use service::transaction::TRANSACTION_FEE;
+
 use super::{SERVICE_ID, TX_MINING_ID, AMOUNT_MINING_COIN};
 use super::wallet::Wallet;
 use super::schema::wallet::WalletSchema;
@@ -19,6 +21,12 @@ message! {
 
         field pub_key:     &PublicKey  [00 => 32]
         field seed:        u64         [32 => 40]
+    }
+}
+
+impl TxMining {
+    fn get_fee(&self) -> u64 {
+        TRANSACTION_FEE
     }
 }
 

@@ -4,6 +4,9 @@ use super::wallet;
 use super::SERVICE_ID;
 //const SERVICE_ID: u16 = 1;
 
+pub const TRANSACTION_FEE: u64 = 1000;
+pub const PER_ASSET_FEE: u64 = 1;
+
 // Create Wallet
 pub const TX_CREATE_WALLET_ID: u16 = 1;
 const INIT_BALANCE: u64 = 100;

@@ -6,6 +6,8 @@ use exonum::crypto::PublicKey;
 use exonum::messages::Message;
 use serde_json::Value;
 
+use service::transaction::TRANSACTION_FEE;
+
 use super::{SERVICE_ID, TX_CREATE_WALLET_ID, INIT_BALANCE};
 use super::wallet::Wallet;
 use super::schema::wallet::WalletSchema;
@@ -18,6 +20,12 @@ message! {
         const SIZE = 32;
 
         field pub_key:     &PublicKey  [00 => 32]
+    }
+}
+
+impl TxCreateWallet {
+    fn get_fee(&self) -> u64 {
+        TRANSACTION_FEE
     }
 }
 
