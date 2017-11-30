@@ -49,7 +49,7 @@ impl Transaction for TxTransfer {
                 !self.assets().is_empty() && sender.in_wallet_assets(&self.assets());
             if update_amount && update_assets {
                 sender.decrease(amount + self.get_fee());
-                sender.del_assets(self.assets());
+                sender.del_assets(&self.assets());
                 let mut receiver = schema.create_wallet(self.to());
                 receiver.increase(amount);
                 receiver.add_assets(self.assets());

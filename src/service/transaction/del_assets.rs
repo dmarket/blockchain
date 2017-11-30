@@ -83,7 +83,7 @@ mod test {
     use service::schema::asset::AssetSchema;
     use service::schema::wallet::WalletSchema;
     use service::wallet::{Wallet, Asset, AssetInfo};
-    use service::transaction::del_assets::{TxDelAsset, FEE_FOR_MINING};
+    use service::transaction::del_assets::TxDelAsset;
 
     fn get_json() -> String {
         r#"{
