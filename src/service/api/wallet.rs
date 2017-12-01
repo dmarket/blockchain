@@ -76,30 +76,30 @@ impl Api for WalletApi {
             if let Some(wallets) = self_.get_wallets() {
                 // define default values for request parameters
                 let total_wallet_count = wallets.len();
-                let mut wallers_to_send = wallets.clone();
+                let mut wallets_to_send = wallets.clone();
 
                 // read url parameters
                 let parameters = req.get_ref::<Params>().unwrap();
                 let offset_parameter = parameters.get(PARAMETER_OFFSET_KEY);
                 let limit_parameter = parameters.get(PARAMETER_LIMIT_KEY);
 
-                // pagination parameterss `offset` and `limit` should be considered together
+                // pagination parameters `offset` and `limit` should be considered together
                 if offset_parameter.is_some() && limit_parameter.is_some() {
                     let offset = FromValue::from_value(offset_parameter.unwrap()).unwrap_or(0);
                     let limit = FromValue::from_value(limit_parameter.unwrap()).unwrap_or(
                         total_wallet_count,
                     );
 
-                    // define wallets that need to be
+                    // define wallets that need to be send in responce
                     let from = std::cmp::min(offset, total_wallet_count);
                     let to = std::cmp::min(from + limit, total_wallet_count);
-                    wallers_to_send = wallers_to_send[from..to].to_vec();
+                    wallets_to_send = wallets_to_send[from..to].to_vec();
                 }
 
-                let wallet_list = serde_json::to_value(&wallers_to_send).unwrap();
+                let wallet_list = serde_json::to_value(&wallets_to_send).unwrap();
                 let response_body = json!({
                     "total": total_wallet_count,
-                    "count": wallers_to_send.len(),
+                    "count": wallets_to_send.len(),
                     "wallets": wallet_list,
                 });
 
