@@ -4,6 +4,8 @@ extern crate exonum;
 extern crate router;
 extern crate bodyparser;
 extern crate iron;
+extern crate params;
+extern crate std;
 
 use exonum::blockchain::Blockchain;
 use exonum::crypto::{PublicKey, HexValue};
@@ -14,6 +16,9 @@ use router::Router;
 
 use service::schema::wallet::WalletSchema;
 use service::wallet::Wallet;
+
+const PARAMETER_OFFSET_KEY: &str = "offset";
+const PARAMETER_LIMIT_KEY: &str = "limit";
 
 #[derive(Clone)]
 pub struct WalletApi {
@@ -42,6 +47,7 @@ impl WalletApi {
 
 impl Api for WalletApi {
     fn wire(&self, router: &mut Router) {
+
         // Gets status of the wallet corresponding to the public key.
         let self_ = self.clone();
         let wallet_info = move |req: &mut Request| -> IronResult<Response> {
@@ -64,9 +70,40 @@ impl Api for WalletApi {
 
         // Gets status of all wallets.
         let self_ = self.clone();
-        let wallets_info = move |_: &mut Request| -> IronResult<Response> {
+        let wallets_info = move |req: &mut Request| -> IronResult<Response> {
+            use self::params::{Params, FromValue};
+
             if let Some(wallets) = self_.get_wallets() {
-                let res = self_.ok_response(&serde_json::to_value(wallets).unwrap());
+                // define default values for request parameters
+                let total_wallet_count = wallets.len();
+                let mut wallers_to_send = wallets.clone();
+
+                // read url parameters
+                let parameters = req.get_ref::<Params>().unwrap();
+                let offset_parameter = parameters.get(PARAMETER_OFFSET_KEY);
+                let limit_parameter = parameters.get(PARAMETER_LIMIT_KEY);
+
+                // pagination parameterss `offset` and `limit` should be considered together
+                if offset_parameter.is_some() && limit_parameter.is_some() {
+                    let offset = FromValue::from_value(offset_parameter.unwrap()).unwrap_or(0);
+                    let limit = FromValue::from_value(limit_parameter.unwrap()).unwrap_or(
+                        total_wallet_count,
+                    );
+
+                    // define wallets that need to be
+                    let from = std::cmp::min(offset, total_wallet_count);
+                    let to = std::cmp::min(from + limit, total_wallet_count);
+                    wallers_to_send = wallers_to_send[from..to].to_vec();
+                }
+
+                let wallet_list = serde_json::to_value(&wallers_to_send).unwrap();
+                let response_body = json!({
+                    "total": total_wallet_count,
+                    "count": wallers_to_send.len(),
+                    "wallets": wallet_list,
+                });
+
+                let res = self_.ok_response(&serde_json::to_value(response_body).unwrap());
                 let mut res = res.unwrap();
                 res.headers.set(AccessControlAllowOrigin::Any);
                 Ok(res)
