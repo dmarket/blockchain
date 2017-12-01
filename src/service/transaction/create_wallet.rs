@@ -85,7 +85,7 @@ fn add_assets_test() {
     let db = Box::new(MemoryDB::new());
     let mut wallet_schema = WalletSchema { view: &mut db.fork() };
 
-    let wallet = Wallet::new(tx_create.pub_key(), 100, vec![]);
+    let wallet = Wallet::new(tx_create.pub_key(), INIT_BALANCE, vec![]);
     assert_eq!(None, wallet_schema.wallet(tx_create.pub_key()));
 
     tx_create.execute(&mut wallet_schema.view);
