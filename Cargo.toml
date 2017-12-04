@@ -5,6 +5,7 @@ authors = ["Ilya Sinyakin <sinyakin.ilya@gmail.com>"]
 
 [dependencies]
 iron = "0.5.1"
+params = "*"
 bodyparser = "0.7.0"
 router = "0.5.1"
 nats="*"
