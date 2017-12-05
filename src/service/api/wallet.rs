@@ -16,11 +16,7 @@ use router::Router;
 
 use service::schema::wallet::WalletSchema;
 use service::wallet::{Wallet, Asset};
-
-use self::params::{Params, FromValue};
-
-const PARAMETER_OFFSET_KEY: &str = "offset";
-const PARAMETER_LIMIT_KEY: &str = "limit";
+use service::ServiceApi;
 
 #[derive(Clone)]
 pub struct WalletApi {
@@ -57,27 +53,6 @@ impl WalletApi {
 impl Api for WalletApi {
     fn wire(&self, router: &mut Router) {
 
-        fn apply_pagination<T: Clone>(req: &mut Request, elements: &Vec<T>) -> Vec<T> {
-            let total_count = elements.len();
-            // read url parameters
-            let parameters = req.get_ref::<Params>().unwrap();
-            let offset_parameter = parameters.get(PARAMETER_OFFSET_KEY);
-            let limit_parameter = parameters.get(PARAMETER_LIMIT_KEY);
-
-            // pagination parameters `offset` and `limit` should be considered together
-            if offset_parameter.is_some() && limit_parameter.is_some() {
-                let offset = FromValue::from_value(offset_parameter.unwrap()).unwrap_or(0);
-                let limit = FromValue::from_value(limit_parameter.unwrap()).unwrap_or(total_count);
-
-                // define wallets that need to be send in responce
-                let from = std::cmp::min(offset, total_count);
-                let to = std::cmp::min(from + limit, total_count);
-                return elements[from..to].to_vec();
-            }
-
-            elements.clone()
-        }
-
         // Gets status of the wallet corresponding to the public key.
         let self_ = self.clone();
         let wallet_info = move |req: &mut Request| -> IronResult<Response> {
@@ -103,7 +78,7 @@ impl Api for WalletApi {
         let wallets_info = move |req: &mut Request| -> IronResult<Response> {
             if let Some(wallets) = self_.get_wallets() {
                 // apply pagination parameters if they exist
-                let wallets_to_send = apply_pagination(req, &wallets);
+                let wallets_to_send = ServiceApi::apply_pagination(req, &wallets);
                 let wallet_list = serde_json::to_value(&wallets_to_send).unwrap();
                 let response_body = json!({
                     "total": wallets.len(),
@@ -139,7 +114,7 @@ impl Api for WalletApi {
             }
             if let Some(assets) = self_.get_assets(&public_key) {
                 // apply pagination parameters if they exist
-                let assets_to_send = apply_pagination(req, &assets);
+                let assets_to_send = ServiceApi::apply_pagination(req, &assets);
                 let assets_list = serde_json::to_value(&assets_to_send).unwrap();
                 let response_body = json!({
                     "total": assets.len(),
