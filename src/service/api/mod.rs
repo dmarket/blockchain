@@ -29,15 +29,15 @@ pub struct ServiceApi {
 
 impl ServiceApi {
 
-    /// Create a new `Vec<T>` if `request` has pagination parameters.
-    /// `offset` and `limit`
+    /// returns a slice `&[T]` if `request` has pagination parameters.
+    /// `offset` and `limit`, otherwise returns existing slice
     ///
     /// # URL request
     ///
     /// ```
     /// https://blockchain.com/api/services/cryptocurrency/v1/wallets?offset=4&limit=10
     /// ```
-    pub fn apply_pagination<T: Clone>(req: &mut Request, elements: &Vec<T>) -> Vec<T> {
+    pub fn apply_pagination<'a, T>(req: &mut Request, elements: &'a [T]) -> &'a [T] {
         let total_count = elements.len();
         // read url parameters
         let parameters = req.get_ref::<Params>().unwrap();
@@ -49,13 +49,13 @@ impl ServiceApi {
             let offset = FromValue::from_value(offset_parameter.unwrap()).unwrap_or(0);
             let limit = FromValue::from_value(limit_parameter.unwrap()).unwrap_or(total_count);
 
-            // define wallets that need to be send in responce
+            // validate parameters for pagination 
             let from = std::cmp::min(offset, total_count);
             let to = std::cmp::min(from + limit, total_count);
-            return elements[from..to].to_vec();
+            return &elements[from..to]
         }
 
-        elements.clone()
+        elements
     }
 }
 
