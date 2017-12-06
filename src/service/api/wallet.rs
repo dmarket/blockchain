@@ -28,20 +28,20 @@ pub struct WalletApi {
 impl WalletApi {
     fn get_wallet(&self, pub_key: &PublicKey) -> Option<Wallet> {
         let mut view = self.blockchain.fork();
-        let mut schema = WalletSchema { view: &mut view };
-        schema.wallet(pub_key)
+        WalletSchema::map(&mut view, |mut schema|{schema.wallet(pub_key)})
     }
 
     fn get_wallets(&self) -> Option<Vec<Wallet>> {
         let mut view = self.blockchain.fork();
-        let mut schema = WalletSchema { view: &mut view };
-        let idx = schema.wallets();
-        let wallets: Vec<Wallet> = idx.values().collect();
-        if wallets.is_empty() {
-            None
-        } else {
-            Some(wallets)
-        }
+        WalletSchema::map(&mut view, |mut schema| {
+            let idx = schema.wallets();
+            let wallets: Vec<Wallet> = idx.values().collect();
+            if wallets.is_empty() {
+                None
+            } else {
+                Some(wallets)
+            }
+        })
     }
 }
 

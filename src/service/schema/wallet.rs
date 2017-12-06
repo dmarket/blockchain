@@ -6,15 +6,12 @@ use exonum::storage::{Fork, MapIndex};
 use service::wallet::{Wallet, Asset};
 use service::SERVICE_NAME;
 
-pub struct WalletSchema<'a> {
-    pub view: &'a mut Fork,
-}
-
+pub struct WalletSchema<'a>(&'a mut Fork);
 
 impl<'a> WalletSchema<'a> {
     pub fn wallets(&mut self) -> MapIndex<&mut Fork, PublicKey, Wallet> {
         let key = SERVICE_NAME.to_string().replace("/", "_") + ".wallets";
-        MapIndex::new(key, self.view)
+        MapIndex::new(key, self.0)
     }
 
     // Utility method to quickly get a separate wallet from the storage
@@ -33,5 +30,12 @@ impl<'a> WalletSchema<'a> {
             }
             Some(wallet) => wallet,
         }
+    }
+
+    pub fn map<F, T>(view: &'a mut Fork, f: F) -> T
+        where F: FnOnce(Self) -> T + 'a,
+            T: 'a
+    {
+        f(WalletSchema(view))
     }
 }

@@ -64,42 +64,45 @@ impl Transaction for TxExchange {
     }
 
     fn execute(&self, view: &mut Fork) {
-        let mut schema = WalletSchema { view };
         let mut tx_status = TxStatus::Fail;
-        let sender = schema.wallet(self.offer().sender());
-        let recipient = schema.wallet(self.offer().recipient());
-        if let (Some(mut sender), Some(mut recipient)) = (sender, recipient) {
-            if sender.balance() >= self.offer().sender_value() &&
-                sender.in_wallet_assets(&self.offer().sender_assets()) &&
-                recipient.balance() >= self.offer().recipient_value() &&
-                recipient.in_wallet_assets(&self.offer().recipient_assets())
-            {
-                println!("--   Exchange transaction   --");
-                println!("Sender's balance before transaction : {:?}", sender);
-                println!("Recipient's balance before transaction : {:?}", recipient);
+        WalletSchema::map(view, |mut schema| {
+            let sender = schema.wallet(self.offer().sender());
+            let recipient = schema.wallet(self.offer().recipient());
+            if let (Some(mut sender), Some(mut recipient)) = (sender, recipient) {
+                if sender.balance() >= self.offer().sender_value() &&
+                    sender.in_wallet_assets(&self.offer().sender_assets()) &&
+                    recipient.balance() >= self.offer().recipient_value() &&
+                    recipient.in_wallet_assets(&self.offer().recipient_assets())
+                    {
+                        println!("--   Exchange transaction   --");
+                        println!("Sender's balance before transaction : {:?}", sender);
+                        println!("Recipient's balance before transaction : {:?}", recipient);
 
-                sender.decrease(self.offer().sender_value());
-                recipient.increase(self.offer().sender_value());
+                        sender.decrease(self.offer().sender_value());
+                        recipient.increase(self.offer().sender_value());
 
-                sender.increase(self.offer().recipient_value());
-                recipient.decrease(self.offer().recipient_value());
+                        sender.increase(self.offer().recipient_value());
+                        recipient.decrease(self.offer().recipient_value());
 
-                sender.del_assets(&self.offer().sender_assets());
-                recipient.add_assets(self.offer().sender_assets());
+                        sender.del_assets(&self.offer().sender_assets());
+                        recipient.add_assets(self.offer().sender_assets());
 
-                sender.add_assets(self.offer().recipient_assets());
-                recipient.del_assets(&self.offer().recipient_assets());
+                        sender.add_assets(self.offer().recipient_assets());
+                        recipient.del_assets(&self.offer().recipient_assets());
 
-                println!("Sender's balance before transaction : {:?}", sender);
-                println!("Recipient's balance before transaction : {:?}", recipient);
-                let mut wallets = schema.wallets();
-                wallets.put(self.offer().sender(), sender);
-                wallets.put(self.offer().recipient(), recipient);
-                tx_status = TxStatus::Success;
+                        println!("Sender's balance before transaction : {:?}", sender);
+                        println!("Recipient's balance before transaction : {:?}", recipient);
+                        let mut wallets = schema.wallets();
+                        wallets.put(self.offer().sender(), sender);
+                        wallets.put(self.offer().recipient(), recipient);
+                        tx_status = TxStatus::Success;
+                    }
             }
-        }
-        let mut tx_status_schema = TxStatusSchema { view: schema.view };
-        tx_status_schema.set_status(&self.hash(), tx_status);
+        });
+
+        TxStatusSchema::map(view, |mut db| {
+            db.set_status(&self.hash(), tx_status)
+        })
     }
 
     fn info(&self) -> Value {
@@ -171,8 +174,7 @@ fn positive_exchange_test() {
     let tx: TxExchange = ::serde_json::from_str(&get_json()).unwrap();
 
     let db = Box::new(MemoryDB::new());
-    let mut wallet_schema = WalletSchema { view: &mut db.fork() };
-
+    let fork = &mut db.fork();
     let sender = Wallet::new(
         tx.offer().sender(),
         100,
@@ -188,18 +190,19 @@ fn positive_exchange_test() {
             Asset::new("a8d5c97d-9978-cccc-9947-7a95dcb31d0f", 100),
         ],
     );
+    WalletSchema::map(fork, |mut schema| {
+        schema.wallets().put(tx.offer().sender(), sender);
+        schema.wallets().put(tx.offer().recipient(), recipient);
+    });
 
-    wallet_schema.wallets().put(tx.offer().sender(), sender);
-    wallet_schema.wallets().put(
-        tx.offer().recipient(),
-        recipient,
-    );
+    tx.execute(fork);
 
-    tx.execute(&mut wallet_schema.view);
+    let participants = WalletSchema::map(fork, |mut schema| {
+        (schema.wallet(tx.offer().sender()),
+         schema.wallet(tx.offer().recipient()))
+    });
 
-    let sender = wallet_schema.wallet(tx.offer().sender());
-    let recipient = wallet_schema.wallet(tx.offer().recipient());
-    if let (Some(sender), Some(recipient)) = (sender, recipient) {
+    if let (Some(sender), Some(recipient)) = participants {
         assert_eq!(63, sender.balance());
         assert_eq!(137, recipient.balance());
         assert!(sender.in_wallet_assets(&vec![

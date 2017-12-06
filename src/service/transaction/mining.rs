@@ -36,22 +36,19 @@ impl Transaction for TxMining {
     }
 
     fn execute(&self, view: &mut Fork) {
-        let mut schema = WalletSchema { view };
-        let tx_status;
-        if let Some(mut wallet) = schema.wallet(self.pub_key()) {
-            wallet.increase(AMOUNT_MINING_COIN);
-            println!("Mining {} the wallet: {:?}", AMOUNT_MINING_COIN, wallet);
+        WalletSchema::map(view, |mut schema| {
+            let wallet = if let Some(mut wallet) = schema.wallet(self.pub_key()) {
+                println!("Mining {} the wallet: {:?}", AMOUNT_MINING_COIN, wallet);
+                wallet.increase(AMOUNT_MINING_COIN);
+                wallet
+            } else {
+                let wallet = Wallet::new(self.pub_key(), AMOUNT_MINING_COIN, vec![]);
+                println!("Create the wallet: {:?}", wallet);
+                wallet
+            };
             schema.wallets().put(self.pub_key(), wallet);
-            tx_status = TxStatus::Success;
-        } else {
-            let wallet = Wallet::new(self.pub_key(), AMOUNT_MINING_COIN, vec![]);
-            println!("Create the wallet: {:?}", wallet);
-            schema.wallets().put(self.pub_key(), wallet);
-            tx_status = TxStatus::Success;
-
-        }
-        let mut tx_status_schema = TxStatusSchema { view: schema.view };
-        tx_status_schema.set_status(&self.hash(), tx_status);
+        });
+        TxStatusSchema::map(view, |mut schema|{schema.set_status(&self.hash(), TxStatus::Success)});
     }
 
     fn info(&self) -> Value {
@@ -90,15 +87,20 @@ fn mining_test() {
     let tx: TxMining = ::serde_json::from_str(&get_json()).unwrap();
 
     let db = Box::new(MemoryDB::new());
-    let mut wallet_schema = WalletSchema { view: &mut db.fork() };
-
+    let fork = &mut db.fork();
     let wallet = Wallet::new(tx.pub_key(), 100, vec![]);
-    wallet_schema.wallets().put(tx.pub_key(), wallet);
 
-    tx.execute(&mut wallet_schema.view);
+    WalletSchema::map(fork, |mut schema| {
+        schema.wallets().put(tx.pub_key(), wallet);
+    });
 
-    if let Some(wallet) = wallet_schema.wallet(tx.pub_key()) {
-        assert_eq!(AMOUNT_MINING_COIN+100, wallet.balance());
+    tx.execute(fork);
+
+    let wallet = WalletSchema::map(fork, |mut schema| {
+        schema.wallet(tx.pub_key())
+    });
+    if let Some(wallet) = wallet {
+        assert_eq!(AMOUNT_MINING_COIN + 100, wallet.balance());
     } else {
         panic!("Something wrong!!!");
     }

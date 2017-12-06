@@ -35,17 +35,19 @@ impl Transaction for TxCreateWallet {
     }
 
     fn execute(&self, view: &mut Fork) {
-        let mut schema = WalletSchema { view };
-        let tx_status = if schema.wallet(self.pub_key()).is_none() {
-            let wallet = Wallet::new(self.pub_key(), INIT_BALANCE, vec![]);
-            println!("Create the wallet: {:?}", wallet);
-            schema.wallets().put(self.pub_key(), wallet);
-            TxStatus::Success
-        } else {
-            TxStatus::Fail
-        };
-        let mut tx_status_schema = TxStatusSchema { view: schema.view };
-        tx_status_schema.set_status(&self.hash(), tx_status);
+        let tx_status = WalletSchema::map(view, |mut schema| {
+            if schema.wallet(self.pub_key()).is_none() {
+                let wallet = Wallet::new(self.pub_key(), INIT_BALANCE, vec![]);
+                println!("Create the wallet: {:?}", wallet);
+                schema.wallets().put(self.pub_key(), wallet);
+                TxStatus::Success
+            } else {
+                TxStatus::Fail
+            }
+        });
+        TxStatusSchema::map(view, |mut schema| {
+            schema.set_status(&self.hash(), tx_status)
+        });
     }
 
     fn info(&self) -> Value {
@@ -83,14 +85,20 @@ fn add_assets_test() {
     let tx_create: TxCreateWallet = ::serde_json::from_str(&get_json()).unwrap();
 
     let db = Box::new(MemoryDB::new());
-    let mut wallet_schema = WalletSchema { view: &mut db.fork() };
+    let fork = &mut db.fork();
 
     let wallet = Wallet::new(tx_create.pub_key(), INIT_BALANCE, vec![]);
-    assert_eq!(None, wallet_schema.wallet(tx_create.pub_key()));
 
-    tx_create.execute(&mut wallet_schema.view);
+    WalletSchema::map(fork, |mut schema|{
+        assert_eq!(None, schema.wallet(tx_create.pub_key()));
+    });
 
-    assert_eq!(Some(wallet), wallet_schema.wallet(tx_create.pub_key()));
+
+    tx_create.execute(fork);
+
+    WalletSchema::map(fork, |mut schema| {
+        assert_eq!(Some(wallet), schema.wallet(tx_create.pub_key()));
+    });
 }
 
 #[test]

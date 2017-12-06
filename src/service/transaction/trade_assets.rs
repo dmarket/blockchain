@@ -67,10 +67,10 @@ impl Transaction for TxTrade {
     }
 
     fn execute(&self, view: &mut Fork) {
-        let mut schema = WalletSchema { view };
-        let buyer = schema.wallet(self.buyer());
-        let seller = schema.wallet(self.offer().seller());
-        if let (Some(mut buyer), Some(mut seller)) = (buyer, seller) {
+        let participants = WalletSchema::map(view, |mut schema| {
+            (schema.wallet(self.buyer()), schema.wallet(self.offer().seller()))
+        });
+        if let (Some(mut buyer), Some(mut seller)) = participants {
             let price = self.offer().price();
             let assets = self.offer().assets();
             println!("Buyer {:?} => Seller {:?}", buyer, seller);
@@ -89,15 +89,17 @@ impl Transaction for TxTrade {
                 buyer.decrease(price);
                 println!("Seller's balance after transaction : {:?}", seller);
                 println!("Buyer's balance after transaction : {:?}", buyer);
-                let mut wallets = schema.wallets();
-                wallets.put(self.buyer(), buyer);
-                wallets.put(self.offer().seller(), seller);
+                WalletSchema::map(view, |mut schema| {
+                    schema.wallets().put(self.buyer(), buyer);
+                    schema.wallets().put(self.offer().seller(), seller);
+                });
                 TxStatus::Success
             } else {
                 TxStatus::Fail
             };
-            let mut tx_status_schema = TxStatusSchema { view: schema.view };
-            tx_status_schema.set_status(&self.hash(), tx_status);
+            TxStatusSchema::map(view, |mut schema| {
+                schema.set_status(&self.hash(), tx_status)
+            });
         }
     }
 
@@ -158,8 +160,7 @@ fn positive_trade_test() {
     let tx: TxTrade = ::serde_json::from_str(&get_json()).unwrap();
 
     let db = Box::new(MemoryDB::new());
-    let mut wallet_schema = WalletSchema { view: &mut db.fork() };
-
+    let fork = &mut db.fork();
     let seller = Wallet::new(
         tx.offer().seller(),
         tx.get_fee(),
@@ -169,19 +170,22 @@ fn positive_trade_test() {
         ],
     );
     let buyer = Wallet::new(tx.buyer(), 3000, vec![]);
+    WalletSchema::map(fork, |mut schema| {
+        schema.wallets().put(tx.offer().seller(), seller);
+        schema.wallets().put(tx.buyer(), buyer);
+    });
 
-    wallet_schema.wallets().put(tx.offer().seller(), seller);
-    wallet_schema.wallets().put(tx.buyer(), buyer);
+    tx.execute(fork);
 
-    tx.execute(&mut wallet_schema.view);
-
-    let seller = wallet_schema.wallet(tx.offer().seller());
-    let buyer = wallet_schema.wallet(tx.buyer());
-    if let (Some(seller), Some(buyer)) = (seller, buyer) {
+    let participants = WalletSchema::map(fork, |mut shema| {
+        (shema.wallet(tx.offer().seller()),
+         shema.wallet(tx.buyer()))
+    });
+    if let (Some(seller), Some(buyer)) = participants {
         assert_eq!(2912, buyer.balance());
         assert_eq!(88, seller.balance());
         assert_eq!(
-            vec![Asset::new("a4826063-d7bb-57a3-a119-3ba03a51b7fa", 5),],
+            vec![Asset::new("a4826063-d7bb-57a3-a119-3ba03a51b7fa", 5), ],
             seller.assets()
         );
         assert_eq!(

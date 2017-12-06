@@ -9,9 +9,7 @@ use self::uuid::Uuid;
 use service::wallet::{Asset, AssetInfo};
 use service::SERVICE_NAME;
 
-pub struct AssetSchema<'a> {
-    pub view: &'a mut Fork,
-}
+pub struct AssetSchema<'a>(&'a mut Fork);
 
 pub fn generate_asset_id(external_asset_id: &str, pub_key: &PublicKey) -> String {
     let s = HexValue::to_hex(pub_key);
@@ -45,7 +43,7 @@ pub fn external_internal(assets: Vec<Asset>, pub_key: &PublicKey) -> HashMap<Str
 impl<'a> AssetSchema<'a> {
     pub fn assets(&mut self) -> MapIndex<&mut Fork, String, AssetInfo> {
         let key = SERVICE_NAME.to_string().replace("/", "_") + ".assets";
-        MapIndex::new(key, self.view)
+        MapIndex::new(key, self.0)
     }
 
     pub fn info(&mut self, asset_id: &str) -> Option<AssetInfo> {
@@ -94,5 +92,12 @@ impl<'a> AssetSchema<'a> {
                 _ => infos.put(&asset.hash_id().to_string(), info),
             }
         }
+    }
+
+    pub fn map<F, T>(view: &'a mut Fork, f: F) -> T
+        where F: FnOnce(Self) -> T + 'a,
+            T: 'a
+    {
+        f(AssetSchema(view))
     }
 }

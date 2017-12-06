@@ -49,14 +49,13 @@ impl Transaction for TxAddAsset {
     }
 
     fn execute(&self, view: &mut Fork) {
-        let mut wallet_schema = WalletSchema { view };
         let mut tx_status = TxStatus::Fail;
-        let creator = wallet_schema.wallet(self.pub_key());
+        let creator =  WalletSchema::map(view, |mut schema| {schema.wallet(self.pub_key())});
         if let Some(mut creator) = creator {
-
             if creator.balance() >= self.get_fee() {
-                let mut asset_schema = AssetSchema { view: wallet_schema.view };
-                let map_assets = asset_schema.add_assets(self.assets(), self.pub_key());
+                let map_assets = AssetSchema::map(view, |mut schema| {
+                    schema.add_assets(self.assets(), self.pub_key())
+                });
                 creator.decrease(self.get_fee());
                 println!("Convert {:?}", map_assets);
                 let new_assets: Vec<Asset> = map_assets
@@ -67,10 +66,11 @@ impl Transaction for TxAddAsset {
                 tx_status = TxStatus::Success;
             }
             println!("Wallet after mining asset: {:?}", creator);
-            wallet_schema.wallets().put(self.pub_key(), creator);
+            WalletSchema::map(view, |mut schema| { schema.wallets().put(self.pub_key(), creator) });
         }
-        let mut tx_status_schema = TxStatusSchema { view: wallet_schema.view };
-        tx_status_schema.set_status(&self.hash(), tx_status);
+        TxStatusSchema::map(view, |mut schema| {
+            schema.set_status(&self.hash(), tx_status)
+        });
     }
 
     fn info(&self) -> Value {
@@ -128,19 +128,27 @@ fn add_assets_test() {
     let internal_a_id_2 = &internal_assets_ids[&"a8d5c97d-9978-4b0b-9947-7a95dcb31d0f".to_string()];
 
     let db = Box::new(MemoryDB::new());
-    let mut wallet_schema = WalletSchema { view: &mut db.fork() };
+    let fork = &mut db.fork();
 
     let wallet = Wallet::new(
         tx_add.pub_key(),
         2000,
         vec![Asset::new(internal_a_id_1, 3),],
     );
-    wallet_schema.wallets().put(tx_add.pub_key(), wallet);
-
-    if let Some(wallet) = wallet_schema.wallet(tx_add.pub_key()) {
+    let wallet = WalletSchema::map(fork, |mut schema|{
+        schema.wallets().put(tx_add.pub_key(), wallet);
+        schema.wallet(tx_add.pub_key())
+    });
+    if let Some(wallet) = wallet {
         assert!(wallet.in_wallet_assets(&vec![Asset::new(internal_a_id_1, 3)]));
-        tx_add.execute(&mut wallet_schema.view);
-        if let Some(wallet) = wallet_schema.wallet(tx_add.pub_key()) {
+
+        tx_add.execute(fork);
+
+        let wallet = WalletSchema::map(fork, |mut schema|{
+            schema.wallet(tx_add.pub_key())
+        });
+
+        if let Some(wallet) = wallet {
             assert_eq!(2000 - tx_add.get_fee(), wallet.balance());
             assert!(wallet.in_wallet_assets(&vec![Asset::new(internal_a_id_1, 20),]));
             assert!(wallet.in_wallet_assets(&vec![Asset::new(internal_a_id_2, 45),]));

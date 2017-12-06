@@ -4,9 +4,8 @@ use exonum::storage::{Fork, MapIndex, Snapshot};
 
 use service::SERVICE_NAME;
 
-pub struct TxStatusSchema<'a> {
-    pub view: &'a mut Fork,
-}
+pub struct TxStatusSchema<'a>(&'a mut Fork);
+
 #[derive(Debug, Serialize, Deserialize)]
 pub enum TxStatus {
     Fail,
@@ -17,7 +16,7 @@ pub enum TxStatus {
 impl<'a> TxStatusSchema<'a> {
     pub fn txs(&mut self) -> MapIndex<&mut Fork, Hash, u8> {
         let key = SERVICE_NAME.to_string().replace("/", "_") + ".transactions";
-        MapIndex::new(key, &mut self.view)
+        MapIndex::new(key, &mut self.0)
     }
 
     // Utility method to quickly get a separate wallet from the storage
@@ -37,6 +36,12 @@ impl<'a> TxStatusSchema<'a> {
             TxStatus::Pending => 2u8,
         };
         self.txs().put(tx_hash, status);
+    }
+
+    pub fn map<F, T>(view: &'a mut Fork, f: F) -> T
+        where F: FnOnce(Self) -> T + 'a,
+    {
+        f(TxStatusSchema(view))
     }
 }
 
