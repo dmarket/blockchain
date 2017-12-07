@@ -1,18 +1,18 @@
 extern crate exonum;
 
 use exonum::blockchain::Transaction;
-use exonum::storage::Fork;
 use exonum::crypto;
 use exonum::crypto::{PublicKey, Signature};
 use exonum::messages::Message;
+use exonum::storage::Fork;
 use serde_json::Value;
 
-use service::transaction::{TRANSACTION_FEE, PER_ASSET_FEE};
 use service::asset::Asset;
+use service::transaction::{PER_ASSET_FEE, TRANSACTION_FEE};
 
 use super::{SERVICE_ID, TX_TRADE_ASSETS_ID};
+use super::schema::transaction_status::{TxStatus, TxStatusSchema};
 use super::schema::wallet::WalletSchema;
-use super::schema::transaction_status::{TxStatusSchema, TxStatus};
 
 const FEE_FOR_TRADE: f64 = 0.025;
 
@@ -117,7 +117,7 @@ impl Transaction for TxTrade {
 }
 
 #[cfg(test)]
-use exonum::storage::{MemoryDB, Database};
+use exonum::storage::{Database, MemoryDB};
 #[cfg(test)]
 use service::wallet::Wallet;
 

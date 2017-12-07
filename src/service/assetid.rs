@@ -49,7 +49,6 @@ impl ToString for AssetID {
 }
 
 impl AssetID {
-
     pub fn from_str(us: &str) -> Result<AssetID, ParseError> {
         let len = us.len();
         if len != 32 {
@@ -58,12 +57,12 @@ impl AssetID {
 
         let high_u64 = u64::from_str_radix(&us[0..16], 16);
         let low_u64 = u64::from_str_radix(&us[16..32], 16);
-        
+
         if high_u64.is_ok() && low_u64.is_ok() {
             let asset_id = AssetID::new(high_u64.unwrap(), low_u64.unwrap());
             return Ok(asset_id);
         } else {
-            return Err(ParseError::InvalidString())
+            return Err(ParseError::InvalidString());
         }
     }
 }

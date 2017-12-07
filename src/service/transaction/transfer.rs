@@ -1,17 +1,17 @@
 extern crate exonum;
 
 use exonum::blockchain::Transaction;
-use exonum::storage::Fork;
 use exonum::crypto::PublicKey;
 use exonum::messages::Message;
-use service::asset::Asset;
+use exonum::storage::Fork;
 use serde_json::Value;
+use service::asset::Asset;
 
-use service::transaction::{TRANSACTION_FEE, PER_ASSET_FEE};
+use service::transaction::{PER_ASSET_FEE, TRANSACTION_FEE};
 
 use super::{SERVICE_ID, TX_TRANSFER_ID};
+use super::schema::transaction_status::{TxStatus, TxStatusSchema};
 use super::schema::wallet::WalletSchema;
-use super::schema::transaction_status::{TxStatusSchema, TxStatus};
 
 message! {
     struct TxTransfer {
@@ -76,7 +76,7 @@ impl Transaction for TxTransfer {
 }
 
 #[cfg(test)]
-use exonum::storage::{MemoryDB, Database};
+use exonum::storage::{Database, MemoryDB};
 #[cfg(test)]
 use service::wallet::Wallet;
 

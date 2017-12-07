@@ -1,11 +1,12 @@
+
+use exonum::encoding::{CheckedOffset, Field, Offset, Result};
+use exonum::encoding::serialize::WriteBufferWrapper;
+use exonum::encoding::serialize::json::ExonumJson;
 use serde_json;
 use serde_json::value::Value;
-use exonum::encoding::{Field, Offset, CheckedOffset, Result};
-use exonum::encoding::serialize::json::ExonumJson;
-use exonum::encoding::serialize::WriteBufferWrapper;
+use std::error::Error;
 use std::mem;
 use std::result;
-use std::error::Error;
 use std::string::ToString;
 
 /// A 128-bit (16 byte) buffer containing the ID.
@@ -58,9 +59,7 @@ impl AssetID {
             let to = offset + 2;
             match u8::from_str_radix(&us[offset..to], 16) {
                 Ok(byte) => bytes[i] = byte,
-                Err(..) => {
-                    return Err(ParseError::InvalidString())
-                }
+                Err(..) => return Err(ParseError::InvalidString()),
             }
         }
 
@@ -80,7 +79,7 @@ impl ToString for AssetID {
     }
 }
 
-impl <'a> Field<'a> for AssetID {
+impl<'a> Field<'a> for AssetID {
     fn field_size() -> Offset {
         mem::size_of::<AssetIDBytes>() as Offset
     }

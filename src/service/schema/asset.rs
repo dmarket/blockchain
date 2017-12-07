@@ -1,14 +1,13 @@
 
-
-use std::collections::HashMap;
-use exonum::crypto::{PublicKey, HexValue};
+use exonum::crypto::{HexValue, PublicKey};
 use exonum::storage::{Fork, MapIndex};
+use std::collections::HashMap;
 use uuid;
 use uuid::Uuid;
 
 use service::SERVICE_NAME;
+use service::asset::{Asset, AssetInfo, MetaAsset};
 use service::assetid::AssetID;
-use service::asset::{MetaAsset, Asset, AssetInfo};
 
 pub struct AssetSchema<'a>(&'a mut Fork);
 
@@ -19,11 +18,14 @@ pub fn generate_asset_id(meta_data: &str, pub_key: &PublicKey) -> AssetID {
     let uuid = Uuid::new_v5(&uuid::NAMESPACE_DNS, &ful_s);
     match AssetID::from_bytes(uuid.as_bytes()) {
         Ok(asset_id) => asset_id,
-        Err(..) => AssetID::new(0, 0)
+        Err(..) => AssetID::new(0, 0),
     }
 }
 
-pub fn from_meta_to_asset_map(meta_assets: Vec<MetaAsset>, pub_key: &PublicKey) -> HashMap<String, Asset> {
+pub fn from_meta_to_asset_map(
+    meta_assets: Vec<MetaAsset>,
+    pub_key: &PublicKey,
+) -> HashMap<String, Asset> {
     let mut map_asset_id: HashMap<String, Asset> = HashMap::new();
 
     for meta_asset in meta_assets {
@@ -35,7 +37,10 @@ pub fn from_meta_to_asset_map(meta_assets: Vec<MetaAsset>, pub_key: &PublicKey) 
     map_asset_id
 }
 
-pub fn external_internal(meta_assets: Vec<MetaAsset>, pub_key: &PublicKey) -> HashMap<String, String> {
+pub fn external_internal(
+    meta_assets: Vec<MetaAsset>,
+    pub_key: &PublicKey,
+) -> HashMap<String, String> {
     let mut meta_asset_to_asset: HashMap<String, String> = HashMap::new();
 
     for (key, asset) in from_meta_to_asset_map(meta_assets, pub_key) {
@@ -100,9 +105,7 @@ impl<'a> AssetSchema<'a> {
     }
 
     pub fn map<F, T>(view: &'a mut Fork, f: F) -> T
-    where
-        F: FnOnce(Self) -> T + 'a,
-        T: 'a,
+        where F: FnOnce(Self) -> T + 'a, T: 'a
     {
         f(AssetSchema(view))
     }

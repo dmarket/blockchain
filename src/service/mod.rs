@@ -2,36 +2,36 @@ pub mod transaction;
 pub mod schema;
 pub mod wallet;
 pub mod api;
+pub mod asset;
 pub mod assetid;
 pub mod assetid_tbd;
-pub mod asset;
 
 mod nats;
 
-use exonum::blockchain::{Service, Transaction, ApiContext, ServiceContext, Schema};
-use exonum::messages::{RawTransaction, FromRaw};
-use exonum::crypto::{PublicKey, HexValue};
-use exonum::encoding;
 use exonum::api::Api;
+use exonum::blockchain::{ApiContext, Schema, Service, ServiceContext, Transaction};
+use exonum::crypto::{HexValue, PublicKey};
+use exonum::encoding;
+use exonum::messages::{FromRaw, RawTransaction};
 use exonum::storage::Fork;
 use iron::Handler;
 use router::Router;
 use serde_json;
 
-use self::transaction::{TX_TRADE_ASSETS_ID, TX_DEL_ASSETS_ID, TX_ADD_ASSETS_ID,
-                        TX_CREATE_WALLET_ID, TX_TRANSFER_ID, TX_EXCHANGE_ID, TX_MINING_ID};
-use self::transaction::create_wallet::TxCreateWallet;
-use self::transaction::transfer::TxTransfer;
+use self::api::ServiceApi;
+use self::asset::Asset;
+use self::schema::transaction_status::TxSchema;
+use self::schema::wallet::WalletSchema;
+use self::transaction::{TX_ADD_ASSETS_ID, TX_CREATE_WALLET_ID, TX_DEL_ASSETS_ID, TX_EXCHANGE_ID,
+                        TX_MINING_ID, TX_TRADE_ASSETS_ID, TX_TRANSFER_ID};
 use self::transaction::add_assets::TxAddAsset;
+use self::transaction::create_wallet::TxCreateWallet;
 use self::transaction::del_assets::TxDelAsset;
-use self::transaction::trade_assets::TxTrade;
 use self::transaction::exchange::TxExchange;
 use self::transaction::mining::TxMining;
-use self::schema::wallet::WalletSchema;
-use self::schema::transaction_status::TxSchema;
+use self::transaction::trade_assets::TxTrade;
+use self::transaction::transfer::TxTransfer;
 use self::wallet::Wallet;
-use self::asset::Asset;
-use self::api::ServiceApi;
 use config;
 
 // Service identifier

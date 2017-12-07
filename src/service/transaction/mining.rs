@@ -1,17 +1,17 @@
 extern crate exonum;
 
 use exonum::blockchain::Transaction;
-use exonum::storage::Fork;
 use exonum::crypto::PublicKey;
 use exonum::messages::Message;
+use exonum::storage::Fork;
 use serde_json::Value;
 
 use service::transaction::TRANSACTION_FEE;
 
-use super::{SERVICE_ID, TX_MINING_ID, AMOUNT_MINING_COIN};
-use super::wallet::Wallet;
+use super::{AMOUNT_MINING_COIN, SERVICE_ID, TX_MINING_ID};
+use super::schema::transaction_status::{TxStatus, TxStatusSchema};
 use super::schema::wallet::WalletSchema;
-use super::schema::transaction_status::{TxStatusSchema, TxStatus};
+use super::wallet::Wallet;
 
 message! {
     struct TxMining {
@@ -61,7 +61,7 @@ impl Transaction for TxMining {
     }
 }
 #[cfg(test)]
-use exonum::storage::{MemoryDB, Database};
+use exonum::storage::{Database, MemoryDB};
 
 #[cfg(test)]
 fn get_json() -> String {

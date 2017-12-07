@@ -5,15 +5,15 @@ extern crate router;
 extern crate bodyparser;
 extern crate iron;
 
-use exonum::blockchain::Blockchain;
 use exonum::api::Api;
+use exonum::blockchain::Blockchain;
 use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use router::Router;
 
-use service::schema::asset::AssetSchema;
-use service::assetid::AssetID;
 use service::asset::AssetInfo;
+use service::assetid::AssetID;
+use service::schema::asset::AssetSchema;
 
 #[derive(Clone)]
 pub struct AssetApi {
@@ -34,15 +34,14 @@ impl Api for AssetApi {
         let get_owner_for_asset_id = move |req: &mut Request| -> IronResult<Response> {
             let path = req.url.path();
             let asset_id_str = path.last().unwrap();
-            let asset_id = AssetID::from_str(asset_id_str);
+            let asset_id = AssetID::from_str(&asset_id_str);
             if asset_id.is_err() {
                 let res =
-                    self_.not_found_response(&serde_json::to_value("Asset ID is invalid").unwrap());
+                    self_.not_found_response(&serde_json::to_value("Invalid Asset ID").unwrap());
                 let mut res = res.unwrap();
                 res.headers.set(AccessControlAllowOrigin::Any);
                 return Ok(res);
             }
-
             if let Some(owner) = self_.get_owner_for_asset(&asset_id.unwrap()) {
                 let res = self_.ok_response(&serde_json::to_value(owner).unwrap());
                 let mut res = res.unwrap();
