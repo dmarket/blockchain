@@ -39,9 +39,9 @@ impl Transaction for TxTransfer {
     }
 
     fn execute(&self, view: &mut Fork) {
-        let mut schema = WalletSchema { view };
+        let sender = WalletSchema::map(view, |mut schema| schema.wallet(self.from()));
         let mut tx_status = TxStatus::Fail;
-        if let Some(mut sender) = schema.wallet(self.from()) {
+        if let Some(mut sender) = sender {
             let amount = self.amount();
             let update_amount = amount == 0 && sender.balance() >= self.get_fee() ||
                 amount > 0 && sender.balance() >= amount + self.get_fee();
@@ -50,19 +50,21 @@ impl Transaction for TxTransfer {
             if update_amount && update_assets {
                 sender.decrease(amount + self.get_fee());
                 sender.del_assets(&self.assets());
-                let mut receiver = schema.create_wallet(self.to());
-                receiver.increase(amount);
-                receiver.add_assets(self.assets());
-
-                println!("Transfer between wallets: {:?} => {:?}", sender, receiver);
-                let mut wallets = schema.wallets();
-                wallets.put(self.from(), sender);
-                wallets.put(self.to(), receiver);
+                WalletSchema::map(view, |mut schema| {
+                    let mut receiver = schema.create_wallet(self.to());
+                    receiver.increase(amount);
+                    receiver.add_assets(self.assets());
+                    println!("Transfer between wallets: {:?} => {:?}", sender, receiver);
+                    schema.wallets().put(self.from(), sender);
+                    schema.wallets().put(self.to(), receiver);
+                });
                 tx_status = TxStatus::Success;
             }
         }
-        let mut tx_status_schema = TxStatusSchema { view: schema.view };
-        tx_status_schema.set_status(&self.hash(), tx_status);
+        TxStatusSchema::map(
+            view,
+            |mut schema| schema.set_status(&self.hash(), tx_status),
+        );
     }
 
     fn info(&self) -> Value {
@@ -115,29 +117,35 @@ fn test_convert_from_json() {
 
 #[test]
 fn positive_send_staff_test() {
-    let tx: TxTransfer = ::serde_json::from_str(&get_json()).unwrap();
+    let tx_transfer: TxTransfer = ::serde_json::from_str(&get_json()).unwrap();
 
     let db = Box::new(MemoryDB::new());
-    let mut wallet_schema = WalletSchema { view: &mut db.fork() };
+    let fork = &mut db.fork();
 
     let from = Wallet::new(
-        tx.from(),
+        tx_transfer.from(),
         2000,
         vec![
-            Asset::new("a8d5c97d-9978-4b0b-9947-7a95dcb31d0f",100),
+            Asset::new("a8d5c97d-9978-4b0b-9947-7a95dcb31d0f", 100),
         ],
     );
-    wallet_schema.wallets().put(tx.from(), from);
+    WalletSchema::map(fork, |mut schema| {
+        schema.wallets().put(tx_transfer.from(), from);
+    });
 
-    tx.execute(&mut wallet_schema.view);
+    tx_transfer.execute(fork);
 
-    let from = wallet_schema.wallet(tx.from());
-    let to = wallet_schema.wallet(tx.to());
-    if let (Some(from), Some(to)) = (from, to) {
+    let participants = WalletSchema::map(fork, |mut schema| {
+        (
+            schema.wallet(tx_transfer.from()),
+            schema.wallet(tx_transfer.to()),
+        )
+    });
+    if let (Some(from), Some(to)) = participants {
         assert_eq!(994, from.balance());
         assert_eq!(3, to.balance());
         assert_eq!(
-            vec![Asset::new("a8d5c97d-9978-4b0b-9947-7a95dcb31d0f", 97),],
+            vec![Asset::new("a8d5c97d-9978-4b0b-9947-7a95dcb31d0f", 97), ],
             from.assets()
         );
         assert_eq!(
@@ -149,7 +157,6 @@ fn positive_send_staff_test() {
     } else {
         panic!("Something wrong!!!");
     }
-
 }
 #[test]
 fn transfer_info_test() {

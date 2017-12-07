@@ -24,8 +24,7 @@ pub struct AssetApi {
 impl AssetApi {
     fn get_owner_for_asset(&self, asset_id: &AssetID) -> Option<AssetInfo> {
         let mut view = self.blockchain.fork();
-        let mut schema = AssetSchema { view: &mut view };
-        schema.info(asset_id)
+        AssetSchema::map(&mut view, |mut schema| schema.info(asset_id))
     }
 }
 

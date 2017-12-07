@@ -12,6 +12,7 @@ use super::{SERVICE_ID, TX_DEL_ASSETS_ID};
 use service::wallet::Asset;
 use service::schema::asset::AssetSchema;
 use service::schema::wallet::WalletSchema;
+use service::schema::transaction_status::{TxStatusSchema, TxStatus};
 
 message! {
     struct TxDelAsset {
@@ -29,6 +30,41 @@ impl TxDelAsset {
     fn get_fee(&self) -> u64 {
         TRANSACTION_FEE + PER_ASSET_FEE * Asset::count(&self.assets())
     }
+
+    fn process(&self, view: &mut Fork) -> TxStatus {
+        // Invariant: for an asset id, the sum of amounts for all assets in
+        // all wallets for this asset id is equal to the amonut stored in the
+        // AssetInfo associated with this asset id.
+
+
+        for a in self.assets() {
+            match AssetSchema::map(view, |mut assets| assets.info(&a.hash_id())) {
+                Some(ref info)
+                    if info.creator() != self.pub_key() && a.amount() <= info.amount() => {
+                    return TxStatus::Fail
+                }
+                None => return TxStatus::Fail,
+                _ => (),
+            }
+        }
+
+        match WalletSchema::map(view, |mut schema| schema.wallet(self.pub_key())) {
+            Some(mut creator) => {
+                if creator.balance() >= self.get_fee() && creator.del_assets(&self.assets()) {
+                    creator.decrease(self.get_fee());
+                    println!("Asset {:?}", self.assets());
+                    println!("Wallet after delete assets: {:?}", creator);
+                    WalletSchema::map(view, |mut schema| {
+                        schema.wallets().put(self.pub_key(), creator)
+                    });
+                }
+            }
+            _ => return TxStatus::Fail,
+        }
+
+        AssetSchema::map(view, |mut schema| schema.del_assets(&self.assets()));
+        TxStatus::Success
+    }
 }
 
 impl Transaction for TxDelAsset {
@@ -37,34 +73,11 @@ impl Transaction for TxDelAsset {
     }
 
     fn execute(&self, view: &mut Fork) {
-        // Invariant: for an asset id, the sum of amounts for all assets in
-        // all wallets for this asset id is equal to the amonut stored in the
-        // AssetInfo associated with this asset id.
-
-        let mut schema = AssetSchema { view };
-        for a in self.assets() {
-            match schema.info(&a.hash_id()) {
-                Some(ref info) if info.creator() != self.pub_key() => return,
-                None => return,
-                _ => (),
-            }
-        }
-
-        let mut schema = WalletSchema { view: schema.view };
-        match schema.wallet(self.pub_key()) {
-            Some(mut creator) => {
-                if creator.balance() >= self.get_fee() && creator.del_assets(&self.assets()) {
-                    creator.decrease(self.get_fee());
-                    println!("Asset {:?}", self.assets());
-                    println!("Wallet after delete assets: {:?}", creator);
-                    schema.wallets().put(self.pub_key(), creator);
-                }
-            }
-            _ => return,
-        }
-
-        let mut schema = AssetSchema { view: schema.view };
-        schema.del_assets(&self.assets());
+        let tx_status = self.process(view);
+        TxStatusSchema::map(
+            view,
+            |mut schema| schema.set_status(&self.hash(), tx_status),
+        );
     }
 
     fn info(&self) -> Value {
@@ -122,24 +135,17 @@ mod test {
         let tx_del: TxDelAsset = ::serde_json::from_str(&get_json()).unwrap();
 
         let db = Box::new(MemoryDB::new());
-
-        let mut asset_schema = AssetSchema { view: &mut db.fork() };
-        asset_schema.assets().put(
-            &"asset_1".to_string(),
-            AssetInfo::new(tx_del.pub_key(), 100),
-        );
-        asset_schema.assets().put(
-            &"asset_2".to_string(),
-            AssetInfo::new(tx_del.pub_key(), 17),
-        );
-        {
-            let assets = asset_schema.assets();
-            for info in assets.iter() {
-                println!("Put info: {:?}", info);
-            }
-        }
-
-        let mut wallet_schema = WalletSchema { view: &mut asset_schema.view };
+        let fork = &mut db.fork();
+        AssetSchema::map(fork, |mut asset_schema| {
+            asset_schema.assets().put(
+                &"asset_1".to_string(),
+                AssetInfo::new(tx_del.pub_key(), 100),
+            );
+            asset_schema.assets().put(
+                &"asset_2".to_string(),
+                AssetInfo::new(tx_del.pub_key(), 17),
+            );
+        });
 
         let assets = vec![
             Asset::new("asset_1", 100),
@@ -147,16 +153,19 @@ mod test {
         ];
 
         let wallet = Wallet::new(tx_del.pub_key(), 2000, assets);
-        wallet_schema.wallets().put(tx_del.pub_key(), wallet);
+        WalletSchema::map(fork, |mut schema| {
+            schema.wallets().put(tx_del.pub_key(), wallet);
+        });
 
-        tx_del.execute(&mut wallet_schema.view);
+        tx_del.execute(fork);
 
-        if let Some(wallet) = wallet_schema.wallet(tx_del.pub_key()) {
+        let wallet = WalletSchema::map(fork, |mut schema| schema.wallet(tx_del.pub_key()));
+        if let Some(wallet) = wallet {
             assert!(wallet.in_wallet_assets(&vec![
-                                        Asset::new("asset_1", 55)
+                Asset::new("asset_1", 55)
             ]));
             assert!(!wallet.in_wallet_assets(&vec![
-                                         Asset::new("asset_2", 0)
+                Asset::new("asset_2", 0)
             ]));
         } else {
             panic!("Something wrong!!!");
@@ -168,24 +177,29 @@ mod test {
         let tx_del: TxDelAsset = ::serde_json::from_str(&get_json()).unwrap();
 
         let db = Box::new(MemoryDB::new());
-        let mut wallet_schema = WalletSchema { view: &mut db.fork() };
+        let fork = &mut db.fork();
 
         let assets = vec![
             Asset::new("asset_1", 400),
         ];
-
         let wallet = Wallet::new(tx_del.pub_key(), 100, assets);
-        wallet_schema.wallets().put(tx_del.pub_key(), wallet);
 
-        tx_del.execute(&mut wallet_schema.view);
+        WalletSchema::map(fork, |mut schema| {
+            schema.wallets().put(tx_del.pub_key(), wallet);
+        });
 
-        if let Some(wallet) = wallet_schema.wallet(tx_del.pub_key()) {
+        tx_del.execute(fork);
+
+        WalletSchema::map(fork, |mut schema| if let Some(wallet) = schema.wallet(
+            tx_del.pub_key(),
+        )
+        {
             assert!(wallet.in_wallet_assets(&vec![
-                                        Asset::new("asset_1", 400)
-            ]));
+                    Asset::new("asset_1", 400)
+                ]));
         } else {
             panic!("Something wrong!!!");
-        }
+        });
     }
 
     #[test]
