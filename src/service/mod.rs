@@ -2,6 +2,7 @@ pub mod transaction;
 pub mod schema;
 pub mod wallet;
 pub mod api;
+pub mod assetid;
 
 mod nats;
 

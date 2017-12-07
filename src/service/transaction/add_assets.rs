@@ -38,7 +38,7 @@ impl Transaction for TxAddAsset {
     fn verify(&self) -> bool {
         if self.verify_signature(self.pub_key()) {
             for asset in self.assets().iter() {
-                if asset.hash_id().chars().count() > ASSET_HASH_ID_MAX_LENGTH {
+                if asset.hash_id().to_string().chars().count() > ASSET_HASH_ID_MAX_LENGTH {
                     return false;
                 }
             }

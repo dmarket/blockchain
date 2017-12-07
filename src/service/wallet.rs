@@ -3,12 +3,14 @@ extern crate exonum;
 use exonum::crypto::PublicKey;
 use exonum::encoding::Field;
 
+use service::assetid::AssetID;
+
 encoding_struct! {
     struct Asset {
-        const SIZE = 12;
+        const SIZE = 20;
 
-        field hash_id: &str [0 =>  8]
-        field amount:  u32 [8 => 12]
+        field hash_id: AssetID [0 =>  16]
+        field amount:  u32 [16 => 20]
     }
 }
 

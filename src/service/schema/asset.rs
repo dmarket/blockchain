@@ -8,25 +8,28 @@ use self::uuid::Uuid;
 
 use service::wallet::{Asset, AssetInfo};
 use service::SERVICE_NAME;
+use service::assetid::AssetID;
 
 pub struct AssetSchema<'a> {
     pub view: &'a mut Fork,
 }
 
-pub fn generate_asset_id(external_asset_id: &str, pub_key: &PublicKey) -> String {
+pub fn generate_asset_id(external_asset_id: &AssetID, pub_key: &PublicKey) -> AssetID {
     let s = HexValue::to_hex(pub_key);
-    let ful_s = s + external_asset_id;
+    let ful_s = s + &external_asset_id.to_string();
 
-    Uuid::new_v5(&uuid::NAMESPACE_DNS, &ful_s)
-        .hyphenated()
-        .to_string()
+    let uuid = Uuid::new_v5(&uuid::NAMESPACE_DNS, &ful_s);
+    match AssetID::from_bytes(uuid.as_bytes()) {
+        Ok(asset_id) => asset_id,
+        Err(..) => AssetID::new(0, 0)
+    }
 }
 
 pub fn get_new_assets_id(assets: Vec<Asset>, pub_key: &PublicKey) -> HashMap<String, Asset> {
     let mut map_asset_id: HashMap<String, Asset> = HashMap::new();
     for asset in assets {
-        let new_hash_id = generate_asset_id(asset.hash_id(), pub_key);
-        let new_asset = Asset::new(&new_hash_id, asset.amount());
+        let asset_id = generate_asset_id(&asset.hash_id(), pub_key);
+        let new_asset = Asset::new(asset_id, asset.amount());
         map_asset_id.insert(asset.hash_id().to_string(), new_asset);
     }
 
@@ -48,12 +51,12 @@ impl<'a> AssetSchema<'a> {
         MapIndex::new(key, self.view)
     }
 
-    pub fn info(&mut self, asset_id: &str) -> Option<AssetInfo> {
+    pub fn info(&mut self, asset_id: &AssetID) -> Option<AssetInfo> {
         self.assets().get(&asset_id.to_string())
     }
 
-    pub fn add_asset(&mut self, asset_id: &str, creator: &PublicKey, amount: u32) -> bool {
-        match self.info(asset_id) {
+    pub fn add_asset(&mut self, asset_id: &AssetID, creator: &PublicKey, amount: u32) -> bool {
+        match self.info(&asset_id) {
             None => {
                 let info = AssetInfo::new(creator, amount);
                 self.assets().put(&asset_id.to_string(), info);
@@ -71,9 +74,9 @@ impl<'a> AssetSchema<'a> {
     ) -> HashMap<String, Asset> {
         let mut map_asset_id: HashMap<String, Asset> = HashMap::new();
         for asset in assets {
-            let new_hash_id = generate_asset_id(asset.hash_id(), pub_key);
-            let new_asset = Asset::new(&new_hash_id, asset.amount());
-            self.add_asset(&new_hash_id, pub_key, asset.amount());
+            let asset_id = generate_asset_id(&asset.hash_id(), pub_key);
+            let new_asset = Asset::new(asset_id, asset.amount());
+            self.add_asset(&new_asset.hash_id(), pub_key, asset.amount());
             map_asset_id.insert(asset.hash_id().to_string(), new_asset);
         }
 

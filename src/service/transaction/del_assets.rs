@@ -43,7 +43,7 @@ impl Transaction for TxDelAsset {
 
         let mut schema = AssetSchema { view };
         for a in self.assets() {
-            match schema.info(a.hash_id()) {
+            match schema.info(&a.hash_id()) {
                 Some(ref info) if info.creator() != self.pub_key() => return,
                 None => return,
                 _ => (),
