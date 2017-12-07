@@ -5,14 +5,14 @@ extern crate router;
 extern crate bodyparser;
 extern crate iron;
 
-use exonum::blockchain::Blockchain;
 use exonum::api::Api;
+use exonum::blockchain::Blockchain;
 use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use router::Router;
 
-use service::wallet::AssetInfo;
 use service::schema::asset::AssetSchema;
+use service::wallet::AssetInfo;
 
 #[derive(Clone)]
 pub struct AssetApi {

@@ -1,6 +1,6 @@
-use std::sync::{Once, ONCE_INIT};
+use std::sync::{ONCE_INIT, Once};
 use std::sync::mpsc;
-use std::sync::mpsc::{Sender, Receiver};
+use std::sync::mpsc::{Receiver, Sender};
 use std::thread;
 use std::time::{Duration, Instant};
 
