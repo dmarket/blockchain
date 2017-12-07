@@ -65,7 +65,7 @@ struct TransactionResponse {
 impl TransactionApi {
     fn get_status(&self, tx_hash: &Hash) -> Option<TxStatus> {
         let mut view = self.blockchain.fork();
-        TxStatusSchema::map(&mut view, |mut schema| {schema.get_status(tx_hash)})
+        TxStatusSchema::map(&mut view, |mut schema| schema.get_status(tx_hash))
     }
 }
 

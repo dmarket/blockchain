@@ -99,9 +99,7 @@ impl Service for CurrencyService {
         let assets: Vec<Asset> = vec![];
         let wallet = Wallet::new(&basic_wallet, 13_700_000_000_000_000, assets);
         println!("Create the wallet: {:?}", wallet);
-        WalletSchema::map(fork, |mut db| {
-            db.wallets().put(&basic_wallet, wallet)
-        });
+        WalletSchema::map(fork, |mut db| db.wallets().put(&basic_wallet, wallet));
 
         serde_json::Value::Null
     }

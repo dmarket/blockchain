@@ -50,7 +50,7 @@ impl Transaction for TxAddAsset {
 
     fn execute(&self, view: &mut Fork) {
         let mut tx_status = TxStatus::Fail;
-        let creator =  WalletSchema::map(view, |mut schema| {schema.wallet(self.pub_key())});
+        let creator = WalletSchema::map(view, |mut schema| schema.wallet(self.pub_key()));
         if let Some(mut creator) = creator {
             if creator.balance() >= self.get_fee() {
                 let map_assets = AssetSchema::map(view, |mut schema| {
@@ -66,11 +66,14 @@ impl Transaction for TxAddAsset {
                 tx_status = TxStatus::Success;
             }
             println!("Wallet after mining asset: {:?}", creator);
-            WalletSchema::map(view, |mut schema| { schema.wallets().put(self.pub_key(), creator) });
+            WalletSchema::map(view, |mut schema| {
+                schema.wallets().put(self.pub_key(), creator)
+            });
         }
-        TxStatusSchema::map(view, |mut schema| {
-            schema.set_status(&self.hash(), tx_status)
-        });
+        TxStatusSchema::map(
+            view,
+            |mut schema| schema.set_status(&self.hash(), tx_status),
+        );
     }
 
     fn info(&self) -> Value {
@@ -135,7 +138,7 @@ fn add_assets_test() {
         2000,
         vec![Asset::new(internal_a_id_1, 3),],
     );
-    let wallet = WalletSchema::map(fork, |mut schema|{
+    let wallet = WalletSchema::map(fork, |mut schema| {
         schema.wallets().put(tx_add.pub_key(), wallet);
         schema.wallet(tx_add.pub_key())
     });
@@ -144,9 +147,7 @@ fn add_assets_test() {
 
         tx_add.execute(fork);
 
-        let wallet = WalletSchema::map(fork, |mut schema|{
-            schema.wallet(tx_add.pub_key())
-        });
+        let wallet = WalletSchema::map(fork, |mut schema| schema.wallet(tx_add.pub_key()));
 
         if let Some(wallet) = wallet {
             assert_eq!(2000 - tx_add.get_fee(), wallet.balance());

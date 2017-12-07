@@ -39,7 +39,8 @@ impl<'a> TxStatusSchema<'a> {
     }
 
     pub fn map<F, T>(view: &'a mut Fork, f: F) -> T
-        where F: FnOnce(Self) -> T + 'a,
+    where
+        F: FnOnce(Self) -> T + 'a,
     {
         f(TxStatusSchema(view))
     }

@@ -38,29 +38,33 @@ impl TxDelAsset {
 
 
         for a in self.assets() {
-            match AssetSchema::map(view, |mut assets| {assets.info(a.hash_id())}) {
-                Some(ref info) if info.creator() != self.pub_key() && a.amount() <= info.amount() => return TxStatus::Fail,
+            match AssetSchema::map(view, |mut assets| assets.info(a.hash_id())) {
+                Some(ref info)
+                    if info.creator() != self.pub_key() && a.amount() <= info.amount() => {
+                    return TxStatus::Fail
+                }
                 None => return TxStatus::Fail,
                 _ => (),
             }
         }
 
-        match WalletSchema::map( view, |mut schema| { schema.wallet(self.pub_key())}) {
+        match WalletSchema::map(view, |mut schema| schema.wallet(self.pub_key())) {
             Some(mut creator) => {
                 if creator.balance() >= self.get_fee() && creator.del_assets(&self.assets()) {
                     creator.decrease(self.get_fee());
                     println!("Asset {:?}", self.assets());
                     println!("Wallet after delete assets: {:?}", creator);
-                    WalletSchema::map( view, |mut schema| { schema.wallets().put(self.pub_key(), creator)});
+                    WalletSchema::map(view, |mut schema| {
+                        schema.wallets().put(self.pub_key(), creator)
+                    });
                 }
             }
             _ => return TxStatus::Fail,
         }
 
-        AssetSchema::map(view, |mut schema| {schema.del_assets(&self.assets())});
+        AssetSchema::map(view, |mut schema| schema.del_assets(&self.assets()));
         TxStatus::Success
     }
-
 }
 
 impl Transaction for TxDelAsset {
@@ -70,9 +74,10 @@ impl Transaction for TxDelAsset {
 
     fn execute(&self, view: &mut Fork) {
         let tx_status = self.process(view);
-        TxStatusSchema::map(view,  |mut schema| {
-            schema.set_status(&self.hash(), tx_status)
-        });
+        TxStatusSchema::map(
+            view,
+            |mut schema| schema.set_status(&self.hash(), tx_status),
+        );
     }
 
     fn info(&self) -> Value {
@@ -154,9 +159,7 @@ mod test {
 
         tx_del.execute(fork);
 
-        let wallet = WalletSchema::map(fork, |mut schema| {
-            schema.wallet(tx_del.pub_key())
-        });
+        let wallet = WalletSchema::map(fork, |mut schema| schema.wallet(tx_del.pub_key()));
         if let Some(wallet) = wallet {
             assert!(wallet.in_wallet_assets(&vec![
                 Asset::new("asset_1", 55)
@@ -187,14 +190,15 @@ mod test {
 
         tx_del.execute(fork);
 
-        WalletSchema::map(fork, |mut schema| {
-            if let Some(wallet) = schema.wallet(tx_del.pub_key()) {
-                assert!(wallet.in_wallet_assets(&vec![
+        WalletSchema::map(fork, |mut schema| if let Some(wallet) = schema.wallet(
+            tx_del.pub_key(),
+        )
+        {
+            assert!(wallet.in_wallet_assets(&vec![
                     Asset::new("asset_1", 400)
                 ]));
-            } else {
-                panic!("Something wrong!!!");
-            }
+        } else {
+            panic!("Something wrong!!!");
         });
     }
 

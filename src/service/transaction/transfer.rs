@@ -39,7 +39,7 @@ impl Transaction for TxTransfer {
     }
 
     fn execute(&self, view: &mut Fork) {
-        let sender = WalletSchema::map(view,|mut schema|{schema.wallet(self.from())});
+        let sender = WalletSchema::map(view, |mut schema| schema.wallet(self.from()));
         let mut tx_status = TxStatus::Fail;
         if let Some(mut sender) = sender {
             let amount = self.amount();
@@ -50,7 +50,7 @@ impl Transaction for TxTransfer {
             if update_amount && update_assets {
                 sender.decrease(amount + self.get_fee());
                 sender.del_assets(&self.assets());
-                WalletSchema::map(view,|mut schema|{
+                WalletSchema::map(view, |mut schema| {
                     let mut receiver = schema.create_wallet(self.to());
                     receiver.increase(amount);
                     receiver.add_assets(self.assets());
@@ -61,7 +61,10 @@ impl Transaction for TxTransfer {
                 tx_status = TxStatus::Success;
             }
         }
-        TxStatusSchema::map(view, |mut schema| {schema.set_status(&self.hash(), tx_status)});
+        TxStatusSchema::map(
+            view,
+            |mut schema| schema.set_status(&self.hash(), tx_status),
+        );
     }
 
     fn info(&self) -> Value {
@@ -133,8 +136,10 @@ fn positive_send_staff_test() {
     tx_transfer.execute(fork);
 
     let participants = WalletSchema::map(fork, |mut schema| {
-        (schema.wallet(tx_transfer.from()),
-         schema.wallet(tx_transfer.to()))
+        (
+            schema.wallet(tx_transfer.from()),
+            schema.wallet(tx_transfer.to()),
+        )
     });
     if let (Some(from), Some(to)) = participants {
         assert_eq!(994, from.balance());

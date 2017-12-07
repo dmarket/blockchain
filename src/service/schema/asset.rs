@@ -95,8 +95,9 @@ impl<'a> AssetSchema<'a> {
     }
 
     pub fn map<F, T>(view: &'a mut Fork, f: F) -> T
-        where F: FnOnce(Self) -> T + 'a,
-            T: 'a
+    where
+        F: FnOnce(Self) -> T + 'a,
+        T: 'a,
     {
         f(AssetSchema(view))
     }

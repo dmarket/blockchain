@@ -68,14 +68,18 @@ impl Transaction for TxTrade {
 
     fn execute(&self, view: &mut Fork) {
         let participants = WalletSchema::map(view, |mut schema| {
-            (schema.wallet(self.buyer()), schema.wallet(self.offer().seller()))
+            (
+                schema.wallet(self.buyer()),
+                schema.wallet(self.offer().seller()),
+            )
         });
         if let (Some(mut buyer), Some(mut seller)) = participants {
             let price = self.offer().price();
             let assets = self.offer().assets();
             println!("Buyer {:?} => Seller {:?}", buyer, seller);
             let tx_status = if (buyer.balance() >= price) && seller.in_wallet_assets(&assets) &&
-                seller.balance() + price >= self.get_fee() //todo: необходимо определится с генергацией fee
+                seller.balance() + price >= self.get_fee()
+            //todo: необходимо определится с генергацией fee
             {
                 println!("--   Trade transaction   --");
                 println!("Seller's balance before transaction : {:?}", seller);
@@ -97,9 +101,10 @@ impl Transaction for TxTrade {
             } else {
                 TxStatus::Fail
             };
-            TxStatusSchema::map(view, |mut schema| {
-                schema.set_status(&self.hash(), tx_status)
-            });
+            TxStatusSchema::map(
+                view,
+                |mut schema| schema.set_status(&self.hash(), tx_status),
+            );
         }
     }
 
@@ -178,8 +183,7 @@ fn positive_trade_test() {
     tx.execute(fork);
 
     let participants = WalletSchema::map(fork, |mut shema| {
-        (shema.wallet(tx.offer().seller()),
-         shema.wallet(tx.buyer()))
+        (shema.wallet(tx.offer().seller()), shema.wallet(tx.buyer()))
     });
     if let (Some(seller), Some(buyer)) = participants {
         assert_eq!(2912, buyer.balance());

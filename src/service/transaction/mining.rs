@@ -48,7 +48,9 @@ impl Transaction for TxMining {
             };
             schema.wallets().put(self.pub_key(), wallet);
         });
-        TxStatusSchema::map(view, |mut schema|{schema.set_status(&self.hash(), TxStatus::Success)});
+        TxStatusSchema::map(view, |mut schema| {
+            schema.set_status(&self.hash(), TxStatus::Success)
+        });
     }
 
     fn info(&self) -> Value {
@@ -96,9 +98,7 @@ fn mining_test() {
 
     tx.execute(fork);
 
-    let wallet = WalletSchema::map(fork, |mut schema| {
-        schema.wallet(tx.pub_key())
-    });
+    let wallet = WalletSchema::map(fork, |mut schema| schema.wallet(tx.pub_key()));
     if let Some(wallet) = wallet {
         assert_eq!(AMOUNT_MINING_COIN + 100, wallet.balance());
     } else {

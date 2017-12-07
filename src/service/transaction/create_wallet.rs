@@ -35,19 +35,21 @@ impl Transaction for TxCreateWallet {
     }
 
     fn execute(&self, view: &mut Fork) {
-        let tx_status = WalletSchema::map(view, |mut schema| {
-            if schema.wallet(self.pub_key()).is_none() {
-                let wallet = Wallet::new(self.pub_key(), INIT_BALANCE, vec![]);
-                println!("Create the wallet: {:?}", wallet);
-                schema.wallets().put(self.pub_key(), wallet);
-                TxStatus::Success
-            } else {
-                TxStatus::Fail
-            }
+        let tx_status = WalletSchema::map(view, |mut schema| if schema
+            .wallet(self.pub_key())
+            .is_none()
+        {
+            let wallet = Wallet::new(self.pub_key(), INIT_BALANCE, vec![]);
+            println!("Create the wallet: {:?}", wallet);
+            schema.wallets().put(self.pub_key(), wallet);
+            TxStatus::Success
+        } else {
+            TxStatus::Fail
         });
-        TxStatusSchema::map(view, |mut schema| {
-            schema.set_status(&self.hash(), tx_status)
-        });
+        TxStatusSchema::map(
+            view,
+            |mut schema| schema.set_status(&self.hash(), tx_status),
+        );
     }
 
     fn info(&self) -> Value {
@@ -89,7 +91,7 @@ fn add_assets_test() {
 
     let wallet = Wallet::new(tx_create.pub_key(), INIT_BALANCE, vec![]);
 
-    WalletSchema::map(fork, |mut schema|{
+    WalletSchema::map(fork, |mut schema| {
         assert_eq!(None, schema.wallet(tx_create.pub_key()));
     });
 

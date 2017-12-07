@@ -28,7 +28,7 @@ pub struct WalletApi {
 impl WalletApi {
     fn get_wallet(&self, pub_key: &PublicKey) -> Option<Wallet> {
         let mut view = self.blockchain.fork();
-        WalletSchema::map(&mut view, |mut schema|{schema.wallet(pub_key)})
+        WalletSchema::map(&mut view, |mut schema| schema.wallet(pub_key))
     }
 
     fn get_wallets(&self) -> Option<Vec<Wallet>> {
