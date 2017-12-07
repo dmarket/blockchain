@@ -3,6 +3,8 @@ pub mod schema;
 pub mod wallet;
 pub mod api;
 pub mod assetid;
+pub mod assetid_tbd;
+pub mod asset;
 
 mod nats;
 
@@ -27,7 +29,8 @@ use self::transaction::exchange::TxExchange;
 use self::transaction::mining::TxMining;
 use self::schema::wallet::WalletSchema;
 use self::schema::transaction_status::TxSchema;
-use self::wallet::{Wallet, Asset};
+use self::wallet::Wallet;
+use self::asset::Asset;
 use self::api::ServiceApi;
 use config;
 

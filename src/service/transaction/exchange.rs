@@ -7,9 +7,9 @@ use exonum::messages::Message;
 use serde_json::Value;
 
 use service::transaction::TRANSACTION_FEE;
+use service::asset::Asset;
 
 use super::{SERVICE_ID, TX_EXCHANGE_ID};
-use super::wallet::Asset;
 use super::schema::wallet::WalletSchema;
 use super::schema::transaction_status::{TxStatusSchema, TxStatus};
 

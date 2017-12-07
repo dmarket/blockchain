@@ -15,7 +15,8 @@ use iron::prelude::*;
 use router::Router;
 
 use service::schema::wallet::WalletSchema;
-use service::wallet::{Wallet, Asset};
+use service::wallet::Wallet;
+use service::asset::Asset;
 use service::ServiceApi;
 
 #[derive(Clone)]

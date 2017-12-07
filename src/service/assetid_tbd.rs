@@ -1,7 +1,4 @@
-extern crate exonum;
-extern crate serde_json;
-
-use std::str::FromStr;
+use serde_json;
 use serde_json::value::Value;
 use exonum::encoding::{Field, Offset, CheckedOffset, Result};
 use exonum::encoding::serialize::json::ExonumJson;
@@ -37,23 +34,47 @@ impl AssetID {
         &self.bytes
     }
 
-    pub fn from_bytes(b: &[u8]) -> Result<AssetID, ParseError> {
+    pub fn from_bytes(b: &[u8]) -> result::Result<AssetID, ParseError> {
         let len = b.len();
         if len != 16 {
             return Err(ParseError::InvalidLength(len));
         }
 
-        let mut assetid = AssetID { bytes: [0; 16] };
-        assetid.bytes.copy_from_slice(bytes);
+        let mut assetid = AssetID::nil();
+        assetid.bytes.copy_from_slice(b);
         Ok(assetid)
+    }
+
+    pub fn from_str(us: &str) -> result::Result<AssetID, ParseError> {
+        let len = us.len();
+        if len != 32 {
+            return Err(ParseError::InvalidLength(len));
+        }
+
+        let mut bytes = [0u8; 16];
+
+        for i in 0..bytes.len() {
+            let offset = i * 2;
+            let to = offset + 2;
+            match u8::from_str_radix(&us[offset..to], 16) {
+                Ok(byte) => bytes[i] = byte,
+                Err(..) => {
+                    return Err(ParseError::InvalidString())
+                }
+            }
+        }
+
+        AssetID::from_bytes(&bytes)
     }
 }
 
 impl ToString for AssetID {
     fn to_string(&self) -> String {
-        let assetid_hex: String = "";
-        for i in 0..16 {
-            assetid_hex += format!("{:2x}", self.bytes()[i]);
+        let mut assetid_hex = "".to_string();
+        let len = self.bytes.len();
+        for i in 0..len {
+            let byte_hex = format!("{:2x}", self.bytes[i]);
+            assetid_hex += &*byte_hex;
         }
         assetid_hex
     }
@@ -93,9 +114,11 @@ impl ExonumJson for AssetID {
         to: Offset,
     ) -> result::Result<(), Box<Error>> {
         let string: String = serde_json::from_value(value.clone()).unwrap();
-        let uuid = Uuid::from_str(&string).unwrap();
-        let asset_id = AssetID::from_uuid(&uuid);
-        buffer.write(from, to, asset_id);
+        let asset_id = AssetID::from_str(&string);
+        // TODO: FIX ME
+        if asset_id.is_ok() {
+            buffer.write(from, to, asset_id.unwrap());
+        }
         Ok(())
     }
 

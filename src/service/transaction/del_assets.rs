@@ -9,7 +9,7 @@ use serde_json::Value;
 use service::transaction::{TRANSACTION_FEE, PER_ASSET_FEE};
 
 use super::{SERVICE_ID, TX_DEL_ASSETS_ID};
-use service::wallet::Asset;
+use service::asset::Asset;
 use service::schema::asset::AssetSchema;
 use service::schema::wallet::WalletSchema;
 use service::schema::transaction_status::{TxStatusSchema, TxStatus};

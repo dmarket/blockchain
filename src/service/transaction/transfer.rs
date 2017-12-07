@@ -4,7 +4,7 @@ use exonum::blockchain::Transaction;
 use exonum::storage::Fork;
 use exonum::crypto::PublicKey;
 use exonum::messages::Message;
-use service::wallet::Asset;
+use service::asset::Asset;
 use serde_json::Value;
 
 use service::transaction::{TRANSACTION_FEE, PER_ASSET_FEE};

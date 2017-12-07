@@ -7,14 +7,12 @@ use exonum::messages::Message;
 use serde_json::Value;
 
 use service::transaction::{TRANSACTION_FEE, PER_ASSET_FEE};
+use service::asset::{Asset, MetaAsset};
 
 use super::{SERVICE_ID, TX_ADD_ASSETS_ID};
-use super::wallet::Asset;
 use super::schema::wallet::WalletSchema;
 use super::schema::asset::{AssetSchema, external_internal};
 use super::schema::transaction_status::{TxStatusSchema, TxStatus};
-
-pub const ASSET_HASH_ID_MAX_LENGTH: usize = 10 * 1024; // 10 KBytes
 
 message! {
     struct TxAddAsset {
@@ -22,23 +20,23 @@ message! {
         const ID = TX_ADD_ASSETS_ID;
         const SIZE = 48;
 
-        field pub_key:     &PublicKey  [00 => 32]
-        field assets:      Vec<Asset>  [32 => 40]
-        field seed:        u64         [40 => 48]
+        field pub_key:       &PublicKey       [00 => 32]
+        field meta_assets:   Vec<MetaAsset>   [32 => 40]
+        field seed:          u64              [40 => 48]
     }
 }
 
 impl TxAddAsset {
     fn get_fee(&self) -> u64 {
-        TRANSACTION_FEE + PER_ASSET_FEE * Asset::count(&self.assets())
+        TRANSACTION_FEE + PER_ASSET_FEE * MetaAsset::count(&self.meta_assets())
     }
 }
 
 impl Transaction for TxAddAsset {
     fn verify(&self) -> bool {
         if self.verify_signature(self.pub_key()) {
-            for asset in self.assets().iter() {
-                if asset.hash_id().to_string().chars().count() > ASSET_HASH_ID_MAX_LENGTH {
+            for asset in self.meta_assets().iter() {
+                if !asset.is_valid() {
                     return false;
                 }
             }
@@ -54,7 +52,7 @@ impl Transaction for TxAddAsset {
         if let Some(mut creator) = creator {
             if creator.balance() >= self.get_fee() {
                 let map_assets = AssetSchema::map(view, |mut schema| {
-                    schema.add_assets(self.assets(), self.pub_key())
+                    schema.add_assets(self.meta_assets(), self.pub_key())
                 });
                 creator.decrease(self.get_fee());
                 println!("Convert {:?}", map_assets);
@@ -79,7 +77,7 @@ impl Transaction for TxAddAsset {
     fn info(&self) -> Value {
         json!({
             "transaction_data": self,
-            "external_internal": external_internal(self.assets(), self.pub_key()),
+            "external_internal": external_internal(self.meta_assets(), self.pub_key()),
             "tx_fee": self.get_fee(),
         })
     }

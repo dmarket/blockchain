@@ -3,7 +3,8 @@ extern crate exonum;
 use exonum::crypto::PublicKey;
 use exonum::storage::{Fork, MapIndex};
 
-use service::wallet::{Wallet, Asset};
+use service::asset::Asset;
+use service::wallet::Wallet;
 use service::SERVICE_NAME;
 
 pub struct WalletSchema<'a>(&'a mut Fork);

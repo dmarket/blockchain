@@ -11,6 +11,7 @@ extern crate router;
 extern crate bodyparser;
 extern crate iron;
 extern crate nats;
+extern crate uuid;
 
 mod service;
 mod config;

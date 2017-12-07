@@ -11,9 +11,9 @@ use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use router::Router;
 
-use service::wallet::AssetInfo;
 use service::schema::asset::AssetSchema;
 use service::assetid::AssetID;
+use service::asset::AssetInfo;
 
 #[derive(Clone)]
 pub struct AssetApi {

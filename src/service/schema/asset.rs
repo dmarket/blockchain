@@ -1,20 +1,20 @@
-extern crate exonum;
-extern crate uuid;
+
 
 use std::collections::HashMap;
 use exonum::crypto::{PublicKey, HexValue};
 use exonum::storage::{Fork, MapIndex};
-use self::uuid::Uuid;
+use uuid;
+use uuid::Uuid;
 
-use service::wallet::{Asset, AssetInfo};
 use service::SERVICE_NAME;
 use service::assetid::AssetID;
+use service::asset::{MetaAsset, Asset, AssetInfo};
 
 pub struct AssetSchema<'a>(&'a mut Fork);
 
-pub fn generate_asset_id(external_asset_id: &AssetID, pub_key: &PublicKey) -> AssetID {
+pub fn generate_asset_id(meta_data: &str, pub_key: &PublicKey) -> AssetID {
     let s = HexValue::to_hex(pub_key);
-    let ful_s = s + &external_asset_id.to_string();
+    let ful_s = s + &meta_data.to_string();
 
     let uuid = Uuid::new_v5(&uuid::NAMESPACE_DNS, &ful_s);
     match AssetID::from_bytes(uuid.as_bytes()) {
@@ -23,24 +23,26 @@ pub fn generate_asset_id(external_asset_id: &AssetID, pub_key: &PublicKey) -> As
     }
 }
 
-pub fn get_new_assets_id(assets: Vec<Asset>, pub_key: &PublicKey) -> HashMap<String, Asset> {
+pub fn from_meta_to_asset_map(meta_assets: Vec<MetaAsset>, pub_key: &PublicKey) -> HashMap<String, Asset> {
     let mut map_asset_id: HashMap<String, Asset> = HashMap::new();
-    for asset in assets {
-        let asset_id = generate_asset_id(&asset.hash_id(), pub_key);
-        let new_asset = Asset::new(asset_id, asset.amount());
-        map_asset_id.insert(asset.hash_id().to_string(), new_asset);
+
+    for meta_asset in meta_assets {
+        let asset_id = generate_asset_id(&meta_asset.meta_data(), pub_key);
+        let new_asset = Asset::new(asset_id, meta_asset.amount());
+        map_asset_id.insert(new_asset.hash_id().to_string(), new_asset);
     }
 
     map_asset_id
 }
 
-pub fn external_internal(assets: Vec<Asset>, pub_key: &PublicKey) -> HashMap<String, String> {
-    let mut old_id_new_id: HashMap<String, String> = HashMap::new();
-    for (key, asset) in get_new_assets_id(assets, pub_key) {
-        old_id_new_id.insert(key, asset.hash_id().to_string());
+pub fn external_internal(meta_assets: Vec<MetaAsset>, pub_key: &PublicKey) -> HashMap<String, String> {
+    let mut meta_asset_to_asset: HashMap<String, String> = HashMap::new();
+
+    for (key, asset) in from_meta_to_asset_map(meta_assets, pub_key) {
+        meta_asset_to_asset.insert(key, asset.hash_id().to_string());
     }
 
-    old_id_new_id
+    meta_asset_to_asset
 }
 
 impl<'a> AssetSchema<'a> {
@@ -67,15 +69,15 @@ impl<'a> AssetSchema<'a> {
 
     pub fn add_assets(
         &mut self,
-        assets: Vec<Asset>,
+        meta_assets: Vec<MetaAsset>,
         pub_key: &PublicKey,
     ) -> HashMap<String, Asset> {
         let mut map_asset_id: HashMap<String, Asset> = HashMap::new();
-        for asset in assets {
-            let asset_id = generate_asset_id(&asset.hash_id(), pub_key);
-            let new_asset = Asset::new(asset_id, asset.amount());
-            self.add_asset(&new_asset.hash_id(), pub_key, asset.amount());
-            map_asset_id.insert(asset.hash_id().to_string(), new_asset);
+        for meta_asset in meta_assets {
+            let asset_id = generate_asset_id(&meta_asset.meta_data(), pub_key);
+            let new_asset = Asset::new(asset_id, meta_asset.amount());
+            self.add_asset(&new_asset.hash_id(), pub_key, new_asset.amount());
+            map_asset_id.insert(new_asset.hash_id().to_string(), new_asset);
         }
 
         map_asset_id
