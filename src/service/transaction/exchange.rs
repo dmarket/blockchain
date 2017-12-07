@@ -1,17 +1,17 @@
 extern crate exonum;
 
 use exonum::blockchain::Transaction;
-use exonum::storage::Fork;
 use exonum::crypto::{PublicKey, Signature, verify};
 use exonum::messages::Message;
+use exonum::storage::Fork;
 use serde_json::Value;
 
 use service::transaction::TRANSACTION_FEE;
 
 use super::{SERVICE_ID, TX_EXCHANGE_ID};
-use super::wallet::Asset;
+use super::schema::transaction_status::{TxStatus, TxStatusSchema};
 use super::schema::wallet::WalletSchema;
-use super::schema::transaction_status::{TxStatusSchema, TxStatus};
+use super::wallet::Asset;
 
 encoding_struct! {
     struct ExchangeOffer {
@@ -114,9 +114,9 @@ impl Transaction for TxExchange {
 
 
 #[cfg(test)]
-use service::wallet::Wallet;
+use exonum::storage::{Database, MemoryDB};
 #[cfg(test)]
-use exonum::storage::{MemoryDB, Database};
+use service::wallet::Wallet;
 #[cfg(test)]
 fn get_json() -> String {
     r#"{

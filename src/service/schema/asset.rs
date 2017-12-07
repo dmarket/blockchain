@@ -1,13 +1,13 @@
 extern crate exonum;
 extern crate uuid;
 
-use std::collections::HashMap;
-use exonum::crypto::{PublicKey, HexValue};
-use exonum::storage::{Fork, MapIndex};
 use self::uuid::Uuid;
+use exonum::crypto::{HexValue, PublicKey};
+use exonum::storage::{Fork, MapIndex};
+use std::collections::HashMap;
 
-use service::wallet::{Asset, AssetInfo};
 use service::SERVICE_NAME;
+use service::wallet::{Asset, AssetInfo};
 
 pub struct AssetSchema<'a>(&'a mut Fork);
 
@@ -95,9 +95,7 @@ impl<'a> AssetSchema<'a> {
     }
 
     pub fn map<F, T>(view: &'a mut Fork, f: F) -> T
-    where
-        F: FnOnce(Self) -> T + 'a,
-        T: 'a,
+        where F: FnOnce(Self) -> T + 'a, T: 'a
     {
         f(AssetSchema(view))
     }

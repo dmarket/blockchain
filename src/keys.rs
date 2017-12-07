@@ -1,11 +1,12 @@
+
+use config;
+use exonum::crypto::{PublicKey, SecretKey};
+use serde_json;
 use std::error::Error;
-use std::io::prelude::*;
 use std::fs::File;
 use std::io::BufReader;
+use std::io::prelude::*;
 use std::path::Path;
-use serde_json;
-use exonum::crypto::{PublicKey, SecretKey};
-use config;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct KeyPair {

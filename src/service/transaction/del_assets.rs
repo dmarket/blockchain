@@ -1,18 +1,18 @@
 extern crate exonum;
 
 use exonum::blockchain::Transaction;
-use exonum::storage::Fork;
 use exonum::crypto::PublicKey;
 use exonum::messages::Message;
+use exonum::storage::Fork;
 use serde_json::Value;
 
-use service::transaction::{TRANSACTION_FEE, PER_ASSET_FEE};
+use service::transaction::{PER_ASSET_FEE, TRANSACTION_FEE};
 
 use super::{SERVICE_ID, TX_DEL_ASSETS_ID};
-use service::wallet::Asset;
 use service::schema::asset::AssetSchema;
+use service::schema::transaction_status::{TxStatus, TxStatusSchema};
 use service::schema::wallet::WalletSchema;
-use service::schema::transaction_status::{TxStatusSchema, TxStatus};
+use service::wallet::Asset;
 
 message! {
     struct TxDelAsset {
@@ -91,12 +91,12 @@ impl Transaction for TxDelAsset {
 
 #[cfg(test)]
 mod test {
-    use exonum::storage::{MemoryDB, Database};
     use exonum::blockchain::Transaction;
+    use exonum::storage::{Database, MemoryDB};
     use service::schema::asset::AssetSchema;
     use service::schema::wallet::WalletSchema;
-    use service::wallet::{Wallet, Asset, AssetInfo};
     use service::transaction::del_assets::TxDelAsset;
+    use service::wallet::{Asset, AssetInfo, Wallet};
 
     fn get_json() -> String {
         r#"{
