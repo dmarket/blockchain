@@ -96,7 +96,9 @@ mod test {
     use service::schema::asset::AssetSchema;
     use service::schema::wallet::WalletSchema;
     use service::transaction::del_assets::TxDelAsset;
-    use service::wallet::{Asset, AssetInfo, Wallet};
+    use service::wallet::Wallet;
+    use service::asset::{Asset, AssetInfo};
+    use service::assetid::AssetID;
 
     fn get_json() -> String {
         r#"{
@@ -127,11 +129,13 @@ mod test {
         let tx_del: TxDelAsset = ::serde_json::from_str(&get_json()).unwrap();
         assert!(tx_del.verify());
         assert_eq!(45, tx_del.assets()[0].amount());
-        assert_eq!("asset_2", tx_del.assets()[1].hash_id());
+        assert_eq!("asset_2", tx_del.assets()[1].hash_id().to_string());
     }
 
     #[test]
     fn positive_delete_assets_test() {
+        use service::assetid::AssetID;
+
         let tx_del: TxDelAsset = ::serde_json::from_str(&get_json()).unwrap();
 
         let db = Box::new(MemoryDB::new());
@@ -148,9 +152,14 @@ mod test {
         });
 
         let assets = vec![
-            Asset::new("asset_1", 100),
-            Asset::new("asset_2", 17),
+            Asset::new(AssetID::nil(), 100),
+            Asset::new(AssetID::nil(), 17),
         ];
+
+        // let assets = vec![
+        //     Asset::new("asset_1", 100),
+        //     Asset::new("asset_2", 17),
+        // ];
 
         let wallet = Wallet::new(tx_del.pub_key(), 2000, assets);
         WalletSchema::map(fork, |mut schema| {
@@ -162,26 +171,40 @@ mod test {
         let wallet = WalletSchema::map(fork, |mut schema| schema.wallet(tx_del.pub_key()));
         if let Some(wallet) = wallet {
             assert!(wallet.in_wallet_assets(&vec![
-                Asset::new("asset_1", 55)
+                Asset::new(AssetID::nil(), 55)
             ]));
             assert!(!wallet.in_wallet_assets(&vec![
-                Asset::new("asset_2", 0)
+                Asset::new(AssetID::nil(), 0)
             ]));
         } else {
             panic!("Something wrong!!!");
         }
+        // if let Some(wallet) = wallet {
+        //     assert!(wallet.in_wallet_assets(&vec![
+        //         Asset::new("asset_1", 55)
+        //     ]));
+        //     assert!(!wallet.in_wallet_assets(&vec![
+        //         Asset::new("asset_2", 0)
+        //     ]));
+        // } else {
+        //     panic!("Something wrong!!!");
+        // }
     }
 
     #[test]
     fn negative_delete_assets_test() {
+
         let tx_del: TxDelAsset = ::serde_json::from_str(&get_json()).unwrap();
 
         let db = Box::new(MemoryDB::new());
         let fork = &mut db.fork();
 
         let assets = vec![
-            Asset::new("asset_1", 400),
+            Asset::new(AssetID::nil(), 400),
         ];
+        // let assets = vec![
+        //     Asset::new("asset_1", 400),
+        // ];
         let wallet = Wallet::new(tx_del.pub_key(), 100, assets);
 
         WalletSchema::map(fork, |mut schema| {
@@ -194,8 +217,11 @@ mod test {
             tx_del.pub_key(),
         )
         {
+            // assert!(wallet.in_wallet_assets(&vec![
+            //         Asset::new("asset_1", 400)
+            //     ]));
             assert!(wallet.in_wallet_assets(&vec![
-                    Asset::new("asset_1", 400)
+                    Asset::new(AssetID::nil(), 400)
                 ]));
         } else {
             panic!("Something wrong!!!");

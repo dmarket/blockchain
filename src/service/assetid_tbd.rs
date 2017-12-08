@@ -1,12 +1,10 @@
-
-use exonum::encoding::{CheckedOffset, Field, Offset, Result};
+use exonum::encoding::{CheckedOffset, Field, Offset, Result as ExonumResult};
 use exonum::encoding::serialize::WriteBufferWrapper;
 use exonum::encoding::serialize::json::ExonumJson;
 use serde_json;
 use serde_json::value::Value;
 use std::error::Error;
 use std::mem;
-use std::result;
 use std::string::ToString;
 
 /// A 128-bit (16 byte) buffer containing the ID.
@@ -35,7 +33,7 @@ impl AssetID {
         &self.bytes
     }
 
-    pub fn from_bytes(b: &[u8]) -> result::Result<AssetID, ParseError> {
+    pub fn from_bytes(b: &[u8]) -> Result<AssetID, ParseError> {
         let len = b.len();
         if len != 16 {
             return Err(ParseError::InvalidLength(len));
@@ -46,7 +44,7 @@ impl AssetID {
         Ok(assetid)
     }
 
-    pub fn from_str(us: &str) -> result::Result<AssetID, ParseError> {
+    pub fn from_str(us: &str) -> Result<AssetID, ParseError> {
         let len = us.len();
         if len != 32 {
             return Err(ParseError::InvalidLength(len));
@@ -99,7 +97,7 @@ impl<'a> Field<'a> for AssetID {
         from: CheckedOffset,
         to: CheckedOffset,
         latest_segment: CheckedOffset,
-    ) -> Result {
+    ) -> ExonumResult {
         debug_assert_eq!((to - from)?.unchecked_offset(), Self::field_size());
         Ok(latest_segment)
     }
@@ -111,7 +109,7 @@ impl ExonumJson for AssetID {
         buffer: &mut B,
         from: Offset,
         to: Offset,
-    ) -> result::Result<(), Box<Error>> {
+    ) -> Result<(), Box<Error>> {
         let string: String = serde_json::from_value(value.clone()).unwrap();
         let asset_id = AssetID::from_str(&string);
         // TODO: FIX ME
@@ -121,8 +119,21 @@ impl ExonumJson for AssetID {
         Ok(())
     }
 
-    fn serialize_field(&self) -> result::Result<Value, Box<Error>> {
+    fn serialize_field(&self) -> Result<Value, Box<Error>> {
         let string = self.to_string();
         Ok(Value::String(string))
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn asset_id_nil_test() {
+        use service::assetid_tbd::AssetID;
+
+        let assetid = AssetID::nil();
+        assert_eq!(assetid.to_string(), "00000000000000000000000000000000");
+        assert_eq!(assetid.as_bytes(), &[0u8; 16]);
     }
 }

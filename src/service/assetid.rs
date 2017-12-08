@@ -18,6 +18,10 @@ pub enum ParseError {
 }
 
 impl AssetID {
+    pub fn nil() -> AssetID {
+        AssetID::new(0, 0)
+    }
+
     pub fn from_bytes(b: &[u8]) -> Result<AssetID, ParseError> {
         let len = b.len();
         if len != 16 {

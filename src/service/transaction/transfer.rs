@@ -106,29 +106,29 @@ fn get_json() -> String {
 
 #[test]
 fn test_convert_from_json() {
+    use service::assetid::AssetID;
+
+    let assetid = AssetID::nil();
+    let asset = Asset::new(assetid, 3);
+
     let tx: TxTransfer = ::serde_json::from_str(&get_json()).unwrap();
     assert!(tx.verify());
-    assert_eq!(
-        Asset::new("a8d5c97d-9978-4b0b-9947-7a95dcb31d0f",3),
-        tx.assets()[0]
-    );
+    assert_eq!(asset, tx.assets()[0]);
     assert_eq!(3, tx.amount());
 }
 
 #[test]
 fn positive_send_staff_test() {
+    use service::assetid::AssetID;
+
     let tx_transfer: TxTransfer = ::serde_json::from_str(&get_json()).unwrap();
 
     let db = Box::new(MemoryDB::new());
     let fork = &mut db.fork();
 
-    let from = Wallet::new(
-        tx_transfer.from(),
-        2000,
-        vec![
-            Asset::new("a8d5c97d-9978-4b0b-9947-7a95dcb31d0f", 100),
-        ],
-    );
+    let asset = Asset::new(AssetID::nil(), 100);
+    
+    let from = Wallet::new(tx_transfer.from(), 2000, vec![asset,],);
     WalletSchema::map(fork, |mut schema| {
         schema.wallets().put(tx_transfer.from(), from);
     });
@@ -145,12 +145,12 @@ fn positive_send_staff_test() {
         assert_eq!(994, from.balance());
         assert_eq!(3, to.balance());
         assert_eq!(
-            vec![Asset::new("a8d5c97d-9978-4b0b-9947-7a95dcb31d0f", 97), ],
+            vec![Asset::new(AssetID::nil(), 97), ],
             from.assets()
         );
         assert_eq!(
             vec![
-                Asset::new("a8d5c97d-9978-4b0b-9947-7a95dcb31d0f", 3),
+                Asset::new(AssetID::nil(), 3),
             ],
             to.assets()
         );

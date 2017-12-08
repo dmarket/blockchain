@@ -118,6 +118,7 @@ impl Transaction for TxTrade {
 
 #[cfg(test)]
 use exonum::storage::{Database, MemoryDB};
+use service::assetid::AssetID;
 #[cfg(test)]
 use service::wallet::Wallet;
 
@@ -156,7 +157,7 @@ fn test_convert_from_json() {
     let tx: TxTrade = ::serde_json::from_str(&get_json()).unwrap();
     assert!(tx.verify());
     assert_eq!(5, tx.offer().assets()[0].amount());
-    assert_eq!("a007f130-ceea-5939-b616-3aaf7185a164", tx.offer().assets()[1].hash_id());
+    assert_eq!("a007f130-ceea-5939-b616-3aaf7185a164", tx.offer().assets()[1].hash_id().to_string());
     assert_eq!(88, tx.offer().price());
 }
 
@@ -166,12 +167,20 @@ fn positive_trade_test() {
 
     let db = Box::new(MemoryDB::new());
     let fork = &mut db.fork();
+    // let seller = Wallet::new(
+    //     tx.offer().seller(),
+    //     tx.get_fee(),
+    //     vec![
+    //         Asset::new("a4826063-d7bb-57a3-a119-3ba03a51b7fa", 10),
+    //         Asset::new("a007f130-ceea-5939-b616-3aaf7185a164", 7),
+    //     ],
+    // );
     let seller = Wallet::new(
         tx.offer().seller(),
         tx.get_fee(),
         vec![
-            Asset::new("a4826063-d7bb-57a3-a119-3ba03a51b7fa", 10),
-            Asset::new("a007f130-ceea-5939-b616-3aaf7185a164", 7),
+            Asset::new(AssetID::nil(), 10),
+            Asset::new(AssetID::nil(), 7),
         ],
     );
     let buyer = Wallet::new(tx.buyer(), 3000, vec![]);
@@ -189,16 +198,27 @@ fn positive_trade_test() {
         assert_eq!(2912, buyer.balance());
         assert_eq!(88, seller.balance());
         assert_eq!(
-            vec![Asset::new("a4826063-d7bb-57a3-a119-3ba03a51b7fa", 5), ],
+            vec![Asset::new(AssetID::nil(), 5), ],
             seller.assets()
         );
+        // assert_eq!(
+        //     vec![Asset::new("a4826063-d7bb-57a3-a119-3ba03a51b7fa", 5), ],
+        //     seller.assets()
+        // );
         assert_eq!(
             vec![
-                Asset::new("a4826063-d7bb-57a3-a119-3ba03a51b7fa", 5),
-                Asset::new("a007f130-ceea-5939-b616-3aaf7185a164", 7),
+                Asset::new(AssetID::nil(), 5),
+                Asset::new(AssetID::nil(), 7),
             ],
             buyer.assets()
-        );
+        )
+        // assert_eq!(
+        //     vec![
+        //         Asset::new("a4826063-d7bb-57a3-a119-3ba03a51b7fa", 5),
+        //         Asset::new("a007f130-ceea-5939-b616-3aaf7185a164", 7),
+        //     ],
+        //     buyer.assets()
+        // );
     } else {
         panic!("Something wrong");
     }

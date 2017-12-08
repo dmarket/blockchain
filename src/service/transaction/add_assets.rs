@@ -117,14 +117,16 @@ fn get_json() -> String {
 fn test_convert_from_json() {
     let tx_add: TxAddAsset = ::serde_json::from_str(&get_json()).unwrap();
     assert!(tx_add.verify());
-    assert_eq!(45, tx_add.assets()[0].amount());
-    assert_eq!("a8d5c97d-9978-4111-9947-7a95dcb31d0f", tx_add.assets()[1].hash_id());
+    assert_eq!(45, tx_add.meta_assets()[0].amount());
+    assert_eq!("a8d5c97d-9978-4111-9947-7a95dcb31d0f", tx_add.meta_assets()[1].meta_data());
 }
 
 #[test]
 fn add_assets_test() {
+    use service::assetid::AssetID;
+
     let tx_add: TxAddAsset = ::serde_json::from_str(&get_json()).unwrap();
-    let internal_assets_ids = external_internal(tx_add.assets(), tx_add.pub_key());
+    let internal_assets_ids = external_internal(tx_add.meta_assets(), tx_add.pub_key());
     let internal_a_id_1 = &internal_assets_ids[&"a8d5c97d-9978-4111-9947-7a95dcb31d0f".to_string()];
     let internal_a_id_2 = &internal_assets_ids[&"a8d5c97d-9978-4b0b-9947-7a95dcb31d0f".to_string()];
 
@@ -134,14 +136,20 @@ fn add_assets_test() {
     let wallet = Wallet::new(
         tx_add.pub_key(),
         2000,
-        vec![Asset::new(internal_a_id_1, 3),],
+        vec![Asset::new(AssetID::nil(), 3),],
     );
+    // let wallet = Wallet::new(
+    //     tx_add.pub_key(),
+    //     2000,
+    //     vec![Asset::new(internal_a_id_1, 3),],
+    // );
     let wallet = WalletSchema::map(fork, |mut schema| {
         schema.wallets().put(tx_add.pub_key(), wallet);
         schema.wallet(tx_add.pub_key())
     });
     if let Some(wallet) = wallet {
-        assert!(wallet.in_wallet_assets(&vec![Asset::new(internal_a_id_1, 3)]));
+        assert!(wallet.in_wallet_assets(&vec![Asset::new(AssetID::nil(), 3)]));
+        // assert!(wallet.in_wallet_assets(&vec![Asset::new(internal_a_id_1, 3)]));
 
         tx_add.execute(fork);
 
@@ -149,8 +157,10 @@ fn add_assets_test() {
 
         if let Some(wallet) = wallet {
             assert_eq!(2000 - tx_add.get_fee(), wallet.balance());
-            assert!(wallet.in_wallet_assets(&vec![Asset::new(internal_a_id_1, 20),]));
-            assert!(wallet.in_wallet_assets(&vec![Asset::new(internal_a_id_2, 45),]));
+            // assert!(wallet.in_wallet_assets(&vec![Asset::new(internal_a_id_1, 20),]));
+            // assert!(wallet.in_wallet_assets(&vec![Asset::new(internal_a_id_2, 45),]));
+            assert!(wallet.in_wallet_assets(&vec![Asset::new(AssetID::nil(), 20),]));
+            assert!(wallet.in_wallet_assets(&vec![Asset::new(AssetID::nil(), 45),]));
         } else {
             assert!(false);
         }
