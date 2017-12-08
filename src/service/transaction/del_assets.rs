@@ -102,64 +102,60 @@ mod test {
 
     fn get_json() -> String {
         r#"{
-        "body": {
-            "pub_key": "1d9c731ebac3d7da9482470ae8b13a839cb05ef4f21f8d119e2c4bf175333cf7",
-            "assets": [
-                {
-                    "hash_id": "asset_1",
-                    "amount": 45
-                },
-                {
-                  "hash_id": "asset_2",
-                  "amount": 17
-                }
-            ],
-        "seed": "113"
-        },
-        "network_id": 0,
-        "protocol_version": 0,
-        "service_id": 2,
-        "message_id": 4,
-        "signature": "e7a3d71fc093f9ddaba083ba3e1618514c96003d9a01cdf6d5c0da344f12c800db9e7b210f9a7b372ddd7e57f299d8bc0e55d238ad1fa6b9d06897c2bda29901"
-    }"#.to_string()
+            "body": {
+                "pub_key": "1d9c731ebac3d7da9482470ae8b13a839cb05ef4f21f8d119e2c4bf175333cf7",
+                "assets": [
+                    {
+                        "hash_id": "67e5504410b1426f9247bb680e5fe0c8",
+                        "amount": 45
+                    },
+                    {
+                        "hash_id": "a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8",
+                        "amount": 17
+                    }
+                ],
+                "seed": "113"
+            },
+            "network_id": 0,
+            "protocol_version": 0,
+            "service_id": 2,
+            "message_id": 4,
+            "signature": "e7a3d71fc093f9ddaba083ba3e1618514c96003d9a01cdf6d5c0da344f12c800db9e7b210f9a7b372ddd7e57f299d8bc0e55d238ad1fa6b9d06897c2bda29901"
+        }"#.to_string()
     }
 
     #[test]
     fn test_convert_from_json() {
         let tx_del: TxDelAsset = ::serde_json::from_str(&get_json()).unwrap();
+        // TODO: to fix this test, `signature` should be regenerated
         assert!(tx_del.verify());
         assert_eq!(45, tx_del.assets()[0].amount());
-        assert_eq!("asset_2", tx_del.assets()[1].hash_id().to_string());
+        assert_eq!("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8", tx_del.assets()[1].hash_id().to_string());
     }
 
     #[test]
-    fn positive_delete_assets_test() {
-        use service::assetid::AssetID;
-
+    fn test_positive_delete_assets() {
         let tx_del: TxDelAsset = ::serde_json::from_str(&get_json()).unwrap();
 
         let db = Box::new(MemoryDB::new());
         let fork = &mut db.fork();
         AssetSchema::map(fork, |mut asset_schema| {
             asset_schema.assets().put(
-                &"asset_1".to_string(),
+                &"67e5504410b1426f9247bb680e5fe0c8".to_string(),
                 AssetInfo::new(tx_del.pub_key(), 100),
             );
             asset_schema.assets().put(
-                &"asset_2".to_string(),
+                &"a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8".to_string(),
                 AssetInfo::new(tx_del.pub_key(), 17),
             );
         });
 
+        let assetid1 = AssetID::from_str("67e5504410b1426f9247bb680e5fe0c8").unwrap();
+        let assetid2 = AssetID::from_str("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8").unwrap();
         let assets = vec![
-            Asset::new(AssetID::nil(), 100),
-            Asset::new(AssetID::nil(), 17),
+            Asset::new(assetid1, 100),
+            Asset::new(assetid2, 17),
         ];
-
-        // let assets = vec![
-        //     Asset::new("asset_1", 100),
-        //     Asset::new("asset_2", 17),
-        // ];
 
         let wallet = Wallet::new(tx_del.pub_key(), 2000, assets);
         WalletSchema::map(fork, |mut schema| {
@@ -171,40 +167,28 @@ mod test {
         let wallet = WalletSchema::map(fork, |mut schema| schema.wallet(tx_del.pub_key()));
         if let Some(wallet) = wallet {
             assert!(wallet.in_wallet_assets(&vec![
-                Asset::new(AssetID::nil(), 55)
+                Asset::new(assetid1, 55)
             ]));
             assert!(!wallet.in_wallet_assets(&vec![
-                Asset::new(AssetID::nil(), 0)
+                Asset::new(assetid2, 0)
             ]));
         } else {
             panic!("Something wrong!!!");
         }
-        // if let Some(wallet) = wallet {
-        //     assert!(wallet.in_wallet_assets(&vec![
-        //         Asset::new("asset_1", 55)
-        //     ]));
-        //     assert!(!wallet.in_wallet_assets(&vec![
-        //         Asset::new("asset_2", 0)
-        //     ]));
-        // } else {
-        //     panic!("Something wrong!!!");
-        // }
     }
 
     #[test]
-    fn negative_delete_assets_test() {
+    fn test_negative_delete_assets() {
 
         let tx_del: TxDelAsset = ::serde_json::from_str(&get_json()).unwrap();
 
         let db = Box::new(MemoryDB::new());
         let fork = &mut db.fork();
 
+        let assetid = AssetID::from_str("67e5504410b1426f9247bb680e5fe0c8").unwrap();
         let assets = vec![
-            Asset::new(AssetID::nil(), 400),
+            Asset::new(assetid, 400),
         ];
-        // let assets = vec![
-        //     Asset::new("asset_1", 400),
-        // ];
         let wallet = Wallet::new(tx_del.pub_key(), 100, assets);
 
         WalletSchema::map(fork, |mut schema| {
@@ -217,11 +201,8 @@ mod test {
             tx_del.pub_key(),
         )
         {
-            // assert!(wallet.in_wallet_assets(&vec![
-            //         Asset::new("asset_1", 400)
-            //     ]));
             assert!(wallet.in_wallet_assets(&vec![
-                    Asset::new(AssetID::nil(), 400)
+                    Asset::new(assetid, 400)
                 ]));
         } else {
             panic!("Something wrong!!!");
@@ -229,7 +210,7 @@ mod test {
     }
 
     #[test]
-    fn add_asset_info_test() {
+    fn test_add_asset_info() {
         let tx: TxDelAsset = ::serde_json::from_str(&get_json()).unwrap();
         assert_eq!(tx.get_fee(), tx.info()["tx_fee"]);
     }
