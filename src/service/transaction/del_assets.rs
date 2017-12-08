@@ -90,7 +90,7 @@ impl Transaction for TxDelAsset {
 
 
 #[cfg(test)]
-mod test {
+mod tests {
     use exonum::blockchain::Transaction;
     use exonum::storage::{Database, MemoryDB};
     use service::schema::asset::AssetSchema;
