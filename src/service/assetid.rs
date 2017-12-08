@@ -1,11 +1,10 @@
 use exonum::encoding::{CheckedOffset, Field, Offset, Result as ExonumResult};
 use exonum::encoding::serialize::WriteBufferWrapper;
 use exonum::encoding::serialize::json::ExonumJson;
-use serde_json;
 use serde_json::value::Value;
 use std::error::Error;
-use std::mem;
 use std::string::ToString;
+use std::{mem, fmt};
 
 /// A 128-bit (16 byte) buffer containing the ID.
 pub type AssetIDBytes = [u8; 16];
@@ -23,6 +22,39 @@ pub enum ParseError {
     InvalidLength(usize),
     InvalidCharacter(char, usize),
     UnexpectedErrorAt(usize),
+}
+
+const SIMPLE_LENGTH: usize = 32;
+
+/// Converts a ParseError to a string.
+impl fmt::Display for ParseError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            ParseError::InvalidLength(found) => {
+                write!(f,
+                       "Invalid length; expecting {}, found {}",
+                       SIMPLE_LENGTH, found)
+            }
+            ParseError::InvalidCharacter(found, pos) => {
+                write!(f,
+                       "Invalid character; found `{}` (0x{:02x}) at offset {}",
+                       found,
+                       found as usize,
+                       pos)
+            }
+            ParseError::UnexpectedErrorAt(pos) => {
+                write!(f,
+                       "Unexpected, at {}",
+                       pos)
+            }
+        }
+    }
+}
+
+impl Error for ParseError {
+    fn description(&self) -> &str {
+        "AssetID parse error"
+    }
 }
 
 impl AssetID {
@@ -118,18 +150,20 @@ impl ExonumJson for AssetID {
         from: Offset,
         to: Offset,
     ) -> Result<(), Box<Error>> {
-        let string: String = serde_json::from_value(value.clone()).unwrap();
-        let asset_id = AssetID::from_str(&string);
-        // TODO: FIX ME
-        if asset_id.is_ok() {
-            buffer.write(from, to, asset_id.unwrap());
+        let val = value.as_str().ok_or("Can't cast json as string")?;
+        match AssetID::from_str(&val) {
+            Ok(assetid) => {
+                buffer.write(from, to, assetid);    
+                Ok(())
+            },
+            Err(error) => {
+                Err(Box::new(error))
+            }
         }
-        Ok(())
     }
 
     fn serialize_field(&self) -> Result<Value, Box<Error>> {
-        let string = self.to_string();
-        Ok(Value::String(string))
+        Ok(Value::String(self.to_string()))
     }
 }
 
