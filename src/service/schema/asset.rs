@@ -18,7 +18,7 @@ pub fn generate_asset_id(meta_data: &str, pub_key: &PublicKey) -> AssetID {
     let uuid = Uuid::new_v5(&uuid::NAMESPACE_DNS, &ful_s);
     match AssetID::from_bytes(uuid.as_bytes()) {
         Ok(asset_id) => asset_id,
-        Err(..) => AssetID::new(0, 0),
+        Err(..) => AssetID::nil(),
     }
 }
 

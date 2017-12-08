@@ -4,7 +4,6 @@ pub mod wallet;
 pub mod api;
 pub mod asset;
 pub mod assetid;
-pub mod assetid_tbd;
 
 mod nats;
 
