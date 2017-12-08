@@ -84,93 +84,91 @@ impl Transaction for TxAddAsset {
 }
 
 #[cfg(test)]
-use exonum::storage::{Database, MemoryDB};
-#[cfg(test)]
-use service::wallet::Wallet;
-
-#[cfg(test)]
-fn get_json() -> String {
-    r#"{
-  "body": {
-    "pub_key": "06f2b8853d37d317639132d3e9646adee97c56dcbc3899bfb2b074477d7ef31a",
-    "assets": [
-      {
-        "hash_id": "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f",
-        "amount": 45
-      },
-      {
-        "hash_id": "a8d5c97d-9978-4111-9947-7a95dcb31d0f",
-        "amount": 17
-      }
-    ],
-    "seed": "85"
-  },
-  "network_id": 0,
-  "protocol_version": 0,
-  "service_id": 2,
-  "message_id": 3,
-  "signature": "11ab7e8236084cb68fe949242f7107068ca54ad3cdfd927a933a282c4781b2f2b4993824eb2dc2b0dc275d1a86bbb8f3b48640680cc1258bb7000748c2b29407"
-}"#.to_string()
-}
-
-#[test]
-fn test_convert_from_json() {
-    let tx_add: TxAddAsset = ::serde_json::from_str(&get_json()).unwrap();
-    assert!(tx_add.verify());
-    assert_eq!(45, tx_add.meta_assets()[0].amount());
-    assert_eq!("a8d5c97d-9978-4111-9947-7a95dcb31d0f", tx_add.meta_assets()[1].meta_data());
-}
-
-#[test]
-fn add_assets_test() {
+mod tests {
+    use super::TxAddAsset;
+    use exonum::blockchain::Transaction;
+    use exonum::storage::{Database, MemoryDB};
+    use service::schema::asset::external_internal;
+    use service::schema::wallet::WalletSchema;
     use service::assetid::AssetID;
+    use service::wallet::Wallet;
+    use service::asset::Asset;
 
-    let tx_add: TxAddAsset = ::serde_json::from_str(&get_json()).unwrap();
-    let internal_assets_ids = external_internal(tx_add.meta_assets(), tx_add.pub_key());
-    let internal_a_id_1 = &internal_assets_ids[&"a8d5c97d-9978-4111-9947-7a95dcb31d0f".to_string()];
-    let internal_a_id_2 = &internal_assets_ids[&"a8d5c97d-9978-4b0b-9947-7a95dcb31d0f".to_string()];
+    fn get_json() -> String {
+        r#"{
+            "body": {
+                "pub_key": "06f2b8853d37d317639132d3e9646adee97c56dcbc3899bfb2b074477d7ef31a",
+                "meta_assets": [
+                {
+                    "meta_data": "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f",
+                    "amount": 45
+                },
+                {
+                    "meta_data": "a8d5c97d-9978-4111-9947-7a95dcb31d0f",
+                    "amount": 17
+                }
+                ],
+                "seed": "85"
+            },
+            "network_id": 0,
+            "protocol_version": 0,
+            "service_id": 2,
+            "message_id": 3,
+            "signature": "11ab7e8236084cb68fe949242f7107068ca54ad3cdfd927a933a282c4781b2f2b4993824eb2dc2b0dc275d1a86bbb8f3b48640680cc1258bb7000748c2b29407"
+        }"#.to_string()
+    }
 
-    let db = Box::new(MemoryDB::new());
-    let fork = &mut db.fork();
+    #[test]
+    fn test_convert_from_json() {
+        let tx_add: TxAddAsset = ::serde_json::from_str(&get_json()).unwrap();
+        assert!(tx_add.verify());
+        assert_eq!(45, tx_add.meta_assets()[0].amount());
+        assert_eq!("a8d5c97d-9978-4111-9947-7a95dcb31d0f", tx_add.meta_assets()[1].meta_data());
+    }
 
-    let wallet = Wallet::new(
-        tx_add.pub_key(),
-        2000,
-        vec![Asset::new(AssetID::nil(), 3),],
-    );
-    // let wallet = Wallet::new(
-    //     tx_add.pub_key(),
-    //     2000,
-    //     vec![Asset::new(internal_a_id_1, 3),],
-    // );
-    let wallet = WalletSchema::map(fork, |mut schema| {
-        schema.wallets().put(tx_add.pub_key(), wallet);
-        schema.wallet(tx_add.pub_key())
-    });
-    if let Some(wallet) = wallet {
-        assert!(wallet.in_wallet_assets(&vec![Asset::new(AssetID::nil(), 3)]));
-        // assert!(wallet.in_wallet_assets(&vec![Asset::new(internal_a_id_1, 3)]));
+    #[test]
+    fn test_add_assets() {
+        let tx_add: TxAddAsset = ::serde_json::from_str(&get_json()).unwrap();
+        let internal_assets_ids = external_internal(tx_add.meta_assets(), tx_add.pub_key());
+        let internal_a_id_1 = &internal_assets_ids[&"a8d5c97d-9978-4111-9947-7a95dcb31d0f".to_string()];
+        let internal_a_id_2 = &internal_assets_ids[&"a8d5c97d-9978-4b0b-9947-7a95dcb31d0f".to_string()];
+        
+        let db = Box::new(MemoryDB::new());
+        let fork = &mut db.fork();
+        let assetid1 = AssetID::from_str(&internal_a_id_1).unwrap();
+        let assetid2 = AssetID::from_str(&internal_a_id_2).unwrap();
 
-        tx_add.execute(fork);
-
-        let wallet = WalletSchema::map(fork, |mut schema| schema.wallet(tx_add.pub_key()));
-
+        let wallet = Wallet::new(
+            tx_add.pub_key(),
+            2000,
+            vec![Asset::new(assetid1, 3),],
+        );
+        let wallet = WalletSchema::map(fork, |mut schema| {
+            schema.wallets().put(tx_add.pub_key(), wallet);
+            schema.wallet(tx_add.pub_key())
+        });
         if let Some(wallet) = wallet {
-            assert_eq!(2000 - tx_add.get_fee(), wallet.balance());
-            // assert!(wallet.in_wallet_assets(&vec![Asset::new(internal_a_id_1, 20),]));
-            // assert!(wallet.in_wallet_assets(&vec![Asset::new(internal_a_id_2, 45),]));
-            assert!(wallet.in_wallet_assets(&vec![Asset::new(AssetID::nil(), 20),]));
-            assert!(wallet.in_wallet_assets(&vec![Asset::new(AssetID::nil(), 45),]));
+            assert!(wallet.in_wallet_assets(&vec![Asset::new(assetid1, 3)]));
+
+            tx_add.execute(fork);
+
+            let wallet = WalletSchema::map(fork, |mut schema| schema.wallet(tx_add.pub_key()));
+
+            if let Some(wallet) = wallet {
+                assert_eq!(2000 - tx_add.get_fee(), wallet.balance());
+                assert!(wallet.in_wallet_assets(&vec![Asset::new(assetid1, 20),]));
+                assert!(wallet.in_wallet_assets(&vec![Asset::new(assetid2, 45),]));
+            } else {
+                assert!(false);
+            }
         } else {
             assert!(false);
         }
-    } else {
-        assert!(false);
-    }
-}
+    }    
 
-#[test]
-fn add_asset_info_test() {
-    let tx_add: TxAddAsset = ::serde_json::from_str(&get_json()).unwrap();
-    assert_eq!(tx_add.get_fee(), tx_add.info()["tx_fee"]);
+    #[test]
+    fn test_add_asset_info() {
+        let tx_add: TxAddAsset = ::serde_json::from_str(&get_json()).unwrap();
+        assert_eq!(tx_add.get_fee(), tx_add.info()["tx_fee"]);
+    }
 }
