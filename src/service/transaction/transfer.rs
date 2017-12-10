@@ -76,90 +76,92 @@ impl Transaction for TxTransfer {
 }
 
 #[cfg(test)]
-use exonum::storage::{Database, MemoryDB};
-#[cfg(test)]
-use service::wallet::Wallet;
-
-
-#[cfg(test)]
-fn get_json() -> String {
-    r#"{
-  "body": {
-    "from": "739fe1c8507aac54b5d4af116544fec304cf8b0f759d0bce39a7934630c0457e",
-    "to": "c08575875170900ac946fc9c0c521bea3d61c138380512cc8d1f55ba27289d27",
-    "amount": "3",
-    "assets": [
-      {
-        "hash_id": "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f",
-        "amount": 3
-      }
-    ],
-    "seed": "123"
-  },
-  "network_id": 0,
-  "protocol_version": 0,
-  "service_id": 2,
-  "message_id": 2,
-  "signature": "4f9c0a9ddb32a1d8e61d3b656dec5786fb447c19362853ddac67a2c4f48c9ad65a377ee86a02727a27a35d16a14dea84f6920878ab82a6e850e8e7814bb64701"
-}"#.to_string()
-}
-
-#[test]
-fn test_convert_from_json() {
+mod tests {
+    use super::TxTransfer;
     use service::assetid::AssetID;
+    use service::asset::Asset;
+    use service::wallet::Wallet;
+    use service::schema::wallet::WalletSchema;
+    use exonum::blockchain::Transaction;
+    use exonum::storage::{Database, MemoryDB};
 
-    let assetid = AssetID::nil();
-    let asset = Asset::new(assetid, 3);
-
-    let tx: TxTransfer = ::serde_json::from_str(&get_json()).unwrap();
-    assert!(tx.verify());
-    assert_eq!(asset, tx.assets()[0]);
-    assert_eq!(3, tx.amount());
-}
-
-#[test]
-fn positive_send_staff_test() {
-    use service::assetid::AssetID;
-
-    let tx_transfer: TxTransfer = ::serde_json::from_str(&get_json()).unwrap();
-
-    let db = Box::new(MemoryDB::new());
-    let fork = &mut db.fork();
-
-    let asset = Asset::new(AssetID::nil(), 100);
-    
-    let from = Wallet::new(tx_transfer.from(), 2000, vec![asset,],);
-    WalletSchema::map(fork, |mut schema| {
-        schema.wallets().put(tx_transfer.from(), from);
-    });
-
-    tx_transfer.execute(fork);
-
-    let participants = WalletSchema::map(fork, |mut schema| {
-        (
-            schema.wallet(tx_transfer.from()),
-            schema.wallet(tx_transfer.to()),
-        )
-    });
-    if let (Some(from), Some(to)) = participants {
-        assert_eq!(994, from.balance());
-        assert_eq!(3, to.balance());
-        assert_eq!(
-            vec![Asset::new(AssetID::nil(), 97), ],
-            from.assets()
-        );
-        assert_eq!(
-            vec![
-                Asset::new(AssetID::nil(), 3),
-            ],
-            to.assets()
-        );
-    } else {
-        panic!("Something wrong!!!");
+    fn get_json() -> String {
+        r#"{
+            "body": {
+                "from": "739fe1c8507aac54b5d4af116544fec304cf8b0f759d0bce39a7934630c0457e",
+                "to": "c08575875170900ac946fc9c0c521bea3d61c138380512cc8d1f55ba27289d27",
+                "amount": "3",
+                "assets": [
+                {
+                    "hash_id": "67e5504410b1426f9247bb680e5fe0c8",
+                    "amount": 3
+                }
+                ],
+                "seed": "123"
+            },
+            "network_id": 0,
+            "protocol_version": 0,
+            "service_id": 2,
+            "message_id": 2,
+            "signature": "4f9c0a9ddb32a1d8e61d3b656dec5786fb447c19362853ddac67a2c4f48c9ad65a377ee86a02727a27a35d16a14dea84f6920878ab82a6e850e8e7814bb64701"
+        }"#.to_string()
     }
-}
-#[test]
-fn transfer_info_test() {
-    let tx: TxTransfer = ::serde_json::from_str(&get_json()).unwrap();
-    assert_eq!(tx.get_fee(), tx.info()["tx_fee"]);
+
+    #[test]
+    fn test_convert_from_json() {
+
+        let assetid = AssetID::nil();
+        let asset = Asset::new(assetid, 3);
+
+        let tx: TxTransfer = ::serde_json::from_str(&get_json()).unwrap();
+        assert!(tx.verify());
+        assert_eq!(asset, tx.assets()[0]);
+        assert_eq!(3, tx.amount());
+    }
+
+    fn test_positive_send_staff() {
+        let tx_transfer: TxTransfer = ::serde_json::from_str(&get_json()).unwrap();
+
+        let db = Box::new(MemoryDB::new());
+        let fork = &mut db.fork();
+
+        let assetid = AssetID::from_str("67e5504410b1426f9247bb680e5fe0c8").unwrap();
+        let asset = Asset::new(assetid, 100);
+        
+        let from = Wallet::new(tx_transfer.from(), 2000, vec![asset,],);
+        WalletSchema::map(fork, |mut schema| {
+            schema.wallets().put(tx_transfer.from(), from);
+        });
+
+        tx_transfer.execute(fork);
+
+        let participants = WalletSchema::map(fork, |mut schema| {
+            (
+                schema.wallet(tx_transfer.from()),
+                schema.wallet(tx_transfer.to()),
+            )
+        });
+        if let (Some(from), Some(to)) = participants {
+            assert_eq!(994, from.balance());
+            assert_eq!(3, to.balance());
+            assert_eq!(
+                vec![Asset::new(AssetID::nil(), 97), ],
+                from.assets()
+            );
+            assert_eq!(
+                vec![
+                    Asset::new(AssetID::nil(), 3),
+                ],
+                to.assets()
+            );
+        } else {
+            panic!("Something wrong!!!");
+        }
+    }
+
+    #[test]
+    fn test_transfer_info() {
+        let tx: TxTransfer = ::serde_json::from_str(&get_json()).unwrap();
+        assert_eq!(tx.get_fee(), tx.info()["tx_fee"]);
+    }
 }
