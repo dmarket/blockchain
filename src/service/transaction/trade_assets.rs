@@ -117,115 +117,103 @@ impl Transaction for TxTrade {
 }
 
 #[cfg(test)]
-use exonum::storage::{Database, MemoryDB};
-use service::assetid::AssetID;
-#[cfg(test)]
-use service::wallet::Wallet;
+mod tests {
+    use super::TxTrade;
+    use service::wallet::Wallet;
+    use service::assetid::AssetID;
+    use service::asset::Asset;
+    use service::schema::wallet::WalletSchema;
+    use exonum::storage::{Database, MemoryDB};
+    use exonum::blockchain::Transaction;
 
-#[cfg(test)]
-fn get_json() -> String {
-    r#"{
-  "body": {
-    "buyer": "f2ab7abcae9363496ccc458a30ec0a58200d9890a12fdfeca35010da6b276e19",
-    "offer": {
-      "seller": "dedb2438fca19f04d2236d3005db0f28caa014f34caf98e23634cb49aef1c307",
-      "assets": [
-        {
-          "hash_id": "a4826063-d7bb-57a3-a119-3ba03a51b7fa",
-          "amount": 5
-        },
-        {
-          "hash_id": "a007f130-ceea-5939-b616-3aaf7185a164",
-          "amount": 7
-        }
-      ],
-      "price": "88"
-    },
-    "seed": "4",
-    "seller_signature": "4e7d8d57fdc5c102b241d4e7a8d1228658c1de62a9334fa4e70776759268d67f9cdd8c4d20f7db8b226422c644bf442b0e28d9cbecece7753656c92915b02c06"
-  },
-  "network_id": 0,
-  "protocol_version": 0,
-  "service_id": 2,
-  "message_id": 5,
-  "signature": "aac7ce5fee4fca99fb66c978b94f42ba899834fa6b840491ab5c9245967b5a07bda688c0da52876258ee25d63dc1278cf97a6a90e84c8cb3880b5d6d3e606b06"
-}"#.to_string()
-}
-
-#[test]
-fn test_convert_from_json() {
-    let tx: TxTrade = ::serde_json::from_str(&get_json()).unwrap();
-    assert!(tx.verify());
-    assert_eq!(5, tx.offer().assets()[0].amount());
-    assert_eq!("a007f130-ceea-5939-b616-3aaf7185a164", tx.offer().assets()[1].hash_id().to_string());
-    assert_eq!(88, tx.offer().price());
-}
-
-#[test]
-fn positive_trade_test() {
-    let tx: TxTrade = ::serde_json::from_str(&get_json()).unwrap();
-
-    let db = Box::new(MemoryDB::new());
-    let fork = &mut db.fork();
-    // let seller = Wallet::new(
-    //     tx.offer().seller(),
-    //     tx.get_fee(),
-    //     vec![
-    //         Asset::new("a4826063-d7bb-57a3-a119-3ba03a51b7fa", 10),
-    //         Asset::new("a007f130-ceea-5939-b616-3aaf7185a164", 7),
-    //     ],
-    // );
-    let seller = Wallet::new(
-        tx.offer().seller(),
-        tx.get_fee(),
-        vec![
-            Asset::new(AssetID::nil(), 10),
-            Asset::new(AssetID::nil(), 7),
-        ],
-    );
-    let buyer = Wallet::new(tx.buyer(), 3000, vec![]);
-    WalletSchema::map(fork, |mut schema| {
-        schema.wallets().put(tx.offer().seller(), seller);
-        schema.wallets().put(tx.buyer(), buyer);
-    });
-
-    tx.execute(fork);
-
-    let participants = WalletSchema::map(fork, |mut shema| {
-        (shema.wallet(tx.offer().seller()), shema.wallet(tx.buyer()))
-    });
-    if let (Some(seller), Some(buyer)) = participants {
-        assert_eq!(2912, buyer.balance());
-        assert_eq!(88, seller.balance());
-        assert_eq!(
-            vec![Asset::new(AssetID::nil(), 5), ],
-            seller.assets()
-        );
-        // assert_eq!(
-        //     vec![Asset::new("a4826063-d7bb-57a3-a119-3ba03a51b7fa", 5), ],
-        //     seller.assets()
-        // );
-        assert_eq!(
-            vec![
-                Asset::new(AssetID::nil(), 5),
-                Asset::new(AssetID::nil(), 7),
-            ],
-            buyer.assets()
-        )
-        // assert_eq!(
-        //     vec![
-        //         Asset::new("a4826063-d7bb-57a3-a119-3ba03a51b7fa", 5),
-        //         Asset::new("a007f130-ceea-5939-b616-3aaf7185a164", 7),
-        //     ],
-        //     buyer.assets()
-        // );
-    } else {
-        panic!("Something wrong");
+    fn get_json() -> String {
+        r#"{
+            "body": {
+                "buyer": "f2ab7abcae9363496ccc458a30ec0a58200d9890a12fdfeca35010da6b276e19",
+                "offer": {
+                "seller": "dedb2438fca19f04d2236d3005db0f28caa014f34caf98e23634cb49aef1c307",
+                "assets": [
+                    {
+                    "hash_id": "67e5504410b1426f9247bb680e5fe0c8",
+                    "amount": 5
+                    },
+                    {
+                    "hash_id": "a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8",
+                    "amount": 7
+                    }
+                ],
+                "price": "88"
+                },
+                "seed": "4",
+                "seller_signature": "4e7d8d57fdc5c102b241d4e7a8d1228658c1de62a9334fa4e70776759268d67f9cdd8c4d20f7db8b226422c644bf442b0e28d9cbecece7753656c92915b02c06"
+            },
+            "network_id": 0,
+            "protocol_version": 0,
+            "service_id": 2,
+            "message_id": 5,
+            "signature": "aac7ce5fee4fca99fb66c978b94f42ba899834fa6b840491ab5c9245967b5a07bda688c0da52876258ee25d63dc1278cf97a6a90e84c8cb3880b5d6d3e606b06"
+        }"#.to_string()
     }
-}
 
-#[test]
-fn exchange_info_test() {
-    let tx: TxTrade = ::serde_json::from_str(&get_json()).unwrap();
-    assert_eq!(tx.get_fee(), tx.info()["tx_fee"]);
+    #[test]
+    fn test_convert_from_json() {
+        let tx: TxTrade = ::serde_json::from_str(&get_json()).unwrap();
+        assert!(tx.verify());
+        assert_eq!(5, tx.offer().assets()[0].amount());
+        assert_eq!("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8", tx.offer().assets()[1].hash_id().to_string());
+        assert_eq!(88, tx.offer().price());
+    }
+
+    #[test]
+    fn positive_trade_test() {
+        let tx: TxTrade = ::serde_json::from_str(&get_json()).unwrap();
+
+        let db = Box::new(MemoryDB::new());
+        let fork = &mut db.fork();
+
+        let assetid1 = AssetID::from_str("67e5504410b1426f9247bb680e5fe0c8").unwrap();
+        let assetid2 = AssetID::from_str("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8").unwrap();
+        let seller = Wallet::new(
+            tx.offer().seller(),
+            tx.get_fee(),
+            vec![
+                Asset::new(assetid1, 10),
+                Asset::new(assetid2, 7),
+            ],
+        );
+        let buyer = Wallet::new(tx.buyer(), 3000, vec![]);
+        WalletSchema::map(fork, |mut schema| {
+            schema.wallets().put(tx.offer().seller(), seller);
+            schema.wallets().put(tx.buyer(), buyer);
+        });
+
+        tx.execute(fork);
+
+        let participants = WalletSchema::map(fork, |mut shema| {
+            (shema.wallet(tx.offer().seller()), shema.wallet(tx.buyer()))
+        });
+        if let (Some(seller), Some(buyer)) = participants {
+            assert_eq!(2912, buyer.balance());
+            assert_eq!(88, seller.balance());
+            assert_eq!(
+                vec![Asset::new(assetid1, 5), ],
+                seller.assets()
+            );
+            assert_eq!(
+                vec![
+                    Asset::new(assetid1, 5),
+                    Asset::new(assetid2, 7),
+                ],
+                buyer.assets()
+            );
+        } else {
+            panic!("Something wrong");
+        }
+    }
+
+    #[test]
+    fn exchange_info_test() {
+        let tx: TxTrade = ::serde_json::from_str(&get_json()).unwrap();
+        assert_eq!(tx.get_fee(), tx.info()["tx_fee"]);
+    }
 }
