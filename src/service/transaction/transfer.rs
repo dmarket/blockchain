@@ -78,12 +78,12 @@ impl Transaction for TxTransfer {
 #[cfg(test)]
 mod tests {
     use super::TxTransfer;
-    use service::assetid::AssetID;
-    use service::asset::Asset;
-    use service::wallet::Wallet;
-    use service::schema::wallet::WalletSchema;
     use exonum::blockchain::Transaction;
     use exonum::storage::{Database, MemoryDB};
+    use service::asset::Asset;
+    use service::assetid::AssetID;
+    use service::schema::wallet::WalletSchema;
+    use service::wallet::Wallet;
 
     fn get_json() -> String {
         r#"{
@@ -127,8 +127,8 @@ mod tests {
 
         let assetid = AssetID::from_str("67e5504410b1426f9247bb680e5fe0c8").unwrap();
         let asset = Asset::new(assetid, 100);
-        
-        let from = Wallet::new(tx_transfer.from(), 2000, vec![asset,],);
+
+        let from = Wallet::new(tx_transfer.from(), 2000, vec![asset,]);
         WalletSchema::map(fork, |mut schema| {
             schema.wallets().put(tx_transfer.from(), from);
         });

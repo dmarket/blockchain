@@ -2,9 +2,9 @@ use exonum::encoding::{CheckedOffset, Field, Offset, Result as ExonumResult};
 use exonum::encoding::serialize::WriteBufferWrapper;
 use exonum::encoding::serialize::json::ExonumJson;
 use serde_json::value::Value;
+use std::{fmt, mem};
 use std::error::Error;
 use std::string::ToString;
-use std::{mem, fmt};
 
 /// A 128-bit (16 byte) buffer containing the ID.
 pub type AssetIDBytes = [u8; 16];
@@ -31,22 +31,23 @@ impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             ParseError::InvalidLength(found) => {
-                write!(f,
-                       "Invalid length; expecting {}, found {}",
-                       SIMPLE_LENGTH, found)
+                write!(
+                    f,
+                    "Invalid length; expecting {}, found {}",
+                    SIMPLE_LENGTH,
+                    found
+                )
             }
             ParseError::InvalidCharacter(found, pos) => {
-                write!(f,
-                       "Invalid character; found `{}` (0x{:02x}) at offset {}",
-                       found,
-                       found as usize,
-                       pos)
+                write!(
+                    f,
+                    "Invalid character; found `{}` (0x{:02x}) at offset {}",
+                    found,
+                    found as usize,
+                    pos
+                )
             }
-            ParseError::UnexpectedErrorAt(pos) => {
-                write!(f,
-                       "Unexpected, at {}",
-                       pos)
-            }
+            ParseError::UnexpectedErrorAt(pos) => write!(f, "Unexpected, at {}", pos),
         }
     }
 }
@@ -86,7 +87,7 @@ impl AssetID {
         let mut cs = us.chars().enumerate();
         for (i, c) in cs.by_ref() {
             if !c.is_digit(16) {
-                return Err(ParseError::InvalidCharacter(c, i))
+                return Err(ParseError::InvalidCharacter(c, i));
             }
         }
 
@@ -153,12 +154,10 @@ impl ExonumJson for AssetID {
         let val = value.as_str().ok_or("Can't cast json as string")?;
         match AssetID::from_str(&val) {
             Ok(assetid) => {
-                buffer.write(from, to, assetid);    
+                buffer.write(from, to, assetid);
                 Ok(())
-            },
-            Err(error) => {
-                Err(Box::new(error))
             }
+            Err(error) => Err(Box::new(error)),
         }
     }
 
@@ -170,9 +169,9 @@ impl ExonumJson for AssetID {
 
 #[cfg(test)]
 mod tests {
-    use exonum::encoding::{Field, Offset};
     use super::AssetID;
     use super::ParseError::*;
+    use exonum::encoding::{Field, Offset};
 
     #[test]
     fn test_nil() {
@@ -185,8 +184,24 @@ mod tests {
 
     #[test]
     fn test_from_bytes() {
-        let b = [0xa1, 0xa2, 0xa3, 0xa4, 0xb1, 0xb2, 0xc1, 0xc2, 0xd1, 0xd2,
-                 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8];
+        let b = [
+            0xa1,
+            0xa2,
+            0xa3,
+            0xa4,
+            0xb1,
+            0xb2,
+            0xc1,
+            0xc2,
+            0xd1,
+            0xd2,
+            0xd3,
+            0xd4,
+            0xd5,
+            0xd6,
+            0xd7,
+            0xd8,
+        ];
 
         let assetid = AssetID::from_bytes(&b).unwrap();
 
@@ -205,13 +220,29 @@ mod tests {
 
         // Valid
         assert!(AssetID::from_str("00000000000000000000000000000000").is_ok());
-        assert!(AssetID::from_str("67e5504410b1426f9247bb680e5fe0c8").is_ok()); 
+        assert!(AssetID::from_str("67e5504410b1426f9247bb680e5fe0c8").is_ok());
     }
 
     #[test]
     fn test_as_bytes() {
-        let expected = [0xa1, 0xa2, 0xa3, 0xa4, 0xb1, 0xb2, 0xc1, 0xc2, 0xd1, 0xd2,
-                0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8];
+        let expected = [
+            0xa1,
+            0xa2,
+            0xa3,
+            0xa4,
+            0xb1,
+            0xb2,
+            0xc1,
+            0xc2,
+            0xd1,
+            0xd2,
+            0xd3,
+            0xd4,
+            0xd5,
+            0xd6,
+            0xd7,
+            0xd8,
+        ];
         let assetid = AssetID::from_str("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8").unwrap();
 
         assert_eq!(assetid.as_bytes(), &expected);
@@ -219,8 +250,24 @@ mod tests {
 
     #[test]
     fn test_to_string() {
-        let b = [0xa1, 0xa2, 0xa3, 0xa4, 0xb1, 0xb2, 0xc1, 0xc2, 0xd1, 0xd2,
-                 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8];
+        let b = [
+            0xa1,
+            0xa2,
+            0xa3,
+            0xa4,
+            0xb1,
+            0xb2,
+            0xc1,
+            0xc2,
+            0xd1,
+            0xd2,
+            0xd3,
+            0xd4,
+            0xd5,
+            0xd6,
+            0xd7,
+            0xd8,
+        ];
 
         let assetid = AssetID::from_bytes(&b).unwrap();
         let expected = "a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8";
@@ -230,21 +277,37 @@ mod tests {
 
     #[test]
     fn test_read() {
-        let buffer = vec![0;16];
+        let buffer = vec![0; 16];
         unsafe {
             let assetid = AssetID::read(&buffer, 0, 16);
             assert_eq!(assetid, AssetID::nil());
         }
 
-        let buffer = vec! [0xa1, 0xa2, 0xa3, 0xa4, 0xb1, 0xb2, 0xc1, 0xc2, 0xd1, 0xd2,
-                           0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8];
+        let buffer = vec![
+            0xa1,
+            0xa2,
+            0xa3,
+            0xa4,
+            0xb1,
+            0xb2,
+            0xc1,
+            0xc2,
+            0xd1,
+            0xd2,
+            0xd3,
+            0xd4,
+            0xd5,
+            0xd6,
+            0xd7,
+            0xd8,
+        ];
         unsafe {
             let assetid = AssetID::read(&buffer, 0, buffer.len() as Offset);
             let expected = AssetID::from_bytes(&buffer).unwrap();
             assert_eq!(assetid, expected);
         }
 
-        let mut extended_buffer = vec! [0xde, 0xad];
+        let mut extended_buffer = vec![0xde, 0xad];
         extended_buffer.extend(&buffer);
         unsafe {
             let assetid = AssetID::read(&extended_buffer, 2, extended_buffer.len() as Offset);
@@ -255,18 +318,54 @@ mod tests {
 
     #[test]
     fn test_write() {
-        let expected =[0xa1, 0xa2, 0xa3, 0xa4, 0xb1, 0xb2, 0xc1, 0xc2, 0xd1, 0xd2,
-                             0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8];
+        let expected = [
+            0xa1,
+            0xa2,
+            0xa3,
+            0xa4,
+            0xb1,
+            0xb2,
+            0xc1,
+            0xc2,
+            0xd1,
+            0xd2,
+            0xd3,
+            0xd4,
+            0xd5,
+            0xd6,
+            0xd7,
+            0xd8,
+        ];
         let assetid = AssetID::from_bytes(&expected).unwrap();
-        let mut buffer = vec! [0; expected.len()];
+        let mut buffer = vec![0; expected.len()];
 
         assetid.write(&mut buffer, 0, expected.len() as Offset);
         assert_eq!(buffer, expected);
 
-        let expected =[0x0, 0x0, 0xa1, 0xa2, 0xa3, 0xa4, 0xb1, 0xb2, 0xc1, 0xc2, 0xd1, 0xd2,
-                             0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0xd8, 0x0, 0x0];
+        let expected = [
+            0x0,
+            0x0,
+            0xa1,
+            0xa2,
+            0xa3,
+            0xa4,
+            0xb1,
+            0xb2,
+            0xc1,
+            0xc2,
+            0xd1,
+            0xd2,
+            0xd3,
+            0xd4,
+            0xd5,
+            0xd6,
+            0xd7,
+            0xd8,
+            0x0,
+            0x0,
+        ];
         let assetid = AssetID::from_bytes(&expected[2..18]).unwrap();
-        let mut buffer = vec! [0; expected.len()];
+        let mut buffer = vec![0; expected.len()];
 
         assetid.write(&mut buffer, 2, 18);
         assert_eq!(buffer, expected);

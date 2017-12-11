@@ -82,8 +82,8 @@ impl Wallet {
 #[cfg(test)]
 mod tests {
     use super::Wallet;
-    use service::assetid::AssetID;
     use service::asset::Asset;
+    use service::assetid::AssetID;
 
     #[test]
     fn test_in_wallet_assets() {
@@ -104,9 +104,7 @@ mod tests {
             ],
         );
         assert!(wallet.in_wallet_assets(&vec![Asset::new(assetid2, 3)]));
-        assert!(!wallet.in_wallet_assets(
-            &vec![Asset::new(assetid2, 33)],
-        ));
+        assert!(!wallet.in_wallet_assets(&vec![Asset::new(assetid2, 33)]));
         assert!(!wallet.in_wallet_assets(&vec![Asset::new(assetid4, 1)]));
         assert!(!wallet.in_wallet_assets(&vec![
             Asset::new(assetid1, 1),

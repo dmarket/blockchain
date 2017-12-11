@@ -119,12 +119,12 @@ impl Transaction for TxTrade {
 #[cfg(test)]
 mod tests {
     use super::TxTrade;
-    use service::wallet::Wallet;
-    use service::assetid::AssetID;
-    use service::asset::Asset;
-    use service::schema::wallet::WalletSchema;
-    use exonum::storage::{Database, MemoryDB};
     use exonum::blockchain::Transaction;
+    use exonum::storage::{Database, MemoryDB};
+    use service::asset::Asset;
+    use service::assetid::AssetID;
+    use service::schema::wallet::WalletSchema;
+    use service::wallet::Wallet;
 
     fn get_json() -> String {
         r#"{

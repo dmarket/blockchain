@@ -93,12 +93,12 @@ impl Transaction for TxDelAsset {
 mod tests {
     use exonum::blockchain::Transaction;
     use exonum::storage::{Database, MemoryDB};
+    use service::asset::{Asset, AssetInfo};
+    use service::assetid::AssetID;
     use service::schema::asset::AssetSchema;
     use service::schema::wallet::WalletSchema;
     use service::transaction::del_assets::TxDelAsset;
     use service::wallet::Wallet;
-    use service::asset::{Asset, AssetInfo};
-    use service::assetid::AssetID;
 
     fn get_json() -> String {
         r#"{

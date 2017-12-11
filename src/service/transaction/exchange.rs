@@ -115,12 +115,12 @@ impl Transaction for TxExchange {
 #[cfg(test)]
 mod tests {
     use super::TxExchange;
-    use service::assetid::AssetID;
-    use service::asset::Asset;
-    use service::wallet::Wallet;
     use exonum::blockchain::Transaction;
     use exonum::storage::{Database, MemoryDB};
+    use service::asset::Asset;
+    use service::assetid::AssetID;
     use service::schema::wallet::WalletSchema;
+    use service::wallet::Wallet;
 
     fn get_json() -> String {
         r#"{
@@ -168,7 +168,7 @@ mod tests {
         let assetid1 = AssetID::from_str("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8").unwrap();
         let assetid2 = AssetID::from_str("8d7d6d5d4d3d2d1d2c1c2b1b4a3a2a1a").unwrap();
 
-        assert_eq!(assetid1, tx.offer().sender_assets()[1].hash_id());   
+        assert_eq!(assetid1, tx.offer().sender_assets()[1].hash_id());
         assert_eq!(Asset::new(assetid2, 1), tx.offer().recipient_assets()[0]);
     }
 

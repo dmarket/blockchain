@@ -1,4 +1,3 @@
-
 use exonum::crypto::{HexValue, PublicKey};
 use exonum::storage::{Fork, MapIndex};
 use std::collections::HashMap;
@@ -12,7 +11,7 @@ use service::assetid::AssetID;
 pub struct AssetSchema<'a>(&'a mut Fork);
 
 
-/// Helper fuction that generates unique `AssetID` from 
+/// Helper fuction that generates unique `AssetID` from
 /// `&str` and `&PublicKey`
 /// # Example:
 /// ```
