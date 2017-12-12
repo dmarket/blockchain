@@ -7,16 +7,17 @@ extern crate iron;
 extern crate params;
 extern crate std;
 
-use exonum::blockchain::Blockchain;
-use exonum::crypto::{PublicKey, HexValue};
 use exonum::api::{Api, ApiError};
+use exonum::blockchain::Blockchain;
+use exonum::crypto::{HexValue, PublicKey};
 use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use router::Router;
 
-use service::schema::wallet::WalletSchema;
-use service::wallet::{Wallet, Asset};
 use service::ServiceApi;
+use service::asset::Asset;
+use service::schema::wallet::WalletSchema;
+use service::wallet::Wallet;
 
 #[derive(Clone)]
 pub struct WalletApi {

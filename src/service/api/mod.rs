@@ -5,18 +5,18 @@ pub mod hash;
 
 extern crate params;
 
+use exonum::api::Api;
 use exonum::blockchain::Blockchain;
 use exonum::node::ApiSender;
-use exonum::api::Api;
-use router::Router;
 use iron::prelude::*;
+use router::Router;
 use std;
 
-use self::transaction::TransactionApi;
 use self::asset::AssetApi;
-use self::wallet::WalletApi;
 use self::hash::HashApi;
-use self::params::{Params, FromValue};
+use self::params::{FromValue, Params};
+use self::transaction::TransactionApi;
+use self::wallet::WalletApi;
 
 const PARAMETER_OFFSET_KEY: &str = "offset";
 const PARAMETER_LIMIT_KEY: &str = "limit";
@@ -28,7 +28,6 @@ pub struct ServiceApi {
 }
 
 impl ServiceApi {
-
     /// returns a slice `&[T]` if `request` has pagination parameters.
     /// `offset` and `limit`, otherwise returns existing slice
     ///
@@ -47,10 +46,10 @@ impl ServiceApi {
             let offset = FromValue::from_value(offset_parameter.unwrap()).unwrap_or(0);
             let limit = FromValue::from_value(limit_parameter.unwrap()).unwrap_or(total_count);
 
-            // validate parameters for pagination 
+            // validate parameters for pagination
             let from = std::cmp::min(offset, total_count);
             let to = std::cmp::min(from + limit, total_count);
-            return &elements[from..to]
+            return &elements[from..to];
         }
 
         elements

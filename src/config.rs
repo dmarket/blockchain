@@ -1,12 +1,12 @@
 extern crate toml;
 
 use std::env;
-use std::result::Result;
-use std::io::Error;
 use std::fs::File;
+use std::io::Error;
 use std::io::prelude::*;
+use std::net::{SocketAddr, ToSocketAddrs};
 use std::path::Path;
-use std::net::{ToSocketAddrs, SocketAddr};
+use std::result::Result;
 
 #[derive(Deserialize)]
 #[warn(unused_must_use)]

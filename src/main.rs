@@ -11,18 +11,19 @@ extern crate router;
 extern crate bodyparser;
 extern crate iron;
 extern crate nats;
+extern crate uuid;
 
 mod service;
 mod config;
 mod keys;
 
-use exonum::blockchain::{Blockchain, Service, GenesisConfig, ValidatorKeys, ConsensusConfig,
-                         TimeoutAdjusterConfig};
-use exonum::node::{Node, NodeConfig, NodeApiConfig};
+use exonum::blockchain::{Blockchain, ConsensusConfig, GenesisConfig, Service,
+                         TimeoutAdjusterConfig, ValidatorKeys};
+use exonum::node::{Node, NodeApiConfig, NodeConfig};
 use exonum::storage::{RocksDB, RocksDBOptions};
 use exonum_configuration::ConfigurationService;
+use keys::{Disc, KeyPair};
 use service::CurrencyService;
-use keys::{KeyPair, Disc};
 
 fn main() {
     exonum::helpers::init_logger().unwrap();

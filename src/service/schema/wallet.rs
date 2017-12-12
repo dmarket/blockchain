@@ -3,8 +3,9 @@ extern crate exonum;
 use exonum::crypto::PublicKey;
 use exonum::storage::{Fork, MapIndex};
 
-use service::wallet::{Wallet, Asset};
 use service::SERVICE_NAME;
+use service::asset::Asset;
+use service::wallet::Wallet;
 
 pub struct WalletSchema<'a>(&'a mut Fork);
 
@@ -33,9 +34,7 @@ impl<'a> WalletSchema<'a> {
     }
 
     pub fn map<F, T>(view: &'a mut Fork, f: F) -> T
-    where
-        F: FnOnce(Self) -> T + 'a,
-        T: 'a,
+        where F: FnOnce(Self) -> T + 'a, T: 'a
     {
         f(WalletSchema(view))
     }
