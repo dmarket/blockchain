@@ -1,4 +1,5 @@
 use exonum::crypto::{HexValue, PublicKey};
+use exonum::storage::StorageKey;
 use exonum::encoding::{CheckedOffset, Field, Offset, Result as ExonumResult};
 use exonum::encoding::serialize::WriteBufferWrapper;
 use exonum::encoding::serialize::json::ExonumJson;
@@ -154,6 +155,23 @@ impl ToString for AssetID {
     }
 }
 
+
+impl StorageKey for AssetID {
+    fn size(&self) -> usize {
+        mem::size_of::<AssetIDBytes>()
+    }
+
+    fn read(buffer: &[u8]) -> Self {
+        let mut bytes = [0u8; 16];
+        bytes.copy_from_slice(buffer);
+        AssetID { bytes: bytes }
+    }
+
+    fn write(&self, buffer: &mut [u8]) {
+        buffer.copy_from_slice(&self.bytes)
+    }
+}
+
 impl<'a> Field<'a> for AssetID {
     fn field_size() -> Offset {
         mem::size_of::<AssetIDBytes>() as Offset
@@ -231,10 +249,14 @@ impl Asset {
     /// `&str` and `&PublicKey`
     /// # Example:
     /// ```
-    /// let data = "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f";
-    /// let pub_key: PublicKey = "06f2b8853d37d317639132d3e9646adee97c56dcbc3899bfb2b074477d7ef31a";
+    /// extern crate exonum;
+    /// use exonum::crypto;
+    /// use exonum::crypto::PublicKey;
     ///
-    /// let assetid = generate_asset_id(&data, &pub_key);
+    /// let data = "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f";
+    /// let (public_key, _) = crypto::gen_keypair();
+    ///
+    /// let assetid = generate_asset_id(&data, &public_key);
     /// assert_eq!(assetid.to_string(), "d7a029d856055d8cbfa8b56d846b7360");
     /// ```
     fn generate_asset_id(data: &str, pub_key: &PublicKey) -> AssetID {

@@ -136,21 +136,22 @@ mod tests {
     fn test_positive_delete_assets() {
         let tx_del: TxDelAsset = ::serde_json::from_str(&get_json()).unwrap();
 
+        let assetid1 = AssetID::from_str("67e5504410b1426f9247bb680e5fe0c8").unwrap();
+        let assetid2 = AssetID::from_str("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8").unwrap();
+
         let db = Box::new(MemoryDB::new());
         let fork = &mut db.fork();
         AssetSchema::map(fork, |mut asset_schema| {
             asset_schema.assets().put(
-                &"67e5504410b1426f9247bb680e5fe0c8".to_string(),
+                &assetid1,
                 AssetInfo::new(tx_del.pub_key(), 100),
             );
             asset_schema.assets().put(
-                &"a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8".to_string(),
+                &assetid2,
                 AssetInfo::new(tx_del.pub_key(), 17),
             );
         });
 
-        let assetid1 = AssetID::from_str("67e5504410b1426f9247bb680e5fe0c8").unwrap();
-        let assetid2 = AssetID::from_str("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8").unwrap();
         let assets = vec![
             Asset::new(assetid1, 100),
             Asset::new(assetid2, 17),

@@ -36,20 +36,20 @@ pub fn external_internal(
 }
 
 impl<'a> AssetSchema<'a> {
-    pub fn assets(&mut self) -> MapIndex<&mut Fork, String, AssetInfo> {
-        let key = SERVICE_NAME.to_string().replace("/", "_") + ".assets";
-        MapIndex::new(key, self.0)
+    pub fn assets(&mut self) -> MapIndex<&mut Fork, AssetID, AssetInfo> {
+        let name = SERVICE_NAME.to_string().replace("/", "_") + ".assets";
+        MapIndex::new(name, self.0)
     }
 
     pub fn info(&mut self, asset_id: &AssetID) -> Option<AssetInfo> {
-        self.assets().get(&asset_id.to_string())
+        self.assets().get(&asset_id)
     }
 
     pub fn add_asset(&mut self, asset_id: &AssetID, creator: &PublicKey, amount: u32) -> bool {
         match self.info(&asset_id) {
             None => {
                 let info = AssetInfo::new(creator, amount);
-                self.assets().put(&asset_id.to_string(), info);
+                self.assets().put(&asset_id, info);
                 println!("Add asset {:?} for wallet: {:?}", asset_id, creator);
                 true
             }
@@ -75,15 +75,15 @@ impl<'a> AssetSchema<'a> {
     pub fn del_assets(&mut self, deleted: &[Asset]) {
         let mut infos = self.assets();
         for asset in deleted {
-            let info = match infos.get(&asset.hash_id().to_string()) {
+            let info = match infos.get(&asset.hash_id()) {
                 Some(info) => info,
                 _ => continue,
             };
             let amount = info.amount() - asset.amount();
             let info = AssetInfo::new(info.creator(), amount);
             match info.amount() {
-                0 => infos.remove(&asset.hash_id().to_string()),
-                _ => infos.put(&asset.hash_id().to_string(), info),
+                0 => infos.remove(&asset.hash_id()),
+                _ => infos.put(&asset.hash_id(), info),
             }
         }
     }
