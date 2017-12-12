@@ -2,6 +2,7 @@ pub mod transaction;
 pub mod schema;
 pub mod wallet;
 pub mod api;
+pub mod asset;
 
 mod nats;
 
@@ -16,6 +17,7 @@ use router::Router;
 use serde_json;
 
 use self::api::ServiceApi;
+use self::asset::Asset;
 use self::schema::transaction_status::TxSchema;
 use self::schema::wallet::WalletSchema;
 use self::transaction::{TX_ADD_ASSETS_ID, TX_CREATE_WALLET_ID, TX_DEL_ASSETS_ID, TX_EXCHANGE_ID,
@@ -27,7 +29,7 @@ use self::transaction::exchange::TxExchange;
 use self::transaction::mining::TxMining;
 use self::transaction::trade_assets::TxTrade;
 use self::transaction::transfer::TxTransfer;
-use self::wallet::{Asset, Wallet};
+use self::wallet::Wallet;
 use config;
 
 // Service identifier

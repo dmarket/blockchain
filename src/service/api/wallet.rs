@@ -15,8 +15,9 @@ use iron::prelude::*;
 use router::Router;
 
 use service::ServiceApi;
+use service::asset::Asset;
 use service::schema::wallet::WalletSchema;
-use service::wallet::{Asset, Wallet};
+use service::wallet::Wallet;
 
 #[derive(Clone)]
 pub struct WalletApi {

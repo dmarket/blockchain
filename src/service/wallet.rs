@@ -2,24 +2,7 @@ extern crate exonum;
 
 use exonum::crypto::PublicKey;
 use exonum::encoding::Field;
-
-encoding_struct! {
-    struct Asset {
-        const SIZE = 12;
-
-        field hash_id: &str [0 =>  8]
-        field amount:  u32 [8 => 12]
-    }
-}
-
-encoding_struct! {
-    struct AssetInfo {
-        const SIZE = 36;
-
-        field creator: &PublicKey [0  => 32]
-        field amount:  u32        [32 => 36]
-    }
-}
+use service::asset::Asset;
 
 encoding_struct! {
     struct Wallet {
@@ -28,23 +11,6 @@ encoding_struct! {
         field pub_key: &PublicKey [00 => 32]
         field balance: u64        [32 => 40]
         field assets:  Vec<Asset> [40 => 48]
-    }
-}
-
-impl Asset {
-    pub fn is_eq(&self, other: &Asset) -> bool {
-        self.hash_id() == other.hash_id()
-    }
-
-    pub fn is_available_to_transfer(&self, other: &Asset) -> bool {
-        self.amount() >= other.amount()
-    }
-
-    pub fn count(assets: &[Asset]) -> u64 {
-        assets.iter().fold(
-            0,
-            |acc, asset| acc + asset.amount() as u64,
-        )
     }
 }
 
@@ -113,72 +79,94 @@ impl Wallet {
     }
 }
 
-#[test]
-fn in_wallet_assets_test() {
-    let (pub_key, _) = ::exonum::crypto::gen_keypair();
-    let wallet = Wallet::new(
-        &pub_key,
-        1000,
-        vec![
-            Asset::new("test_hash1", 30),
-            Asset::new("test_hash2", 30),
-            Asset::new("test_hash3", 30),
-        ],
-    );
-    assert!(wallet.in_wallet_assets(&vec![Asset::new("test_hash2", 3)]));
-    assert!(!wallet.in_wallet_assets(
-        &vec![Asset::new("test_hash2", 33)],
-    ));
-    assert!(!wallet.in_wallet_assets(&vec![Asset::new("test_hash4", 1)]));
-    assert!(!wallet.in_wallet_assets(&vec![
-        Asset::new("test_hash1", 1),
-        Asset::new("test_hash4", 1),
-    ]));
-    assert!(!wallet.in_wallet_assets(&vec![
-        Asset::new("test_hash1", 1),
-        Asset::new("test_hash3", 31),
-    ]));
-}
+#[cfg(test)]
+mod tests {
+    use super::Wallet;
+    use service::asset::{Asset, AssetID};
 
-#[test]
-fn add_assets_test() {
-    let (pub_key, _) = ::exonum::crypto::gen_keypair();
-    let mut wallet = Wallet::new(
-        &pub_key,
-        1000,
-        vec![
-            Asset::new("test_hash1", 30),
-            Asset::new("test_hash2", 30),
-            Asset::new("test_hash3", 30),
-        ],
-    );
+    #[test]
+    fn test_in_wallet_assets() {
+        let (pub_key, _) = ::exonum::crypto::gen_keypair();
 
-    wallet.add_assets(vec![Asset::new("test_hash2", 3)]);
-    wallet.add_assets(vec![Asset::new("test_hash4", 3)]);
-    assert!(wallet.in_wallet_assets(&vec![Asset::new("test_hash2", 33)]));
-    assert!(wallet.in_wallet_assets(&vec![Asset::new("test_hash4", 3)]));
-}
+        let assetid1 = AssetID::from_str("67e5504410b1426f9247bb680e5fe0c8").unwrap();
+        let assetid2 = AssetID::from_str("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8").unwrap();
+        let assetid3 = AssetID::from_str("8d7d6d5d4d3d2d1d2c1c2b1b4a3a2a1a").unwrap();
+        let assetid4 = AssetID::from_str("8c0ef5e086bb7429f6241b0144055e76").unwrap();
 
-#[test]
-fn del_assets_test() {
-    let (pub_key, _) = ::exonum::crypto::gen_keypair();
-    let mut wallet = Wallet::new(
-        &pub_key,
-        1000,
-        vec![
-            Asset::new("test_hash1", 30),
-            Asset::new("test_hash2", 30),
-            Asset::new("test_hash3", 30),
-        ],
-    );
+        let wallet = Wallet::new(
+            &pub_key,
+            1000,
+            vec![
+                Asset::new(assetid1, 30),
+                Asset::new(assetid2, 30),
+                Asset::new(assetid3, 30),
+            ],
+        );
+        assert!(wallet.in_wallet_assets(&vec![Asset::new(assetid2, 3)]));
+        assert!(!wallet.in_wallet_assets(&vec![Asset::new(assetid2, 33)]));
+        assert!(!wallet.in_wallet_assets(&vec![Asset::new(assetid4, 1)]));
+        assert!(!wallet.in_wallet_assets(&vec![
+            Asset::new(assetid1, 1),
+            Asset::new(assetid4, 1),
+        ]));
+        assert!(!wallet.in_wallet_assets(&vec![
+            Asset::new(assetid1, 1),
+            Asset::new(assetid3, 31),
+        ]));
+    }
 
-    assert!(wallet.del_assets(&vec![Asset::new("test_hash2", 15)]));
-    assert!(wallet.in_wallet_assets(&vec![Asset::new("test_hash2", 15)]));
-    assert!(!wallet.del_assets(&vec![Asset::new("test_hash4", 3)]));
-    assert!(!wallet.del_assets(&vec![Asset::new("test_hash3", 31)]));
-    assert!(!wallet.del_assets(&vec![
-        Asset::new("test_hash1", 10),
-        Asset::new("test_hash3", 31),
-    ]));
-    assert!(wallet.in_wallet_assets(&vec![Asset::new("test_hash1", 30)]));
+    #[test]
+    fn test_add_assets() {
+        let (pub_key, _) = ::exonum::crypto::gen_keypair();
+
+        let assetid1 = AssetID::from_str("67e5504410b1426f9247bb680e5fe0c8").unwrap();
+        let assetid2 = AssetID::from_str("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8").unwrap();
+        let assetid3 = AssetID::from_str("8d7d6d5d4d3d2d1d2c1c2b1b4a3a2a1a").unwrap();
+        let assetid4 = AssetID::from_str("8c0ef5e086bb7429f6241b0144055e76").unwrap();
+
+        let mut wallet = Wallet::new(
+            &pub_key,
+            1000,
+            vec![
+                Asset::new(assetid1, 30),
+                Asset::new(assetid2, 30),
+                Asset::new(assetid3, 30),
+            ],
+        );
+
+        wallet.add_assets(vec![Asset::new(assetid2, 3)]);
+        wallet.add_assets(vec![Asset::new(assetid4, 3)]);
+        assert!(wallet.in_wallet_assets(&vec![Asset::new(assetid2, 33)]));
+        assert!(wallet.in_wallet_assets(&vec![Asset::new(assetid4, 3)]));
+    }
+
+    #[test]
+    fn test_del_assets() {
+        let (pub_key, _) = ::exonum::crypto::gen_keypair();
+
+        let assetid1 = AssetID::from_str("67e5504410b1426f9247bb680e5fe0c8").unwrap();
+        let assetid2 = AssetID::from_str("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8").unwrap();
+        let assetid3 = AssetID::from_str("8d7d6d5d4d3d2d1d2c1c2b1b4a3a2a1a").unwrap();
+        let assetid4 = AssetID::from_str("8c0ef5e086bb7429f6241b0144055e76").unwrap();
+
+        let mut wallet = Wallet::new(
+            &pub_key,
+            1000,
+            vec![
+                Asset::new(assetid1, 30),
+                Asset::new(assetid2, 30),
+                Asset::new(assetid3, 30),
+            ],
+        );
+
+        assert!(wallet.del_assets(&vec![Asset::new(assetid2, 15)]));
+        assert!(wallet.in_wallet_assets(&vec![Asset::new(assetid2, 15)]));
+        assert!(!wallet.del_assets(&vec![Asset::new(assetid4, 3)]));
+        assert!(!wallet.del_assets(&vec![Asset::new(assetid3, 31)]));
+        assert!(!wallet.del_assets(&vec![
+            Asset::new(assetid1, 10),
+            Asset::new(assetid3, 31),
+        ]));
+        assert!(wallet.in_wallet_assets(&vec![Asset::new(assetid1, 30)]));
+    }
 }

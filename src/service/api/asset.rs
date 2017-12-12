@@ -11,8 +11,8 @@ use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use router::Router;
 
+use service::asset::{AssetID, AssetInfo};
 use service::schema::asset::AssetSchema;
-use service::wallet::AssetInfo;
 
 #[derive(Clone)]
 pub struct AssetApi {
@@ -21,7 +21,7 @@ pub struct AssetApi {
 
 /// Shortcut to get data on wallets.
 impl AssetApi {
-    fn get_owner_for_asset(&self, asset_id: &str) -> Option<AssetInfo> {
+    fn get_owner_for_asset(&self, asset_id: &AssetID) -> Option<AssetInfo> {
         let mut view = self.blockchain.fork();
         AssetSchema::map(&mut view, |mut schema| schema.info(asset_id))
     }
@@ -32,8 +32,16 @@ impl Api for AssetApi {
         let self_ = self.clone();
         let get_owner_for_asset_id = move |req: &mut Request| -> IronResult<Response> {
             let path = req.url.path();
-            let asset_id = path.last().unwrap();
-            if let Some(owner) = self_.get_owner_for_asset(*asset_id) {
+            let asset_id_str = path.last().unwrap();
+            let asset_id = AssetID::from_str(&asset_id_str);
+            if asset_id.is_err() {
+                let res =
+                    self_.not_found_response(&serde_json::to_value("Invalid Asset ID").unwrap());
+                let mut res = res.unwrap();
+                res.headers.set(AccessControlAllowOrigin::Any);
+                return Ok(res);
+            }
+            if let Some(owner) = self_.get_owner_for_asset(&asset_id.unwrap()) {
                 let res = self_.ok_response(&serde_json::to_value(owner).unwrap());
                 let mut res = res.unwrap();
                 res.headers.set(AccessControlAllowOrigin::Any);

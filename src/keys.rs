@@ -1,4 +1,3 @@
-
 use config;
 use exonum::crypto::{PublicKey, SecretKey};
 use serde_json;

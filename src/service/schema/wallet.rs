@@ -4,7 +4,8 @@ use exonum::crypto::PublicKey;
 use exonum::storage::{Fork, MapIndex};
 
 use service::SERVICE_NAME;
-use service::wallet::{Asset, Wallet};
+use service::asset::Asset;
+use service::wallet::Wallet;
 
 pub struct WalletSchema<'a>(&'a mut Fork);
 
