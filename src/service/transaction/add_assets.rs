@@ -88,8 +88,7 @@ mod tests {
     use super::TxAddAsset;
     use exonum::blockchain::Transaction;
     use exonum::storage::{Database, MemoryDB};
-    use service::asset::Asset;
-    use service::assetid::AssetID;
+    use service::asset::{Asset, AssetID};
     use service::schema::asset::external_internal;
     use service::schema::wallet::WalletSchema;
     use service::wallet::Wallet;

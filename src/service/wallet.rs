@@ -82,8 +82,7 @@ impl Wallet {
 #[cfg(test)]
 mod tests {
     use super::Wallet;
-    use service::asset::Asset;
-    use service::assetid::AssetID;
+    use service::asset::{Asset, AssetID};
 
     #[test]
     fn test_in_wallet_assets() {

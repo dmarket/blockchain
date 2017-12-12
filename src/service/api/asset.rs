@@ -11,8 +11,7 @@ use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use router::Router;
 
-use service::asset::AssetInfo;
-use service::assetid::AssetID;
+use service::asset::{AssetID, AssetInfo};
 use service::schema::asset::AssetSchema;
 
 #[derive(Clone)]

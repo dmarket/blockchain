@@ -1,36 +1,11 @@
-use exonum::crypto::{HexValue, PublicKey};
+use exonum::crypto::PublicKey;
 use exonum::storage::{Fork, MapIndex};
 use std::collections::HashMap;
-use uuid;
-use uuid::Uuid;
 
 use service::SERVICE_NAME;
-use service::asset::{Asset, AssetInfo, MetaAsset};
-use service::assetid::AssetID;
+use service::asset::{Asset, AssetID, AssetInfo, MetaAsset};
 
 pub struct AssetSchema<'a>(&'a mut Fork);
-
-
-/// Helper fuction that generates unique `AssetID` from
-/// `&str` and `&PublicKey`
-/// # Example:
-/// ```
-/// let data = "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f";
-/// let pub_key: PublicKey = "06f2b8853d37d317639132d3e9646adee97c56dcbc3899bfb2b074477d7ef31a";
-///
-/// let assetid = generate_asset_id(&data, &pub_key);
-/// assert_eq!(assetid.to_string(), "d7a029d856055d8cbfa8b56d846b7360");
-/// ```
-pub fn generate_asset_id(data: &str, pub_key: &PublicKey) -> AssetID {
-    let s = HexValue::to_hex(pub_key);
-    let ful_s = s + &data.to_string();
-
-    let uuid = Uuid::new_v5(&uuid::NAMESPACE_DNS, &ful_s);
-    match AssetID::from_bytes(uuid.as_bytes()) {
-        Ok(asset_id) => asset_id,
-        Err(..) => AssetID::nil(),
-    }
-}
 
 pub fn from_meta_to_asset_map(
     meta_assets: Vec<MetaAsset>,
@@ -40,8 +15,7 @@ pub fn from_meta_to_asset_map(
 
     for meta_asset in meta_assets {
         let key = &meta_asset.data();
-        let asset_id = generate_asset_id(&key, pub_key);
-        let new_asset = Asset::new(asset_id, meta_asset.amount());
+        let new_asset = Asset::from_meta_asset(&meta_asset, pub_key);
         map_asset_id.insert(key.to_string(), new_asset);
     }
 
@@ -90,8 +64,7 @@ impl<'a> AssetSchema<'a> {
     ) -> HashMap<String, Asset> {
         let mut map_asset_id: HashMap<String, Asset> = HashMap::new();
         for meta_asset in meta_assets {
-            let asset_id = generate_asset_id(&meta_asset.data(), pub_key);
-            let new_asset = Asset::new(asset_id, meta_asset.amount());
+            let new_asset = Asset::from_meta_asset(&meta_asset, pub_key);
             self.add_asset(&new_asset.hash_id(), pub_key, new_asset.amount());
             map_asset_id.insert(new_asset.hash_id().to_string(), new_asset);
         }
