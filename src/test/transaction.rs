@@ -12,7 +12,7 @@ use service::transaction::mining::TxMining;
 use service::transaction::trade_assets::{TxTrade, TradeOffer};
 use service::transaction::transfer::TxTransfer;
 
-pub struct TransactionBuilder {
+pub struct Builder {
     public_key: Option<PublicKey>,
     secret_key: Option<SecretKey>,
     network_id: u32,
@@ -28,8 +28,8 @@ struct TransactionMetadata {
     service_id: u16,
 }
 
-impl From<TransactionBuilder> for TransactionMetadata {
-    fn from(b: TransactionBuilder) -> Self {
+impl From<Builder> for TransactionMetadata {
+    fn from(b: Builder) -> Self {
         TransactionMetadata {
             public_key: b.public_key.unwrap(),
             secret_key: b.secret_key.unwrap(),
@@ -40,9 +40,9 @@ impl From<TransactionBuilder> for TransactionMetadata {
     }
 }
 
-impl TransactionBuilder {
+impl Builder {
     pub fn new() -> Self {
-        TransactionBuilder {
+        Builder {
             public_key: None,
             secret_key: None,
             network_id: 0,
@@ -52,7 +52,7 @@ impl TransactionBuilder {
     }
 
     pub fn keypair(self, public_key: PublicKey, secret_key: SecretKey) -> Self {
-        TransactionBuilder {
+        Builder {
             public_key: Some(public_key),
             secret_key: Some(secret_key),
             ..self
@@ -61,7 +61,7 @@ impl TransactionBuilder {
 
     pub fn random_keypair(self) -> Self {
         let (public_key, secret_key) = crypto::gen_keypair();
-        TransactionBuilder {
+        Builder {
             public_key: Some(public_key),
             secret_key: Some(secret_key),
             ..self
@@ -69,15 +69,15 @@ impl TransactionBuilder {
     }
 
     pub fn network_id(self, network_id: u32) -> Self {
-        TransactionBuilder { network_id, ..self }
+        Builder { network_id, ..self }
     }
 
     pub fn protocol_version(self, protocol_version: u32) -> Self {
-        TransactionBuilder { protocol_version, ..self }
+        Builder { protocol_version, ..self }
     }
 
     pub fn service_id(self, service_id: u16) -> Self {
-        TransactionBuilder { service_id, ..self }
+        Builder { service_id, ..self }
     }
 
     pub fn tx_add_assets(self) -> TxAddAssetBuilder {
@@ -396,6 +396,13 @@ impl TxTradeBuilder {
         }
     }
 
+    pub fn seed(self, seed: u64) -> Self {
+        TxTradeBuilder {
+            seed,
+            ..self
+        }
+    }
+
     pub fn build(self) -> TxTrade {
         self.verify();
 
@@ -485,32 +492,31 @@ impl TxTransferBuilder {
 #[cfg(test)]
 mod test {
     use exonum::crypto;
+    use exonum::storage::StorageValue;
 
     use service::wallet::Asset;
 
     use service::transaction::add_assets::TxAddAsset;
+    use service::transaction::create_wallet::TxCreateWallet;
+    use service::transaction::del_assets::TxDelAsset;
+    use service::transaction::exchange::{TxExchange, ExchangeOffer};
+    use service::transaction::mining::TxMining;
+    use service::transaction::trade_assets::{TxTrade, TradeOffer};
+    use service::transaction::transfer::TxTransfer;
 
-    // TODO: tests.
-    // use service::transaction::create_wallet::TxCreateWallet;
-    // use service::transaction::del_assets::TxDelAsset;
-    // use service::transaction::exchange::{TxExchange, ExchangeOffer};
-    // use service::transaction::mining::TxMining;
-    // use service::transaction::trade_assets::{TxTrade, TradeOffer};
-    // use service::transaction::transfer::TxTransfer;
-
-    use test::transaction::TransactionBuilder;
+    use test::transaction;
 
     #[test]
     #[should_panic]
     fn meta_underspecified() {
-        TransactionBuilder::new().tx_add_assets();
+        transaction::Builder::new().tx_add_assets();
     }
 
     #[test]
     fn add_assets() {
         let (public_key, secret_key) = crypto::gen_keypair();
-        let transaction = TransactionBuilder::new()
-            .random_keypair()
+        let transaction = transaction::Builder::new()
+            .keypair(public_key, secret_key.clone())
             .tx_add_assets()
             .add_asset(Asset::new("foobar", 9))
             .add_asset(Asset::new("bazqux", 13))
@@ -518,6 +524,133 @@ mod test {
 
         let assets = vec![Asset::new("foobar", 9), Asset::new("bazqux", 13)];
         let equivalent = TxAddAsset::new(&public_key, assets, 0, &secret_key);
+
+        assert!(transaction == equivalent);
+    }
+
+    #[test]
+    fn create_wallet() {
+        let (public_key, secret_key) = crypto::gen_keypair();
+        let transaction = transaction::Builder::new()
+            .keypair(public_key, secret_key.clone())
+            .tx_create_wallet()
+            .build();
+
+        let equivalent = TxCreateWallet::new(&public_key, &secret_key);
+
+        assert!(transaction == equivalent);
+    }
+
+    #[test]
+    fn del_assets() {
+        let (public_key, secret_key) = crypto::gen_keypair();
+        let transaction = transaction::Builder::new()
+            .keypair(public_key, secret_key.clone())
+            .tx_del_assets()
+            .add_asset(Asset::new("foobar", 9))
+            .seed(6)
+            .build();
+
+        let assets = vec![Asset::new("foobar", 9)];
+        let equivalent = TxDelAsset::new(&public_key, assets, 6, &secret_key);
+
+        assert!(transaction == equivalent);
+    }
+
+    #[test]
+    fn exchange() {
+        let (public_key, secret_key) = crypto::gen_keypair();
+
+        let (recipient, _) = crypto::gen_keypair();
+        let sender_asset = Asset::new("foobar", 9);
+        let recipient_asset = Asset::new("bazqux", 13);
+
+        let transaction = transaction::Builder::new()
+            .keypair(public_key, secret_key.clone())
+            .tx_exchange()
+            .sender_add_asset(sender_asset.clone())
+            .sender_value(9)
+            .recipient(recipient)
+            .recipient_add_asset(recipient_asset.clone())
+            .recipient_value(13)
+            .fee_strategy(1)
+            .seed(1)
+            .build();
+
+        let offer = ExchangeOffer::new(
+            &public_key,
+            vec![sender_asset.clone()],
+            9,
+            &recipient,
+            vec![recipient_asset.clone()],
+            13,
+            1,
+        );
+        let signature = crypto::sign(&offer.clone().into_bytes(), &secret_key);
+        let equivalent = TxExchange::new(offer, 1, &signature, &secret_key);
+
+        assert!(transaction == equivalent);
+    }
+
+    #[test]
+    fn mining() {
+        let (public_key, secret_key) = crypto::gen_keypair();
+        let transaction = transaction::Builder::new()
+            .keypair(public_key, secret_key.clone())
+            .tx_mining()
+            .seed(9)
+            .build();
+
+        let equivalent = TxMining::new(&public_key, 9, &secret_key);
+
+        assert!(transaction == equivalent);
+    }
+
+    #[test]
+    fn trade_assets() {
+        let (public_key, secret_key) = crypto::gen_keypair();
+        let (buyer, _) = crypto::gen_keypair();
+        let transaction = transaction::Builder::new()
+            .keypair(public_key, secret_key.clone())
+            .tx_trade_assets()
+            .add_asset(Asset::new("foobar", 9))
+            .price(9)
+            .buyer(buyer)
+            .seed(1)
+            .build();
+
+        let offer = TradeOffer::new(
+            &public_key,
+            vec![Asset::new("foobar", 9)],
+            9,
+        );
+        let signature = crypto::sign(&offer.clone().into_bytes(), &secret_key);
+        let equivalent = TxTrade::new(&buyer, offer, 1, &signature, &secret_key);
+
+        assert!(transaction == equivalent);
+    }
+
+    #[test]
+    fn transfer() {
+        let (public_key, secret_key) = crypto::gen_keypair();
+        let (recipient, _) = crypto::gen_keypair();
+        let transaction = transaction::Builder::new()
+            .keypair(public_key, secret_key.clone())
+            .tx_transfer()
+            .recipient(recipient)
+            .amount(9)
+            .add_asset(Asset::new("foobar", 9))
+            .seed(1)
+            .build();
+
+        let equivalent = TxTransfer::new(
+            &public_key,
+            &recipient,
+            9,
+            vec![Asset::new("foobar", 9)],
+            1,
+            &secret_key
+        );
 
         assert!(transaction == equivalent);
     }
