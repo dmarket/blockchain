@@ -100,11 +100,11 @@ mod tests {
                 "pub_key": "06f2b8853d37d317639132d3e9646adee97c56dcbc3899bfb2b074477d7ef31a",
                 "meta_assets": [
                 {
-                    "meta_data": "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f",
+                    "data": "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f",
                     "amount": 45
                 },
                 {
-                    "meta_data": "a8d5c97d-9978-4111-9947-7a95dcb31d0f",
+                    "data": "a8d5c97d-9978-4111-9947-7a95dcb31d0f",
                     "amount": 17
                 }
                 ],
@@ -123,7 +123,7 @@ mod tests {
         let tx_add: TxAddAsset = ::serde_json::from_str(&get_json()).unwrap();
         assert!(tx_add.verify());
         assert_eq!(45, tx_add.meta_assets()[0].amount());
-        assert_eq!("a8d5c97d-9978-4111-9947-7a95dcb31d0f", tx_add.meta_assets()[1].meta_data());
+        assert_eq!("a8d5c97d-9978-4111-9947-7a95dcb31d0f", tx_add.meta_assets()[1].data());
     }
 
     #[test]

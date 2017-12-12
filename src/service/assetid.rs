@@ -80,7 +80,7 @@ impl AssetID {
 
     pub fn from_str(us: &str) -> Result<AssetID, ParseError> {
         let len = us.len();
-        if len != 32 {
+        if len != mem::size_of::<AssetIDBytes>() * 2 {
             return Err(ParseError::InvalidLength(len));
         }
 
@@ -92,7 +92,7 @@ impl AssetID {
         }
 
         let mut bytes = [0u8; 16];
-
+        
         for i in 0..bytes.len() {
             let offset = i * 2;
             let to = offset + 2;

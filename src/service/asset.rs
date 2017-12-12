@@ -7,8 +7,8 @@ encoding_struct! {
     struct MetaAsset {
         const SIZE = 12;
 
-        field meta_data: &str   [0 => 8]
-        field amount: u32       [8 => 12]
+        field data: &str   [0 => 8]
+        field amount: u32  [8 => 12]
     }
 }
 
@@ -21,7 +21,7 @@ impl MetaAsset {
     }
 
     pub fn is_valid(&self) -> bool {
-        self.meta_data().len() <= ASSET_HASH_ID_MAX_LENGTH
+        self.data().len() <= ASSET_HASH_ID_MAX_LENGTH
     }
 }
 

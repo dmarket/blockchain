@@ -39,7 +39,7 @@ pub fn from_meta_to_asset_map(
     let mut map_asset_id: HashMap<String, Asset> = HashMap::new();
 
     for meta_asset in meta_assets {
-        let key = &meta_asset.meta_data();
+        let key = &meta_asset.data();
         let asset_id = generate_asset_id(&key, pub_key);
         let new_asset = Asset::new(asset_id, meta_asset.amount());
         map_asset_id.insert(key.to_string(), new_asset);
@@ -90,7 +90,7 @@ impl<'a> AssetSchema<'a> {
     ) -> HashMap<String, Asset> {
         let mut map_asset_id: HashMap<String, Asset> = HashMap::new();
         for meta_asset in meta_assets {
-            let asset_id = generate_asset_id(&meta_asset.meta_data(), pub_key);
+            let asset_id = generate_asset_id(&meta_asset.data(), pub_key);
             let new_asset = Asset::new(asset_id, meta_asset.amount());
             self.add_asset(&new_asset.hash_id(), pub_key, new_asset.amount());
             map_asset_id.insert(new_asset.hash_id().to_string(), new_asset);
