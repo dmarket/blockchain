@@ -3,7 +3,7 @@ use exonum::crypto::{PublicKey, SecretKey};
 use exonum::storage::StorageValue;
 
 use service;
-use service::wallet::Asset;
+use service::asset::{Asset, MetaAsset};
 use service::transaction::add_assets::TxAddAsset;
 use service::transaction::create_wallet::TxCreateWallet;
 use service::transaction::del_assets::TxDelAsset;
@@ -125,7 +125,7 @@ impl Builder {
 
 pub struct TxAddAssetBuilder {
     meta: TransactionMetadata,
-    assets: Vec<Asset>,
+    assets: Vec<MetaAsset>,
     seed: u64,
 }
 
@@ -138,7 +138,7 @@ impl TxAddAssetBuilder {
         }
     }
 
-    pub fn add_asset(mut self, asset: Asset) -> Self {
+    pub fn add_asset(mut self, asset: MetaAsset) -> Self {
         self.assets.push(asset);
         self
     }
@@ -494,7 +494,7 @@ mod test {
     use exonum::crypto;
     use exonum::storage::StorageValue;
 
-    use service::wallet::Asset;
+    use service::asset::{Asset, MetaAsset};
 
     use service::transaction::add_assets::TxAddAsset;
     use service::transaction::create_wallet::TxCreateWallet;
@@ -513,16 +513,33 @@ mod test {
     }
 
     #[test]
-    fn add_assets() {
+    fn not_equal() {
         let (public_key, secret_key) = crypto::gen_keypair();
         let transaction = transaction::Builder::new()
             .keypair(public_key, secret_key.clone())
-            .tx_add_assets()
-            .add_asset(Asset::new("foobar", 9))
-            .add_asset(Asset::new("bazqux", 13))
+            .tx_mining()
+            .seed(9)
             .build();
 
-        let assets = vec![Asset::new("foobar", 9), Asset::new("bazqux", 13)];
+        let equivalent = TxMining::new(&public_key, 18, &secret_key);
+
+        assert!(transaction != equivalent);
+    }
+
+    #[test]
+    fn add_assets() {
+        let (public_key, secret_key) = crypto::gen_keypair();
+        let asset_foobar = MetaAsset::new("foobar", 9);
+        let asset_bazqux = MetaAsset::new("bazqux", 18);
+
+        let transaction = transaction::Builder::new()
+            .keypair(public_key, secret_key.clone())
+            .tx_add_assets()
+            .add_asset(asset_foobar.clone())
+            .add_asset(asset_bazqux.clone())
+            .build();
+
+        let assets = vec![asset_foobar, asset_bazqux];
         let equivalent = TxAddAsset::new(&public_key, assets, 0, &secret_key);
 
         assert!(transaction == equivalent);
@@ -544,14 +561,15 @@ mod test {
     #[test]
     fn del_assets() {
         let (public_key, secret_key) = crypto::gen_keypair();
+        let asset = Asset::from_meta_asset(&MetaAsset::new("foobar", 9), &public_key);
         let transaction = transaction::Builder::new()
             .keypair(public_key, secret_key.clone())
             .tx_del_assets()
-            .add_asset(Asset::new("foobar", 9))
+            .add_asset(asset.clone())
             .seed(6)
             .build();
 
-        let assets = vec![Asset::new("foobar", 9)];
+        let assets = vec![asset];
         let equivalent = TxDelAsset::new(&public_key, assets, 6, &secret_key);
 
         assert!(transaction == equivalent);
@@ -562,8 +580,8 @@ mod test {
         let (public_key, secret_key) = crypto::gen_keypair();
 
         let (recipient, _) = crypto::gen_keypair();
-        let sender_asset = Asset::new("foobar", 9);
-        let recipient_asset = Asset::new("bazqux", 13);
+        let sender_asset = Asset::from_meta_asset(&MetaAsset::new("foobar", 9), &public_key);
+        let recipient_asset = Asset::from_meta_asset(&MetaAsset::new("bazqux", 13), &public_key);
 
         let transaction = transaction::Builder::new()
             .keypair(public_key, secret_key.clone())
@@ -610,20 +628,17 @@ mod test {
     fn trade_assets() {
         let (public_key, secret_key) = crypto::gen_keypair();
         let (buyer, _) = crypto::gen_keypair();
+        let asset = Asset::from_meta_asset(&MetaAsset::new("foobar", 9), &public_key);
         let transaction = transaction::Builder::new()
             .keypair(public_key, secret_key.clone())
             .tx_trade_assets()
-            .add_asset(Asset::new("foobar", 9))
+            .add_asset(asset.clone())
             .price(9)
             .buyer(buyer)
             .seed(1)
             .build();
 
-        let offer = TradeOffer::new(
-            &public_key,
-            vec![Asset::new("foobar", 9)],
-            9,
-        );
+        let offer = TradeOffer::new(&public_key, vec![asset], 9);
         let signature = crypto::sign(&offer.clone().into_bytes(), &secret_key);
         let equivalent = TxTrade::new(&buyer, offer, 1, &signature, &secret_key);
 
@@ -634,12 +649,13 @@ mod test {
     fn transfer() {
         let (public_key, secret_key) = crypto::gen_keypair();
         let (recipient, _) = crypto::gen_keypair();
+        let asset = Asset::from_meta_asset(&MetaAsset::new("foobar", 9), &public_key);
         let transaction = transaction::Builder::new()
             .keypair(public_key, secret_key.clone())
             .tx_transfer()
             .recipient(recipient)
             .amount(9)
-            .add_asset(Asset::new("foobar", 9))
+            .add_asset(asset.clone())
             .seed(1)
             .build();
 
@@ -647,7 +663,7 @@ mod test {
             &public_key,
             &recipient,
             9,
-            vec![Asset::new("foobar", 9)],
+            vec![asset],
             1,
             &secret_key
         );
