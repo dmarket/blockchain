@@ -95,7 +95,7 @@ impl Error for ParseError {
 }
 
 impl AssetID {
-    pub fn nil() -> AssetID {
+    pub fn zero() -> AssetID {
         AssetID { bytes: [0u8; 16] }
     }
 
@@ -109,7 +109,7 @@ impl AssetID {
             return Err(ParseError::InvalidLength(len));
         }
 
-        let mut assetid = AssetID::nil();
+        let mut assetid = AssetID::zero();
         assetid.bytes.copy_from_slice(b);
         Ok(assetid)
     }
@@ -244,7 +244,7 @@ impl Asset {
         let uuid = Uuid::new_v5(&uuid::NAMESPACE_DNS, &ful_s);
         match AssetID::from_bytes(uuid.as_bytes()) {
             Ok(asset_id) => asset_id,
-            Err(..) => AssetID::nil(),
+            Err(..) => AssetID::zero(),
         }
     }
 
@@ -262,8 +262,8 @@ mod tests {
     use exonum::encoding::{Field, Offset};
 
     #[test]
-    fn test_nil() {
-        let assetid = AssetID::nil();
+    fn assetid_zero() {
+        let assetid = AssetID::zero();
         let expected = "00000000000000000000000000000000";
 
         assert_eq!(assetid.to_string(), expected);
@@ -271,7 +271,7 @@ mod tests {
     }
 
     #[test]
-    fn test_from_bytes() {
+    fn assetid_from_bytes() {
         let b = [
             0xa1,
             0xa2,
@@ -297,7 +297,7 @@ mod tests {
     }
 
     #[test]
-    fn test_from_str() {
+    fn assetid_from_str() {
         // Invalid
         assert_eq!(AssetID::from_str(""), Err(InvalidLength(0)));
         assert_eq!(AssetID::from_str("!"), Err(InvalidLength(1)));
@@ -312,7 +312,7 @@ mod tests {
     }
 
     #[test]
-    fn test_as_bytes() {
+    fn assetid_as_bytes() {
         let expected = [
             0xa1,
             0xa2,
@@ -337,7 +337,7 @@ mod tests {
     }
 
     #[test]
-    fn test_to_string() {
+    fn assetid_to_string() {
         let b = [
             0xa1,
             0xa2,
@@ -364,11 +364,11 @@ mod tests {
     }
 
     #[test]
-    fn test_read() {
+    fn assetid_read() {
         let buffer = vec![0; 16];
         unsafe {
             let assetid = AssetID::read(&buffer, 0, 16);
-            assert_eq!(assetid, AssetID::nil());
+            assert_eq!(assetid, AssetID::zero());
         }
 
         let buffer = vec![
@@ -405,7 +405,7 @@ mod tests {
     }
 
     #[test]
-    fn test_write() {
+    fn assetid_write() {
         let expected = [
             0xa1,
             0xa2,

@@ -109,7 +109,7 @@ mod tests {
     #[test]
     fn test_convert_from_json() {
 
-        let assetid = AssetID::nil();
+        let assetid = AssetID::zero();
         let asset = Asset::new(assetid, 3);
 
         let tx: TxTransfer = ::serde_json::from_str(&get_json()).unwrap();
@@ -144,12 +144,12 @@ mod tests {
             assert_eq!(994, from.balance());
             assert_eq!(3, to.balance());
             assert_eq!(
-                vec![Asset::new(AssetID::nil(), 97), ],
+                vec![Asset::new(AssetID::zero(), 97), ],
                 from.assets()
             );
             assert_eq!(
                 vec![
-                    Asset::new(AssetID::nil(), 3),
+                    Asset::new(AssetID::zero(), 3),
                 ],
                 to.assets()
             );
