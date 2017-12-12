@@ -34,9 +34,7 @@ impl ServiceApi {
     ///
     /// # URL request
     ///
-    /// ```
-    /// https://blockchain.com/api/services/cryptocurrency/v1/wallets?offset=4&limit=10
-    /// ```
+    /// ` https://blockchain.com/api/services/cryptocurrency/v1/wallets?offset=4&limit=10 `
     pub fn apply_pagination<'a, T>(req: &mut Request, elements: &'a [T]) -> &'a [T] {
         let total_count = elements.len();
         // read url parameters

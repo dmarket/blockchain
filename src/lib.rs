@@ -12,9 +12,9 @@ extern crate bodyparser;
 extern crate iron;
 extern crate nats;
 
-pub mod service;
 pub mod config;
 pub mod keys;
+pub mod service;
 
-//#[cfg(test)]
+#[cfg(test)]
 pub mod test;
