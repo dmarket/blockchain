@@ -27,7 +27,7 @@ message! {
 }
 
 impl TxAddAsset {
-    fn get_fee(&self) -> u64 {
+    pub fn get_fee(&self) -> u64 {
         TRANSACTION_FEE + PER_ASSET_FEE * MetaAsset::count(&self.meta_assets())
     }
 }

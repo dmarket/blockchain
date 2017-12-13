@@ -54,7 +54,7 @@ impl TxTrade {
         self.offer().raw
     }
 
-    fn get_fee(&self) -> u64 {
+    pub fn get_fee(&self) -> u64 {
         //todo: необходимо определится с генергацией fee
         let price_fee = ((self.offer().price() as f64) * FEE_FOR_TRADE).round() as u64;
         price_fee + TRANSACTION_FEE + PER_ASSET_FEE * Asset::count(&self.offer().assets())

@@ -24,7 +24,7 @@ message! {
 }
 
 impl TxCreateWallet {
-    fn get_fee(&self) -> u64 {
+    pub fn get_fee(&self) -> u64 {
         TRANSACTION_FEE
     }
 }
