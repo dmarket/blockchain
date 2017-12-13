@@ -88,6 +88,7 @@ mod tests {
     use super::TxAddAsset;
     use exonum::blockchain::Transaction;
     use exonum::storage::{Database, MemoryDB};
+
     use service::asset::{Asset, AssetID};
     use service::schema::asset::external_internal;
     use service::schema::wallet::WalletSchema;
@@ -123,44 +124,6 @@ mod tests {
         assert!(tx_add.verify());
         assert_eq!(45, tx_add.meta_assets()[0].amount());
         assert_eq!("a8d5c97d-9978-4111-9947-7a95dcb31d0f", tx_add.meta_assets()[1].data());
-    }
-
-    #[test]
-    fn test_add_assets() {
-        let tx_add: TxAddAsset = ::serde_json::from_str(&get_json()).unwrap();
-        let internal_assets_ids = external_internal(tx_add.meta_assets(), tx_add.pub_key());
-        let internal_a_id_1 = &internal_assets_ids[&"a8d5c97d-9978-4111-9947-7a95dcb31d0f"
-                                                       .to_string()];
-        let internal_a_id_2 = &internal_assets_ids[&"a8d5c97d-9978-4b0b-9947-7a95dcb31d0f"
-                                                       .to_string()];
-
-        let db = Box::new(MemoryDB::new());
-        let fork = &mut db.fork();
-        let assetid1 = AssetID::from_str(&internal_a_id_1).unwrap();
-        let assetid2 = AssetID::from_str(&internal_a_id_2).unwrap();
-
-        let wallet = Wallet::new(tx_add.pub_key(), 2000, vec![Asset::new(assetid1, 3),]);
-        let wallet = WalletSchema::map(fork, |mut schema| {
-            schema.wallets().put(tx_add.pub_key(), wallet);
-            schema.wallet(tx_add.pub_key())
-        });
-        if let Some(wallet) = wallet {
-            assert!(wallet.in_wallet_assets(&vec![Asset::new(assetid1, 3)]));
-
-            tx_add.execute(fork);
-
-            let wallet = WalletSchema::map(fork, |mut schema| schema.wallet(tx_add.pub_key()));
-
-            if let Some(wallet) = wallet {
-                assert_eq!(2000 - tx_add.get_fee(), wallet.balance());
-                assert!(wallet.in_wallet_assets(&vec![Asset::new(assetid1, 20),]));
-                assert!(wallet.in_wallet_assets(&vec![Asset::new(assetid2, 45),]));
-            } else {
-                assert!(false);
-            }
-        } else {
-            assert!(false);
-        }
     }
 
     #[test]
