@@ -5,14 +5,14 @@ authors = ["Ilya Sinyakin <sinyakin.ilya@gmail.com>"]
 
 [dependencies]
 iron = "0.5.1"
-params = "*"
+params = "0.7.0"
 bodyparser = "0.7.0"
 router = "0.5.1"
-nats="*"
+nats = { git = "https://github.com/jedisct1/rust-nats", rev = "21919e5" }
 serde = "1.0"
 serde_json = "1.0"
 serde_derive = "1.0"
 toml = "0.4.5"
 uuid = { version = "0.5", features = ["v5"] }
-exonum = "0.3"
-exonum-configuration = "0.3"
+exonum = "0.4"
+exonum-configuration = "0.4"
