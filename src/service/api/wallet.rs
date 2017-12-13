@@ -10,6 +10,7 @@ extern crate std;
 use exonum::api::{Api, ApiError};
 use exonum::blockchain::Blockchain;
 use exonum::crypto::PublicKey;
+use exonum::encoding::serialize::FromHex;
 use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use router::Router;

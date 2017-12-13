@@ -10,6 +10,7 @@ use exonum::api::Api;
 use exonum::blockchain::{ApiContext, Schema, Service, ServiceContext, Transaction};
 use exonum::crypto::PublicKey;
 use exonum::encoding;
+use exonum::encoding::serialize::FromHex;
 use exonum::messages::RawTransaction;
 use exonum::storage::Fork;
 use iron::Handler;
@@ -94,8 +95,9 @@ impl Service for CurrencyService {
     }
 
     fn initialize(&self, fork: &mut Fork) -> serde_json::Value {
-        let key_as_hex = "36a05e418393fb4b23819753f6e6dd51550ce030d53842c43dd1349857a96a61";
-        let basic_wallet = PublicKey::from_slice(key_as_hex.as_bytes()).unwrap();
+        let basic_wallet = PublicKey::from_hex(
+            "36a05e418393fb4b23819753f6e6dd51550ce030d53842c43dd1349857a96a61"
+            ).unwrap();
         let assets: Vec<Asset> = vec![];
         let wallet = Wallet::new(&basic_wallet, 13_700_000_000_000_000, assets);
         println!("Create the wallet: {:?}", wallet);
