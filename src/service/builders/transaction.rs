@@ -138,7 +138,12 @@ impl TxAddAssetBuilder {
         }
     }
 
-    pub fn add_asset(mut self, asset: MetaAsset) -> Self {
+    pub fn add_asset(self, name: &str, count: u32) -> Self {
+        let asset = MetaAsset::new(name, count);
+        self.add_asset_value(asset)
+    }
+
+    pub fn add_asset_value(mut self, asset: MetaAsset) -> Self {
         self.assets.push(asset);
         self
     }
@@ -199,7 +204,13 @@ impl TxDelAssetBuilder {
         }
     }
 
-    pub fn add_asset(mut self, asset: Asset) -> Self {
+    pub fn add_asset(self, name: &str, count: u32) -> Self {
+        let meta = MetaAsset::new(name, count);
+        let asset = Asset::from_meta_asset(&meta, &self.meta.public_key);
+        self.add_asset_value(asset)
+    }
+
+    pub fn add_asset_value(mut self, asset: Asset) -> Self {
         self.assets.push(asset);
         self
     }
@@ -255,7 +266,13 @@ impl TxExchangeBuilder {
         }
     }
 
-    pub fn sender_add_asset(mut self, asset: Asset) -> Self {
+    pub fn sender_add_asset(self, name: &str, count: u32) -> Self {
+        let meta = MetaAsset::new(name, count);
+        let asset = Asset::from_meta_asset(&meta, &self.meta.public_key);
+        self.sender_add_asset_value(asset)
+    }
+
+    pub fn sender_add_asset_value(mut self, asset: Asset) -> Self {
         self.sender_assets.push(asset);
         self
     }
@@ -274,7 +291,13 @@ impl TxExchangeBuilder {
         }
     }
 
-    pub fn recipient_add_asset(mut self, asset: Asset) -> Self {
+    pub fn recipient_add_asset(self, name: &str, count: u32) -> Self {
+        let meta = MetaAsset::new(name, count);
+        let asset = Asset::from_meta_asset(&meta, &self.meta.public_key);
+        self.recipient_add_asset_value(asset)
+    }
+
+    pub fn recipient_add_asset_value(mut self, asset: Asset) -> Self {
         self.recipient_assets.push(asset);
         self
     }
@@ -384,7 +407,13 @@ impl TxTradeBuilder {
         }
     }
 
-    pub fn add_asset(mut self, asset: Asset) -> Self {
+    pub fn add_asset(self, name: &str, count: u32) -> Self {
+        let meta = MetaAsset::new(name, count);
+        let asset = Asset::from_meta_asset(&meta, &self.meta.public_key);
+        self.add_asset_value(asset)
+    }
+
+    pub fn add_asset_value(mut self, asset: Asset) -> Self {
         self.assets.push(asset);
         self
     }
@@ -459,7 +488,13 @@ impl TxTransferBuilder {
         }
     }
 
-    pub fn add_asset(mut self, asset: Asset) -> Self {
+    pub fn add_asset(self, name: &str, count: u32) -> Self {
+        let meta = MetaAsset::new(name, count);
+        let asset = Asset::from_meta_asset(&meta, &self.meta.public_key);
+        self.add_asset_value(asset)
+    }
+
+    pub fn add_asset_value(mut self, asset: Asset) -> Self {
         self.assets.push(asset);
         self
     }
@@ -504,7 +539,7 @@ mod test {
     use service::transaction::trade_assets::{TxTrade, TradeOffer};
     use service::transaction::transfer::TxTransfer;
 
-    use test::transaction;
+    use service::builders::transaction;
 
     #[test]
     #[should_panic]
@@ -535,8 +570,8 @@ mod test {
         let transaction = transaction::Builder::new()
             .keypair(public_key, secret_key.clone())
             .tx_add_assets()
-            .add_asset(asset_foobar.clone())
-            .add_asset(asset_bazqux.clone())
+            .add_asset_value(asset_foobar.clone())
+            .add_asset_value(asset_bazqux.clone())
             .build();
 
         let assets = vec![asset_foobar, asset_bazqux];
@@ -565,7 +600,7 @@ mod test {
         let transaction = transaction::Builder::new()
             .keypair(public_key, secret_key.clone())
             .tx_del_assets()
-            .add_asset(asset.clone())
+            .add_asset_value(asset.clone())
             .seed(6)
             .build();
 
@@ -586,10 +621,10 @@ mod test {
         let transaction = transaction::Builder::new()
             .keypair(public_key, secret_key.clone())
             .tx_exchange()
-            .sender_add_asset(sender_asset.clone())
+            .sender_add_asset_value(sender_asset.clone())
             .sender_value(9)
             .recipient(recipient)
-            .recipient_add_asset(recipient_asset.clone())
+            .recipient_add_asset_value(recipient_asset.clone())
             .recipient_value(13)
             .fee_strategy(1)
             .seed(1)
@@ -632,7 +667,7 @@ mod test {
         let transaction = transaction::Builder::new()
             .keypair(public_key, secret_key.clone())
             .tx_trade_assets()
-            .add_asset(asset.clone())
+            .add_asset_value(asset.clone())
             .price(9)
             .buyer(buyer)
             .seed(1)
@@ -655,7 +690,7 @@ mod test {
             .tx_transfer()
             .recipient(recipient)
             .amount(9)
-            .add_asset(asset.clone())
+            .add_asset_value(asset.clone())
             .seed(1)
             .build();
 

@@ -16,6 +16,3 @@ extern crate uuid;
 pub mod config;
 pub mod keys;
 pub mod service;
-
-#[cfg(test)]
-pub mod test;
