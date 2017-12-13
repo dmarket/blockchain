@@ -79,18 +79,17 @@ impl Service for CurrencyService {
     fn handle_commit(&self, ctx: &ServiceContext) {
         let schema = Schema::new(ctx.snapshot());
         let service_tx_schema = TxSchema::new(ctx.snapshot());
-        if let Some(las_block) = schema.last_block() {
-            let list = schema.block_txs(las_block.height());
-            for hash in list.iter() {
-                let tx_hash = hash.to_hex();
-                let status = service_tx_schema.get_status(&hash);
-                let msg = json!({
-                    tx_hash: status
-                }).to_string();
-                let queuename = config::config().nats().queuename();
-                nats::publish(queuename, msg);
-                println!("Made transaction {:?}", hash.to_hex());
-            }
+        let las_block = schema.last_block();
+        let list = schema.block_txs(las_block.height());
+        for hash in list.iter() {
+            let tx_hash = hash.to_hex();
+            let status = service_tx_schema.get_status(&hash);
+            let msg = json!({
+                tx_hash: status
+            }).to_string();
+            let queuename = config::config().nats().queuename();
+            nats::publish(queuename, msg);
+            println!("Made transaction {:?}", hash.to_hex());
         }
     }
 
