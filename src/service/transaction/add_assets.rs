@@ -86,13 +86,8 @@ impl Transaction for TxAddAsset {
 #[cfg(test)]
 mod tests {
     use super::TxAddAsset;
-    use exonum::blockchain::Transaction;
-    use exonum::storage::{Database, MemoryDB};
 
-    use service::asset::{Asset, AssetID};
-    use service::schema::asset::external_internal;
-    use service::schema::wallet::WalletSchema;
-    use service::wallet::Wallet;
+    use exonum::blockchain::Transaction;
 
     fn get_json() -> String {
         r#"{
