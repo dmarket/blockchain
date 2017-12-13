@@ -100,6 +100,28 @@ impl AssetID {
         AssetID { bytes: [0u8; 16] }
     }
 
+    /// Creates unique `AssetID` from
+    /// `&str` and `&PublicKey`
+    /// # Example:
+    /// ```
+    /// extern crate exonum;
+    /// use exonum::crypto;
+    /// use exonum::crypto::PublicKey;
+    ///
+    /// let data = "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f";
+    /// let (public_key, _) = crypto::gen_keypair();
+    ///
+    /// let assetid = AssetID::new(&data, &public_key);
+    /// assert_eq!(assetid.to_string(), "d7a029d856055d8cbfa8b56d846b7360");
+    /// ```
+    pub fn new(data: &str, pub_key: &PublicKey) -> Result<AssetID, ParseError> {
+        let s = HexValue::to_hex(pub_key);
+        let ful_s = s + &data;
+
+        let uuid = Uuid::new_v5(&uuid::NAMESPACE_DNS, &ful_s);
+        AssetID::from_bytes(uuid.as_bytes())
+    }
+
     pub fn as_bytes(&self) -> &[u8; 16] {
         &self.bytes
     }
@@ -245,33 +267,8 @@ impl Asset {
         )
     }
 
-    /// Helper fuction that generates unique `AssetID` from
-    /// `&str` and `&PublicKey`
-    /// # Example:
-    /// ```
-    /// extern crate exonum;
-    /// use exonum::crypto;
-    /// use exonum::crypto::PublicKey;
-    ///
-    /// let data = "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f";
-    /// let (public_key, _) = crypto::gen_keypair();
-    ///
-    /// let assetid = generate_asset_id(&data, &public_key);
-    /// assert_eq!(assetid.to_string(), "d7a029d856055d8cbfa8b56d846b7360");
-    /// ```
-    fn generate_asset_id(data: &str, pub_key: &PublicKey) -> AssetID {
-        let s = HexValue::to_hex(pub_key);
-        let ful_s = s + &data;
-
-        let uuid = Uuid::new_v5(&uuid::NAMESPACE_DNS, &ful_s);
-        match AssetID::from_bytes(uuid.as_bytes()) {
-            Ok(asset_id) => asset_id,
-            Err(..) => AssetID::zero(),
-        }
-    }
-
     pub fn from_meta_asset(meta_asset: &MetaAsset, pub_key: &PublicKey) -> Asset {
-        let assetid = Asset::generate_asset_id(&meta_asset.data(), pub_key);
+        let assetid = AssetID::new(&meta_asset.data(), pub_key).unwrap();
         Asset::new(assetid, meta_asset.amount())
     }
 }
