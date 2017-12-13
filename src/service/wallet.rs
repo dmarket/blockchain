@@ -79,7 +79,9 @@ impl Wallet {
     }
 
     pub fn asset(&self, id: AssetID) -> Option<Asset> {
-        self.assets().into_iter().find(|asset| asset.hash_id() == id)
+        self.assets().into_iter().find(
+            |asset| asset.hash_id() == id,
+        )
     }
 }
 

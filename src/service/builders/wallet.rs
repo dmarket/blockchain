@@ -26,10 +26,7 @@ impl Builder {
     }
 
     pub fn balance(self, balance: u64) -> Self {
-        Builder {
-            balance,
-            ..self
-        }
+        Builder { balance, ..self }
     }
 
     pub fn add_asset(self, name: &str, amount: u32) -> Self {
@@ -45,9 +42,7 @@ impl Builder {
 
     pub fn build(self) -> Wallet {
         self.validate();
-        Wallet::new(self.public_key.as_ref().unwrap(),
-                    self.balance,
-                    self.assets)
+        Wallet::new(self.public_key.as_ref().unwrap(), self.balance, self.assets)
     }
 
     fn validate(&self) {

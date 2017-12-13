@@ -26,10 +26,7 @@ impl Builder {
     }
 
     pub fn amount(self, amount: u32) -> Self {
-        Builder {
-            amount,
-            ..self
-        }
+        Builder { amount, ..self }
     }
 
     pub fn creator(self, creator: PublicKey) -> Self {
@@ -46,8 +43,7 @@ impl Builder {
 
     pub fn build(self) -> Asset {
         self.validate();
-        let id = AssetID::new(self.data.as_ref().unwrap(),
-                              self.creator.as_ref().unwrap()).unwrap();
+        let id = AssetID::new(self.data.as_ref().unwrap(), self.creator.as_ref().unwrap()).unwrap();
         Asset::new(id, self.amount)
     }
 
@@ -57,4 +53,3 @@ impl Builder {
         assert!(self.creator.is_some());
     }
 }
-

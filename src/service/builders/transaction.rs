@@ -7,9 +7,9 @@ use service::asset::{Asset, MetaAsset};
 use service::transaction::add_assets::TxAddAsset;
 use service::transaction::create_wallet::TxCreateWallet;
 use service::transaction::del_assets::TxDelAsset;
-use service::transaction::exchange::{TxExchange, ExchangeOffer};
+use service::transaction::exchange::{ExchangeOffer, TxExchange};
 use service::transaction::mining::TxMining;
-use service::transaction::trade_assets::{TxTrade, TradeOffer};
+use service::transaction::trade_assets::{TradeOffer, TxTrade};
 use service::transaction::transfer::TxTransfer;
 
 pub struct Builder {
@@ -73,7 +73,10 @@ impl Builder {
     }
 
     pub fn protocol_version(self, protocol_version: u32) -> Self {
-        Builder { protocol_version, ..self }
+        Builder {
+            protocol_version,
+            ..self
+        }
     }
 
     pub fn service_id(self, service_id: u16) -> Self {
@@ -162,8 +165,7 @@ impl TxAddAssetBuilder {
         )
     }
 
-    fn validate(&self) {
-    }
+    fn validate(&self) {}
 }
 
 pub struct TxCreateWalletBuilder {
@@ -172,21 +174,15 @@ pub struct TxCreateWalletBuilder {
 
 impl TxCreateWalletBuilder {
     fn new(meta: TransactionMetadata) -> Self {
-        TxCreateWalletBuilder {
-            meta,
-        }
+        TxCreateWalletBuilder { meta }
     }
 
     pub fn build(self) -> TxCreateWallet {
         self.validate();
-        TxCreateWallet::new(
-            &self.meta.public_key,
-            &self.meta.secret_key,
-        )
+        TxCreateWallet::new(&self.meta.public_key, &self.meta.secret_key)
     }
 
-    fn validate(&self) {
-    }
+    fn validate(&self) {}
 }
 
 pub struct TxDelAssetBuilder {
@@ -229,8 +225,7 @@ impl TxDelAssetBuilder {
         )
     }
 
-    fn validate(&self) {
-    }
+    fn validate(&self) {}
 }
 
 pub struct TxExchangeBuilder {
@@ -317,10 +312,7 @@ impl TxExchangeBuilder {
     }
 
     pub fn seed(self, seed: u64) -> Self {
-        TxExchangeBuilder {
-            seed,
-            ..self
-        }
+        TxExchangeBuilder { seed, ..self }
     }
 
     pub fn build(self) -> TxExchange {
@@ -335,12 +327,7 @@ impl TxExchangeBuilder {
             self.fee_strategy,
         );
         let signature = crypto::sign(&offer.clone().into_bytes(), &self.meta.secret_key);
-        TxExchange::new(
-            offer,
-            self.seed,
-            &signature,
-            &self.meta.secret_key,
-        )
+        TxExchange::new(offer, self.seed, &signature, &self.meta.secret_key)
     }
 
     fn verify(&self) {
@@ -355,30 +342,19 @@ pub struct TxMiningBuilder {
 
 impl TxMiningBuilder {
     fn new(meta: TransactionMetadata) -> Self {
-        TxMiningBuilder {
-            meta,
-            seed: 0,
-        }
+        TxMiningBuilder { meta, seed: 0 }
     }
 
     pub fn seed(self, seed: u64) -> Self {
-        TxMiningBuilder {
-            seed,
-            ..self
-        }
+        TxMiningBuilder { seed, ..self }
     }
 
     pub fn build(self) -> TxMining {
         self.verify();
-        TxMining::new(
-            &self.meta.public_key,
-            self.seed,
-            &self.meta.secret_key,
-        )
+        TxMining::new(&self.meta.public_key, self.seed, &self.meta.secret_key)
     }
 
-    fn verify(&self) {
-    }
+    fn verify(&self) {}
 }
 
 pub struct TxTradeBuilder {
@@ -419,34 +395,24 @@ impl TxTradeBuilder {
     }
 
     pub fn price(self, price: u64) -> Self {
-        TxTradeBuilder {
-            price,
-            ..self
-        }
+        TxTradeBuilder { price, ..self }
     }
 
     pub fn seed(self, seed: u64) -> Self {
-        TxTradeBuilder {
-            seed,
-            ..self
-        }
+        TxTradeBuilder { seed, ..self }
     }
 
     pub fn build(self) -> TxTrade {
         self.verify();
 
-        let offer = TradeOffer::new(
-                &self.meta.public_key,
-                self.assets,
-                self.price,
-        );
+        let offer = TradeOffer::new(&self.meta.public_key, self.assets, self.price);
         let signature = crypto::sign(&offer.clone().into_bytes(), &self.meta.secret_key);
         TxTrade::new(
             self.buyer.as_ref().unwrap(),
             offer,
             self.seed,
             &signature,
-            &self.meta.secret_key
+            &self.meta.secret_key,
         )
     }
 
@@ -482,10 +448,7 @@ impl TxTransferBuilder {
     }
 
     pub fn amount(self, amount: u64) -> Self {
-        TxTransferBuilder {
-            amount,
-            ..self
-        }
+        TxTransferBuilder { amount, ..self }
     }
 
     pub fn add_asset(self, name: &str, count: u32) -> Self {
@@ -500,10 +463,7 @@ impl TxTransferBuilder {
     }
 
     pub fn seed(self, seed: u64) -> Self {
-        TxTransferBuilder {
-            seed,
-            ..self
-        }
+        TxTransferBuilder { seed, ..self }
     }
 
     pub fn build(self) -> TxTransfer {
@@ -534,9 +494,9 @@ mod test {
     use service::transaction::add_assets::TxAddAsset;
     use service::transaction::create_wallet::TxCreateWallet;
     use service::transaction::del_assets::TxDelAsset;
-    use service::transaction::exchange::{TxExchange, ExchangeOffer};
+    use service::transaction::exchange::{ExchangeOffer, TxExchange};
     use service::transaction::mining::TxMining;
-    use service::transaction::trade_assets::{TxTrade, TradeOffer};
+    use service::transaction::trade_assets::{TradeOffer, TxTrade};
     use service::transaction::transfer::TxTransfer;
 
     use service::builders::transaction;
@@ -694,16 +654,8 @@ mod test {
             .seed(1)
             .build();
 
-        let equivalent = TxTransfer::new(
-            &public_key,
-            &recipient,
-            9,
-            vec![asset],
-            1,
-            &secret_key
-        );
+        let equivalent = TxTransfer::new(&public_key, &recipient, 9, vec![asset], 1, &secret_key);
 
         assert!(transaction == equivalent);
     }
 }
-

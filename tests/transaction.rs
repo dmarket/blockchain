@@ -1,15 +1,15 @@
 extern crate exonum;
 extern crate dmbc;
 
-use exonum::crypto;
 use exonum::blockchain::Transaction;
+use exonum::crypto;
 use exonum::storage::{Database, MemoryDB};
 
 use dmbc::service::asset::{AssetID, AssetInfo};
-use dmbc::service::schema::asset::AssetSchema;
-use dmbc::service::schema::wallet::WalletSchema;
 use dmbc::service::builders::transaction;
 use dmbc::service::builders::wallet;
+use dmbc::service::schema::asset::AssetSchema;
+use dmbc::service::schema::wallet::WalletSchema;
 
 #[test]
 fn add_assets_execute() {
@@ -46,18 +46,13 @@ fn add_assets_execute() {
 
     tx.execute(fork);
 
-    let existing_info = AssetSchema::map(fork, |mut s| {
-        s.info(&existing_id).unwrap()
-    });
+    let existing_info = AssetSchema::map(fork, |mut s| s.info(&existing_id).unwrap());
 
     assert_eq!(20, existing_info.amount());
 
-    let wallet = WalletSchema::map(fork, |mut s| {
-        s.wallet(tx.pub_key()).unwrap()
-    });
+    let wallet = WalletSchema::map(fork, |mut s| s.wallet(tx.pub_key()).unwrap());
 
     assert_eq!(2000 - tx.get_fee(), wallet.balance());
     assert_eq!(20, wallet.asset(existing_id).unwrap().amount());
     assert_eq!(45, wallet.asset(absent_id).unwrap().amount());
 }
-
