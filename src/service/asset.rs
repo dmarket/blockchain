@@ -1,4 +1,4 @@
-use exonum::crypto::{HexValue, PublicKey};
+use exonum::crypto::PublicKey;
 use exonum::storage::StorageKey;
 use exonum::encoding::{CheckedOffset, Field, Offset, Result as ExonumResult};
 use exonum::encoding::serialize::WriteBufferWrapper;
@@ -260,7 +260,7 @@ impl Asset {
     /// assert_eq!(assetid.to_string(), "d7a029d856055d8cbfa8b56d846b7360");
     /// ```
     fn generate_asset_id(data: &str, pub_key: &PublicKey) -> AssetID {
-        let s = HexValue::to_hex(pub_key);
+        let s = pub_key.to_hex();
         let ful_s = s + &data;
 
         let uuid = Uuid::new_v5(&uuid::NAMESPACE_DNS, &ful_s);

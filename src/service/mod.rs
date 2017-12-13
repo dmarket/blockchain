@@ -8,9 +8,9 @@ mod nats;
 
 use exonum::api::Api;
 use exonum::blockchain::{ApiContext, Schema, Service, ServiceContext, Transaction};
-use exonum::crypto::{HexValue, PublicKey};
+use exonum::crypto::PublicKey;
 use exonum::encoding;
-use exonum::messages::{FromRaw, RawTransaction};
+use exonum::messages::RawTransaction;
 use exonum::storage::Fork;
 use iron::Handler;
 use router::Router;
@@ -76,7 +76,7 @@ impl Service for CurrencyService {
         Some(Box::new(router))
     }
 
-    fn handle_commit(&self, ctx: &mut ServiceContext) {
+    fn handle_commit(&self, ctx: &ServiceContext) {
         let schema = Schema::new(ctx.snapshot());
         let service_tx_schema = TxSchema::new(ctx.snapshot());
         if let Some(las_block) = schema.last_block() {
@@ -95,9 +95,8 @@ impl Service for CurrencyService {
     }
 
     fn initialize(&self, fork: &mut Fork) -> serde_json::Value {
-        let basic_wallet = PublicKey::from_hex(
-            "36a05e418393fb4b23819753f6e6dd51550ce030d53842c43dd1349857a96a61",
-        ).unwrap();
+        let key_as_hex = "36a05e418393fb4b23819753f6e6dd51550ce030d53842c43dd1349857a96a61";
+        let basic_wallet = PublicKey::from_slice(key_as_hex.as_bytes()).unwrap();
         let assets: Vec<Asset> = vec![];
         let wallet = Wallet::new(&basic_wallet, 13_700_000_000_000_000, assets);
         println!("Create the wallet: {:?}", wallet);

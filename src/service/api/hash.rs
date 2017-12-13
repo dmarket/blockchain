@@ -7,7 +7,6 @@ extern crate iron;
 
 use exonum::api::{Api, ApiError};
 use exonum::blockchain::Transaction;
-use exonum::messages::FromRaw;
 use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use router::Router;
