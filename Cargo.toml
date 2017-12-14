@@ -6,7 +6,7 @@ authors = ["Ilya Sinyakin <sinyakin.ilya@gmail.com>"]
 [dependencies]
 iron = "0.6.0"
 params = "0.8.0"
-bodyparser = "0.7.0"
+bodyparser = "0.8.0"
 router = "0.6.0"
 nats = { git = "https://github.com/jedisct1/rust-nats", rev = "21919e5" }
 serde = "1.0"

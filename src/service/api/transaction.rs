@@ -8,6 +8,7 @@ extern crate iron;
 use exonum::api::{Api, ApiError};
 use exonum::blockchain::{Blockchain, Transaction};
 use exonum::crypto::Hash;
+use exonum::encoding::serialize::FromHex;
 use exonum::node::{ApiSender, TransactionSend};
 use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
