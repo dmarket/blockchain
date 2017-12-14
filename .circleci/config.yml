@@ -21,7 +21,7 @@ jobs:
           name: Install Project Dependencies
           command: |
             rustup update stable nightly
-            cargo install
+            cargo install -vv
             cargo +nightly install rustfmt-nightly
 
       - save_cache:
@@ -32,7 +32,7 @@ jobs:
 
       - run:
           name: Run Fmt
-          command: rustfmt-nightly -v
+          command: rustfmt -v
 
       - run:
           name: Run Tests
