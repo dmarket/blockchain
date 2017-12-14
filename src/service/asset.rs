@@ -1,8 +1,8 @@
 use exonum::crypto::PublicKey;
-use exonum::storage::StorageKey;
 use exonum::encoding::{CheckedOffset, Field, Offset, Result as ExonumResult};
 use exonum::encoding::serialize::WriteBufferWrapper;
 use exonum::encoding::serialize::json::ExonumJson;
+use exonum::storage::StorageKey;
 use serde_json::value::Value;
 use std::{fmt, mem};
 use std::error::Error;

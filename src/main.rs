@@ -17,8 +17,8 @@ mod service;
 mod config;
 mod keys;
 
-use exonum::blockchain::{ConsensusConfig, GenesisConfig, Service,
-                         TimeoutAdjusterConfig, ValidatorKeys};
+use exonum::blockchain::{ConsensusConfig, GenesisConfig, Service, TimeoutAdjusterConfig,
+                         ValidatorKeys};
 use exonum::node::{Node, NodeApiConfig, NodeConfig};
 use exonum::storage::{RocksDB, RocksDBOptions};
 use exonum_configuration::ConfigurationService;

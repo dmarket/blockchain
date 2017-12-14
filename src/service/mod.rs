@@ -96,8 +96,8 @@ impl Service for CurrencyService {
 
     fn initialize(&self, fork: &mut Fork) -> serde_json::Value {
         let basic_wallet = PublicKey::from_hex(
-            "36a05e418393fb4b23819753f6e6dd51550ce030d53842c43dd1349857a96a61"
-            ).unwrap();
+            "36a05e418393fb4b23819753f6e6dd51550ce030d53842c43dd1349857a96a61",
+        ).unwrap();
         let assets: Vec<Asset> = vec![];
         let wallet = Wallet::new(&basic_wallet, 13_700_000_000_000_000, assets);
         println!("Create the wallet: {:?}", wallet);
