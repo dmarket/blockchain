@@ -104,15 +104,20 @@ impl AssetID {
     /// `&str` and `&PublicKey`
     /// # Example:
     /// ```
-    /// extern crate exonum;
-    /// use exonum::crypto;
-    /// use exonum::crypto::PublicKey;
+    /// # extern crate exonum;
+    /// # extern crate dmbc;
+    /// #
+    /// # fn main () {
+    /// #
+    /// # use exonum::crypto::{PublicKey, HexValue};
+    /// # use dmbc::service::asset::AssetID;
     ///
     /// let data = "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f";
-    /// let (public_key, _) = crypto::gen_keypair();
+    /// let public_key = PublicKey::from_hex("3115dbc2ff73f4819672d5e9e421692305a9de1a18e4389df041c0cf6c8918a8").unwrap();
     ///
-    /// let assetid = AssetID::new(&data, &public_key);
-    /// assert_eq!(assetid.to_string(), "d7a029d856055d8cbfa8b56d846b7360");
+    /// let assetid = AssetID::new(&data, &public_key).unwrap();
+    /// assert_eq!(assetid.to_string(), "82c1f90bed24508e9ce74b536f97fa9c");
+    /// # }
     /// ```
     pub fn new(data: &str, pub_key: &PublicKey) -> Result<AssetID, ParseError> {
         let s = HexValue::to_hex(pub_key);
