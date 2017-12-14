@@ -4,12 +4,14 @@ extern crate dmbc;
 use exonum::blockchain::Transaction;
 use exonum::crypto;
 use exonum::storage::{Database, MemoryDB};
+use exonum::messages::Message;
 
 use dmbc::service::asset::{Asset, AssetID, AssetInfo};
 use dmbc::service::builders::transaction;
 use dmbc::service::builders::wallet;
 use dmbc::service::schema::asset::AssetSchema;
 use dmbc::service::schema::wallet::WalletSchema;
+use dmbc::service::schema::transaction_status::{TxStatusSchema, TxStatus};
 
 #[test]
 fn add_assets() {
@@ -158,7 +160,7 @@ fn delete_assets_fails() {
         .seed(9)
         .build();
 
-    let _tx_doesnt_exist = transaction::Builder::new()
+    let tx_doesnt_exist = transaction::Builder::new()
         .keypair(public_key, secret_key.clone())
         .tx_del_assets()
         .add_asset("absent", 999)
@@ -183,6 +185,88 @@ fn delete_assets_fails() {
             s.wallet(&public_key)
              .and_then(|w| w.asset(id))
              .map(|a| a.amount()));
+    });
+
+    tx_doesnt_exist.execute(fork);
+
+    TxStatusSchema::map(fork, |mut s| {
+        assert_eq!(Some(TxStatus::Fail), s.get_status(&tx_doesnt_exist.hash()));
+    });
+}
+
+#[test]
+fn exchange() {
+    let (sender_public, sender_secret) = crypto::gen_keypair();
+    let (recipient_public, _) = crypto::gen_keypair();
+
+    let sender_data_1 = "sender asset 1";
+    let sender_id_1 = AssetID::new(sender_data_1, &sender_public).unwrap();
+
+    let sender_data_2 = "sender asset 2";
+    let sender_id_2 = AssetID::new(sender_data_2, &sender_public).unwrap();
+
+    let recipient_data_1 = "recipient asset 1";
+    let recipient_id_1 = AssetID::new(recipient_data_1, &sender_public).unwrap();
+
+    let recipient_data_2 = "recipient asset 2";
+    let recipient_id_2 = AssetID::new(recipient_data_2, &sender_public).unwrap();
+
+    let sender = wallet::Builder::new()
+        .key(sender_public)
+        .balance(100)
+        .add_asset(sender_data_1, 10)
+        .add_asset(sender_data_2, 30)
+        .build();
+
+    let recipient = wallet::Builder::new()
+        .key(recipient_public)
+        .balance(100)
+        .add_asset(recipient_data_1, 30)
+        .add_asset(recipient_data_2, 50)
+        .build();
+
+    let tx = transaction::Builder::new()
+        .keypair(sender_public, sender_secret.clone())
+        .tx_exchange()
+        .sender_add_asset(sender_data_1, 10)
+        .sender_add_asset(sender_data_2, 15)
+        .sender_value(50)
+        .recipient(recipient_public)
+        .recipient_add_asset(recipient_data_1, 30)
+        .recipient_add_asset(recipient_data_2, 25)
+        .fee_strategy(1)
+        .build();
+
+    let db = MemoryDB::new();
+    let fork = &mut db.fork();
+
+    AssetSchema::map(fork, |mut s| {
+        s.add_asset(&sender_id_1, &sender_public, 10);
+        s.add_asset(&sender_id_2, &sender_public, 30);
+        s.add_asset(&recipient_id_1, &recipient_public, 30);
+        s.add_asset(&recipient_id_2, &recipient_public, 50);
+    });
+
+    WalletSchema::map(fork, |mut s| {
+        s.wallets().put(&sender_public, sender);
+        s.wallets().put(&recipient_public, recipient);
+    });
+
+    tx.execute(fork);
+
+    WalletSchema::map(fork, |mut s| {
+        let sender = s.wallet(&sender_public).unwrap();
+        let recipient = s.wallet(&recipient_public).unwrap();
+
+        assert_eq!(None, sender.asset(sender_id_1).map(|a| a.amount()));
+        assert_eq!(Some(15), sender.asset(sender_id_2).map(|a| a.amount()));
+        assert_eq!(Some(30), sender.asset(recipient_id_1).map(|a| a.amount()));
+        assert_eq!(Some(25), sender.asset(recipient_id_2).map(|a| a.amount()));
+
+        assert_eq!(None, recipient.asset(recipient_id_1).map(|a| a.amount()));
+        assert_eq!(Some(25), recipient.asset(recipient_id_2).map(|a| a.amount()));
+        assert_eq!(Some(10), recipient.asset(sender_id_1).map(|a| a.amount()));
+        assert_eq!(Some(15), recipient.asset(sender_id_2).map(|a| a.amount()));
     });
 }
 
