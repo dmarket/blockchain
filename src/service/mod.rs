@@ -8,9 +8,10 @@ mod nats;
 
 use exonum::api::Api;
 use exonum::blockchain::{ApiContext, Schema, Service, ServiceContext, Transaction};
-use exonum::crypto::{HexValue, PublicKey};
+use exonum::crypto::PublicKey;
 use exonum::encoding;
-use exonum::messages::{FromRaw, RawTransaction};
+use exonum::encoding::serialize::FromHex;
+use exonum::messages::RawTransaction;
 use exonum::storage::Fork;
 use iron::Handler;
 use router::Router;
@@ -76,21 +77,20 @@ impl Service for CurrencyService {
         Some(Box::new(router))
     }
 
-    fn handle_commit(&self, ctx: &mut ServiceContext) {
+    fn handle_commit(&self, ctx: &ServiceContext) {
         let schema = Schema::new(ctx.snapshot());
         let service_tx_schema = TxSchema::new(ctx.snapshot());
-        if let Some(las_block) = schema.last_block() {
-            let list = schema.block_txs(las_block.height());
-            for hash in list.iter() {
-                let tx_hash = hash.to_hex();
-                let status = service_tx_schema.get_status(&hash);
-                let msg = json!({
-                    tx_hash: status
-                }).to_string();
-                let queuename = config::config().nats().queuename();
-                nats::publish(queuename, msg);
-                println!("Made transaction {:?}", hash.to_hex());
-            }
+        let las_block = schema.last_block();
+        let list = schema.block_txs(las_block.height());
+        for hash in list.iter() {
+            let tx_hash = hash.to_hex();
+            let status = service_tx_schema.get_status(&hash);
+            let msg = json!({
+                tx_hash: status
+            }).to_string();
+            let queuename = config::config().nats().queuename();
+            nats::publish(queuename, msg);
+            println!("Made transaction {:?}", hash.to_hex());
         }
     }
 
