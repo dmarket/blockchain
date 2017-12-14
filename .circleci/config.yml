@@ -31,7 +31,7 @@ jobs:
 
       - run:
           name: Run Fmt
-          command: cargo fmt
+          command: rustfmt-nightly -v
 
       - run:
           name: Run Tests
