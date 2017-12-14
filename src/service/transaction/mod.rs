@@ -9,7 +9,7 @@ pub const PER_ASSET_FEE: u64 = 1;
 
 // Create Wallet
 pub const TX_CREATE_WALLET_ID: u16 = 1;
-const INIT_BALANCE: u64 = 100_000_000; // 1 DMC = 100_000_000 dimosh
+pub const INIT_BALANCE: u64 = 100_000_000; // 1 DMC = 100_000_000 dimosh
 pub mod create_wallet;
 
 // Transfer
