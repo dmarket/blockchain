@@ -21,7 +21,7 @@ jobs:
           name: Install Project Dependencies
           command: |
             cargo install
-            cargo install +nightly rustfmt-nightly
+            cargo +nightly install rustfmt-nightly
 
       - save_cache:
           key: suntechsoft-dmarket-blockchain-{{ .Branch }}-{{ checksum "Cargo.toml" }}
