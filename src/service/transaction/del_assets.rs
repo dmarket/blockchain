@@ -38,7 +38,7 @@ impl TxDelAsset {
 
 
         for a in self.assets() {
-            match AssetSchema::map(view, |mut assets| assets.info(&a.hash_id())) {
+            match AssetSchema::map(view, |mut assets| assets.info(&a.id())) {
                 Some(ref info)
                     if info.creator() != self.pub_key() && a.amount() <= info.amount() => {
                     return TxStatus::Fail
@@ -105,11 +105,11 @@ mod tests {
                 "pub_key": "1d9c731ebac3d7da9482470ae8b13a839cb05ef4f21f8d119e2c4bf175333cf7",
                 "assets": [
                     {
-                        "hash_id": "67e5504410b1426f9247bb680e5fe0c8",
+                        "id": "67e5504410b1426f9247bb680e5fe0c8",
                         "amount": 45
                     },
                     {
-                        "hash_id": "a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8",
+                        "id": "a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8",
                         "amount": 17
                     }
                 ],
@@ -129,7 +129,7 @@ mod tests {
         // TODO: to fix this test, `signature` should be regenerated
         assert!(tx_del.verify());
         assert_eq!(45, tx_del.assets()[0].amount());
-        assert_eq!("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8", tx_del.assets()[1].hash_id().to_string());
+        assert_eq!("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8", tx_del.assets()[1].id().to_string());
     }
 
     #[test]

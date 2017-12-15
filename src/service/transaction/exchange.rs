@@ -128,11 +128,11 @@ mod tests {
                 "sender": "d350490ebf5d5afe3ddb36fcde58c1b4874792c46c85d3f3d7a3f3509c2acb60",
                 "sender_assets": [
                     {
-                    "hash_id": "67e5504410b1426f9247bb680e5fe0c8",
+                    "id": "67e5504410b1426f9247bb680e5fe0c8",
                     "amount": 5
                     },
                     {
-                    "hash_id": "a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8",
+                    "id": "a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8",
                     "amount": 7
                     }
                 ],
@@ -140,7 +140,7 @@ mod tests {
                 "recipient": "b9426d175f946ed39211e5ca4dad1856d83caf92211661d94c660ba85c6f90be",
                 "recipient_assets": [
                     {
-                    "hash_id": "8d7d6d5d4d3d2d1d2c1c2b1b4a3a2a1a",
+                    "id": "8d7d6d5d4d3d2d1d2c1c2b1b4a3a2a1a",
                     "amount": 1
                     }
                 ],
@@ -167,7 +167,7 @@ mod tests {
         let assetid1 = AssetID::from_str("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8").unwrap();
         let assetid2 = AssetID::from_str("8d7d6d5d4d3d2d1d2c1c2b1b4a3a2a1a").unwrap();
 
-        assert_eq!(assetid1, tx.offer().sender_assets()[1].hash_id());
+        assert_eq!(assetid1, tx.offer().sender_assets()[1].id());
         assert_eq!(Asset::new(assetid2, 1), tx.offer().recipient_assets()[0]);
     }
 

@@ -58,7 +58,7 @@ impl Transaction for TxAddAsset {
                 println!("Convert {:?}", map_assets);
                 let new_assets: Vec<Asset> = map_assets
                     .iter()
-                    .map(|(_, asset)| Asset::new(asset.hash_id(), asset.amount()))
+                    .map(|(_, asset)| Asset::new(asset.id(), asset.amount()))
                     .collect();
                 creator.add_assets(new_assets);
                 tx_status = TxStatus::Success;

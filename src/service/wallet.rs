@@ -33,7 +33,7 @@ impl Wallet {
                 .into_iter()
                 .map(|a| if a.is_eq(&asset) {
                     new_assets.remove(i);
-                    Asset::new(a.hash_id(), a.amount() + asset.amount())
+                    Asset::new(a.id(), a.amount() + asset.amount())
                 } else {
                     a
                 })
@@ -57,7 +57,7 @@ impl Wallet {
                         if amount == 0 {
                             return None;
                         } else {
-                            a = Asset::new(a.hash_id(), amount);
+                            a = Asset::new(a.id(), amount);
                         }
                     }
                     Some(a)

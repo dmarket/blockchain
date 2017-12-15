@@ -7,6 +7,7 @@ use serde_json::value::Value;
 use std::{fmt, mem};
 use std::error::Error;
 use std::string::ToString;
+use std::convert::From;
 use uuid;
 use uuid::Uuid;
 
@@ -224,14 +225,14 @@ encoding_struct! {
     struct Asset {
         const SIZE = 20;
 
-        field hash_id: AssetID [0 =>  16]
+        field id: AssetID [0 =>  16]
         field amount:  u32 [16 => 20]
     }
 }
 
 impl Asset {
     pub fn is_eq(&self, other: &Asset) -> bool {
-        self.hash_id() == other.hash_id()
+        self.id() == other.id()
     }
 
     pub fn is_available_to_transfer(&self, other: &Asset) -> bool {
@@ -276,6 +277,21 @@ impl Asset {
     }
 }
 
+encoding_struct! {
+    struct TradeAsset {
+        const SIZE = 28;
+
+        field id: AssetID [0 => 16]
+        field amount: u32 [16 => 20]
+        field price: u64  [20 => 28] 
+    }
+}
+
+impl From<Asset> for TradeAsset {
+    fn from(asset: Asset) -> TradeAsset {
+        TradeAsset::new(asset.id(), asset.amount(), 0)
+    }
+}
 
 #[cfg(test)]
 mod tests {

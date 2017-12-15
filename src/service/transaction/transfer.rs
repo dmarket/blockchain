@@ -92,7 +92,7 @@ mod tests {
                 "amount": "3",
                 "assets": [
                 {
-                    "hash_id": "67e5504410b1426f9247bb680e5fe0c8",
+                    "id": "67e5504410b1426f9247bb680e5fe0c8",
                     "amount": 3
                 }
                 ],

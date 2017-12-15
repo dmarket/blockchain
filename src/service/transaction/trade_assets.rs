@@ -133,11 +133,11 @@ mod tests {
                 "seller": "dedb2438fca19f04d2236d3005db0f28caa014f34caf98e23634cb49aef1c307",
                 "assets": [
                     {
-                    "hash_id": "67e5504410b1426f9247bb680e5fe0c8",
+                    "id": "67e5504410b1426f9247bb680e5fe0c8",
                     "amount": 5
                     },
                     {
-                    "hash_id": "a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8",
+                    "id": "a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8",
                     "amount": 7
                     }
                 ],
@@ -159,7 +159,7 @@ mod tests {
         let tx: TxTrade = ::serde_json::from_str(&get_json()).unwrap();
         assert!(tx.verify());
         assert_eq!(5, tx.offer().assets()[0].amount());
-        assert_eq!("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8", tx.offer().assets()[1].hash_id().to_string());
+        assert_eq!("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8", tx.offer().assets()[1].id().to_string());
         assert_eq!(88, tx.offer().price());
     }
 
