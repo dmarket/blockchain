@@ -53,7 +53,7 @@ impl Transaction for TxTransfer {
                 WalletSchema::map(view, |mut schema| {
                     let mut receiver = schema.create_wallet(self.to());
                     receiver.increase(amount);
-                    receiver.add_assets(self.assets());
+                    receiver.add_assets(&self.assets());
                     println!("Transfer between wallets: {:?} => {:?}", sender, receiver);
                     schema.wallets().put(self.from(), sender);
                     schema.wallets().put(self.to(), receiver);

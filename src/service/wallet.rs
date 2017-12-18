@@ -25,10 +25,10 @@ impl Wallet {
         Field::write(&balance, &mut self.raw, 32, 40);
     }
 
-    pub fn add_assets(&mut self, asset_list: Vec<Asset>) {
+    pub fn add_assets(&mut self, asset_list: &[Asset]) {
         let mut assets = self.assets();
-        let mut new_assets = asset_list.clone();
-        for (i, asset) in asset_list.into_iter().enumerate() {
+        let mut new_assets = asset_list.to_vec();
+        for (i, asset) in asset_list.iter().enumerate() {
             assets = assets
                 .into_iter()
                 .map(|a| if a.is_eq(&asset) {
@@ -134,8 +134,8 @@ mod tests {
             ],
         );
 
-        wallet.add_assets(vec![Asset::new(assetid2, 3)]);
-        wallet.add_assets(vec![Asset::new(assetid4, 3)]);
+        wallet.add_assets(&vec![Asset::new(assetid2, 3)]);
+        wallet.add_assets(&vec![Asset::new(assetid4, 3)]);
         assert!(wallet.is_assets_in_wallet(&vec![Asset::new(assetid2, 33)]));
         assert!(wallet.is_assets_in_wallet(&vec![Asset::new(assetid4, 3)]));
     }

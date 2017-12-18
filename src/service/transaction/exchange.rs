@@ -85,9 +85,9 @@ impl Transaction for TxExchange {
                     recipient.decrease(self.offer().recipient_value());
 
                     sender.del_assets(&self.offer().sender_assets());
-                    recipient.add_assets(self.offer().sender_assets());
+                    recipient.add_assets(&self.offer().sender_assets());
 
-                    sender.add_assets(self.offer().recipient_assets());
+                    sender.add_assets(&self.offer().recipient_assets());
                     recipient.del_assets(&self.offer().recipient_assets());
 
                     println!("Sender's balance before transaction : {:?}", sender);

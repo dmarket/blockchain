@@ -60,7 +60,7 @@ impl Transaction for TxAddAsset {
                     .iter()
                     .map(|(_, asset)| Asset::new(asset.id(), asset.amount()))
                     .collect();
-                creator.add_assets(new_assets);
+                creator.add_assets(&new_assets);
                 tx_status = TxStatus::Success;
             }
             println!("Wallet after mining asset: {:?}", creator);
