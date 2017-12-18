@@ -13,6 +13,7 @@ use service::transaction::{PER_ASSET_FEE, TRANSACTION_FEE};
 use super::{SERVICE_ID, TX_TRADE_ASSETS_ID};
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
 use super::schema::wallet::WalletSchema;
+use super::schema::asset::AssetSchema;
 
 const FEE_FOR_TRADE: f64 = 0.025;
 
@@ -20,8 +21,8 @@ encoding_struct! {
     struct TradeOffer {
         const SIZE = 40;
 
-        field seller:              &PublicKey   [00 => 32]
-        field assets:              Vec<TradeAsset>   [32 => 40]
+        field seller: &PublicKey        [00 => 32]
+        field assets: Vec<TradeAsset>   [32 => 40]
     }
 }
 
@@ -100,7 +101,7 @@ impl Transaction for TxTrade {
                 seller.del_assets(&assets);
                 seller.increase(price);
                 seller.decrease(self.get_fee());
-                buyer.add_assets(assets);
+                buyer.add_assets(&assets);
                 buyer.decrease(price);
                 println!("Seller's balance after transaction : {:?}", seller);
                 println!("Buyer's balance after transaction : {:?}", buyer);
@@ -108,6 +109,22 @@ impl Transaction for TxTrade {
                     schema.wallets().put(self.buyer(), buyer);
                     schema.wallets().put(self.offer().seller(), seller);
                 });
+
+                // send fee to assets creators
+                for trade_asset in trade_assets {
+                    if let Some(info) = AssetSchema::map(view, |mut schema| {
+                        schema.info(&trade_asset.id())
+                    }) {
+                        
+                        if let Some(mut creator) = WalletSchema::map(view, |mut schema| {
+                            schema.wallet(info.creator())
+                        }) {
+                            let fee = (trade_asset.price() as f64 * FEE_FOR_TRADE).round() as u64;
+                            creator.increase(fee);
+                        }
+                    }
+                }
+
                 TxStatus::Success
             } else {
                 TxStatus::Fail
