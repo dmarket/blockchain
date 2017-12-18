@@ -145,7 +145,7 @@ mod tests {
             schema.wallet(tx_add.pub_key())
         });
         if let Some(wallet) = wallet {
-            assert!(wallet.in_wallet_assets(&vec![Asset::new(assetid1, 3)]));
+            assert!(wallet.is_assets_in_wallet(&vec![Asset::new(assetid1, 3)]));
 
             tx_add.execute(fork);
 
@@ -153,8 +153,8 @@ mod tests {
 
             if let Some(wallet) = wallet {
                 assert_eq!(2000 - tx_add.get_fee(), wallet.balance());
-                assert!(wallet.in_wallet_assets(&vec![Asset::new(assetid1, 20),]));
-                assert!(wallet.in_wallet_assets(&vec![Asset::new(assetid2, 45),]));
+                assert!(wallet.is_assets_in_wallet(&vec![Asset::new(assetid1, 20),]));
+                assert!(wallet.is_assets_in_wallet(&vec![Asset::new(assetid2, 45),]));
             } else {
                 assert!(false);
             }

@@ -166,10 +166,10 @@ mod tests {
 
         let wallet = WalletSchema::map(fork, |mut schema| schema.wallet(tx_del.pub_key()));
         if let Some(wallet) = wallet {
-            assert!(wallet.in_wallet_assets(&vec![
+            assert!(wallet.is_assets_in_wallet(&vec![
                 Asset::new(assetid1, 55)
             ]));
-            assert!(!wallet.in_wallet_assets(&vec![
+            assert!(!wallet.is_assets_in_wallet(&vec![
                 Asset::new(assetid2, 0)
             ]));
         } else {
@@ -201,7 +201,7 @@ mod tests {
             tx_del.pub_key(),
         )
         {
-            assert!(wallet.in_wallet_assets(&vec![
+            assert!(wallet.is_assets_in_wallet(&vec![
                     Asset::new(assetid, 400)
                 ]));
         } else {

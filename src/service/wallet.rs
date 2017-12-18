@@ -44,7 +44,7 @@ impl Wallet {
     }
 
     pub fn del_assets(&mut self, asset_list: &[Asset]) -> bool {
-        if !self.in_wallet_assets(asset_list) {
+        if !self.is_assets_in_wallet(asset_list) {
             return false;
         }
         let mut assets = self.assets();
@@ -74,7 +74,7 @@ impl Wallet {
         })
     }
 
-    pub fn in_wallet_assets(&self, asset_list: &[Asset]) -> bool {
+    pub fn is_assets_in_wallet(&self, asset_list: &[Asset]) -> bool {
         asset_list.into_iter().all(|a| self.allow_amount(&a))
     }
 }
@@ -85,7 +85,7 @@ mod tests {
     use service::asset::{Asset, AssetID};
 
     #[test]
-    fn test_in_wallet_assets() {
+    fn test_is_assets_in_wallet() {
         let (pub_key, _) = ::exonum::crypto::gen_keypair();
 
         let assetid1 = AssetID::from_str("67e5504410b1426f9247bb680e5fe0c8").unwrap();
@@ -102,14 +102,14 @@ mod tests {
                 Asset::new(assetid3, 30),
             ],
         );
-        assert!(wallet.in_wallet_assets(&vec![Asset::new(assetid2, 3)]));
-        assert!(!wallet.in_wallet_assets(&vec![Asset::new(assetid2, 33)]));
-        assert!(!wallet.in_wallet_assets(&vec![Asset::new(assetid4, 1)]));
-        assert!(!wallet.in_wallet_assets(&vec![
+        assert!(wallet.is_assets_in_wallet(&vec![Asset::new(assetid2, 3)]));
+        assert!(!wallet.is_assets_in_wallet(&vec![Asset::new(assetid2, 33)]));
+        assert!(!wallet.is_assets_in_wallet(&vec![Asset::new(assetid4, 1)]));
+        assert!(!wallet.is_assets_in_wallet(&vec![
             Asset::new(assetid1, 1),
             Asset::new(assetid4, 1),
         ]));
-        assert!(!wallet.in_wallet_assets(&vec![
+        assert!(!wallet.is_assets_in_wallet(&vec![
             Asset::new(assetid1, 1),
             Asset::new(assetid3, 31),
         ]));
@@ -136,8 +136,8 @@ mod tests {
 
         wallet.add_assets(vec![Asset::new(assetid2, 3)]);
         wallet.add_assets(vec![Asset::new(assetid4, 3)]);
-        assert!(wallet.in_wallet_assets(&vec![Asset::new(assetid2, 33)]));
-        assert!(wallet.in_wallet_assets(&vec![Asset::new(assetid4, 3)]));
+        assert!(wallet.is_assets_in_wallet(&vec![Asset::new(assetid2, 33)]));
+        assert!(wallet.is_assets_in_wallet(&vec![Asset::new(assetid4, 3)]));
     }
 
     #[test]
@@ -160,13 +160,13 @@ mod tests {
         );
 
         assert!(wallet.del_assets(&vec![Asset::new(assetid2, 15)]));
-        assert!(wallet.in_wallet_assets(&vec![Asset::new(assetid2, 15)]));
+        assert!(wallet.is_assets_in_wallet(&vec![Asset::new(assetid2, 15)]));
         assert!(!wallet.del_assets(&vec![Asset::new(assetid4, 3)]));
         assert!(!wallet.del_assets(&vec![Asset::new(assetid3, 31)]));
         assert!(!wallet.del_assets(&vec![
             Asset::new(assetid1, 10),
             Asset::new(assetid3, 31),
         ]));
-        assert!(wallet.in_wallet_assets(&vec![Asset::new(assetid1, 30)]));
+        assert!(wallet.is_assets_in_wallet(&vec![Asset::new(assetid1, 30)]));
     }
 }

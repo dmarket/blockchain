@@ -7,7 +7,7 @@ use exonum::messages::Message;
 use exonum::storage::Fork;
 use serde_json::Value;
 
-use service::asset::Asset;
+use service::asset::{Asset, TradeAsset};
 use service::transaction::{PER_ASSET_FEE, TRANSACTION_FEE};
 
 use super::{SERVICE_ID, TX_TRADE_ASSETS_ID};
@@ -18,11 +18,18 @@ const FEE_FOR_TRADE: f64 = 0.025;
 
 encoding_struct! {
     struct TradeOffer {
-        const SIZE = 48;
+        const SIZE = 40;
 
         field seller:              &PublicKey   [00 => 32]
-        field assets:              Vec<Asset>   [32 => 40]
-        field price:               u64          [40 => 48]
+        field assets:              Vec<TradeAsset>   [32 => 40]
+    }
+}
+
+impl TradeOffer {
+    pub fn total_price(&self) -> u64 {
+        self.assets()
+            .iter()
+            .fold(0, |total, item| total + item.price())
     }
 }
 
@@ -56,8 +63,8 @@ impl TxTrade {
 
     fn get_fee(&self) -> u64 {
         //todo: необходимо определится с генергацией fee
-        let price_fee = ((self.offer().price() as f64) * FEE_FOR_TRADE).round() as u64;
-        price_fee + TRANSACTION_FEE + PER_ASSET_FEE * Asset::count(&self.offer().assets())
+        let price_fee = ((self.offer().total_price() as f64) * FEE_FOR_TRADE).round() as u64;
+        price_fee + TRANSACTION_FEE + PER_ASSET_FEE * TradeAsset::count(&self.offer().assets())
     }
 }
 
@@ -74,21 +81,25 @@ impl Transaction for TxTrade {
             )
         });
         if let (Some(mut buyer), Some(mut seller)) = participants {
-            let price = self.offer().price();
-            let assets = self.offer().assets();
+            let price = self.offer().total_price();
+            let trade_assets = self.offer().assets();
+            let assets = trade_assets.iter()
+                .map(|x| x.clone().into())
+                .collect::<Vec<Asset>>();
             println!("Buyer {:?} => Seller {:?}", buyer, seller);
-            let tx_status = if (buyer.balance() >= price) && seller.in_wallet_assets(&assets) &&
-                seller.balance() + price >= self.get_fee()
+
+            let seller_have_assets = seller.is_assets_in_wallet(&assets);
+            let is_sufficient_funds = seller.balance() + price >= self.get_fee();
+            let tx_status = if (buyer.balance() >= price) 
+                && seller_have_assets && is_sufficient_funds
             //todo: необходимо определится с генергацией fee
             {
                 println!("--   Trade transaction   --");
                 println!("Seller's balance before transaction : {:?}", seller);
                 println!("Buyer's balance before transaction : {:?}", buyer);
-                let assets = self.offer().assets();
                 seller.del_assets(&assets);
                 seller.increase(price);
                 seller.decrease(self.get_fee());
-                let assets = self.offer().assets();
                 buyer.add_assets(assets);
                 buyer.decrease(price);
                 println!("Seller's balance after transaction : {:?}", seller);
@@ -130,18 +141,19 @@ mod tests {
             "body": {
                 "buyer": "f2ab7abcae9363496ccc458a30ec0a58200d9890a12fdfeca35010da6b276e19",
                 "offer": {
-                "seller": "dedb2438fca19f04d2236d3005db0f28caa014f34caf98e23634cb49aef1c307",
-                "assets": [
-                    {
-                    "id": "67e5504410b1426f9247bb680e5fe0c8",
-                    "amount": 5
-                    },
-                    {
-                    "id": "a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8",
-                    "amount": 7
-                    }
-                ],
-                "price": "88"
+                    "seller": "dedb2438fca19f04d2236d3005db0f28caa014f34caf98e23634cb49aef1c307",
+                    "assets": [
+                        {
+                            "id": "67e5504410b1426f9247bb680e5fe0c8",
+                            "amount": 5,
+                            "price": "44"
+                        },
+                        {
+                            "id": "a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8",
+                            "amount": 7,
+                            "price": "44"
+                        }
+                    ]
                 },
                 "seed": "4",
                 "seller_signature": "4e7d8d57fdc5c102b241d4e7a8d1228658c1de62a9334fa4e70776759268d67f9cdd8c4d20f7db8b226422c644bf442b0e28d9cbecece7753656c92915b02c06"
@@ -160,7 +172,7 @@ mod tests {
         assert!(tx.verify());
         assert_eq!(5, tx.offer().assets()[0].amount());
         assert_eq!("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8", tx.offer().assets()[1].id().to_string());
-        assert_eq!(88, tx.offer().price());
+        assert_eq!(88, tx.offer().total_price());
     }
 
     #[test]

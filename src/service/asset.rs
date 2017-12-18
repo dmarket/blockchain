@@ -277,6 +277,12 @@ impl Asset {
     }
 }
 
+impl From<TradeAsset> for Asset {
+    fn from(trade_asset: TradeAsset) -> Asset {
+        Asset::new(trade_asset.id(), trade_asset.amount())
+    }
+}
+
 encoding_struct! {
     struct TradeAsset {
         const SIZE = 28;
@@ -287,11 +293,20 @@ encoding_struct! {
     }
 }
 
-impl From<Asset> for TradeAsset {
-    fn from(asset: Asset) -> TradeAsset {
-        TradeAsset::new(asset.id(), asset.amount(), 0)
+impl TradeAsset {
+    pub fn count(assets: &[TradeAsset]) -> u64 {
+        assets.iter().fold(
+            0,
+            |acc, asset| acc + asset.amount() as u64,
+        )
     }
 }
+
+// impl From<Asset> for TradeAsset {
+//     fn from(asset: Asset) -> TradeAsset {
+//         TradeAsset::new(asset.id(), asset.amount(), 0)
+//     }
+// }
 
 #[cfg(test)]
 mod tests {

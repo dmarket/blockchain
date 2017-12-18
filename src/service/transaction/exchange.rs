@@ -70,9 +70,9 @@ impl Transaction for TxExchange {
             let recipient = schema.wallet(self.offer().recipient());
             if let (Some(mut sender), Some(mut recipient)) = (sender, recipient) {
                 if sender.balance() >= self.offer().sender_value() &&
-                    sender.in_wallet_assets(&self.offer().sender_assets()) &&
+                    sender.is_assets_in_wallet(&self.offer().sender_assets()) &&
                     recipient.balance() >= self.offer().recipient_value() &&
-                    recipient.in_wallet_assets(&self.offer().recipient_assets())
+                    recipient.is_assets_in_wallet(&self.offer().recipient_assets())
                 {
                     println!("--   Exchange transaction   --");
                     println!("Sender's balance before transaction : {:?}", sender);
@@ -214,22 +214,22 @@ mod tests {
             println!("{:?}", sender.balance());
             assert_eq!(63, sender.balance());
             assert_eq!(137, recipient.balance());
-            assert!(sender.in_wallet_assets(&vec![
+            assert!(sender.is_assets_in_wallet(&vec![
                 Asset::new(assetid1, 95),
                 Asset::new(assetid2, 93),
                 Asset::new(assetid3, 1),
             ]));
-            assert!(recipient.in_wallet_assets(&vec![
+            assert!(recipient.is_assets_in_wallet(&vec![
                 Asset::new(assetid1, 5),
                 Asset::new(assetid2, 7),
                 Asset::new(assetid3, 99),
             ]));
-            assert!(!sender.in_wallet_assets(&vec![
+            assert!(!sender.is_assets_in_wallet(&vec![
                 Asset::new(assetid1, 96),
                 Asset::new(assetid2, 94),
                 Asset::new(assetid3, 12),
             ]));
-            assert!(!recipient.in_wallet_assets(&vec![
+            assert!(!recipient.is_assets_in_wallet(&vec![
                 Asset::new(assetid1, 3),
                 Asset::new(assetid2, 1),
                 Asset::new(assetid3, 111),
