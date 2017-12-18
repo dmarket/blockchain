@@ -302,12 +302,6 @@ impl TradeAsset {
     }
 }
 
-// impl From<Asset> for TradeAsset {
-//     fn from(asset: Asset) -> TradeAsset {
-//         TradeAsset::new(asset.id(), asset.amount(), 0)
-//     }
-// }
-
 #[cfg(test)]
 mod tests {
     use super::AssetID;
