@@ -5,9 +5,9 @@ use exonum::encoding::serialize::json::ExonumJson;
 use exonum::storage::StorageKey;
 use serde_json::value::Value;
 use std::{fmt, mem};
+use std::convert::From;
 use std::error::Error;
 use std::string::ToString;
-use std::convert::From;
 use uuid;
 use uuid::Uuid;
 
