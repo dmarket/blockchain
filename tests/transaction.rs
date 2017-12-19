@@ -271,3 +271,129 @@ fn exchange() {
     });
 }
 
+#[test]
+fn trade_assets() {
+    let (seller_public, seller_secret) = crypto::gen_keypair();
+    let (buyer_public, _) = crypto::gen_keypair();
+
+    let full_data = "fully transferred asset";
+    let full_id = AssetID::new(full_data, &seller_public).unwrap();
+
+    let half_data = "partially transferred asset";
+    let half_id = AssetID::new(half_data, &seller_public).unwrap();
+
+    let seller = wallet::Builder::new()
+        .key(seller_public)
+        .balance(2000)
+        .add_asset(full_data, 20)
+        .add_asset(half_data, 20)
+        .build();
+
+    let buyer = wallet::Builder::new()
+        .key(buyer_public)
+        .balance(2000)
+        .build();
+
+    let tx = transaction::Builder::new()
+        .keypair(seller_public, seller_secret)
+        .tx_trade_assets()
+        .buyer(buyer_public)
+        .add_asset(full_data, 20)
+        .add_asset(half_data, 10)
+        .price(88)
+        .seed(4)
+        .build();
+
+    let db = MemoryDB::new();
+    let fork = &mut db.fork();
+
+    AssetSchema::map(fork, |mut s| {
+        s.assets().put(&full_id, AssetInfo::new(&seller_public, 20));
+        s.assets().put(&half_id, AssetInfo::new(&seller_public, 20));
+    });
+
+    WalletSchema::map(fork, |mut s| {
+        s.wallets().put(&seller_public, seller);
+        s.wallets().put(&buyer_public, buyer);
+    });
+
+    tx.execute(fork);
+
+    WalletSchema::map(fork, |mut s| {
+        let seller = s.wallet(&seller_public).unwrap();
+        let buyer = s.wallet(&buyer_public).unwrap();
+
+        assert_eq!(None,     seller.asset(full_id).map(|a| a.amount()));
+        assert_eq!(Some(10), seller.asset(half_id).map(|a| a.amount()));
+
+        assert_eq!(Some(20), buyer.asset(full_id).map(|a| a.amount()));
+        assert_eq!(Some(10), buyer.asset(half_id).map(|a| a.amount()));
+
+        assert_eq!(2000 - tx.get_fee() + 88, seller.balance());
+        assert_eq!(2000 - 88, buyer.balance());
+    });
+}
+
+#[test]
+fn transfer() {
+    let (sender_public, sender_secret) = crypto::gen_keypair();
+    let (recipient_public, _) = crypto::gen_keypair();
+
+    let full_data = "fully transferred asset";
+    let full_id = AssetID::new(full_data, &sender_public).unwrap();
+
+    let half_data = "partially transferred asset";
+    let half_id = AssetID::new(half_data, &sender_public).unwrap();
+
+    let sender = wallet::Builder::new()
+        .key(sender_public)
+        .balance(2000)
+        .add_asset(full_data, 20)
+        .add_asset(half_data, 20)
+        .build();
+
+    let recipient = wallet::Builder::new()
+        .key(recipient_public)
+        .balance(2000)
+        .build();
+
+    let tx = transaction::Builder::new()
+        .keypair(sender_public, sender_secret)
+        .tx_transfer()
+        .recipient(recipient_public)
+        .amount(100)
+        .add_asset(full_data, 20)
+        .add_asset(half_data, 10)
+        .seed(123)
+        .build();
+
+    let db = MemoryDB::new();
+    let fork = &mut db.fork();
+
+    AssetSchema::map(fork, |mut s| {
+        s.assets().put(&full_id, AssetInfo::new(&sender_public, 20));
+        s.assets().put(&half_id, AssetInfo::new(&sender_public, 20));
+    });
+
+    WalletSchema::map(fork, |mut s| {
+        s.wallets().put(&sender_public, sender);
+        s.wallets().put(&recipient_public, recipient);
+    });
+
+    tx.execute(fork);
+
+    WalletSchema::map(fork, |mut s| {
+        let sender = s.wallet(&sender_public).unwrap();
+        let recipient = s.wallet(&recipient_public).unwrap();
+
+        assert_eq!(None,     sender.asset(full_id).map(|a| a.amount()));
+        assert_eq!(Some(10), sender.asset(half_id).map(|a| a.amount()));
+
+        assert_eq!(Some(20), recipient.asset(full_id).map(|a| a.amount()));
+        assert_eq!(Some(10), recipient.asset(half_id).map(|a| a.amount()));
+
+        assert_eq!(2000 - tx.get_fee() - 100, sender.balance());
+        assert_eq!(2000 + 100, recipient.balance());
+    });
+}
+
