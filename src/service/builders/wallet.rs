@@ -30,6 +30,7 @@ impl Builder {
     }
 
     pub fn add_asset(self, name: &str, amount: u32) -> Self {
+        assert!(self.public_key.is_some());
         let id = AssetID::new(name, self.public_key.as_ref().unwrap()).unwrap();
         let asset = Asset::new(id, amount);
         self.add_asset_value(asset)
