@@ -13,6 +13,11 @@ use uuid::Uuid;
 
 pub const ASSET_HASH_ID_MAX_LENGTH: usize = 10 * 1024; // 10 KBytes
 
+pub trait Amount {
+    fn amount(&self) -> u32;
+}
+
+
 encoding_struct! {
     struct MetaAsset {
         const SIZE = 12;
@@ -32,6 +37,12 @@ impl MetaAsset {
 
     pub fn is_valid(&self) -> bool {
         self.data().len() <= ASSET_HASH_ID_MAX_LENGTH
+    }
+}
+
+impl Amount for MetaAsset {
+    fn amount(&self) -> u32 {
+        self.amount()
     }
 }
 
@@ -283,6 +294,12 @@ impl From<TradeAsset> for Asset {
     }
 }
 
+impl Amount for Asset {
+    fn amount(&self) -> u32 {
+        self.amount()
+    }
+}
+
 encoding_struct! {
     struct TradeAsset {
         const SIZE = 28;
@@ -300,6 +317,12 @@ impl TradeAsset {
             |acc, asset| acc + asset.amount() as u64,
         )
     }
+}
+
+impl Amount for TradeAsset {
+    fn amount(&self) -> u32 {
+        self.amount()
+    } 
 }
 
 #[cfg(test)]

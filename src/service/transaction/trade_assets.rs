@@ -9,6 +9,7 @@ use serde_json::Value;
 
 use service::asset::{Asset, TradeAsset};
 use service::transaction::{PER_ASSET_FEE, TRANSACTION_FEE};
+use service::transaction::fee;
 use service::wallet::Wallet;
 
 use super::{SERVICE_ID, TX_TRADE_ASSETS_ID};
@@ -65,9 +66,16 @@ impl TxTrade {
     }
 
     fn get_fee(&self) -> u64 {
-        //todo: необходимо определится с генергацией fee
-        let price_fee = ((self.offer().total_price() as f64) * FEE_FOR_TRADE).round() as u64;
-        price_fee + TRANSACTION_FEE + PER_ASSET_FEE * TradeAsset::count(&self.offer().assets())
+        let fee = fee::TxCalculator::new()
+            .tx_fee(1000)
+            .asset_calculator()
+            .per_asset_fee(1)
+            .assets(&self.offer().assets())
+            .trade_calculator()
+            .trade_fee(100)
+            .calcluate();
+
+        fee.amount()
     }
 
     fn get_creators_and_fees(&self, view: &mut Fork) -> Vec<(Wallet, u64)> {

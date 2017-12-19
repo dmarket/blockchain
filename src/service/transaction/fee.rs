@@ -1,7 +1,7 @@
 
-use service::asset::{Asset, MetaAsset};
+use service::asset::Amount;
 
-struct Fee {
+pub struct Fee {
     for_tx: u64,
     for_assets: Option<u64>,
     for_trade: Option<u64>,
@@ -26,7 +26,7 @@ impl Fee {
 }
 
 
-struct TxCalculator {
+pub struct TxCalculator {
     tx_fee: u64,
 }
 
@@ -43,18 +43,18 @@ impl TxCalculator {
         Fee::new(self.tx_fee, None, None)
     }
 
-    pub fn asset_calculator<T>(self) -> AssetCalculator<T> {
+    pub fn asset_calculator<T: Clone + Amount>(self) -> AssetCalculator<T> {
         AssetCalculator::<T>::new(self)
     }
 }
 
-struct AssetCalculator<T> {
+pub struct AssetCalculator<T> {
     tx_calculator: TxCalculator,
     per_asset_fee: u64,
     assets: Vec<T>,
 }
 
-impl<T> AssetCalculator<T> {
+impl<T: Clone + Amount> AssetCalculator<T> {
     pub fn new(tx_calc: TxCalculator) -> Self {
         AssetCalculator { tx_calculator: tx_calc, per_asset_fee: 0, assets: vec![], }
     }
@@ -63,45 +63,34 @@ impl<T> AssetCalculator<T> {
         self.per_asset_fee = per_asset_fee;
         self
     }
-}
 
-impl AssetCalculator<MetaAsset> {
-    pub fn assets(mut self, assets: &Vec<MetaAsset>) -> Self {
+    pub fn assets(mut self, assets: &Vec<T>) -> Self {
         self.assets = assets.to_vec();
         self
     }
 
     pub fn calculate(self) -> Fee {
         let mut fee = self.tx_calculator.calcluate();
-        fee.for_assets = Some(self.per_asset_fee * MetaAsset::count(&self.assets));
-        fee
-    }
-}
-
-impl AssetCalculator<Asset> {
-    pub fn assets(mut self, assets: &Vec<Asset>) -> Self {
-        self.assets = assets.to_vec();
-        self
-    }
-
-    pub fn calculate(self) -> Fee {
-        let mut fee = self.tx_calculator.calcluate();
-        fee.for_assets = Some(self.per_asset_fee * Asset::count(&self.assets));
+        let count = self.assets.iter().fold(
+            0,
+            |acc, asset| acc + asset.amount() as u64,
+        );
+        fee.for_assets = Some(self.per_asset_fee * count);
         fee
     }
 
-    pub fn trade_calculator(self) -> TradeCalculator {
+    pub fn trade_calculator(self) -> TradeCalculator<T> {
         TradeCalculator::new(self)
     }
 }
 
-struct TradeCalculator {
-    asset_calculator: AssetCalculator<Asset>,
+pub struct TradeCalculator<T> {
+    asset_calculator: AssetCalculator<T>,
     trade_fee: u64,
 }
 
-impl TradeCalculator {
-    pub fn new(asset_calc: AssetCalculator<Asset>) -> Self {
+impl<T: Clone + Amount> TradeCalculator<T> {
+    pub fn new(asset_calc: AssetCalculator<T>) -> Self {
         TradeCalculator { asset_calculator: asset_calc, trade_fee: 0 }
     }
 

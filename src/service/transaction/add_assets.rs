@@ -8,6 +8,7 @@ use serde_json::Value;
 
 use service::asset::{Asset, MetaAsset};
 use service::transaction::{PER_ASSET_FEE, TRANSACTION_FEE};
+use service::transaction::fee;
 
 use super::{SERVICE_ID, TX_ADD_ASSETS_ID};
 use super::schema::asset::{AssetSchema, external_internal};
@@ -28,7 +29,14 @@ message! {
 
 impl TxAddAsset {
     fn get_fee(&self) -> u64 {
-        TRANSACTION_FEE + PER_ASSET_FEE * MetaAsset::count(&self.meta_assets())
+        let fee = fee::TxCalculator::new()
+            .tx_fee(1000)
+            .asset_calculator()
+            .per_asset_fee(1)
+            .assets(&self.meta_assets())
+            .calculate();
+
+        fee.amount()
     }
 }
 

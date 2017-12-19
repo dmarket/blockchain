@@ -8,6 +8,7 @@ use serde_json::Value;
 
 use service::asset::Asset;
 use service::transaction::TRANSACTION_FEE;
+use service::transaction::fee;
 
 use super::{SERVICE_ID, TX_EXCHANGE_ID};
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
@@ -47,7 +48,11 @@ impl TxExchange {
     }
 
     fn get_fee(&self) -> u64 {
-        TRANSACTION_FEE
+        let fee = fee::TxCalculator::new()
+            .tx_fee(1000)
+            .calcluate();
+
+        fee.amount()
     }
 }
 
