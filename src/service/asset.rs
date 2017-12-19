@@ -1,4 +1,4 @@
-use exonum::crypto::{HexValue, PublicKey};
+use exonum::crypto::PublicKey;
 use exonum::encoding::{CheckedOffset, Field, Offset, Result as ExonumResult};
 use exonum::encoding::serialize::WriteBufferWrapper;
 use exonum::encoding::serialize::json::ExonumJson;

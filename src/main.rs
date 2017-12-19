@@ -17,8 +17,8 @@ mod service;
 mod config;
 mod keys;
 
-use exonum::blockchain::{Blockchain, ConsensusConfig, GenesisConfig, Service,
-                         TimeoutAdjusterConfig, ValidatorKeys};
+use exonum::blockchain::{ConsensusConfig, GenesisConfig, Service, TimeoutAdjusterConfig,
+                         ValidatorKeys};
 use exonum::node::{Node, NodeApiConfig, NodeConfig};
 use exonum::storage::{RocksDB, RocksDBOptions};
 use exonum_configuration::ConfigurationService;
@@ -27,18 +27,6 @@ use service::CurrencyService;
 
 fn main() {
     exonum::helpers::init_logger().unwrap();
-
-    let mut options = RocksDBOptions::default();
-    options.create_if_missing(true);
-
-    let path = config::config().db().path();
-    let db = Box::new(RocksDB::open(path, options).unwrap());
-
-    let services: Vec<Box<Service>> = vec![
-        Box::new(ConfigurationService::new()),
-        Box::new(CurrencyService),
-    ];
-    let blockchain = Blockchain::new(db, services);
 
     /** Create Keys */
     println!("Current node: {}", config::config().api().current_node());
@@ -78,7 +66,7 @@ fn main() {
         },
     };
 
-    /* Configure Node */
+    // Configure Node
     let genesis = GenesisConfig::new_with_consensus(consensus_config, validators.into_iter());
     let api_cfg = NodeApiConfig {
         public_api_address: Some(config::config().api().address().parse().unwrap()),
@@ -103,6 +91,18 @@ fn main() {
         services_configs: Default::default(),
     };
 
-    let node = Node::new(blockchain, node_cfg);
+    // Initialize database
+    let mut options = RocksDBOptions::default();
+    options.create_if_missing(true);
+    let path = config::config().db().path();
+    let db = Box::new(RocksDB::open(path, &options).unwrap());
+
+    // Initialize services
+    let services: Vec<Box<Service>> = vec![
+        Box::new(ConfigurationService::new()),
+        Box::new(CurrencyService),
+    ];
+
+    let node = Node::new(db, services, node_cfg);
     node.run().unwrap();
 }

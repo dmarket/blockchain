@@ -20,8 +20,7 @@ jobs:
       - run:
           name: Install Project Dependencies
           command: |
-            cargo install
-            cargo install rustfmt
+            cargo install -vv
 
       - save_cache:
           key: suntechsoft-dmarket-blockchain-{{ .Branch }}-{{ checksum "Cargo.toml" }}
@@ -29,13 +28,13 @@ jobs:
             - "/project/target"
             - "/project/Cargo.lock"
 
-      - run:
-          name: Run Fmt
-          command: cargo fmt
+#      - run:
+#          name: Run Fmt
+#          command: rustup run nightly rustfmt --write-mode checkstyle
 
       - run:
           name: Run Tests
-          command: cargo test
+          command: cargo test -vv
 
 #      - store_artifacts:
 #          path: /project/report/
