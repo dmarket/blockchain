@@ -36,15 +36,14 @@ impl TxDelAsset {
         // all wallets for this asset id is equal to the amonut stored in the
         // AssetInfo associated with this asset id.
 
-
         for a in self.assets() {
             match AssetSchema::map(view, |mut assets| assets.info(&a.hash_id())) {
-                Some(ref info)
-                    if info.creator() != self.pub_key() && a.amount() <= info.amount() => {
-                    return TxStatus::Fail
+                Some(ref info) => {
+                    if info.creator() != self.pub_key() || a.amount() > info.amount() {
+                        return TxStatus::Fail;
+                    }
                 }
                 None => return TxStatus::Fail,
-                _ => (),
             }
         }
 
