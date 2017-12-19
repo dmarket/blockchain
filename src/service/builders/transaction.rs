@@ -288,7 +288,7 @@ impl TxExchangeBuilder {
 
     pub fn recipient_add_asset(self, name: &str, count: u32) -> Self {
         let meta = MetaAsset::new(name, count);
-        let asset = Asset::from_meta_asset(&meta, &self.meta.public_key);
+        let asset = Asset::from_meta_asset(&meta, &self.recipient.unwrap());
         self.recipient_add_asset_value(asset)
     }
 

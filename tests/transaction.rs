@@ -206,10 +206,10 @@ fn exchange() {
     let sender_id_2 = AssetID::new(sender_data_2, &sender_public).unwrap();
 
     let recipient_data_1 = "recipient asset 1";
-    let recipient_id_1 = AssetID::new(recipient_data_1, &sender_public).unwrap();
+    let recipient_id_1 = AssetID::new(recipient_data_1, &recipient_public).unwrap();
 
     let recipient_data_2 = "recipient asset 2";
-    let recipient_id_2 = AssetID::new(recipient_data_2, &sender_public).unwrap();
+    let recipient_id_2 = AssetID::new(recipient_data_2, &recipient_public).unwrap();
 
     let sender = wallet::Builder::new()
         .key(sender_public)
@@ -234,6 +234,7 @@ fn exchange() {
         .recipient(recipient_public)
         .recipient_add_asset(recipient_data_1, 30)
         .recipient_add_asset(recipient_data_2, 25)
+        .recipient_value(0)
         .fee_strategy(1)
         .build();
 
