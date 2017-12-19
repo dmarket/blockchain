@@ -114,14 +114,6 @@ mod tests {
     }
 
     #[test]
-    fn test_convert_from_json() {
-        let tx_add: TxAddAsset = ::serde_json::from_str(&get_json()).unwrap();
-        assert!(tx_add.verify());
-        assert_eq!(45, tx_add.meta_assets()[0].amount());
-        assert_eq!("a8d5c97d-9978-4111-9947-7a95dcb31d0f", tx_add.meta_assets()[1].data());
-    }
-
-    #[test]
     fn test_add_asset_info() {
         let tx_add: TxAddAsset = ::serde_json::from_str(&get_json()).unwrap();
         assert_eq!(tx_add.get_fee(), tx_add.info()["tx_fee"]);

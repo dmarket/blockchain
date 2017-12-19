@@ -79,10 +79,6 @@ impl Transaction for TxTransfer {
 mod tests {
     use super::TxTransfer;
     use exonum::blockchain::Transaction;
-    use exonum::storage::{Database, MemoryDB};
-    use service::asset::{Asset, AssetID};
-    use service::schema::wallet::WalletSchema;
-    use service::wallet::Wallet;
 
     fn get_json() -> String {
         r#"{
@@ -104,58 +100,6 @@ mod tests {
             "message_id": 2,
             "signature": "4f9c0a9ddb32a1d8e61d3b656dec5786fb447c19362853ddac67a2c4f48c9ad65a377ee86a02727a27a35d16a14dea84f6920878ab82a6e850e8e7814bb64701"
         }"#.to_string()
-    }
-
-    #[test]
-    fn test_convert_from_json() {
-
-        let assetid = AssetID::zero();
-        let asset = Asset::new(assetid, 3);
-
-        let tx: TxTransfer = ::serde_json::from_str(&get_json()).unwrap();
-        assert!(tx.verify());
-        assert_eq!(asset, tx.assets()[0]);
-        assert_eq!(3, tx.amount());
-    }
-
-    fn test_positive_send_staff() {
-        let tx_transfer: TxTransfer = ::serde_json::from_str(&get_json()).unwrap();
-
-        let db = Box::new(MemoryDB::new());
-        let fork = &mut db.fork();
-
-        let assetid = AssetID::from_str("67e5504410b1426f9247bb680e5fe0c8").unwrap();
-        let asset = Asset::new(assetid, 100);
-
-        let from = Wallet::new(tx_transfer.from(), 2000, vec![asset,]);
-        WalletSchema::map(fork, |mut schema| {
-            schema.wallets().put(tx_transfer.from(), from);
-        });
-
-        tx_transfer.execute(fork);
-
-        let participants = WalletSchema::map(fork, |mut schema| {
-            (
-                schema.wallet(tx_transfer.from()),
-                schema.wallet(tx_transfer.to()),
-            )
-        });
-        if let (Some(from), Some(to)) = participants {
-            assert_eq!(994, from.balance());
-            assert_eq!(3, to.balance());
-            assert_eq!(
-                vec![Asset::new(AssetID::zero(), 97), ],
-                from.assets()
-            );
-            assert_eq!(
-                vec![
-                    Asset::new(AssetID::zero(), 3),
-                ],
-                to.assets()
-            );
-        } else {
-            panic!("Something wrong!!!");
-        }
     }
 
     #[test]

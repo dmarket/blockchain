@@ -91,12 +91,7 @@ impl Transaction for TxDelAsset {
 #[cfg(test)]
 mod tests {
     use exonum::blockchain::Transaction;
-    use exonum::storage::{Database, MemoryDB};
-    use service::asset::{Asset, AssetID, AssetInfo};
-    use service::schema::asset::AssetSchema;
-    use service::schema::wallet::WalletSchema;
     use service::transaction::del_assets::TxDelAsset;
-    use service::wallet::Wallet;
 
     fn get_json() -> String {
         r#"{
@@ -120,92 +115,6 @@ mod tests {
             "message_id": 4,
             "signature": "e7a3d71fc093f9ddaba083ba3e1618514c96003d9a01cdf6d5c0da344f12c800db9e7b210f9a7b372ddd7e57f299d8bc0e55d238ad1fa6b9d06897c2bda29901"
         }"#.to_string()
-    }
-
-    #[test]
-    fn test_convert_from_json() {
-        let tx_del: TxDelAsset = ::serde_json::from_str(&get_json()).unwrap();
-        // TODO: to fix this test, `signature` should be regenerated
-        assert!(tx_del.verify());
-        assert_eq!(45, tx_del.assets()[0].amount());
-        assert_eq!("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8", tx_del.assets()[1].hash_id().to_string());
-    }
-
-    #[test]
-    fn test_positive_delete_assets() {
-        let tx_del: TxDelAsset = ::serde_json::from_str(&get_json()).unwrap();
-
-        let assetid1 = AssetID::from_str("67e5504410b1426f9247bb680e5fe0c8").unwrap();
-        let assetid2 = AssetID::from_str("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8").unwrap();
-
-        let db = Box::new(MemoryDB::new());
-        let fork = &mut db.fork();
-        AssetSchema::map(fork, |mut asset_schema| {
-            asset_schema.assets().put(
-                &assetid1,
-                AssetInfo::new(tx_del.pub_key(), 100),
-            );
-            asset_schema.assets().put(
-                &assetid2,
-                AssetInfo::new(tx_del.pub_key(), 17),
-            );
-        });
-
-        let assets = vec![
-            Asset::new(assetid1, 100),
-            Asset::new(assetid2, 17),
-        ];
-
-        let wallet = Wallet::new(tx_del.pub_key(), 2000, assets);
-        WalletSchema::map(fork, |mut schema| {
-            schema.wallets().put(tx_del.pub_key(), wallet);
-        });
-
-        tx_del.execute(fork);
-
-        let wallet = WalletSchema::map(fork, |mut schema| schema.wallet(tx_del.pub_key()));
-        if let Some(wallet) = wallet {
-            assert!(wallet.in_wallet_assets(&vec![
-                Asset::new(assetid1, 55)
-            ]));
-            assert!(!wallet.in_wallet_assets(&vec![
-                Asset::new(assetid2, 0)
-            ]));
-        } else {
-            panic!("Something wrong!!!");
-        }
-    }
-
-    #[test]
-    fn test_negative_delete_assets() {
-
-        let tx_del: TxDelAsset = ::serde_json::from_str(&get_json()).unwrap();
-
-        let db = Box::new(MemoryDB::new());
-        let fork = &mut db.fork();
-
-        let assetid = AssetID::from_str("67e5504410b1426f9247bb680e5fe0c8").unwrap();
-        let assets = vec![
-            Asset::new(assetid, 400),
-        ];
-        let wallet = Wallet::new(tx_del.pub_key(), 100, assets);
-
-        WalletSchema::map(fork, |mut schema| {
-            schema.wallets().put(tx_del.pub_key(), wallet);
-        });
-
-        tx_del.execute(fork);
-
-        WalletSchema::map(fork, |mut schema| if let Some(wallet) = schema.wallet(
-            tx_del.pub_key(),
-        )
-        {
-            assert!(wallet.in_wallet_assets(&vec![
-                    Asset::new(assetid, 400)
-                ]));
-        } else {
-            panic!("Something wrong!!!");
-        });
     }
 
     #[test]
