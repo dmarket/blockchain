@@ -36,3 +36,5 @@ pub mod exchange;
 pub const TX_MINING_ID: u16 = 7;
 const AMOUNT_MINING_COIN: u64 = 100_000_000_000_000;
 pub mod mining;
+
+pub mod fee;
