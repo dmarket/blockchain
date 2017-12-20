@@ -8,7 +8,7 @@ use exonum::storage::Fork;
 use serde_json::Value;
 
 use service::asset::{Asset, TradeAsset};
-use service::transaction::{PER_TRADE_ASSET_FEE, TX_TRADE_FEE, MARKETPLACE_FEE};
+use service::transaction::{MARKETPLACE_FEE, PER_TRADE_ASSET_FEE, TX_TRADE_FEE};
 use service::transaction::fee;
 use service::wallet::Wallet;
 

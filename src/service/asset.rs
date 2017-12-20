@@ -11,7 +11,7 @@ use std::string::ToString;
 use uuid;
 use uuid::Uuid;
 
-pub const ASSET_HASH_ID_MAX_LENGTH: usize = 10 * 1024; // 10 KBytes 
+pub const ASSET_HASH_ID_MAX_LENGTH: usize = 10 * 1024; // 10 KBytes
 
 encoding_struct! {
     struct MetaAsset {
