@@ -3,7 +3,10 @@ use service::asset::{Asset, MetaAsset, TradeAsset};
 pub struct Fee {
     for_tx: u64,
     for_assets: Option<u64>,
+
     for_trade: Option<u64>,
+    for_marketplace: Option<u64>,
+
     for_exchange: Option<u64>,
 }
 
@@ -13,6 +16,7 @@ impl Fee {
             for_tx: tx_fee,
             for_assets: None,
             for_trade: None,
+            for_marketplace: None,
             for_exchange: None,
         }
     }
@@ -24,6 +28,9 @@ impl Fee {
         }
         if let Some(trade_fee) = self.for_trade {
             amount += trade_fee;
+        }
+        if let Some(marketplace_fee) = self.for_marketplace {
+            amount += marketplace_fee;
         }
         if let Some(exchange_fee) = self.for_exchange {
             amount += exchange_fee;
@@ -174,7 +181,7 @@ impl ExchangeCalculator {
 
 pub struct TradeCalculator {
     tx_calculator: TxCalculator,
-    marketplace_fee: u64,
+    trade_fee: u64,
     per_asset_fee: u64,
     assets: Vec<TradeAsset>,
 }
@@ -183,14 +190,14 @@ impl TradeCalculator {
     pub fn new(tx_calc: TxCalculator) -> Self {
         TradeCalculator {
             tx_calculator: tx_calc,
-            marketplace_fee: 0,
+            trade_fee: 0,
             per_asset_fee: 0,
             assets: vec![],
         }
     }
 
-    pub fn marketplace_fee(mut self, marketplace_fee: u64) -> Self {
-        self.marketplace_fee = marketplace_fee;
+    pub fn trade_fee(mut self, trade_fee: u64) -> Self {
+        self.trade_fee = trade_fee;
         self
     }
 
@@ -206,10 +213,18 @@ impl TradeCalculator {
 
     pub fn calculate(self) -> Fee {
         let mut fee = self.tx_calculator.calculate();
-        let price = self.assets.iter().fold(0, |sum, asset| {
-            sum + asset.price() * asset.amount() as u64
-        });
-        fee.for_trade = Some(price + self.marketplace_fee);
+        let price = self.assets.iter().fold(
+            0, 
+            |sum, asset| sum + asset.price(),
+        );
+        fee.for_marketplace = Some(price * self.trade_fee);
+
+        let count = self.assets.iter().fold(
+            0,
+            |acc, asset| acc + asset.amount() as u64,
+        );
+
+        fee.for_trade = Some(count * self.per_asset_fee);
         fee
     }
 }

@@ -69,7 +69,7 @@ impl TxTrade {
         let fee = fee::TxCalculator::new()
             .tx_fee(TX_TRADE_FEE)
             .trade_calculator()
-            .marketplace_fee(MARKETPLACE_FEE)
+            .trade_fee(MARKETPLACE_FEE)
             .per_asset_fee(PER_TRADE_ASSET_FEE)
             .assets(&self.offer().assets())
             .calculate();
