@@ -7,7 +7,7 @@ use exonum::storage::Fork;
 use serde_json::Value;
 use service::asset::Asset;
 
-use service::transaction::{PER_ASSET_FEE, TRANSACTION_FEE};
+use service::transaction::TX_TRANSFER_FEE;
 use service::transaction::fee;
 
 use super::{SERVICE_ID, TX_TRANSFER_ID};
@@ -31,8 +31,9 @@ message! {
 impl TxTransfer {
     fn get_fee(&self) -> u64 {
         let fee = fee::TxCalculator::new()
-            .tx_fee(1000)
-            .calcluate();
+            .tx_fee(TX_TRANSFER_FEE)
+            .transfer_callculator()
+            .calculate();
 
         fee.amount()
     }

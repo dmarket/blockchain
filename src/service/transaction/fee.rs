@@ -1,15 +1,16 @@
 
-use service::asset::Amount;
+use service::asset::{MetaAsset, TradeAsset, Asset};
 
 pub struct Fee {
     for_tx: u64,
     for_assets: Option<u64>,
     for_trade: Option<u64>,
+    for_exchange: Option<u64>,
 }
 
 impl Fee {
-    pub fn new(tx_fee: u64, assets_fee: Option<u64>, trade_fee: Option<u64>) -> Self {
-        Fee { for_tx: tx_fee, for_assets: assets_fee, for_trade: trade_fee }
+    pub fn new(tx_fee: u64) -> Self {
+        Fee { for_tx: tx_fee, for_assets: None, for_trade: None, for_exchange: None }
     }
 
     pub fn amount(self) -> u64 {
@@ -19,6 +20,9 @@ impl Fee {
         }
         if let Some(trade_fee) = self.for_trade {
             amount += trade_fee;
+        }
+        if let Some(exchange_fee) = self.for_exchange {
+            amount += exchange_fee;
         }
 
         amount
@@ -39,24 +43,40 @@ impl TxCalculator {
         TxCalculator { tx_fee: fee }
     }
 
-    pub fn calcluate(self) -> Fee {
-        Fee::new(self.tx_fee, None, None)
+    pub fn calculate(self) -> Fee {
+        Fee::new(self.tx_fee)
     }
 
-    pub fn asset_calculator<T: Clone + Amount>(self) -> AssetCalculator<T> {
-        AssetCalculator::<T>::new(self)
+    pub fn add_asset_calculator(self) -> AddAssetCalculator {
+        AddAssetCalculator::new(self)
+    }
+
+    pub fn del_asset_calculator(self) -> DelAssetCalculator {
+        DelAssetCalculator::new(self)
+    }
+
+    pub fn transfer_callculator(self) -> TransferCalculator {
+        TransferCalculator::new(self)
+    }
+
+    pub fn exchange_calculator(self) -> ExchangeCalculator {
+        ExchangeCalculator::new(self)
+    }
+
+    pub fn trade_calculator(self) -> TradeCalculator {
+        TradeCalculator::new(self)
     }
 }
 
-pub struct AssetCalculator<T> {
+pub struct AddAssetCalculator {
     tx_calculator: TxCalculator,
     per_asset_fee: u64,
-    assets: Vec<T>,
+    assets: Vec<MetaAsset>,
 }
 
-impl<T: Clone + Amount> AssetCalculator<T> {
+impl AddAssetCalculator {
     pub fn new(tx_calc: TxCalculator) -> Self {
-        AssetCalculator { tx_calculator: tx_calc, per_asset_fee: 0, assets: vec![], }
+        AddAssetCalculator { tx_calculator: tx_calc, per_asset_fee: 0, assets: vec![] }
     }
 
     pub fn per_asset_fee(mut self, per_asset_fee: u64) -> Self {
@@ -64,13 +84,13 @@ impl<T: Clone + Amount> AssetCalculator<T> {
         self
     }
 
-    pub fn assets(mut self, assets: &Vec<T>) -> Self {
+    pub fn assets(mut self, assets: &Vec<MetaAsset>) -> Self {
         self.assets = assets.to_vec();
         self
     }
 
     pub fn calculate(self) -> Fee {
-        let mut fee = self.tx_calculator.calcluate();
+        let mut fee = self.tx_calculator.calculate();
         let count = self.assets.iter().fold(
             0,
             |acc, asset| acc + asset.amount() as u64,
@@ -78,30 +98,102 @@ impl<T: Clone + Amount> AssetCalculator<T> {
         fee.for_assets = Some(self.per_asset_fee * count);
         fee
     }
+}
 
-    pub fn trade_calculator(self) -> TradeCalculator<T> {
-        TradeCalculator::new(self)
+pub struct DelAssetCalculator {
+    tx_calculator: TxCalculator,
+}
+
+impl DelAssetCalculator {
+    pub fn new(tx_calc: TxCalculator) -> Self {
+        DelAssetCalculator { tx_calculator: tx_calc, }
+    }
+
+    pub fn calculate(self) -> Fee {
+        self.tx_calculator.calculate()
     }
 }
 
-pub struct TradeCalculator<T> {
-    asset_calculator: AssetCalculator<T>,
-    trade_fee: u64,
+pub struct TransferCalculator {
+    tx_calculator: TxCalculator,
 }
 
-impl<T: Clone + Amount> TradeCalculator<T> {
-    pub fn new(asset_calc: AssetCalculator<T>) -> Self {
-        TradeCalculator { asset_calculator: asset_calc, trade_fee: 0 }
+impl TransferCalculator {
+    pub fn new(tx_calc: TxCalculator) -> Self {
+        TransferCalculator { tx_calculator: tx_calc, }
     }
 
-    pub fn trade_fee(mut self, fee: u64) -> Self {
-        self.trade_fee = fee;
+    pub fn calculate(self) -> Fee {
+        self.tx_calculator.calculate()
+    }
+}
+
+pub struct ExchangeCalculator {
+    tx_calculator: TxCalculator,
+    per_asset_fee: u64,
+    assets: Vec<Asset>
+}
+
+impl ExchangeCalculator {
+    pub fn new(tx_calc: TxCalculator) -> Self {
+        ExchangeCalculator { tx_calculator: tx_calc, per_asset_fee: 0, assets: vec![] }
+    }
+
+    pub fn per_asset_fee(mut self, per_asset_fee: u64) -> Self {
+        self.per_asset_fee = per_asset_fee;
         self
     }
 
-    pub fn calcluate(self) -> Fee {
-        let mut fee = self.asset_calculator.calculate();
-        fee.for_trade = Some(self.trade_fee);
+    pub fn assets(mut self, assets: &Vec<Asset>) -> Self {
+        self.assets = assets.to_vec();
+        self
+    }
+
+    pub fn calculate(self) -> Fee {
+        let mut fee = self.tx_calculator.calculate();
+        let count = self.assets.iter().fold(
+            0,
+            |acc, asset| acc + asset.amount() as u64,
+        );
+        fee.for_exchange = Some(count * self.per_asset_fee);
+        fee
+    }
+}
+
+pub struct TradeCalculator {
+    tx_calculator: TxCalculator,
+    marketplace_fee: u64,
+    per_asset_fee: u64,
+    assets: Vec<TradeAsset>, 
+}
+
+impl TradeCalculator {
+    pub fn new(tx_calc: TxCalculator) -> Self {
+        TradeCalculator { tx_calculator: tx_calc, marketplace_fee: 0, per_asset_fee: 0, assets: vec![] }
+    }
+
+    pub fn marketplace_fee(mut self, marketplace_fee: u64) -> Self {
+        self.marketplace_fee = marketplace_fee;
+        self
+    }
+
+    pub fn per_asset_fee(mut self, per_asset_fee: u64) -> Self {
+        self.per_asset_fee = per_asset_fee;
+        self
+    }
+
+    pub fn assets(mut self, assets: &Vec<TradeAsset>) -> Self {
+        self.assets = assets.to_vec();
+        self
+    }
+
+    pub fn calculate(self) -> Fee {
+        let mut fee = self.tx_calculator.calculate();
+        let price = self.assets.iter().fold(
+            0,
+            |sum, asset| sum + asset.price() * asset.amount() as u64,
+        );
+        fee.for_trade = Some(price + self.marketplace_fee);
         fee
     }
 }

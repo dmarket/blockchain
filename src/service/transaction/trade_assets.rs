@@ -8,7 +8,7 @@ use exonum::storage::Fork;
 use serde_json::Value;
 
 use service::asset::{Asset, TradeAsset};
-use service::transaction::{PER_ASSET_FEE, TRANSACTION_FEE};
+use service::transaction::{PER_TRADE_ASSET_FEE, TX_TRADE_FEE, MARKETPLACE_FEE};
 use service::transaction::fee;
 use service::wallet::Wallet;
 
@@ -17,7 +17,7 @@ use super::schema::asset::AssetSchema;
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
 use super::schema::wallet::WalletSchema;
 
-const FEE_FOR_TRADE: f64 = 0.025;
+const FEE_FOR_TRADE: f64 = 0.025; // 1/40 = 0.025
 
 encoding_struct! {
     struct TradeOffer {
@@ -67,13 +67,12 @@ impl TxTrade {
 
     fn get_fee(&self) -> u64 {
         let fee = fee::TxCalculator::new()
-            .tx_fee(1000)
-            .asset_calculator()
-            .per_asset_fee(1)
-            .assets(&self.offer().assets())
+            .tx_fee(TX_TRADE_FEE)
             .trade_calculator()
-            .trade_fee(100)
-            .calcluate();
+            .marketplace_fee(MARKETPLACE_FEE)
+            .per_asset_fee(PER_TRADE_ASSET_FEE)
+            .assets(&self.offer().assets())
+            .calculate();
 
         fee.amount()
     }

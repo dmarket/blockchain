@@ -7,7 +7,7 @@ use exonum::storage::Fork;
 use serde_json::Value;
 
 use service::asset::{Asset, MetaAsset};
-use service::transaction::{PER_ASSET_FEE, TRANSACTION_FEE};
+use service::transaction::{PER_ADD_ASSET_FEE, TX_ADD_ASSET_FEE};
 use service::transaction::fee;
 
 use super::{SERVICE_ID, TX_ADD_ASSETS_ID};
@@ -30,9 +30,9 @@ message! {
 impl TxAddAsset {
     fn get_fee(&self) -> u64 {
         let fee = fee::TxCalculator::new()
-            .tx_fee(1000)
-            .asset_calculator()
-            .per_asset_fee(1)
+            .tx_fee(TX_ADD_ASSET_FEE)
+            .add_asset_calculator()
+            .per_asset_fee(PER_ADD_ASSET_FEE)
             .assets(&self.meta_assets())
             .calculate();
 

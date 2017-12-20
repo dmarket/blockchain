@@ -11,12 +11,7 @@ use std::string::ToString;
 use uuid;
 use uuid::Uuid;
 
-pub const ASSET_HASH_ID_MAX_LENGTH: usize = 10 * 1024; // 10 KBytes
-
-pub trait Amount {
-    fn amount(&self) -> u32;
-}
-
+pub const ASSET_HASH_ID_MAX_LENGTH: usize = 10 * 1024; // 10 KBytes 
 
 encoding_struct! {
     struct MetaAsset {
@@ -28,21 +23,8 @@ encoding_struct! {
 }
 
 impl MetaAsset {
-    pub fn count(assets: &[MetaAsset]) -> u64 {
-        assets.iter().fold(
-            0,
-            |acc, asset| acc + asset.amount() as u64,
-        )
-    }
-
     pub fn is_valid(&self) -> bool {
         self.data().len() <= ASSET_HASH_ID_MAX_LENGTH
-    }
-}
-
-impl Amount for MetaAsset {
-    fn amount(&self) -> u32 {
-        self.amount()
     }
 }
 
@@ -250,13 +232,6 @@ impl Asset {
         self.amount() >= other.amount()
     }
 
-    pub fn count(assets: &[Asset]) -> u64 {
-        assets.iter().fold(
-            0,
-            |acc, asset| acc + asset.amount() as u64,
-        )
-    }
-
     /// Helper fuction that generates unique `AssetID` from
     /// `&str` and `&PublicKey`
     /// # Example:
@@ -294,12 +269,6 @@ impl From<TradeAsset> for Asset {
     }
 }
 
-impl Amount for Asset {
-    fn amount(&self) -> u32 {
-        self.amount()
-    }
-}
-
 encoding_struct! {
     struct TradeAsset {
         const SIZE = 28;
@@ -308,21 +277,6 @@ encoding_struct! {
         field amount: u32 [16 => 20]
         field price: u64  [20 => 28] 
     }
-}
-
-impl TradeAsset {
-    pub fn count(assets: &[TradeAsset]) -> u64 {
-        assets.iter().fold(
-            0,
-            |acc, asset| acc + asset.amount() as u64,
-        )
-    }
-}
-
-impl Amount for TradeAsset {
-    fn amount(&self) -> u32 {
-        self.amount()
-    } 
 }
 
 #[cfg(test)]
