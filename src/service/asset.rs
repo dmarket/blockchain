@@ -109,7 +109,8 @@ impl AssetID {
     /// #
     /// # fn main () {
     /// #
-    /// # use exonum::crypto::{PublicKey, HexValue};
+    /// # use exonum::crypto::{PublicKey};
+    /// # use exonum::encoding::serialize::FromHex;
     /// # use dmbc::service::asset::AssetID;
     ///
     /// let data = "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f";
@@ -120,7 +121,7 @@ impl AssetID {
     /// # }
     /// ```
     pub fn new(data: &str, pub_key: &PublicKey) -> Result<AssetID, ParseError> {
-        let s = HexValue::to_hex(pub_key);
+        let s = pub_key.to_hex();
         let ful_s = s + &data;
 
         let uuid = Uuid::new_v5(&uuid::NAMESPACE_DNS, &ful_s);
