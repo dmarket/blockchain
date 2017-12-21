@@ -30,10 +30,7 @@ impl Fee {
             amount += marketplace_fee;
         }
         if let Some(ref trade_assets_fees) = self.for_trade_assets {
-            amount += trade_assets_fees.iter().fold(
-                0,
-                |acc, asset| acc + asset.1,
-            )
+            amount += trade_assets_fees.iter().fold(0, |acc, asset| acc + asset.1)
         }
         if let Some(exchange_fee) = self.for_exchange {
             amount += exchange_fee;
@@ -44,7 +41,7 @@ impl Fee {
 
     pub fn for_trade_assets(&self) -> Vec<(AssetID, u64)> {
         if let Some(ref trade_asset_fees) = self.for_trade_assets {
-            return trade_asset_fees.clone()
+            return trade_asset_fees.clone();
         }
 
         vec![]
@@ -223,13 +220,14 @@ impl TradeCalculator {
     }
 
     pub fn calculate(self) -> Fee {
-        let get_fee = |price: u64, coef: u64| {
-            (price as f64 / coef as f64).round() as u64
-        };
+        let get_fee = |price: u64, coef: u64| (price as f64 / coef as f64).round() as u64;
 
-        let trade_assets_fees = self.assets.iter().map(
-            |asset| (asset.id(), get_fee(asset.price(), self.per_asset_fee))
-        ).collect();
+        let trade_assets_fees = self.assets
+            .iter()
+            .map(|asset| {
+                (asset.id(), get_fee(asset.price(), self.per_asset_fee))
+            })
+            .collect();
 
         let mut fee = self.tx_calculator.calculate();
         fee.for_marketplace = Some(self.marketplace_fee);
@@ -242,7 +240,7 @@ impl TradeCalculator {
 #[cfg(test)]
 mod test {
     use super::TxCalculator;
-    use service::asset::{TradeAsset, AssetID, MetaAsset};
+    use service::asset::{AssetID, MetaAsset, TradeAsset};
 
     #[test]
     fn test_add_asset_calculator() {
@@ -286,4 +284,3 @@ mod test {
         assert_eq!(fee.amount(), 1050);
     }
 }
- 
