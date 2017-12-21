@@ -7,7 +7,7 @@ pub struct Fee {
     for_marketplace: Option<u64>,
     for_trade_assets: Option<Vec<(AssetID, u64)>>,
 
-    for_exchange: Option<u64>,
+    for_exchange_assets: Option<Vec<(AssetID, u64)>>,
 }
 
 impl Fee {
@@ -17,7 +17,7 @@ impl Fee {
             for_add_assets: None,
             for_marketplace: None,
             for_trade_assets: None,
-            for_exchange: None,
+            for_exchange_assets: None,
         }
     }
 
@@ -33,8 +33,8 @@ impl Fee {
         if let Some(ref trade_assets_fees) = self.for_trade_assets {
             amount += trade_assets_fees.iter().fold(0, |acc, asset| acc + asset.1)
         }
-        if let Some(exchange_fee) = self.for_exchange {
-            amount += exchange_fee;
+        if let Some(ref exchange_assets_fees) = self.for_exchange_assets {
+            amount += exchange_assets_fees.iter().fold(0, |acc, asset| acc + asset.1);
         }
 
         amount
@@ -43,6 +43,14 @@ impl Fee {
     pub fn for_trade_assets(&self) -> Vec<(AssetID, u64)> {
         if let Some(ref trade_asset_fees) = self.for_trade_assets {
             return trade_asset_fees.clone();
+        }
+
+        vec![]
+    }
+
+    pub fn for_exchange_assets(&self) -> Vec<(AssetID, u64)> {
+        if let Some(ref exchange_asset_fees) = self.for_exchange_assets {
+            return exchange_asset_fees.clone();
         }
 
         vec![]
@@ -178,12 +186,17 @@ impl ExchangeCalculator {
     }
 
     pub fn calculate(self) -> Fee {
+        let get_fee = |count: u32, coef: u64| (count as f64 / coef as f64).floor() as u64;
+
+        let exchange_assets_fees = self.assets
+            .iter()
+            .map(|asset| {
+                (asset.id(), get_fee(asset.amount(), self.per_asset_fee))
+            })
+            .collect();
+
         let mut fee = self.tx_calculator.calculate();
-        let count = self.assets.iter().fold(
-            0,
-            |acc, asset| acc + asset.amount() as u64,
-        );
-        fee.for_exchange = Some(count * self.per_asset_fee);
+        fee.for_exchange_assets = Some(exchange_assets_fees);
         fee
     }
 }

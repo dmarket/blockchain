@@ -47,7 +47,7 @@ impl TxExchange {
         self.offer().raw
     }
 
-    pub fn get_fee(&self) -> u64 {
+    pub fn get_fee(&self) -> fee::Fee {
         let exchange_assets = [
             &self.offer().sender_assets()[..],
             &self.offer().recipient_assets()[..],
@@ -59,7 +59,7 @@ impl TxExchange {
             .assets(&exchange_assets)
             .calculate();
 
-        fee.amount()
+        fee
     }
 }
 
@@ -107,6 +107,7 @@ impl Transaction for TxExchange {
                     let mut wallets = schema.wallets();
                     wallets.put(self.offer().sender(), sender);
                     wallets.put(self.offer().recipient(), recipient);
+
                     tx_status = TxStatus::Success;
                 }
             }

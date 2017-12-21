@@ -12,7 +12,7 @@ pub const TX_TRADE_FEE: u64 = 1000;
 pub const MARKETPLACE_FEE: u64 = 0;
 pub const PER_TRADE_ASSET_FEE: u64 = 40; // 1/40 = 0.025
 pub const TX_EXCHANGE_FEE: u64 = 1000;
-pub const PER_EXCHANGE_ASSET_FEE: u64 = 1;
+pub const PER_EXCHANGE_ASSET_FEE: u64 = 40;
 pub const TX_TRANSFER_FEE: u64 = 1000;
 
 // Create Wallet
