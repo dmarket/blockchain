@@ -282,7 +282,6 @@ fn trade_assets() {
     let half_data = "partially transferred asset";
     let half_id = AssetID::new(half_data, &seller_public).unwrap();
 
-    // Create wallet with assetid1 and assetid2 amount 40
     let seller = wallet::Builder::new()
         .key(seller_public)
         .balance(2000)
@@ -290,17 +289,11 @@ fn trade_assets() {
         .add_asset(half_data, 20)
         .build();
 
-    // buyer with empty wallet
     let buyer = wallet::Builder::new()
         .key(buyer_public)
         .balance(2000)
         .build();
 
-    // create tx where all assets with id1 is going to be sold
-    // and half of assetid2
-    // 20 * 60 = 1200
-    // 10 * 20 = 200
-    // total price == 1400
     let tx = transaction::Builder::new()
         .keypair(seller_public, seller_secret)
         .tx_trade_assets()
@@ -316,13 +309,11 @@ fn trade_assets() {
     let db = MemoryDB::new();
     let fork = &mut db.fork();
 
-    // insert into asset schema two items with 2x20 amount
     AssetSchema::map(fork, |mut s| {
         s.assets().put(&full_id, AssetInfo::new(&seller_public, 20));
         s.assets().put(&half_id, AssetInfo::new(&seller_public, 20));
     });
 
-    // add seller and buyer wallets
     WalletSchema::map(fork, |mut s| {
         s.wallets().put(&seller_public, seller);
         s.wallets().put(&buyer_public, buyer);
