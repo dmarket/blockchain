@@ -8,7 +8,7 @@ use exonum::storage::Fork;
 use serde_json::Value;
 
 use service::asset::{Asset, TradeAsset};
-use service::transaction::{MARKETPLACE_FEE, PER_TRADE_ASSET_FEE, TX_TRADE_FEE};
+use service::transaction::{PER_TRADE_ASSET_FEE, TX_TRADE_FEE};
 use service::transaction::fee;
 use service::wallet::Wallet;
 
@@ -32,7 +32,7 @@ impl TradeOffer {
     pub fn total_price(&self) -> u64 {
         self.assets().iter().fold(
             0,
-            |total, item| total + item.price(),
+            |total, item| total + item.amount() as u64 * item.price(),
         )
     }
 }
@@ -65,11 +65,10 @@ impl TxTrade {
         self.offer().raw
     }
 
-    fn get_fee(&self) -> fee::Fee {
+    pub fn get_fee(&self) -> fee::Fee {
         let fee = fee::TxCalculator::new()
             .tx_fee(TX_TRADE_FEE)
             .trade_calculator()
-            .marketplace_fee(MARKETPLACE_FEE)
             .per_asset_fee(PER_TRADE_ASSET_FEE)
             .assets(&self.offer().assets())
             .calculate();
@@ -170,10 +169,6 @@ impl Transaction for TxTrade {
 mod tests {
     use super::TxTrade;
     use exonum::blockchain::Transaction;
-    use exonum::storage::{Database, MemoryDB};
-    use service::asset::{Asset, AssetID};
-    use service::schema::wallet::WalletSchema;
-    use service::wallet::Wallet;
 
     fn get_json() -> String {
         r#"{
@@ -203,62 +198,6 @@ mod tests {
             "message_id": 5,
             "signature": "aac7ce5fee4fca99fb66c978b94f42ba899834fa6b840491ab5c9245967b5a07bda688c0da52876258ee25d63dc1278cf97a6a90e84c8cb3880b5d6d3e606b06"
         }"#.to_string()
-    }
-
-    #[test]
-    fn test_convert_from_json() {
-        let tx: TxTrade = ::serde_json::from_str(&get_json()).unwrap();
-        assert!(tx.verify());
-        assert_eq!(5, tx.offer().assets()[0].amount());
-        assert_eq!("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8", tx.offer().assets()[1].id().to_string());
-        assert_eq!(88, tx.offer().total_price());
-    }
-
-    #[test]
-    fn positive_trade_test() {
-        let tx: TxTrade = ::serde_json::from_str(&get_json()).unwrap();
-
-        let db = Box::new(MemoryDB::new());
-        let fork = &mut db.fork();
-
-        let assetid1 = AssetID::from_str("67e5504410b1426f9247bb680e5fe0c8").unwrap();
-        let assetid2 = AssetID::from_str("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8").unwrap();
-        let seller = Wallet::new(
-            tx.offer().seller(),
-            tx.get_fee().amount(),
-            vec![
-                Asset::new(assetid1, 10),
-                Asset::new(assetid2, 7),
-            ],
-        );
-        let buyer = Wallet::new(tx.buyer(), 3000, vec![]);
-        WalletSchema::map(fork, |mut schema| {
-            schema.wallets().put(tx.offer().seller(), seller);
-            schema.wallets().put(tx.buyer(), buyer);
-        });
-
-        tx.execute(fork);
-
-        let participants = WalletSchema::map(fork, |mut shema| {
-            (shema.wallet(tx.offer().seller()), shema.wallet(tx.buyer()))
-        });
-        if let (Some(seller), Some(buyer)) = participants {
-            assert_eq!(2912, buyer.balance());
-            assert_eq!(88, seller.balance());
-            assert_eq!(
-                vec![Asset::new(assetid1, 5), ],
-                seller.assets()
-            );
-            assert_eq!(
-                vec![
-                    Asset::new(assetid1, 5),
-                    Asset::new(assetid2, 7),
-                ],
-                buyer.assets()
-            );
-        } else {
-            panic!("Something wrong");
-        }
     }
 
     #[test]

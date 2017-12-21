@@ -3,6 +3,17 @@ name = "dmarket-blockchain"
 version = "0.1.0"
 authors = ["Ilya Sinyakin <sinyakin.ilya@gmail.com>"]
 
+[lib]
+name = "dmbc"
+path = "src/lib.rs"
+
+[[bin]]
+name = "dmarket-blockchain"
+path = "src/main.rs"
+test = false
+bench = false
+doc = false
+
 [dependencies]
 iron = "0.6.0"
 params = "0.8.0"

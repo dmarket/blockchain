@@ -53,7 +53,11 @@ impl<'a> AssetSchema<'a> {
                 println!("Add asset {:?} for wallet: {:?}", asset_id, creator);
                 true
             }
-            Some(_) => true,
+            Some(info) => {
+                let info = AssetInfo::new(creator, info.amount() + amount);
+                self.assets().put(&asset_id, info);
+                true
+            }
         }
     }
 

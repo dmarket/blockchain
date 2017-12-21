@@ -2,7 +2,7 @@ extern crate exonum;
 
 use exonum::crypto::PublicKey;
 use exonum::encoding::Field;
-use service::asset::Asset;
+use service::asset::{Asset, AssetID};
 
 encoding_struct! {
     struct Wallet {
@@ -76,6 +76,12 @@ impl Wallet {
 
     pub fn is_assets_in_wallet(&self, asset_list: &[Asset]) -> bool {
         asset_list.into_iter().all(|a| self.allow_amount(&a))
+    }
+
+    pub fn asset(&self, id: AssetID) -> Option<Asset> {
+        self.assets().into_iter().find(
+            |asset| asset.id() == id,
+        )
     }
 }
 

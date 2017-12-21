@@ -23,6 +23,7 @@ impl Fee {
 
     pub fn amount(&self) -> u64 {
         let mut amount = self.for_tx;
+
         if let Some(assets_fee) = self.for_add_assets {
             amount += assets_fee;
         }
@@ -220,7 +221,7 @@ impl TradeCalculator {
     }
 
     pub fn calculate(self) -> Fee {
-        let get_fee = |price: u64, coef: u64| (price as f64 / coef as f64).round() as u64;
+        let get_fee = |price: u64, coef: u64| (price as f64 / coef as f64).floor() as u64;
 
         let trade_assets_fees = self.assets
             .iter()

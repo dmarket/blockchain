@@ -40,7 +40,7 @@ encoding_struct! {
 /// A 128-bit (16 byte) buffer containing the ID.
 type AssetIDBytes = [u8; 16];
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct AssetID {
     /// The 128-bit number stored in 16 bytes
     bytes: AssetIDBytes,
@@ -92,6 +92,34 @@ impl Error for ParseError {
 impl AssetID {
     pub fn zero() -> AssetID {
         AssetID { bytes: [0u8; 16] }
+    }
+
+    /// Creates unique `AssetID` from
+    /// `&str` and `&PublicKey`
+    /// # Example:
+    /// ```
+    /// # extern crate exonum;
+    /// # extern crate dmbc;
+    /// #
+    /// # fn main () {
+    /// #
+    /// # use exonum::crypto::{PublicKey};
+    /// # use exonum::encoding::serialize::FromHex;
+    /// # use dmbc::service::asset::AssetID;
+    ///
+    /// let data = "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f";
+    /// let public_key = PublicKey::from_hex("3115dbc2ff73f4819672d5e9e421692305a9de1a18e4389df041c0cf6c8918a8").unwrap();
+    ///
+    /// let assetid = AssetID::new(&data, &public_key).unwrap();
+    /// assert_eq!(assetid.to_string(), "82c1f90bed24508e9ce74b536f97fa9c");
+    /// # }
+    /// ```
+    pub fn new(data: &str, pub_key: &PublicKey) -> Result<AssetID, ParseError> {
+        let s = pub_key.to_hex();
+        let ful_s = s + &data;
+
+        let uuid = Uuid::new_v5(&uuid::NAMESPACE_DNS, &ful_s);
+        AssetID::from_bytes(uuid.as_bytes())
     }
 
     pub fn as_bytes(&self) -> &[u8; 16] {
@@ -214,6 +242,12 @@ impl ExonumJson for AssetID {
     }
 }
 
+impl fmt::Debug for AssetID {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "AssetId({})", self.to_string())
+    }
+}
+
 encoding_struct! {
     struct Asset {
         const SIZE = 20;
@@ -232,34 +266,13 @@ impl Asset {
         self.amount() >= other.amount()
     }
 
-    /// Helper fuction that generates unique `AssetID` from
-    /// `&str` and `&PublicKey`
-    /// # Example:
-    /// ```
-    /// extern crate exonum;
-    /// use exonum::crypto;
-    /// use exonum::crypto::PublicKey;
-    ///
-    /// let data = "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f";
-    /// let (public_key, _) = crypto::gen_keypair();
-    ///
-    /// let assetid = generate_asset_id(&data, &public_key);
-    /// assert_eq!(assetid.to_string(), "d7a029d856055d8cbfa8b56d846b7360");
-    /// ```
-    fn generate_asset_id(data: &str, pub_key: &PublicKey) -> AssetID {
-        let s = pub_key.to_hex();
-        let ful_s = s + &data;
-
-        let uuid = Uuid::new_v5(&uuid::NAMESPACE_DNS, &ful_s);
-        match AssetID::from_bytes(uuid.as_bytes()) {
-            Ok(asset_id) => asset_id,
-            Err(..) => AssetID::zero(),
-        }
+    pub fn from_meta_asset(meta_asset: &MetaAsset, pub_key: &PublicKey) -> Asset {
+        let assetid = AssetID::new(&meta_asset.data(), pub_key).unwrap();
+        Asset::new(assetid, meta_asset.amount())
     }
 
-    pub fn from_meta_asset(meta_asset: &MetaAsset, pub_key: &PublicKey) -> Asset {
-        let assetid = Asset::generate_asset_id(&meta_asset.data(), pub_key);
-        Asset::new(assetid, meta_asset.amount())
+    pub fn into_trade_asset(&self, price: u64) -> TradeAsset {
+        TradeAsset::new(self.id(), self.amount(), price)
     }
 }
 
