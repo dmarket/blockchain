@@ -6,7 +6,7 @@ use service::SERVICE_NAME;
 
 pub struct TxStatusSchema<'a>(&'a mut Fork);
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Copy, Clone)]
 pub enum TxStatus {
     Fail,
     Success,

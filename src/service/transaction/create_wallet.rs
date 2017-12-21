@@ -24,7 +24,7 @@ message! {
 }
 
 impl TxCreateWallet {
-    fn get_fee(&self) -> u64 {
+    pub fn get_fee(&self) -> u64 {
         TRANSACTION_FEE
     }
 }
@@ -59,52 +59,29 @@ impl Transaction for TxCreateWallet {
         })
     }
 }
-#[cfg(test)]
-use exonum::storage::{Database, MemoryDB};
 
 #[cfg(test)]
-fn get_json() -> String {
-    r#"{
-  "body": {
-    "pub_key": "06f2b8853d37d317639132d3e9646adee97c56dcbc3899bfb2b074477d7ef31a"
-  },
-  "network_id": 0,
-  "protocol_version": 0,
-  "service_id": 2,
-  "message_id": 1,
-  "signature": "8b46f5e5034c4168c7bd8a305b7173c0467df3cea9b62fc8f0da03e1d9a6f9a09ca14d259f714ada1e7c52787bdbcaa5eaa3d940c4a5ced453a3c56930f73e0a"
-}"#.to_string()
-}
+mod test {
+    use exonum::blockchain::Transaction;
 
-#[test]
-fn test_convert_from_json() {
-    let tx_create: TxCreateWallet = ::serde_json::from_str(&get_json()).unwrap();
-    assert!(tx_create.verify());
-}
+    use service::transaction::create_wallet::TxCreateWallet;
 
-#[test]
-fn add_assets_test() {
-    let tx_create: TxCreateWallet = ::serde_json::from_str(&get_json()).unwrap();
+    fn get_json() -> String {
+        r#"{
+               "body": {
+                   "pub_key": "06f2b8853d37d317639132d3e9646adee97c56dcbc3899bfb2b074477d7ef31a"
+               },
+               "network_id": 0,
+               "protocol_version": 0,
+               "service_id": 2,
+               "message_id": 1,
+               "signature": "8b46f5e5034c4168c7bd8a305b7173c0467df3cea9b62fc8f0da03e1d9a6f9a09ca14d259f714ada1e7c52787bdbcaa5eaa3d940c4a5ced453a3c56930f73e0a"
+        }"#.to_string()
+    }
 
-    let db = Box::new(MemoryDB::new());
-    let fork = &mut db.fork();
-
-    let wallet = Wallet::new(tx_create.pub_key(), INIT_BALANCE, vec![]);
-
-    WalletSchema::map(fork, |mut schema| {
-        assert_eq!(None, schema.wallet(tx_create.pub_key()));
-    });
-
-
-    tx_create.execute(fork);
-
-    WalletSchema::map(fork, |mut schema| {
-        assert_eq!(Some(wallet), schema.wallet(tx_create.pub_key()));
-    });
-}
-
-#[test]
-fn create_wallet_info_test() {
-    let tx_create: TxCreateWallet = ::serde_json::from_str(&get_json()).unwrap();
-    assert_eq!(0, tx_create.info()["tx_fee"]);
+    #[test]
+    fn create_wallet_info_test() {
+        let tx_create: TxCreateWallet = ::serde_json::from_str(&get_json()).unwrap();
+        assert_eq!(0, tx_create.info()["tx_fee"]);
+    }
 }

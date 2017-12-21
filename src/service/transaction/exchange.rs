@@ -46,7 +46,7 @@ impl TxExchange {
         self.offer().raw
     }
 
-    fn get_fee(&self) -> u64 {
+    pub fn get_fee(&self) -> u64 {
         TRANSACTION_FEE
     }
 }
@@ -116,10 +116,6 @@ impl Transaction for TxExchange {
 mod tests {
     use super::TxExchange;
     use exonum::blockchain::Transaction;
-    use exonum::storage::{Database, MemoryDB};
-    use service::asset::{Asset, AssetID};
-    use service::schema::wallet::WalletSchema;
-    use service::wallet::Wallet;
 
     fn get_json() -> String {
         r#"{
@@ -156,87 +152,6 @@ mod tests {
             "message_id": 6,
             "signature": "87d225e432a99b1efc9d32e9133577f211db5a2610c4929ff9348cc56e3ee5cde4a10311a197b0db49d987c5529c76c8e3740078f4625f77530f86575418450c"
         }"#.to_string()
-    }
-
-    #[test]
-    fn test_convert_from_json() {
-        let tx: TxExchange = ::serde_json::from_str(&get_json()).unwrap();
-        assert!(tx.verify());
-        assert_eq!(5, tx.offer().sender_assets()[0].amount());
-
-        let assetid1 = AssetID::from_str("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8").unwrap();
-        let assetid2 = AssetID::from_str("8d7d6d5d4d3d2d1d2c1c2b1b4a3a2a1a").unwrap();
-
-        assert_eq!(assetid1, tx.offer().sender_assets()[1].hash_id());
-        assert_eq!(Asset::new(assetid2, 1), tx.offer().recipient_assets()[0]);
-    }
-
-    #[test]
-    fn test_positive_exchange() {
-        let tx: TxExchange = ::serde_json::from_str(&get_json()).unwrap();
-
-        let db = Box::new(MemoryDB::new());
-        let fork = &mut db.fork();
-        let assetid1 = AssetID::from_str("67e5504410b1426f9247bb680e5fe0c8").unwrap();
-        let assetid2 = AssetID::from_str("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8").unwrap();
-        let sender = Wallet::new(
-            tx.offer().sender(),
-            100,
-            vec![
-                Asset::new(assetid1, 100),
-                Asset::new(assetid2, 100),
-            ],
-        );
-
-        let assetid3 = AssetID::from_str("8d7d6d5d4d3d2d1d2c1c2b1b4a3a2a1a").unwrap();
-        let recipient = Wallet::new(
-            tx.offer().recipient(),
-            100,
-            vec![
-                Asset::new(assetid3, 100),
-            ],
-        );
-        WalletSchema::map(fork, |mut schema| {
-            schema.wallets().put(tx.offer().sender(), sender);
-            schema.wallets().put(tx.offer().recipient(), recipient);
-        });
-
-        tx.execute(fork);
-
-        let participants = WalletSchema::map(fork, |mut schema| {
-            (
-                schema.wallet(tx.offer().sender()),
-                schema.wallet(tx.offer().recipient()),
-            )
-        });
-
-        if let (Some(sender), Some(recipient)) = participants {
-            println!("{:?}", sender.balance());
-            assert_eq!(63, sender.balance());
-            assert_eq!(137, recipient.balance());
-            assert!(sender.in_wallet_assets(&vec![
-                Asset::new(assetid1, 95),
-                Asset::new(assetid2, 93),
-                Asset::new(assetid3, 1),
-            ]));
-            assert!(recipient.in_wallet_assets(&vec![
-                Asset::new(assetid1, 5),
-                Asset::new(assetid2, 7),
-                Asset::new(assetid3, 99),
-            ]));
-            assert!(!sender.in_wallet_assets(&vec![
-                Asset::new(assetid1, 96),
-                Asset::new(assetid2, 94),
-                Asset::new(assetid3, 12),
-            ]));
-            assert!(!recipient.in_wallet_assets(&vec![
-                Asset::new(assetid1, 3),
-                Asset::new(assetid2, 1),
-                Asset::new(assetid3, 111),
-            ]));
-        } else {
-            panic!("Something wrong");
-        }
     }
 
     #[test]

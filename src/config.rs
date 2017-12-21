@@ -152,8 +152,9 @@ impl Nats {
 ///
 /// # Examples
 ///
-/// ```
-/// assert_eq!("0.0.0.0:8000", read_config().ok().unwrap().api.address.unwrap().as_str())
+/// ```no_run
+/// # use dmbc::config;
+/// let api_address = config::read_config().unwrap().api().address();
 /// ```
 pub fn read_config() -> Result<Config, Error> {
     let mut content = String::new();
