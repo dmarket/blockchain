@@ -65,29 +65,28 @@ impl TxTrade {
         self.offer().raw
     }
 
-    fn get_fee(&self) -> u64 {
+    fn get_fee(&self) -> fee::Fee {
         let fee = fee::TxCalculator::new()
             .tx_fee(TX_TRADE_FEE)
             .trade_calculator()
-            .trade_fee(MARKETPLACE_FEE)
+            .marketplace_fee(MARKETPLACE_FEE)
             .per_asset_fee(PER_TRADE_ASSET_FEE)
             .assets(&self.offer().assets())
             .calculate();
 
-        fee.amount()
+        fee
     }
 
-    fn get_creators_and_fees(&self, view: &mut Fork) -> Vec<(Wallet, u64)> {
+    fn get_creators_and_fees(&self, view: &mut Fork, fee: fee::Fee) -> Vec<(Wallet, u64)> {
         let mut creators_and_fees = Vec::<(Wallet, u64)>::new();
 
-        for asset in self.offer().assets() {
-            if let Some(info) = AssetSchema::map(view, |mut schema| schema.info(&asset.id())) {
+        for (assetid, fee) in fee.for_trade_assets() {
+            if let Some(info) = AssetSchema::map(view, |mut schema| schema.info(&assetid)) {
                 if let Some(creator) = WalletSchema::map(
                     view,
                     |mut schema| schema.wallet(info.creator()),
                 )
                 {
-                    let fee = (asset.price() as f64 * FEE_FOR_TRADE).round() as u64;
                     creators_and_fees.push((creator, fee));
                 }
             }
@@ -118,8 +117,9 @@ impl Transaction for TxTrade {
                 .collect::<Vec<Asset>>();
             println!("Buyer {:?} => Seller {:?}", buyer, seller);
 
+            let fee = self.get_fee();
             let seller_have_assets = seller.is_assets_in_wallet(&assets);
-            let is_sufficient_funds = seller.balance() + price >= self.get_fee();
+            let is_sufficient_funds = seller.balance() + price >= fee.amount();
             let tx_status = if (buyer.balance() >= price) && seller_have_assets &&
                 is_sufficient_funds
             //todo: необходимо определится с генергацией fee
@@ -129,7 +129,7 @@ impl Transaction for TxTrade {
                 println!("Buyer's balance before transaction : {:?}", buyer);
                 seller.del_assets(&assets);
                 seller.increase(price);
-                seller.decrease(self.get_fee());
+                seller.decrease(fee.amount());
                 buyer.add_assets(&assets);
                 buyer.decrease(price);
                 println!("Seller's balance after transaction : {:?}", seller);
@@ -140,7 +140,7 @@ impl Transaction for TxTrade {
                 });
 
                 // send fee to creators of assets
-                for (mut creator, fee) in self.get_creators_and_fees(view) {
+                for (mut creator, fee) in self.get_creators_and_fees(view, fee) {
                     creator.increase(fee);
                     WalletSchema::map(view, |mut schema| {
                         schema.wallets().put(creator.pub_key(), creator.clone());
@@ -161,7 +161,7 @@ impl Transaction for TxTrade {
     fn info(&self) -> Value {
         json!({
             "transaction_data": self,
-            "tx_fee": self.get_fee(),
+            "tx_fee": self.get_fee().amount(),
         })
     }
 }
@@ -225,7 +225,7 @@ mod tests {
         let assetid2 = AssetID::from_str("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8").unwrap();
         let seller = Wallet::new(
             tx.offer().seller(),
-            tx.get_fee(),
+            tx.get_fee().amount(),
             vec![
                 Asset::new(assetid1, 10),
                 Asset::new(assetid2, 7),
@@ -264,6 +264,6 @@ mod tests {
     #[test]
     fn exchange_info_test() {
         let tx: TxTrade = ::serde_json::from_str(&get_json()).unwrap();
-        assert_eq!(tx.get_fee(), tx.info()["tx_fee"]);
+        assert_eq!(tx.get_fee().amount(), tx.info()["tx_fee"]);
     }
 }

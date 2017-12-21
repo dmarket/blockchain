@@ -1,11 +1,11 @@
-use service::asset::{Asset, MetaAsset, TradeAsset};
+use service::asset::{Asset, AssetID, MetaAsset, TradeAsset};
 
 pub struct Fee {
     for_tx: u64,
-    for_assets: Option<u64>,
+    for_add_assets: Option<u64>,
 
-    for_trade: Option<u64>,
     for_marketplace: Option<u64>,
+    for_trade_assets: Option<Vec<(AssetID, u64)>>,
 
     for_exchange: Option<u64>,
 }
@@ -14,29 +14,40 @@ impl Fee {
     pub fn new(tx_fee: u64) -> Self {
         Fee {
             for_tx: tx_fee,
-            for_assets: None,
-            for_trade: None,
+            for_add_assets: None,
             for_marketplace: None,
+            for_trade_assets: None,
             for_exchange: None,
         }
     }
 
-    pub fn amount(self) -> u64 {
+    pub fn amount(&self) -> u64 {
         let mut amount = self.for_tx;
-        if let Some(assets_fee) = self.for_assets {
+        if let Some(assets_fee) = self.for_add_assets {
             amount += assets_fee;
-        }
-        if let Some(trade_fee) = self.for_trade {
-            amount += trade_fee;
         }
         if let Some(marketplace_fee) = self.for_marketplace {
             amount += marketplace_fee;
+        }
+        if let Some(ref trade_assets_fees) = self.for_trade_assets {
+            amount += trade_assets_fees.iter().fold(
+                0,
+                |acc, asset| acc + asset.1,
+            )
         }
         if let Some(exchange_fee) = self.for_exchange {
             amount += exchange_fee;
         }
 
         amount
+    }
+
+    pub fn for_trade_assets(&self) -> Vec<(AssetID, u64)> {
+        if let Some(ref trade_asset_fees) = self.for_trade_assets {
+            return trade_asset_fees.clone()
+        }
+
+        vec![]
     }
 }
 
@@ -110,7 +121,7 @@ impl AddAssetCalculator {
             0,
             |acc, asset| acc + asset.amount() as u64,
         );
-        fee.for_assets = Some(self.per_asset_fee * count);
+        fee.for_add_assets = Some(self.per_asset_fee * count);
         fee
     }
 }
@@ -181,7 +192,7 @@ impl ExchangeCalculator {
 
 pub struct TradeCalculator {
     tx_calculator: TxCalculator,
-    trade_fee: u64,
+    marketplace_fee: u64,
     per_asset_fee: u64,
     assets: Vec<TradeAsset>,
 }
@@ -190,14 +201,14 @@ impl TradeCalculator {
     pub fn new(tx_calc: TxCalculator) -> Self {
         TradeCalculator {
             tx_calculator: tx_calc,
-            trade_fee: 0,
+            marketplace_fee: 0,
             per_asset_fee: 0,
             assets: vec![],
         }
     }
 
-    pub fn trade_fee(mut self, trade_fee: u64) -> Self {
-        self.trade_fee = trade_fee;
+    pub fn marketplace_fee(mut self, marketplace_fee: u64) -> Self {
+        self.marketplace_fee = marketplace_fee;
         self
     }
 
@@ -212,19 +223,18 @@ impl TradeCalculator {
     }
 
     pub fn calculate(self) -> Fee {
+        let get_fee = |price: u64, coef: u64| {
+            (price as f64 / coef as f64).round() as u64
+        };
+
+        let trade_assets_fees = self.assets.iter().map(
+            |asset| (asset.id(), get_fee(asset.price(), self.per_asset_fee))
+        ).collect();
+
         let mut fee = self.tx_calculator.calculate();
-        let price = self.assets.iter().fold(
-            0, 
-            |sum, asset| sum + asset.price(),
-        );
-        fee.for_marketplace = Some(price * self.trade_fee);
+        fee.for_marketplace = Some(self.marketplace_fee);
+        fee.for_trade_assets = Some(trade_assets_fees);
 
-        let count = self.assets.iter().fold(
-            0,
-            |acc, asset| acc + asset.amount() as u64,
-        );
-
-        fee.for_trade = Some(count * self.per_asset_fee);
         fee
     }
 }
@@ -232,43 +242,48 @@ impl TradeCalculator {
 #[cfg(test)]
 mod test {
     use super::TxCalculator;
-    use service::asset::{Asset, AssetID};
+    use service::asset::{TradeAsset, AssetID, MetaAsset};
 
     #[test]
-    fn test_calculator() {
-        let fee = TxCalculator::new().tx_fee(1000).calcluate();
+    fn test_add_asset_calculator() {
+        let fee = TxCalculator::new().tx_fee(1000).calculate();
         assert_eq!(fee.amount(), 1000);
 
-        let mut assets: Vec<Asset> = Vec::new();
+        let mut assets: Vec<MetaAsset> = Vec::new();
         let fee = TxCalculator::new()
             .tx_fee(1000)
-            .asset_calculator::<Asset>()
+            .add_asset_calculator()
             .assets(&assets)
             .per_asset_fee(1)
             .calculate();
 
         assert_eq!(fee.amount(), 1000);
 
-        assets.push(Asset::new(AssetID::zero(), 2));
-        assets.push(Asset::new(AssetID::zero(), 6));
+        assets.push(MetaAsset::new("Asset#1", 2));
+        assets.push(MetaAsset::new("Asset#2", 6));
         let fee = TxCalculator::new()
             .tx_fee(1000)
-            .asset_calculator::<Asset>()
+            .add_asset_calculator()
             .assets(&assets)
             .per_asset_fee(1)
             .calculate();
 
         assert_eq!(fee.amount(), 1008);
+    }
 
+    #[test]
+    fn test_trade_calculator() {
+        let mut assets: Vec<TradeAsset> = Vec::new();
+        assets.push(TradeAsset::new(AssetID::zero(), 2, 1000));
+        assets.push(TradeAsset::new(AssetID::zero(), 6, 1000));
         let fee = TxCalculator::new()
             .tx_fee(1000)
-            .asset_calculator::<Asset>()
-            .assets(&assets)
-            .per_asset_fee(1)
             .trade_calculator()
-            .trade_fee(20)
-            .calcluate();
+            .assets(&assets)
+            .per_asset_fee(40)  // 1/40 = 0.025
+            .calculate();
 
-        assert_eq!(fee.amount(), 1028);
+        assert_eq!(fee.amount(), 1050);
     }
 }
+ 
