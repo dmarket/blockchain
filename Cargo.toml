@@ -14,6 +14,13 @@ test = false
 bench = false
 doc = false
 
+[[bin]]
+name = "fuzz"
+path = "src/bin/fuzz/main.rs"
+test = false
+bench = false
+doc = false
+
 [dependencies]
 iron = "0.6.0"
 params = "0.8.0"
@@ -27,3 +34,6 @@ toml = "0.4.5"
 uuid = { version = "0.5", features = ["v5"] }
 exonum = "0.4"
 exonum-configuration = "0.4"
+
+[dev-dependencies]
+afl = "0.3"
