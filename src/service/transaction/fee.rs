@@ -40,7 +40,7 @@ impl Fee {
         amount
     }
 
-    pub fn for_trade_assets(&self) -> Vec<(AssetID, u64)> {
+    pub fn fees_from_trade(&self) -> Vec<(AssetID, u64)> {
         if let Some(ref trade_asset_fees) = self.for_trade_assets {
             return trade_asset_fees.clone();
         }
@@ -48,7 +48,7 @@ impl Fee {
         vec![]
     }
 
-    pub fn for_exchange_assets(&self) -> Vec<(AssetID, u64)> {
+    pub fn fees_from_exchange(&self) -> Vec<(AssetID, u64)> {
         if let Some(ref exchange_asset_fees) = self.for_exchange_assets {
             return exchange_asset_fees.clone();
         }

@@ -273,20 +273,29 @@ fn exchange() {
 
 #[test]
 fn trade_assets() {
+    let (creator_public, _) = crypto::gen_keypair();
     let (seller_public, seller_secret) = crypto::gen_keypair();
     let (buyer_public, _) = crypto::gen_keypair();
 
     let full_data = "fully transferred asset";
-    let full_id = AssetID::new(full_data, &seller_public).unwrap();
+    let full_id = AssetID::new(full_data, &creator_public).unwrap();
 
     let half_data = "partially transferred asset";
-    let half_id = AssetID::new(half_data, &seller_public).unwrap();
+    let half_id = AssetID::new(half_data, &creator_public).unwrap();
+
+    let asset1 = Asset::new(full_id, 20);
+    let asset2 = Asset::new(half_id, 20);
+
+    let creator = wallet::Builder::new()
+        .key(creator_public)
+        .balance(0)
+        .build();
 
     let seller = wallet::Builder::new()
         .key(seller_public)
         .balance(2000)
-        .add_asset(full_data, 20)
-        .add_asset(half_data, 20)
+        .add_asset_value(asset1.clone())
+        .add_asset_value(asset2.clone())
         .build();
 
     let buyer = wallet::Builder::new()
@@ -294,12 +303,15 @@ fn trade_assets() {
         .balance(2000)
         .build();
 
+    let full_asset = Asset::new(asset1.id(), asset1.amount());
+    let hald_asset = Asset::new(asset2.id(), asset1.amount() / 2);
+
     let tx = transaction::Builder::new()
         .keypair(seller_public, seller_secret)
         .tx_trade_assets()
         .buyer(buyer_public)
-        .add_asset(full_data, 20, 60)
-        .add_asset(half_data, 10, 20)
+        .add_asset_value(full_asset.into_trade_asset(60))
+        .add_asset_value(hald_asset.into_trade_asset(20))
         .seed(4)
         .build();
 
@@ -310,20 +322,25 @@ fn trade_assets() {
     let fork = &mut db.fork();
 
     AssetSchema::map(fork, |mut s| {
-        s.assets().put(&full_id, AssetInfo::new(&seller_public, 20));
-        s.assets().put(&half_id, AssetInfo::new(&seller_public, 20));
+        s.assets().put(&full_id, AssetInfo::new(&creator_public, 20));
+        s.assets().put(&half_id, AssetInfo::new(&creator_public, 20));
     });
 
     WalletSchema::map(fork, |mut s| {
+        s.wallets().put(&creator_public, creator);
         s.wallets().put(&seller_public, seller);
         s.wallets().put(&buyer_public, buyer);
     });
 
     tx.execute(fork);
 
+    let creators_fee = tx.get_fee().fees_from_trade().iter()
+        .fold(0, |acc, asset| acc + asset.1);
+
     WalletSchema::map(fork, |mut s| {
         let seller = s.wallet(&seller_public).unwrap();
         let buyer = s.wallet(&buyer_public).unwrap();
+        let creator = s.wallet(&creator_public).unwrap();
 
         assert_eq!(None,     seller.asset(full_id).map(|a| a.amount()));
         assert_eq!(Some(10), seller.asset(half_id).map(|a| a.amount()));
@@ -333,6 +350,8 @@ fn trade_assets() {
 
         assert_eq!(2000 - price, buyer.balance());
         assert_eq!(2000 + price - tx.get_fee().amount(), seller.balance());
+
+        assert_eq!(creators_fee, creator.balance());
     });
 }
 

@@ -80,7 +80,7 @@ impl TxTrade {
     fn get_creators_and_fees(&self, view: &mut Fork, fee: fee::Fee) -> BTreeMap<Wallet, u64> {
         let mut creators_and_fees = BTreeMap::new();
 
-        for (assetid, fee) in fee.for_trade_assets() {
+        for (assetid, fee) in fee.fees_from_trade() {
             if let Some(info) = AssetSchema::map(view, |mut schema| schema.info(&assetid)) {
                 if let Some(creator) = WalletSchema::map(
                     view,
