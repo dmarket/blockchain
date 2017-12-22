@@ -6,6 +6,7 @@ use exonum::crypto::{PublicKey, Signature};
 use exonum::messages::Message;
 use exonum::storage::Fork;
 use serde_json::Value;
+use std::collections::BTreeMap;
 
 use service::asset::{Asset, TradeAsset};
 use service::transaction::{PER_TRADE_ASSET_FEE, TX_TRADE_FEE};
@@ -32,7 +33,7 @@ impl TradeOffer {
     pub fn total_price(&self) -> u64 {
         self.assets().iter().fold(
             0,
-            |total, item| total + item.amount() as u64 * item.price(),
+            |total, item| total + item.total_price(),
         )
     }
 }
@@ -76,8 +77,9 @@ impl TxTrade {
         fee
     }
 
-    fn get_creators_and_fees(&self, view: &mut Fork, fee: fee::Fee) -> Vec<(Wallet, u64)> {
-        let mut creators_and_fees = Vec::<(Wallet, u64)>::new();
+    fn get_creators_and_fees(&self, view: &mut Fork, fee: fee::Fee) -> BTreeMap<Wallet, u64> {
+        let mut creators_and_fees = BTreeMap::new();
+        let mut pub_fees = BTreeMap::new();
 
         for (assetid, fee) in fee.for_trade_assets() {
             if let Some(info) = AssetSchema::map(view, |mut schema| schema.info(&assetid)) {
@@ -86,7 +88,7 @@ impl TxTrade {
                     |mut schema| schema.wallet(info.creator()),
                 )
                 {
-                    creators_and_fees.push((creator, fee));
+                    *creators_and_fees.entry(creator).or_insert(0) += fee;
                 }
             }
         }
@@ -140,6 +142,7 @@ impl Transaction for TxTrade {
 
                 // send fee to creators of assets
                 for (mut creator, fee) in self.get_creators_and_fees(view, fee) {
+                    println!("Creator {:?} will receive {}", creator.pub_key(), fee);
                     creator.increase(fee);
                     WalletSchema::map(view, |mut schema| {
                         schema.wallets().put(creator.pub_key(), creator.clone());

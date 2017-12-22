@@ -292,6 +292,12 @@ encoding_struct! {
     }
 }
 
+impl TradeAsset {
+    pub fn total_price(&self) -> u64 {
+        self.amount() as u64 * self.price()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::AssetID;

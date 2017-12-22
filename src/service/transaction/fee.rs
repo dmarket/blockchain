@@ -234,12 +234,10 @@ impl TradeCalculator {
     }
 
     pub fn calculate(self) -> Fee {
-        let get_fee = |price: u64, coef: u64| (price as f64 / coef as f64).floor() as u64;
-
         let trade_assets_fees = self.assets
             .iter()
             .map(|asset| {
-                (asset.id(), get_fee(asset.price(), self.per_asset_fee))
+                (asset.id(), asset.total_price() / self.per_asset_fee)
             })
             .collect();
 
@@ -286,15 +284,19 @@ mod test {
     #[test]
     fn test_trade_calculator() {
         let mut assets: Vec<TradeAsset> = Vec::new();
-        assets.push(TradeAsset::new(AssetID::zero(), 2, 1000));
-        assets.push(TradeAsset::new(AssetID::zero(), 6, 1000));
+        let asset1 = TradeAsset::new(AssetID::zero(), 2, 1000);
+        let asset2 = TradeAsset::new(AssetID::zero(), 6, 1000);
+        assets.push(asset1.clone());
+        assets.push(asset2.clone());
+
+        let per_asset_fee = 33u64;
         let fee = TxCalculator::new()
             .tx_fee(1000)
             .trade_calculator()
             .assets(&assets)
-            .per_asset_fee(40)  // 1/40 = 0.025
+            .per_asset_fee(per_asset_fee)  // 1/per_asset_fee
             .calculate();
 
-        assert_eq!(fee.amount(), 1050);
+        assert_eq!(fee.amount(), 1000 + asset1.total_price() / per_asset_fee + asset2.total_price() / per_asset_fee);
     }
 }
