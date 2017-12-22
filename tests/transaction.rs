@@ -3,15 +3,15 @@ extern crate dmbc;
 
 use exonum::blockchain::Transaction;
 use exonum::crypto;
-use exonum::storage::{Database, MemoryDB};
 use exonum::messages::Message;
+use exonum::storage::{Database, MemoryDB};
 
 use dmbc::service::asset::{Asset, AssetID, AssetInfo};
 use dmbc::service::builders::transaction;
 use dmbc::service::builders::wallet;
 use dmbc::service::schema::asset::AssetSchema;
+use dmbc::service::schema::transaction_status::{TxStatus, TxStatusSchema};
 use dmbc::service::schema::wallet::WalletSchema;
-use dmbc::service::schema::transaction_status::{TxStatusSchema, TxStatus};
 
 #[test]
 fn add_assets() {
@@ -182,9 +182,10 @@ fn delete_assets_fails() {
     WalletSchema::map(fork, |mut s| {
         assert_eq!(
             Some(20),
-            s.wallet(&public_key)
-             .and_then(|w| w.asset(id))
-             .map(|a| a.amount()));
+            s.wallet(&public_key).and_then(|w| w.asset(id)).map(|a| {
+                a.amount()
+            })
+        );
     });
 
     tx_doesnt_exist.execute(fork);
@@ -265,7 +266,10 @@ fn exchange() {
         assert_eq!(Some(25), sender.asset(recipient_id_2).map(|a| a.amount()));
 
         assert_eq!(None, recipient.asset(recipient_id_1).map(|a| a.amount()));
-        assert_eq!(Some(25), recipient.asset(recipient_id_2).map(|a| a.amount()));
+        assert_eq!(
+            Some(25),
+            recipient.asset(recipient_id_2).map(|a| a.amount())
+        );
         assert_eq!(Some(10), recipient.asset(sender_id_1).map(|a| a.amount()));
         assert_eq!(Some(15), recipient.asset(sender_id_2).map(|a| a.amount()));
     });
@@ -316,14 +320,20 @@ fn trade_assets() {
         .build();
 
     let price = tx.offer().total_price();
-    assert_eq!(price, 1400);    
+    assert_eq!(price, 1400);
 
     let db = MemoryDB::new();
     let fork = &mut db.fork();
 
     AssetSchema::map(fork, |mut s| {
-        s.assets().put(&full_id, AssetInfo::new(&creator_public, 20));
-        s.assets().put(&half_id, AssetInfo::new(&creator_public, 20));
+        s.assets().put(
+            &full_id,
+            AssetInfo::new(&creator_public, 20),
+        );
+        s.assets().put(
+            &half_id,
+            AssetInfo::new(&creator_public, 20),
+        );
     });
 
     WalletSchema::map(fork, |mut s| {
@@ -334,15 +344,19 @@ fn trade_assets() {
 
     tx.execute(fork);
 
-    let creators_fee = tx.get_fee().fees_from_trade().iter()
-        .fold(0, |acc, asset| acc + asset.1);
+    let creators_fee = tx.get_fee().fees_from_trade().iter().fold(
+        0,
+        |acc, asset| {
+            acc + asset.1
+        },
+    );
 
     WalletSchema::map(fork, |mut s| {
         let seller = s.wallet(&seller_public).unwrap();
         let buyer = s.wallet(&buyer_public).unwrap();
         let creator = s.wallet(&creator_public).unwrap();
 
-        assert_eq!(None,     seller.asset(full_id).map(|a| a.amount()));
+        assert_eq!(None, seller.asset(full_id).map(|a| a.amount()));
         assert_eq!(Some(10), seller.asset(half_id).map(|a| a.amount()));
 
         assert_eq!(Some(20), buyer.asset(full_id).map(|a| a.amount()));
@@ -407,7 +421,7 @@ fn transfer() {
         let sender = s.wallet(&sender_public).unwrap();
         let recipient = s.wallet(&recipient_public).unwrap();
 
-        assert_eq!(None,     sender.asset(full_id).map(|a| a.amount()));
+        assert_eq!(None, sender.asset(full_id).map(|a| a.amount()));
         assert_eq!(Some(10), sender.asset(half_id).map(|a| a.amount()));
 
         assert_eq!(Some(20), recipient.asset(full_id).map(|a| a.amount()));
@@ -417,4 +431,3 @@ fn transfer() {
         assert_eq!(2000 + 100, recipient.balance());
     });
 }
-

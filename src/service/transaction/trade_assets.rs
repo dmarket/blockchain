@@ -31,10 +31,9 @@ encoding_struct! {
 
 impl TradeOffer {
     pub fn total_price(&self) -> u64 {
-        self.assets().iter().fold(
-            0,
-            |total, item| total + item.total_price(),
-        )
+        self.assets().iter().fold(0, |total, item| {
+            total + item.total_price()
+        })
     }
 }
 

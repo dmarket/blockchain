@@ -52,6 +52,7 @@ impl TxExchange {
             &self.offer().sender_assets()[..],
             &self.offer().recipient_assets()[..],
         ].concat();
+
         let fee = fee::TxCalculator::new()
             .tx_fee(TX_EXCHANGE_FEE)
             .exchange_calculator()

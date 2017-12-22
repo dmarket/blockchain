@@ -34,7 +34,10 @@ impl Fee {
             amount += trade_assets_fees.iter().fold(0, |acc, asset| acc + asset.1)
         }
         if let Some(ref exchange_assets_fees) = self.for_exchange_assets {
-            amount += exchange_assets_fees.iter().fold(0, |acc, asset| acc + asset.1);
+            amount += exchange_assets_fees.iter().fold(
+                0,
+                |acc, asset| acc + asset.1,
+            );
         }
 
         amount
@@ -234,10 +237,12 @@ impl TradeCalculator {
     }
 
     pub fn calculate(self) -> Fee {
+        let get_fee = |price: u64, coef: u64| (price as f64 / coef as f64).round() as u64;
+
         let trade_assets_fees = self.assets
             .iter()
             .map(|asset| {
-                (asset.id(), asset.total_price() / self.per_asset_fee)
+                (asset.id(), get_fee(asset.total_price(), self.per_asset_fee))
             })
             .collect();
 
@@ -297,6 +302,9 @@ mod test {
             .per_asset_fee(per_asset_fee)  // 1/per_asset_fee
             .calculate();
 
-        assert_eq!(fee.amount(), 1000 + asset1.total_price() / per_asset_fee + asset2.total_price() / per_asset_fee);
+        let expected_amount = 1000 +
+            (asset1.total_price() as f64 / per_asset_fee as f64).round() as u64 +
+            (asset2.total_price() as f64 / per_asset_fee as f64).round() as u64;
+        assert_eq!(fee.amount(), expected_amount);
     }
 }
