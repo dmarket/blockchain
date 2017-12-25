@@ -10,6 +10,11 @@ use exonum::blockchain::Blockchain;
 use exonum::node::ApiSender;
 use iron::prelude::*;
 use router::Router;
+use hyper::header::Headers;
+use iron::headers::AccessControlAllowOrigin;
+use hyper::header::{AccessControlAllowMethods, AccessControlAllowHeaders};
+use hyper::method::Method;
+use unicase::UniCase;
 use std;
 
 use self::asset::AssetApi;
@@ -55,6 +60,12 @@ impl ServiceApi {
         }
 
         elements
+    }
+
+    pub fn add_option_headers(headers: &mut Headers) {
+        headers.set(AccessControlAllowOrigin::Any);
+        headers.set(AccessControlAllowHeaders(vec![UniCase("content-type".to_owned())]));
+        headers.set(AccessControlAllowMethods(vec![Method::Get, Method::Post, Method::Options]));
     }
 }
 
