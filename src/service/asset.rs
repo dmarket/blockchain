@@ -5,6 +5,7 @@ use exonum::encoding::serialize::json::ExonumJson;
 use exonum::storage::StorageKey;
 use serde_json::value::Value;
 use std::{fmt, mem};
+use std::convert::From;
 use std::error::Error;
 use std::string::ToString;
 use uuid;
@@ -22,13 +23,6 @@ encoding_struct! {
 }
 
 impl MetaAsset {
-    pub fn count(assets: &[MetaAsset]) -> u64 {
-        assets.iter().fold(
-            0,
-            |acc, asset| acc + asset.amount() as u64,
-        )
-    }
-
     pub fn is_valid(&self) -> bool {
         self.data().len() <= ASSET_HASH_ID_MAX_LENGTH
     }
@@ -46,7 +40,7 @@ encoding_struct! {
 /// A 128-bit (16 byte) buffer containing the ID.
 type AssetIDBytes = [u8; 16];
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct AssetID {
     /// The 128-bit number stored in 16 bytes
     bytes: AssetIDBytes,
@@ -248,37 +242,61 @@ impl ExonumJson for AssetID {
     }
 }
 
+impl fmt::Debug for AssetID {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "AssetId({})", self.to_string())
+    }
+}
+
 encoding_struct! {
     struct Asset {
         const SIZE = 20;
 
-        field hash_id: AssetID [0 =>  16]
+        field id: AssetID [0 =>  16]
         field amount:  u32 [16 => 20]
     }
 }
 
 impl Asset {
     pub fn is_eq(&self, other: &Asset) -> bool {
-        self.hash_id() == other.hash_id()
+        self.id() == other.id()
     }
 
     pub fn is_available_to_transfer(&self, other: &Asset) -> bool {
         self.amount() >= other.amount()
     }
 
-    pub fn count(assets: &[Asset]) -> u64 {
-        assets.iter().fold(
-            0,
-            |acc, asset| acc + asset.amount() as u64,
-        )
-    }
-
     pub fn from_meta_asset(meta_asset: &MetaAsset, pub_key: &PublicKey) -> Asset {
         let assetid = AssetID::new(&meta_asset.data(), pub_key).unwrap();
         Asset::new(assetid, meta_asset.amount())
     }
+
+    pub fn into_trade_asset(&self, price: u64) -> TradeAsset {
+        TradeAsset::new(self.id(), self.amount(), price)
+    }
 }
 
+impl From<TradeAsset> for Asset {
+    fn from(trade_asset: TradeAsset) -> Asset {
+        Asset::new(trade_asset.id(), trade_asset.amount())
+    }
+}
+
+encoding_struct! {
+    struct TradeAsset {
+        const SIZE = 28;
+
+        field id: AssetID [0 => 16]
+        field amount: u32 [16 => 20]
+        field price: u64  [20 => 28] 
+    }
+}
+
+impl TradeAsset {
+    pub fn total_price(&self) -> u64 {
+        self.amount() as u64 * self.price()
+    }
+}
 
 #[cfg(test)]
 mod tests {

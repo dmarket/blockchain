@@ -7,7 +7,8 @@ use exonum::storage::Fork;
 use serde_json::Value;
 
 use service::asset::Asset;
-use service::transaction::TRANSACTION_FEE;
+use service::transaction::{PER_EXCHANGE_ASSET_FEE, TX_EXCHANGE_FEE};
+use service::transaction::fee;
 
 use super::{SERVICE_ID, TX_EXCHANGE_ID};
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
@@ -46,8 +47,20 @@ impl TxExchange {
         self.offer().raw
     }
 
-    pub fn get_fee(&self) -> u64 {
-        TRANSACTION_FEE
+    pub fn get_fee(&self) -> fee::Fee {
+        let exchange_assets = [
+            &self.offer().sender_assets()[..],
+            &self.offer().recipient_assets()[..],
+        ].concat();
+
+        let fee = fee::TxCalculator::new()
+            .tx_fee(TX_EXCHANGE_FEE)
+            .exchange_calculator()
+            .per_asset_fee(PER_EXCHANGE_ASSET_FEE)
+            .assets(&exchange_assets)
+            .calculate();
+
+        fee
     }
 }
 
@@ -70,9 +83,9 @@ impl Transaction for TxExchange {
             let recipient = schema.wallet(self.offer().recipient());
             if let (Some(mut sender), Some(mut recipient)) = (sender, recipient) {
                 if sender.balance() >= self.offer().sender_value() &&
-                    sender.in_wallet_assets(&self.offer().sender_assets()) &&
+                    sender.is_assets_in_wallet(&self.offer().sender_assets()) &&
                     recipient.balance() >= self.offer().recipient_value() &&
-                    recipient.in_wallet_assets(&self.offer().recipient_assets())
+                    recipient.is_assets_in_wallet(&self.offer().recipient_assets())
                 {
                     println!("--   Exchange transaction   --");
                     println!("Sender's balance before transaction : {:?}", sender);
@@ -85,9 +98,9 @@ impl Transaction for TxExchange {
                     recipient.decrease(self.offer().recipient_value());
 
                     sender.del_assets(&self.offer().sender_assets());
-                    recipient.add_assets(self.offer().sender_assets());
+                    recipient.add_assets(&self.offer().sender_assets());
 
-                    sender.add_assets(self.offer().recipient_assets());
+                    sender.add_assets(&self.offer().recipient_assets());
                     recipient.del_assets(&self.offer().recipient_assets());
 
                     println!("Sender's balance before transaction : {:?}", sender);
@@ -95,6 +108,7 @@ impl Transaction for TxExchange {
                     let mut wallets = schema.wallets();
                     wallets.put(self.offer().sender(), sender);
                     wallets.put(self.offer().recipient(), recipient);
+
                     tx_status = TxStatus::Success;
                 }
             }
@@ -124,11 +138,11 @@ mod tests {
                 "sender": "d350490ebf5d5afe3ddb36fcde58c1b4874792c46c85d3f3d7a3f3509c2acb60",
                 "sender_assets": [
                     {
-                    "hash_id": "67e5504410b1426f9247bb680e5fe0c8",
+                    "id": "67e5504410b1426f9247bb680e5fe0c8",
                     "amount": 5
                     },
                     {
-                    "hash_id": "a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8",
+                    "id": "a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8",
                     "amount": 7
                     }
                 ],
@@ -136,7 +150,7 @@ mod tests {
                 "recipient": "b9426d175f946ed39211e5ca4dad1856d83caf92211661d94c660ba85c6f90be",
                 "recipient_assets": [
                     {
-                    "hash_id": "8d7d6d5d4d3d2d1d2c1c2b1b4a3a2a1a",
+                    "id": "8d7d6d5d4d3d2d1d2c1c2b1b4a3a2a1a",
                     "amount": 1
                     }
                 ],

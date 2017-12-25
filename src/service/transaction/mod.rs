@@ -5,7 +5,15 @@ use super::SERVICE_ID;
 //const SERVICE_ID: u16 = 1;
 
 pub const TRANSACTION_FEE: u64 = 1000;
-pub const PER_ASSET_FEE: u64 = 1;
+pub const TX_ADD_ASSET_FEE: u64 = 1000;
+pub const PER_ADD_ASSET_FEE: u64 = 1;
+pub const TX_DEL_ASSET_FEE: u64 = 100;
+pub const TX_TRADE_FEE: u64 = 1000;
+pub const MARKETPLACE_FEE: u64 = 0;
+pub const PER_TRADE_ASSET_FEE: u64 = 40; // 1/40 = 0.025
+pub const TX_EXCHANGE_FEE: u64 = 1000;
+pub const PER_EXCHANGE_ASSET_FEE: u64 = 40;
+pub const TX_TRANSFER_FEE: u64 = 1000;
 
 // Create Wallet
 pub const TX_CREATE_WALLET_ID: u16 = 1;
@@ -36,3 +44,5 @@ pub mod exchange;
 pub const TX_MINING_ID: u16 = 7;
 const AMOUNT_MINING_COIN: u64 = 100_000_000_000_000;
 pub mod mining;
+
+pub mod fee;

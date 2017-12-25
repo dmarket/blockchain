@@ -3,11 +3,11 @@
     "pub_key": "1b4ff6ea64068ded4adc777172b99c8da8f64366a909a29c0fdc9ac0eb3e86ec",
     "assets": [
       {
-        "hash_id": "u1_asset1",
+        "id": "u1_asset1",
         "amount": 10
       },
       {
-        "hash_id": "u1_asset2",
+        "id": "u1_asset2",
         "amount": 1
       }
     ],

@@ -7,7 +7,8 @@ use exonum::storage::Fork;
 use serde_json::Value;
 
 use service::asset::{Asset, MetaAsset};
-use service::transaction::{PER_ASSET_FEE, TRANSACTION_FEE};
+use service::transaction::{PER_ADD_ASSET_FEE, TX_ADD_ASSET_FEE};
+use service::transaction::fee;
 
 use super::{SERVICE_ID, TX_ADD_ASSETS_ID};
 use super::schema::asset::{AssetSchema, external_internal};
@@ -28,7 +29,14 @@ message! {
 
 impl TxAddAsset {
     pub fn get_fee(&self) -> u64 {
-        TRANSACTION_FEE + PER_ASSET_FEE * MetaAsset::count(&self.meta_assets())
+        let fee = fee::TxCalculator::new()
+            .tx_fee(TX_ADD_ASSET_FEE)
+            .add_asset_calculator()
+            .per_asset_fee(PER_ADD_ASSET_FEE)
+            .assets(&self.meta_assets())
+            .calculate();
+
+        fee.amount()
     }
 }
 
@@ -58,9 +66,9 @@ impl Transaction for TxAddAsset {
                 println!("Convert {:?}", map_assets);
                 let new_assets: Vec<Asset> = map_assets
                     .iter()
-                    .map(|(_, asset)| Asset::new(asset.hash_id(), asset.amount()))
+                    .map(|(_, asset)| Asset::new(asset.id(), asset.amount()))
                     .collect();
-                creator.add_assets(new_assets);
+                creator.add_assets(&new_assets);
                 tx_status = TxStatus::Success;
             }
             println!("Wallet after mining asset: {:?}", creator);

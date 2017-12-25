@@ -6,23 +6,34 @@ use exonum::crypto::{PublicKey, Signature};
 use exonum::messages::Message;
 use exonum::storage::Fork;
 use serde_json::Value;
+use std::collections::BTreeMap;
 
-use service::asset::Asset;
-use service::transaction::{PER_ASSET_FEE, TRANSACTION_FEE};
+use service::asset::{Asset, TradeAsset};
+use service::transaction::{PER_TRADE_ASSET_FEE, TX_TRADE_FEE};
+use service::transaction::fee;
+use service::wallet::Wallet;
 
 use super::{SERVICE_ID, TX_TRADE_ASSETS_ID};
+use super::schema::asset::AssetSchema;
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
 use super::schema::wallet::WalletSchema;
 
-const FEE_FOR_TRADE: f64 = 0.025;
+const FEE_FOR_TRADE: f64 = 0.025; // 1/40 = 0.025
 
 encoding_struct! {
     struct TradeOffer {
-        const SIZE = 48;
+        const SIZE = 40;
 
-        field seller:              &PublicKey   [00 => 32]
-        field assets:              Vec<Asset>   [32 => 40]
-        field price:               u64          [40 => 48]
+        field seller: &PublicKey        [00 => 32]
+        field assets: Vec<TradeAsset>   [32 => 40]
+    }
+}
+
+impl TradeOffer {
+    pub fn total_price(&self) -> u64 {
+        self.assets().iter().fold(0, |total, item| {
+            total + item.total_price()
+        })
     }
 }
 
@@ -54,10 +65,33 @@ impl TxTrade {
         self.offer().raw
     }
 
-    pub fn get_fee(&self) -> u64 {
-        //todo: необходимо определится с генергацией fee
-        let price_fee = ((self.offer().price() as f64) * FEE_FOR_TRADE).round() as u64;
-        price_fee + TRANSACTION_FEE + PER_ASSET_FEE * Asset::count(&self.offer().assets())
+    pub fn get_fee(&self) -> fee::Fee {
+        let fee = fee::TxCalculator::new()
+            .tx_fee(TX_TRADE_FEE)
+            .trade_calculator()
+            .per_asset_fee(PER_TRADE_ASSET_FEE)
+            .assets(&self.offer().assets())
+            .calculate();
+
+        fee
+    }
+
+    fn get_creators_and_fees(&self, view: &mut Fork, fee: fee::Fee) -> BTreeMap<Wallet, u64> {
+        let mut creators_and_fees = BTreeMap::new();
+
+        for (assetid, fee) in fee.fees_from_trade() {
+            if let Some(info) = AssetSchema::map(view, |mut schema| schema.info(&assetid)) {
+                if let Some(creator) = WalletSchema::map(
+                    view,
+                    |mut schema| schema.wallet(info.creator()),
+                )
+                {
+                    *creators_and_fees.entry(creator).or_insert(0) += fee;
+                }
+            }
+        }
+
+        creators_and_fees
     }
 }
 
@@ -74,22 +108,28 @@ impl Transaction for TxTrade {
             )
         });
         if let (Some(mut buyer), Some(mut seller)) = participants {
-            let price = self.offer().price();
-            let assets = self.offer().assets();
+            let price = self.offer().total_price();
+            let trade_assets = self.offer().assets();
+            let assets = trade_assets
+                .iter()
+                .map(|x| x.clone().into())
+                .collect::<Vec<Asset>>();
             println!("Buyer {:?} => Seller {:?}", buyer, seller);
-            let tx_status = if (buyer.balance() >= price) && seller.in_wallet_assets(&assets) &&
-                seller.balance() + price >= self.get_fee()
+
+            let fee = self.get_fee();
+            let seller_have_assets = seller.is_assets_in_wallet(&assets);
+            let is_sufficient_funds = seller.balance() + price >= fee.amount();
+            let tx_status = if (buyer.balance() >= price) && seller_have_assets &&
+                is_sufficient_funds
             //todo: необходимо определится с генергацией fee
             {
                 println!("--   Trade transaction   --");
                 println!("Seller's balance before transaction : {:?}", seller);
                 println!("Buyer's balance before transaction : {:?}", buyer);
-                let assets = self.offer().assets();
                 seller.del_assets(&assets);
                 seller.increase(price);
-                seller.decrease(self.get_fee());
-                let assets = self.offer().assets();
-                buyer.add_assets(assets);
+                seller.decrease(fee.amount());
+                buyer.add_assets(&assets);
                 buyer.decrease(price);
                 println!("Seller's balance after transaction : {:?}", seller);
                 println!("Buyer's balance after transaction : {:?}", buyer);
@@ -97,6 +137,16 @@ impl Transaction for TxTrade {
                     schema.wallets().put(self.buyer(), buyer);
                     schema.wallets().put(self.offer().seller(), seller);
                 });
+
+                // send fee to creators of assets
+                for (mut creator, fee) in self.get_creators_and_fees(view, fee) {
+                    println!("Creator {:?} will receive {}", creator.pub_key(), fee);
+                    creator.increase(fee);
+                    WalletSchema::map(view, |mut schema| {
+                        schema.wallets().put(creator.pub_key(), creator.clone());
+                    });
+                }
+
                 TxStatus::Success
             } else {
                 TxStatus::Fail
@@ -111,7 +161,7 @@ impl Transaction for TxTrade {
     fn info(&self) -> Value {
         json!({
             "transaction_data": self,
-            "tx_fee": self.get_fee(),
+            "tx_fee": self.get_fee().amount(),
         })
     }
 }
@@ -126,18 +176,19 @@ mod tests {
             "body": {
                 "buyer": "f2ab7abcae9363496ccc458a30ec0a58200d9890a12fdfeca35010da6b276e19",
                 "offer": {
-                "seller": "dedb2438fca19f04d2236d3005db0f28caa014f34caf98e23634cb49aef1c307",
-                "assets": [
-                    {
-                    "hash_id": "67e5504410b1426f9247bb680e5fe0c8",
-                    "amount": 5
-                    },
-                    {
-                    "hash_id": "a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8",
-                    "amount": 7
-                    }
-                ],
-                "price": "88"
+                    "seller": "dedb2438fca19f04d2236d3005db0f28caa014f34caf98e23634cb49aef1c307",
+                    "assets": [
+                        {
+                            "id": "67e5504410b1426f9247bb680e5fe0c8",
+                            "amount": 5,
+                            "price": "44"
+                        },
+                        {
+                            "id": "a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8",
+                            "amount": 7,
+                            "price": "44"
+                        }
+                    ]
                 },
                 "seed": "4",
                 "seller_signature": "4e7d8d57fdc5c102b241d4e7a8d1228658c1de62a9334fa4e70776759268d67f9cdd8c4d20f7db8b226422c644bf442b0e28d9cbecece7753656c92915b02c06"
@@ -153,6 +204,6 @@ mod tests {
     #[test]
     fn exchange_info_test() {
         let tx: TxTrade = ::serde_json::from_str(&get_json()).unwrap();
-        assert_eq!(tx.get_fee(), tx.info()["tx_fee"]);
+        assert_eq!(tx.get_fee().amount(), tx.info()["tx_fee"]);
     }
 }

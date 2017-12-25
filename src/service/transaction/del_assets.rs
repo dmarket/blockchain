@@ -6,7 +6,8 @@ use exonum::messages::Message;
 use exonum::storage::Fork;
 use serde_json::Value;
 
-use service::transaction::{PER_ASSET_FEE, TRANSACTION_FEE};
+use service::transaction::TX_DEL_ASSET_FEE;
+use service::transaction::fee;
 
 use super::{SERVICE_ID, TX_DEL_ASSETS_ID};
 use service::asset::Asset;
@@ -28,7 +29,12 @@ message! {
 
 impl TxDelAsset {
     pub fn get_fee(&self) -> u64 {
-        TRANSACTION_FEE + PER_ASSET_FEE * Asset::count(&self.assets())
+        let fee = fee::TxCalculator::new()
+            .tx_fee(TX_DEL_ASSET_FEE)
+            .del_asset_calculator()
+            .calculate();
+
+        fee.amount()
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {
@@ -37,7 +43,7 @@ impl TxDelAsset {
         // AssetInfo associated with this asset id.
 
         for a in self.assets() {
-            match AssetSchema::map(view, |mut assets| assets.info(&a.hash_id())) {
+            match AssetSchema::map(view, |mut assets| assets.info(&a.id())) {
                 Some(ref info) => {
                     if info.creator() != self.pub_key() || a.amount() > info.amount() {
                         return TxStatus::Fail;
@@ -99,11 +105,11 @@ mod tests {
                 "pub_key": "1d9c731ebac3d7da9482470ae8b13a839cb05ef4f21f8d119e2c4bf175333cf7",
                 "assets": [
                     {
-                        "hash_id": "67e5504410b1426f9247bb680e5fe0c8",
+                        "id": "67e5504410b1426f9247bb680e5fe0c8",
                         "amount": 45
                     },
                     {
-                        "hash_id": "a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8",
+                        "id": "a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8",
                         "amount": 17
                     }
                 ],

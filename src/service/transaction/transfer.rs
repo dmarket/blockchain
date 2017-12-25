@@ -7,7 +7,8 @@ use exonum::storage::Fork;
 use serde_json::Value;
 use service::asset::Asset;
 
-use service::transaction::{PER_ASSET_FEE, TRANSACTION_FEE};
+use service::transaction::TX_TRANSFER_FEE;
+use service::transaction::fee;
 
 use super::{SERVICE_ID, TX_TRANSFER_ID};
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
@@ -29,7 +30,12 @@ message! {
 
 impl TxTransfer {
     pub fn get_fee(&self) -> u64 {
-        TRANSACTION_FEE + PER_ASSET_FEE * Asset::count(&self.assets())
+        let fee = fee::TxCalculator::new()
+            .tx_fee(TX_TRANSFER_FEE)
+            .transfer_callculator()
+            .calculate();
+
+        fee.amount()
     }
 }
 
@@ -46,14 +52,14 @@ impl Transaction for TxTransfer {
             let update_amount = amount == 0 && sender.balance() >= self.get_fee() ||
                 amount > 0 && sender.balance() >= amount + self.get_fee();
             let update_assets = self.assets().is_empty() ||
-                !self.assets().is_empty() && sender.in_wallet_assets(&self.assets());
+                !self.assets().is_empty() && sender.is_assets_in_wallet(&self.assets());
             if update_amount && update_assets {
                 sender.decrease(amount + self.get_fee());
                 sender.del_assets(&self.assets());
                 WalletSchema::map(view, |mut schema| {
                     let mut receiver = schema.create_wallet(self.to());
                     receiver.increase(amount);
-                    receiver.add_assets(self.assets());
+                    receiver.add_assets(&self.assets());
                     println!("Transfer between wallets: {:?} => {:?}", sender, receiver);
                     schema.wallets().put(self.from(), sender);
                     schema.wallets().put(self.to(), receiver);
@@ -88,7 +94,7 @@ mod tests {
                 "amount": "3",
                 "assets": [
                 {
-                    "hash_id": "67e5504410b1426f9247bb680e5fe0c8",
+                    "id": "67e5504410b1426f9247bb680e5fe0c8",
                     "amount": 3
                 }
                 ],
