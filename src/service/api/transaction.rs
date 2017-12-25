@@ -11,7 +11,6 @@ use exonum::crypto::Hash;
 use exonum::encoding::serialize::FromHex;
 use exonum::node::{ApiSender, TransactionSend};
 use iron::headers::AccessControlAllowOrigin;
-use hyper::status::StatusCode;
 use iron::prelude::*;
 use router::Router;
 
@@ -23,7 +22,6 @@ use service::transaction::exchange::TxExchange;
 use service::transaction::mining::TxMining;
 use service::transaction::trade_assets::TxTrade;
 use service::transaction::transfer::TxTransfer;
-use service::api::ServiceApi;
 
 
 #[derive(Clone)]
@@ -120,13 +118,6 @@ impl Api for TransactionApi {
             }
         };
 
-        let send_option = move |_request: &mut Request| -> IronResult<Response> {
-            let mut resp = Response::with((StatusCode::Ok));
-            ServiceApi::add_option_headers(&mut resp.headers);
-            Ok(resp)
-        };
-
-        router.options("/transactions", send_option, "send_option");
         router.post("/transactions", transaction, "transaction");
         router.get("/transactions/:hash", get_status, "get_transaction_status");
 

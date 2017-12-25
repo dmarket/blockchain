@@ -10,9 +10,9 @@ use exonum::blockchain::Blockchain;
 use exonum::node::ApiSender;
 use iron::prelude::*;
 use router::Router;
-use hyper::header::Headers;
 use iron::headers::AccessControlAllowOrigin;
-use hyper::header::{AccessControlAllowMethods, AccessControlAllowHeaders};
+use hyper::header::{AccessControlAllowMethods, AccessControlAllowHeaders, Headers};
+use hyper::status::StatusCode;
 use hyper::method::Method;
 use unicase::UniCase;
 use std;
@@ -86,5 +86,13 @@ impl Api for ServiceApi {
 
         let api = HashApi {};
         api.wire(router);
+
+        let send_option = move |_request: &mut Request| -> IronResult<Response> {
+            let mut resp = Response::with((StatusCode::Ok));
+            ServiceApi::add_option_headers(&mut resp.headers);
+            Ok(resp)
+        };
+
+        router.options("/*", send_option, "send_options");
     }
 }
