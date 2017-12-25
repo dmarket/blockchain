@@ -3,7 +3,7 @@ use exonum::crypto::{PublicKey, SecretKey};
 use exonum::storage::StorageValue;
 
 use service;
-use service::asset::{Asset, MetaAsset, TradeAsset};
+use service::asset::{Asset, MetaAsset, TradeAsset, Fees};
 use service::transaction::add_assets::TxAddAsset;
 use service::transaction::create_wallet::TxCreateWallet;
 use service::transaction::del_assets::TxDelAsset;
@@ -141,8 +141,8 @@ impl TxAddAssetBuilder {
         }
     }
 
-    pub fn add_asset(self, name: &str, count: u32) -> Self {
-        let asset = MetaAsset::new(name, count);
+    pub fn add_asset(self, name: &str, count: u32, fees: Fees) -> Self {
+        let asset = MetaAsset::new(name, count, fees);
         self.add_asset_value(asset)
     }
 
@@ -200,8 +200,8 @@ impl TxDelAssetBuilder {
         }
     }
 
-    pub fn add_asset(self, name: &str, count: u32) -> Self {
-        let meta = MetaAsset::new(name, count);
+    pub fn add_asset(self, name: &str, count: u32, fees: Fees) -> Self {
+        let meta = MetaAsset::new(name, count, fees);
         let asset = Asset::from_meta_asset(&meta, &self.meta.public_key);
         self.add_asset_value(asset)
     }
@@ -261,8 +261,8 @@ impl TxExchangeBuilder {
         }
     }
 
-    pub fn sender_add_asset(self, name: &str, count: u32) -> Self {
-        let meta = MetaAsset::new(name, count);
+    pub fn sender_add_asset(self, name: &str, count: u32, fees: Fees) -> Self {
+        let meta = MetaAsset::new(name, count, fees);
         let asset = Asset::from_meta_asset(&meta, &self.meta.public_key);
         self.sender_add_asset_value(asset)
     }
@@ -286,8 +286,8 @@ impl TxExchangeBuilder {
         }
     }
 
-    pub fn recipient_add_asset(self, name: &str, count: u32) -> Self {
-        let meta = MetaAsset::new(name, count);
+    pub fn recipient_add_asset(self, name: &str, count: u32, fees: Fees) -> Self {
+        let meta = MetaAsset::new(name, count, fees);
         let asset = Asset::from_meta_asset(&meta, &self.recipient.unwrap());
         self.recipient_add_asset_value(asset)
     }
@@ -381,8 +381,8 @@ impl TxTradeBuilder {
         }
     }
 
-    pub fn add_asset(self, name: &str, count: u32, price: u64) -> Self {
-        let meta = MetaAsset::new(name, count);
+    pub fn add_asset(self, name: &str, count: u32, price: u64, fees: Fees) -> Self {
+        let meta = MetaAsset::new(name, count, fees);
         let asset = Asset::from_meta_asset(&meta, &self.meta.public_key);
         let trade = asset.into_trade_asset(price);
         self.add_asset_value(trade)
@@ -446,8 +446,8 @@ impl TxTransferBuilder {
         TxTransferBuilder { amount, ..self }
     }
 
-    pub fn add_asset(self, name: &str, count: u32) -> Self {
-        let meta = MetaAsset::new(name, count);
+    pub fn add_asset(self, name: &str, count: u32, fees: Fees) -> Self {
+        let meta = MetaAsset::new(name, count, fees);
         let asset = Asset::from_meta_asset(&meta, &self.meta.public_key);
         self.add_asset_value(asset)
     }

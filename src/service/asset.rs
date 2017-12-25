@@ -7,18 +7,88 @@ use serde_json::value::Value;
 use std::{fmt, mem};
 use std::convert::From;
 use std::error::Error;
+use std::str::FromStr;
 use std::string::ToString;
 use uuid;
 use uuid::Uuid;
 
 pub const ASSET_HASH_ID_MAX_LENGTH: usize = 10 * 1024; // 10 KBytes
 
+enum FeeType {
+    Amount,
+    Ratio,
+}
+
+#[allow(missing_docs)]
+#[derive(PartialEq, Eq, Clone, Debug)]
+pub enum FeeParseError {
+    InvalidType(String),
+}
+
+impl fmt::Display for FeeParseError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            FeeParseError::InvalidType(ref found) => {
+                write!(
+                    f,
+                    "Invalid type; expecting {} or {}, found {}",
+                    FeeType::Amount.to_string(), FeeType::Ratio.to_string(),
+                    found
+                )
+            }
+        }
+    }
+}
+
+impl FromStr for FeeType {    
+    type Err = FeeParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "amount" => Ok(FeeType::Amount),
+            "ratio" => Ok(FeeType::Ratio),
+            _ => Err(FeeParseError::InvalidType(s.to_string())),
+        }
+    }
+}
+
+impl fmt::Display for FeeType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let printable = match *self {
+            FeeType::Amount => "amount",
+            FeeType::Ratio => "ratio",
+            
+        };
+        write!(f, "{}", printable)
+    }
+}
+
+encoding_struct! {
+    struct Fee {
+        const SIZE = 16;
+
+        field value:   u64  [0 => 8]
+        field pattern: &str [8 => 16]
+    }
+}
+
+encoding_struct! {
+    struct Fees {
+        const SIZE = 48;
+
+        field trade:    Fee [0 => 16]
+        field exchange: Fee [16 => 32]
+        field transfer: Fee [32 => 48]
+    }
+}
+
 encoding_struct! {
     struct MetaAsset {
-        const SIZE = 12;
+        const SIZE = 60;
 
         field data: &str   [0 => 8]
         field amount: u32  [8 => 12]
+        field fees: Fees   [12 => 60]
     }
 }
 
@@ -30,10 +100,11 @@ impl MetaAsset {
 
 encoding_struct! {
     struct AssetInfo {
-        const SIZE = 36;
+        const SIZE = 84;
 
         field creator: &PublicKey [0  => 32]
         field amount:  u32        [32 => 36]
+        field fees:    Fees       [36 => 84]
     }
 }
 
