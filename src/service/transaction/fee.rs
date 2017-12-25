@@ -189,7 +189,7 @@ impl ExchangeCalculator {
     }
 
     pub fn calculate(self) -> Fee {
-        let get_fee = |count: u32, coef: u64| (count as f64 / coef as f64).floor() as u64;
+        let get_fee = |count: u32, coef: u64| (count as f64 / coef as f64).round() as u64;
 
         let exchange_assets_fees = self.assets
             .iter()
