@@ -14,7 +14,7 @@ use uuid::Uuid;
 
 pub const ASSET_HASH_ID_MAX_LENGTH: usize = 10 * 1024; // 10 KBytes
 
-enum FeeType {
+pub enum FeeType {
     Amount,
     Ratio,
 }
@@ -32,7 +32,8 @@ impl fmt::Display for FeeParseError {
                 write!(
                     f,
                     "Invalid type; expecting {} or {}, found {}",
-                    FeeType::Amount.to_string(), FeeType::Ratio.to_string(),
+                    FeeType::Amount.to_string(),
+                    FeeType::Ratio.to_string(),
                     found
                 )
             }
@@ -40,7 +41,7 @@ impl fmt::Display for FeeParseError {
     }
 }
 
-impl FromStr for FeeType {    
+impl FromStr for FeeType {
     type Err = FeeParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -57,7 +58,7 @@ impl fmt::Display for FeeType {
         let printable = match *self {
             FeeType::Amount => "amount",
             FeeType::Ratio => "ratio",
-            
+
         };
         write!(f, "{}", printable)
     }
@@ -338,8 +339,12 @@ impl Asset {
     }
 
     pub fn from_meta_asset(meta_asset: &MetaAsset, pub_key: &PublicKey) -> Asset {
-        let assetid = AssetID::new(&meta_asset.data(), pub_key).unwrap();
-        Asset::new(assetid, meta_asset.amount())
+        Asset::from_str(&meta_asset.data(), meta_asset.amount(), pub_key)
+    }
+
+    pub fn from_str(s: &str, amount: u32, pub_key: &PublicKey) -> Asset {
+        let id = AssetID::new(s, pub_key).unwrap();
+        Asset::new(id, amount)
     }
 
     pub fn into_trade_asset(&self, price: u64) -> TradeAsset {

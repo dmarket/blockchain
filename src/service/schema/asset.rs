@@ -3,7 +3,7 @@ use exonum::storage::{Fork, MapIndex};
 use std::collections::HashMap;
 
 use service::SERVICE_NAME;
-use service::asset::{Asset, AssetID, AssetInfo, MetaAsset, Fees};
+use service::asset::{Asset, AssetID, AssetInfo, Fees, MetaAsset};
 
 pub struct AssetSchema<'a>(&'a mut Fork);
 
@@ -45,7 +45,13 @@ impl<'a> AssetSchema<'a> {
         self.assets().get(&asset_id)
     }
 
-    pub fn add_asset(&mut self, asset_id: &AssetID, creator: &PublicKey, amount: u32, fees: Fees) -> bool {
+    pub fn add_asset(
+        &mut self,
+        asset_id: &AssetID,
+        creator: &PublicKey,
+        amount: u32,
+        fees: Fees,
+    ) -> bool {
         match self.info(&asset_id) {
             None => {
                 let info = AssetInfo::new(creator, amount, fees);
@@ -69,7 +75,12 @@ impl<'a> AssetSchema<'a> {
         let mut map_asset_id: HashMap<String, Asset> = HashMap::new();
         for meta_asset in meta_assets {
             let new_asset = Asset::from_meta_asset(&meta_asset, pub_key);
-            self.add_asset(&new_asset.id(), pub_key, new_asset.amount(), meta_asset.fees());
+            self.add_asset(
+                &new_asset.id(),
+                pub_key,
+                new_asset.amount(),
+                meta_asset.fees(),
+            );
             map_asset_id.insert(new_asset.id().to_string(), new_asset);
         }
 

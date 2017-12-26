@@ -3,7 +3,7 @@ use exonum::crypto::{PublicKey, SecretKey};
 use exonum::storage::StorageValue;
 
 use service;
-use service::asset::{Asset, MetaAsset, TradeAsset, Fees};
+use service::asset::{Asset, Fees, MetaAsset, TradeAsset};
 use service::transaction::add_assets::TxAddAsset;
 use service::transaction::create_wallet::TxCreateWallet;
 use service::transaction::del_assets::TxDelAsset;
@@ -200,9 +200,8 @@ impl TxDelAssetBuilder {
         }
     }
 
-    pub fn add_asset(self, name: &str, count: u32, fees: Fees) -> Self {
-        let meta = MetaAsset::new(name, count, fees);
-        let asset = Asset::from_meta_asset(&meta, &self.meta.public_key);
+    pub fn add_asset(self, name: &str, count: u32) -> Self {
+        let asset = Asset::from_str(name, count, &self.meta.public_key);
         self.add_asset_value(asset)
     }
 
@@ -261,9 +260,8 @@ impl TxExchangeBuilder {
         }
     }
 
-    pub fn sender_add_asset(self, name: &str, count: u32, fees: Fees) -> Self {
-        let meta = MetaAsset::new(name, count, fees);
-        let asset = Asset::from_meta_asset(&meta, &self.meta.public_key);
+    pub fn sender_add_asset(self, name: &str, count: u32) -> Self {
+        let asset = Asset::from_str(name, count, &self.meta.public_key);
         self.sender_add_asset_value(asset)
     }
 
@@ -286,9 +284,8 @@ impl TxExchangeBuilder {
         }
     }
 
-    pub fn recipient_add_asset(self, name: &str, count: u32, fees: Fees) -> Self {
-        let meta = MetaAsset::new(name, count, fees);
-        let asset = Asset::from_meta_asset(&meta, &self.recipient.unwrap());
+    pub fn recipient_add_asset(self, name: &str, count: u32) -> Self {
+        let asset = Asset::from_str(name, count, &self.recipient.unwrap());
         self.recipient_add_asset_value(asset)
     }
 
@@ -381,9 +378,8 @@ impl TxTradeBuilder {
         }
     }
 
-    pub fn add_asset(self, name: &str, count: u32, price: u64, fees: Fees) -> Self {
-        let meta = MetaAsset::new(name, count, fees);
-        let asset = Asset::from_meta_asset(&meta, &self.meta.public_key);
+    pub fn add_asset(self, name: &str, count: u32, price: u64) -> Self {
+        let asset = Asset::from_str(name, count, &self.meta.public_key);
         let trade = asset.into_trade_asset(price);
         self.add_asset_value(trade)
     }
@@ -446,9 +442,8 @@ impl TxTransferBuilder {
         TxTransferBuilder { amount, ..self }
     }
 
-    pub fn add_asset(self, name: &str, count: u32, fees: Fees) -> Self {
-        let meta = MetaAsset::new(name, count, fees);
-        let asset = Asset::from_meta_asset(&meta, &self.meta.public_key);
+    pub fn add_asset(self, name: &str, count: u32) -> Self {
+        let asset = Asset::from_str(name, count, &self.meta.public_key);
         self.add_asset_value(asset)
     }
 
@@ -484,7 +479,7 @@ mod test {
     use exonum::crypto;
     use exonum::storage::StorageValue;
 
-    use service::asset::{Asset, MetaAsset};
+    use service::asset::{Asset, FeeType, MetaAsset};
 
     use service::transaction::add_assets::TxAddAsset;
     use service::transaction::create_wallet::TxCreateWallet;
@@ -494,6 +489,7 @@ mod test {
     use service::transaction::trade_assets::{TradeOffer, TxTrade};
     use service::transaction::transfer::TxTransfer;
 
+    use service::builders::fee;
     use service::builders::transaction;
 
     #[test]
@@ -519,8 +515,21 @@ mod test {
     #[test]
     fn add_assets() {
         let (public_key, secret_key) = crypto::gen_keypair();
-        let asset_foobar = MetaAsset::new("foobar", 9);
-        let asset_bazqux = MetaAsset::new("bazqux", 18);
+
+        let fees_foobar = fee::Builder::new()
+            .trade(10, FeeType::Ratio)
+            .exchange(10, FeeType::Ratio)
+            .transfer(10, FeeType::Ratio)
+            .build();
+
+        let fees_bazqux = fee::Builder::new()
+            .trade(11, FeeType::Ratio)
+            .exchange(11, FeeType::Ratio)
+            .transfer(11, FeeType::Ratio)
+            .build();
+
+        let asset_foobar = MetaAsset::new("foobar", 9, fees_foobar);
+        let asset_bazqux = MetaAsset::new("bazqux", 18, fees_bazqux);
 
         let transaction = transaction::Builder::new()
             .keypair(public_key, secret_key.clone())
@@ -551,7 +560,7 @@ mod test {
     #[test]
     fn del_assets() {
         let (public_key, secret_key) = crypto::gen_keypair();
-        let asset = Asset::from_meta_asset(&MetaAsset::new("foobar", 9), &public_key);
+        let asset = Asset::from_str("foobar", 9, &public_key);
         let transaction = transaction::Builder::new()
             .keypair(public_key, secret_key.clone())
             .tx_del_assets()
@@ -570,8 +579,8 @@ mod test {
         let (public_key, secret_key) = crypto::gen_keypair();
 
         let (recipient, _) = crypto::gen_keypair();
-        let sender_asset = Asset::from_meta_asset(&MetaAsset::new("foobar", 9), &public_key);
-        let recipient_asset = Asset::from_meta_asset(&MetaAsset::new("bazqux", 13), &public_key);
+        let sender_asset = Asset::from_str("foobar", 9, &public_key);
+        let recipient_asset = Asset::from_str("bazqux", 13, &public_key);
 
         let transaction = transaction::Builder::new()
             .keypair(public_key, secret_key.clone())
@@ -618,7 +627,7 @@ mod test {
     fn trade_assets() {
         let (public_key, secret_key) = crypto::gen_keypair();
         let (buyer, _) = crypto::gen_keypair();
-        let asset = Asset::from_meta_asset(&MetaAsset::new("foobar", 9), &public_key);
+        let asset = Asset::from_str("foobar", 9, &public_key);
         let trade_asset = asset.into_trade_asset(9);
         let transaction = transaction::Builder::new()
             .keypair(public_key, secret_key.clone())
@@ -639,7 +648,7 @@ mod test {
     fn transfer() {
         let (public_key, secret_key) = crypto::gen_keypair();
         let (recipient, _) = crypto::gen_keypair();
-        let asset = Asset::from_meta_asset(&MetaAsset::new("foobar", 9), &public_key);
+        let asset = Asset::from_str("foobar", 9, &public_key);
         let transaction = transaction::Builder::new()
             .keypair(public_key, secret_key.clone())
             .tx_transfer()

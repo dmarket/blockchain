@@ -6,7 +6,8 @@ use exonum::crypto;
 use exonum::messages::Message;
 use exonum::storage::{Database, MemoryDB};
 
-use dmbc::service::asset::{Asset, AssetID, AssetInfo};
+use dmbc::service::asset::{Asset, AssetID, AssetInfo, FeeType};
+use dmbc::service::builders::fee;
 use dmbc::service::builders::transaction;
 use dmbc::service::builders::wallet;
 use dmbc::service::schema::asset::AssetSchema;
@@ -23,11 +24,23 @@ fn add_assets() {
     let absent_id = AssetID::new(absent_data, &public_key).unwrap();
     let existing_id = AssetID::new(existing_data, &public_key).unwrap();
 
+    let absent_fees = fee::Builder::new()
+        .trade(10, FeeType::Ratio)
+        .exchange(10, FeeType::Ratio)
+        .transfer(10, FeeType::Ratio)
+        .build();
+
+    let existing_fees = fee::Builder::new()
+        .trade(11, FeeType::Ratio)
+        .exchange(11, FeeType::Ratio)
+        .transfer(11, FeeType::Ratio)
+        .build();
+
     let tx = transaction::Builder::new()
         .keypair(public_key, secret_key.clone())
         .tx_add_assets()
-        .add_asset(absent_data, 45)
-        .add_asset(existing_data, 17)
+        .add_asset(absent_data, 45, absent_fees)
+        .add_asset(existing_data, 17, existing_fees)
         .seed(85)
         .build();
 
@@ -35,7 +48,10 @@ fn add_assets() {
     let fork = &mut db.fork();
 
     AssetSchema::map(fork, |mut s| {
-        s.assets().put(&existing_id, AssetInfo::new(&public_key, 3))
+        s.assets().put(
+            &existing_id,
+            AssetInfo::new(&public_key, 3, existing_fees),
+        )
     });
 
     let wallet = wallet::Builder::new()
