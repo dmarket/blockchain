@@ -15,7 +15,7 @@ use hyper::header::{AccessControlAllowMethods, AccessControlAllowHeaders, Header
 use hyper::status::StatusCode;
 use hyper::method::Method;
 use unicase::UniCase;
-use std;
+use std::cmp;
 
 use self::asset::AssetApi;
 use self::hash::HashApi;
@@ -52,8 +52,8 @@ impl ServiceApi {
             let limit = FromValue::from_value(limit_parameter.unwrap()).unwrap_or(total_count);
 
             // validate parameters for pagination
-            let from = std::cmp::min(offset, total_count);
-            let to = std::cmp::min(from + limit, total_count);
+            let from = cmp::min(offset, total_count);
+            let to = cmp::min(from + limit, total_count);
             return &elements[from..to];
         }
 
