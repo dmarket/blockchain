@@ -10,6 +10,11 @@ use exonum::blockchain::Blockchain;
 use exonum::node::ApiSender;
 use iron::prelude::*;
 use router::Router;
+use iron::headers::AccessControlAllowOrigin;
+use hyper::header::{AccessControlAllowMethods, AccessControlAllowHeaders, Headers};
+use hyper::status::StatusCode;
+use hyper::method::Method;
+use unicase::UniCase;
 use std;
 
 use self::asset::AssetApi;
@@ -54,6 +59,12 @@ impl ServiceApi {
 
         elements
     }
+
+    pub fn add_option_headers(headers: &mut Headers) {
+        headers.set(AccessControlAllowOrigin::Any);
+        headers.set(AccessControlAllowHeaders(vec![UniCase("content-type".to_owned())]));
+        headers.set(AccessControlAllowMethods(vec![Method::Get, Method::Post, Method::Options]));
+    }
 }
 
 impl Api for ServiceApi {
@@ -73,5 +84,13 @@ impl Api for ServiceApi {
 
         let api = HashApi {};
         api.wire(router);
+
+        let send_option = move |_request: &mut Request| -> IronResult<Response> {
+            let mut resp = Response::with((StatusCode::Ok));
+            ServiceApi::add_option_headers(&mut resp.headers);
+            Ok(resp)
+        };
+
+        router.options("/*", send_option, "send_options");
     }
 }
