@@ -1,13 +1,11 @@
 use service::asset::{Asset, AssetID, MetaAsset, TradeAsset};
 
 pub struct Fee {
-    for_tx: u64,
-    for_add_assets: Option<u64>,
-
-    for_marketplace: Option<u64>,
-    for_trade_assets: Option<Vec<(AssetID, u64)>>,
-
-    for_exchange_assets: Option<Vec<(AssetID, u64)>>,
+    pub for_tx: u64,
+    pub for_add_assets: Option<u64>,
+    pub for_marketplace: Option<u64>,
+    pub for_trade_assets: Option<Vec<(AssetID, u64)>>,
+    pub for_exchange_assets: Option<Vec<(AssetID, u64)>>,
 }
 
 impl Fee {

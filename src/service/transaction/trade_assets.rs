@@ -7,8 +7,9 @@ use exonum::messages::Message;
 use exonum::storage::Fork;
 use serde_json::Value;
 use std::collections::BTreeMap;
+use std::str::FromStr;
 
-use service::asset::{Asset, TradeAsset};
+use service::asset::{Asset, TradeAsset, FeeType, AssetID};
 use service::transaction::{PER_TRADE_ASSET_FEE, TX_TRADE_FEE};
 use service::transaction::fee;
 use service::wallet::Wallet;
@@ -65,15 +66,37 @@ impl TxTrade {
         self.offer().raw
     }
 
-    pub fn get_fee(&self) -> fee::Fee {
-        let fee = fee::TxCalculator::new()
-            .tx_fee(TX_TRADE_FEE)
-            .trade_calculator()
-            .per_asset_fee(PER_TRADE_ASSET_FEE)
-            .assets(&self.offer().assets())
-            .calculate();
+    pub fn get_fee(&self, view: &mut Fork) -> fee::Fee {
+        let mut assets: Vec<(AssetID, u64)> = Vec::new();
 
-        fee
+        let fee_ratio = |price: u64, coef: u64| (price as f64 / coef as f64).round() as u64;
+
+        for asset in self.offer().assets() {
+            if let Some(info) = AssetSchema::map(view, |mut schema| schema.info(&asset.id())) {
+
+                let trade_fee = info.fees().trade();
+                let fee_pattern = match FeeType::from_str(trade_fee.pattern()) {
+                    Ok(pattern) => pattern,
+                    Err(error) => { println!("Invalid fee pattern: {:?}", error); continue; },
+                };
+                let fee_value = trade_fee.value();
+
+                let fee = match fee_pattern {
+                    FeeType::Amount => fee_value,
+                    FeeType::Ratio => fee_ratio(asset.total_price(), fee_value),
+                };
+
+                assets.push((asset.id(), fee));
+            }
+        }
+
+        fee::Fee {
+            for_tx: TX_TRADE_FEE,
+            for_add_assets: None,
+            for_marketplace: None,
+            for_trade_assets: None,
+            for_exchange_assets: Some(assets),
+        }
     }
 
     fn get_creators_and_fees(&self, view: &mut Fork, fee: fee::Fee) -> BTreeMap<Wallet, u64> {
@@ -116,7 +139,7 @@ impl Transaction for TxTrade {
                 .collect::<Vec<Asset>>();
             println!("Buyer {:?} => Seller {:?}", buyer, seller);
 
-            let fee = self.get_fee();
+            let fee = self.get_fee(view);
             let seller_have_assets = seller.is_assets_in_wallet(&assets);
             let is_sufficient_funds = seller.balance() + price >= fee.amount();
             let tx_status = if (buyer.balance() >= price) && seller_have_assets &&
@@ -161,7 +184,7 @@ impl Transaction for TxTrade {
     fn info(&self) -> Value {
         json!({
             "transaction_data": self,
-            "tx_fee": self.get_fee().amount(),
+            // "tx_fee": self.get_fee().amount(),
         })
     }
 }
@@ -204,6 +227,6 @@ mod tests {
     #[test]
     fn exchange_info_test() {
         let tx: TxTrade = ::serde_json::from_str(&get_json()).unwrap();
-        assert_eq!(tx.get_fee().amount(), tx.info()["tx_fee"]);
+        // assert_eq!(tx.get_fee().amount(), tx.info()["tx_fee"]);
     }
 }
