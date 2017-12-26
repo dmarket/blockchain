@@ -10,8 +10,7 @@ use std::collections::BTreeMap;
 use std::str::FromStr;
 
 use service::asset::{Asset, TradeAsset, FeeType, AssetID};
-use service::transaction::{PER_TRADE_ASSET_FEE, TX_TRADE_FEE};
-use service::transaction::fee;
+use service::transaction::TX_TRADE_FEE;
 use service::wallet::Wallet;
 
 use super::{SERVICE_ID, TX_TRADE_ASSETS_ID};
@@ -35,6 +34,30 @@ impl TradeOffer {
         self.assets().iter().fold(0, |total, item| {
             total + item.total_price()
         })
+    }
+}
+
+pub struct TradeFee {
+    transaction_fee: u64,
+    assets_fees: Vec<(AssetID, u64)>,
+}
+
+impl TradeFee {
+    pub fn new(tx_fee: u64, assets: Vec<(AssetID, u64)>) -> Self {
+        TradeFee {
+            transaction_fee: tx_fee,
+            assets_fees: assets
+        }
+    }
+
+    pub fn amount(&self) -> u64 {
+        let mut amount = self.transaction_fee;
+        amount += self.assets_fees.iter().fold(0, |acc, asset| acc + asset.1);
+        amount
+    }
+
+    pub fn assets_fees(&self) -> Vec<(AssetID, u64)> {
+        self.assets_fees.clone()
     }
 }
 
@@ -66,7 +89,7 @@ impl TxTrade {
         self.offer().raw
     }
 
-    pub fn get_fee(&self, view: &mut Fork) -> fee::Fee {
+    pub fn get_fee(&self, view: &mut Fork) -> TradeFee {
         let mut assets: Vec<(AssetID, u64)> = Vec::new();
 
         let fee_ratio = |price: u64, coef: u64| (price as f64 / coef as f64).round() as u64;
@@ -90,19 +113,13 @@ impl TxTrade {
             }
         }
 
-        fee::Fee {
-            for_tx: TX_TRADE_FEE,
-            for_add_assets: None,
-            for_marketplace: None,
-            for_trade_assets: None,
-            for_exchange_assets: Some(assets),
-        }
+        TradeFee::new(TX_TRADE_FEE, assets)
     }
 
-    fn get_creators_and_fees(&self, view: &mut Fork, fee: fee::Fee) -> BTreeMap<Wallet, u64> {
+    fn get_creators_and_fees(&self, view: &mut Fork, fee: TradeFee) -> BTreeMap<Wallet, u64> {
         let mut creators_and_fees = BTreeMap::new();
 
-        for (assetid, fee) in fee.fees_from_trade() {
+        for (assetid, fee) in fee.assets_fees() {
             if let Some(info) = AssetSchema::map(view, |mut schema| schema.info(&assetid)) {
                 if let Some(creator) = WalletSchema::map(
                     view,
