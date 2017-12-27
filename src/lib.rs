@@ -12,6 +12,8 @@ extern crate bodyparser;
 extern crate iron;
 extern crate nats;
 extern crate uuid;
+extern crate hyper;
+extern crate unicase;
 
 pub mod config;
 pub mod keys;

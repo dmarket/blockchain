@@ -10,7 +10,12 @@ use exonum::blockchain::Blockchain;
 use exonum::node::ApiSender;
 use iron::prelude::*;
 use router::Router;
-use std;
+use iron::headers::AccessControlAllowOrigin;
+use hyper::header::{AccessControlAllowMethods, AccessControlAllowHeaders, Headers};
+use hyper::status::StatusCode;
+use hyper::method::Method;
+use unicase::UniCase;
+use std::cmp;
 
 use self::asset::AssetApi;
 use self::hash::HashApi;
@@ -47,12 +52,18 @@ impl ServiceApi {
             let limit = FromValue::from_value(limit_parameter.unwrap()).unwrap_or(total_count);
 
             // validate parameters for pagination
-            let from = std::cmp::min(offset, total_count);
-            let to = std::cmp::min(from + limit, total_count);
+            let from = cmp::min(offset, total_count);
+            let to = cmp::min(from + limit, total_count);
             return &elements[from..to];
         }
 
         elements
+    }
+
+    pub fn add_option_headers(headers: &mut Headers) {
+        headers.set(AccessControlAllowOrigin::Any);
+        headers.set(AccessControlAllowHeaders(vec![UniCase("content-type".to_owned())]));
+        headers.set(AccessControlAllowMethods(vec![Method::Get, Method::Post, Method::Options]));
     }
 }
 
@@ -73,5 +84,13 @@ impl Api for ServiceApi {
 
         let api = HashApi {};
         api.wire(router);
+
+        let send_option = move |_request: &mut Request| -> IronResult<Response> {
+            let mut resp = Response::with((StatusCode::Ok));
+            ServiceApi::add_option_headers(&mut resp.headers);
+            Ok(resp)
+        };
+
+        router.options("/*", send_option, "send_options");
     }
 }

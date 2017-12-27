@@ -27,3 +27,5 @@ toml = "0.4.5"
 uuid = { version = "0.5", features = ["v5"] }
 exonum = "0.4"
 exonum-configuration = "0.4"
+hyper = "0.10.13"
+unicase = "1.0"
