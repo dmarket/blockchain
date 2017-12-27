@@ -134,37 +134,36 @@ impl Transaction for TxTrade {
             let fee = self.get_fee(view);
             let seller_have_assets = seller.is_assets_in_wallet(&assets);
             let is_sufficient_funds = seller.balance() + price >= fee.amount();
-            let tx_status = if (buyer.balance() >= price) && seller_have_assets &&
-                is_sufficient_funds
-            {
-                println!("--   Trade transaction   --");
-                println!("Seller's balance before transaction : {:?}", seller);
-                println!("Buyer's balance before transaction : {:?}", buyer);
-                seller.del_assets(&assets);
-                seller.increase(price);
-                seller.decrease(fee.amount());
-                buyer.add_assets(&assets);
-                buyer.decrease(price);
-                println!("Seller's balance after transaction : {:?}", seller);
-                println!("Buyer's balance after transaction : {:?}", buyer);
-                WalletSchema::map(view, |mut schema| {
-                    schema.wallets().put(self.buyer(), buyer);
-                    schema.wallets().put(self.offer().seller(), seller);
-                });
-
-                // send fee to creators of assets
-                for (mut creator, fee) in fee.assets_fees() {
-                    println!("Creator {:?} will receive {}", creator.pub_key(), fee);
-                    creator.increase(fee);
+            let tx_status =
+                if (buyer.balance() >= price) && seller_have_assets && is_sufficient_funds {
+                    println!("--   Trade transaction   --");
+                    println!("Seller's balance before transaction : {:?}", seller);
+                    println!("Buyer's balance before transaction : {:?}", buyer);
+                    seller.del_assets(&assets);
+                    seller.increase(price);
+                    seller.decrease(fee.amount());
+                    buyer.add_assets(&assets);
+                    buyer.decrease(price);
+                    println!("Seller's balance after transaction : {:?}", seller);
+                    println!("Buyer's balance after transaction : {:?}", buyer);
                     WalletSchema::map(view, |mut schema| {
-                        schema.wallets().put(creator.pub_key(), creator.clone());
+                        schema.wallets().put(self.buyer(), buyer);
+                        schema.wallets().put(self.offer().seller(), seller);
                     });
-                }
 
-                TxStatus::Success
-            } else {
-                TxStatus::Fail
-            };
+                    // send fee to creators of assets
+                    for (mut creator, fee) in fee.assets_fees() {
+                        println!("Creator {:?} will receive {}", creator.pub_key(), fee);
+                        creator.increase(fee);
+                        WalletSchema::map(view, |mut schema| {
+                            schema.wallets().put(creator.pub_key(), creator.clone());
+                        });
+                    }
+
+                    TxStatus::Success
+                } else {
+                    TxStatus::Fail
+                };
             TxStatusSchema::map(
                 view,
                 |mut schema| schema.set_status(&self.hash(), tx_status),
