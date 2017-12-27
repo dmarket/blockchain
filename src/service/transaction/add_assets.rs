@@ -28,10 +28,9 @@ message! {
 
 impl TxAddAsset {
     pub fn get_fee(&self) -> u64 {
-        let count = self.meta_assets().iter().fold(
-            0,
-            |acc, asset| acc + asset.amount() as u64,
-        );
+        let count = self.meta_assets().iter().fold(0, |acc, asset| {
+            acc + asset.amount() as u64
+        });
 
         TX_ADD_ASSET_FEE + PER_ADD_ASSET_FEE * count
     }
@@ -83,72 +82,6 @@ impl Transaction for TxAddAsset {
         json!({
             "transaction_data": self,
             "external_internal": external_internal(self.meta_assets(), self.pub_key()),
-            "tx_fee": self.get_fee(),
         })
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::TxAddAsset;
-
-    use exonum::blockchain::Transaction;
-
-    fn get_json() -> String {
-        r#"{
-            "body": {
-                "pub_key": "06f2b8853d37d317639132d3e9646adee97c56dcbc3899bfb2b074477d7ef31a",
-                "meta_assets": [
-                    {
-                        "data": "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f",
-                        "amount": 45,
-                        "fees": {
-                            "trade": {
-                                "value": 10,
-                                "pattern": "ratio" 
-                            },
-                            "exchange": {
-                                "value": 10,
-                                "pattern": "ratio"
-                            },
-                            "transfer": {
-                                "value": 10,
-                                "pattern": "ratio"
-                            }
-                        }
-                    },
-                    {
-                        "data": "a8d5c97d-9978-4111-9947-7a95dcb31d0f",
-                        "amount": 17,
-                        "fees": {
-                            "trade": {
-                                "value": 10,
-                                "pattern": "ratio" 
-                            },
-                            "exchange": {
-                                "value": 10,
-                                "pattern": "ratio"
-                            },
-                            "transfer": {
-                                "value": 10,
-                                "pattern": "ratio"
-                            }
-                        }
-                    }
-                ],
-                "seed": "85"
-            },
-            "network_id": 0,
-            "protocol_version": 0,
-            "service_id": 2,
-            "message_id": 3,
-            "signature": "11ab7e8236084cb68fe949242f7107068ca54ad3cdfd927a933a282c4781b2f2b4993824eb2dc2b0dc275d1a86bbb8f3b48640680cc1258bb7000748c2b29407"
-        }"#.to_string()
-    }
-
-    #[test]
-    fn test_add_asset_info() {
-        let tx_add: TxAddAsset = ::serde_json::from_str(&get_json()).unwrap();
-        // assert_eq!(tx_add.get_fee(), tx_add.info()["tx_fee"]);
     }
 }

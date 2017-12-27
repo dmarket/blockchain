@@ -6,7 +6,7 @@ use exonum::crypto;
 use exonum::messages::Message;
 use exonum::storage::{Database, MemoryDB};
 
-use dmbc::service::asset::{Asset, AssetID, AssetInfo, FeeType};
+use dmbc::service::asset::{Asset, AssetID, AssetInfo};
 use dmbc::service::builders::fee;
 use dmbc::service::builders::transaction;
 use dmbc::service::builders::wallet;
@@ -25,15 +25,15 @@ fn add_assets() {
     let existing_id = AssetID::new(existing_data, &public_key).unwrap();
 
     let absent_fees = fee::Builder::new()
-        .trade(10, FeeType::Ratio)
-        .exchange(10, FeeType::Ratio)
-        .transfer(10, FeeType::Ratio)
+        .trade(10, 10)
+        .exchange(10, 10)
+        .transfer(10, 10)
         .build();
 
     let existing_fees = fee::Builder::new()
-        .trade(11, FeeType::Ratio)
-        .exchange(11, FeeType::Ratio)
-        .transfer(11, FeeType::Ratio)
+        .trade(11, 10)
+        .exchange(11, 10)
+        .transfer(11, 10)
         .build();
 
     let tx = transaction::Builder::new()
@@ -133,9 +133,9 @@ fn delete_assets() {
     let id_3 = AssetID::new(data_3, &public_key).unwrap();
 
     let fee = fee::Builder::new()
-        .trade(10, FeeType::Ratio)
-        .exchange(10, FeeType::Ratio)
-        .transfer(10, FeeType::Ratio)
+        .trade(10, 10)
+        .exchange(10, 10)
+        .transfer(10, 10)
         .build();
 
     AssetSchema::map(fork, |mut s| {
@@ -193,9 +193,9 @@ fn delete_assets_fails() {
     let fork = &mut db.fork();
 
     let fee = fee::Builder::new()
-        .trade(10, FeeType::Amount)
-        .exchange(10, FeeType::Amount)
-        .transfer(10, FeeType::Ratio)
+        .trade(10, 10)
+        .exchange(10, 10)
+        .transfer(10, 10)
         .build();
 
     AssetSchema::map(fork, |mut s| s.add_asset(&id, &public_key, 20, fee));
@@ -271,9 +271,9 @@ fn exchange() {
     let fork = &mut db.fork();
 
     let fee = fee::Builder::new()
-        .trade(10, FeeType::Amount)
-        .exchange(10, FeeType::Amount)
-        .transfer(10, FeeType::Amount)
+        .trade(10, 10)
+        .exchange(10, 10)
+        .transfer(10, 10)
         .build();
 
     AssetSchema::map(fork, |mut s| {
@@ -360,9 +360,9 @@ fn trade_assets() {
     let fork = &mut db.fork();
 
     let fee = fee::Builder::new()
-        .trade(10, FeeType::Amount)
-        .exchange(10, FeeType::Amount)
-        .transfer(10, FeeType::Amount)
+        .trade(10, 10)
+        .exchange(10, 10)
+        .transfer(10, 10)
         .build();
 
     AssetSchema::map(fork, |mut s| {
@@ -385,12 +385,7 @@ fn trade_assets() {
     tx.execute(fork);
 
     let fee = tx.get_fee(fork);
-    let creators_fee = fee.assets_fees().iter().fold(
-        0,
-        |acc, asset| {
-            acc + asset.1
-        },
-    );
+    let creators_fee = fee.assets_fees().iter().fold(0, |acc, asset| acc + asset.1);
 
     WalletSchema::map(fork, |mut s| {
         let seller = s.wallet(&seller_public).unwrap();
@@ -447,14 +442,20 @@ fn transfer() {
     let fork = &mut db.fork();
 
     let fee = fee::Builder::new()
-        .trade(10, FeeType::Amount)
-        .exchange(10, FeeType::Amount)
-        .transfer(10, FeeType::Amount)
+        .trade(10, 10)
+        .exchange(10, 10)
+        .transfer(10, 10)
         .build();
 
     AssetSchema::map(fork, |mut s| {
-        s.assets().put(&full_id, AssetInfo::new(&sender_public, 20, fee.clone()));
-        s.assets().put(&half_id, AssetInfo::new(&sender_public, 20, fee.clone()));
+        s.assets().put(
+            &full_id,
+            AssetInfo::new(&sender_public, 20, fee.clone()),
+        );
+        s.assets().put(
+            &half_id,
+            AssetInfo::new(&sender_public, 20, fee.clone()),
+        );
     });
 
     WalletSchema::map(fork, |mut s| {

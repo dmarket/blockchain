@@ -82,44 +82,6 @@ impl Transaction for TxDelAsset {
     fn info(&self) -> Value {
         json!({
             "transaction_data": self,
-            "tx_fee": self.get_fee(),
         })
-    }
-}
-
-
-#[cfg(test)]
-mod tests {
-    use exonum::blockchain::Transaction;
-    use service::transaction::del_assets::TxDelAsset;
-
-    fn get_json() -> String {
-        r#"{
-            "body": {
-                "pub_key": "1d9c731ebac3d7da9482470ae8b13a839cb05ef4f21f8d119e2c4bf175333cf7",
-                "assets": [
-                    {
-                        "id": "67e5504410b1426f9247bb680e5fe0c8",
-                        "amount": 45
-                    },
-                    {
-                        "id": "a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8",
-                        "amount": 17
-                    }
-                ],
-                "seed": "113"
-            },
-            "network_id": 0,
-            "protocol_version": 0,
-            "service_id": 2,
-            "message_id": 4,
-            "signature": "e7a3d71fc093f9ddaba083ba3e1618514c96003d9a01cdf6d5c0da344f12c800db9e7b210f9a7b372ddd7e57f299d8bc0e55d238ad1fa6b9d06897c2bda29901"
-        }"#.to_string()
-    }
-
-    #[test]
-    fn test_add_asset_info() {
-        let tx: TxDelAsset = ::serde_json::from_str(&get_json()).unwrap();
-        assert_eq!(tx.get_fee(), tx.info()["tx_fee"]);
     }
 }

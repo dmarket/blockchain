@@ -1,4 +1,4 @@
-use service::asset::{Fee, FeeType, Fees};
+use service::asset::{Fee, Fees};
 
 pub struct Builder {
     trade: Option<Fee>,
@@ -15,23 +15,23 @@ impl Builder {
         }
     }
 
-    pub fn trade(self, value: u64, pattern: FeeType) -> Self {
+    pub fn trade(self, tax: u64, ratio: u64) -> Self {
         Builder {
-            trade: Some(Fee::new(value, &pattern.to_string())),
+            trade: Some(Fee::new(tax, ratio)),
             ..self
         }
     }
 
-    pub fn exchange(self, value: u64, pattern: FeeType) -> Self {
+    pub fn exchange(self, tax: u64, ratio: u64) -> Self {
         Builder {
-            exchange: Some(Fee::new(value, &pattern.to_string())),
+            exchange: Some(Fee::new(tax, ratio)),
             ..self
         }
     }
 
-    pub fn transfer(self, value: u64, pattern: FeeType) -> Self {
+    pub fn transfer(self, tax: u64, ratio: u64) -> Self {
         Builder {
-            transfer: Some(Fee::new(value, &pattern.to_string())),
+            transfer: Some(Fee::new(tax, ratio)),
             ..self
         }
     }

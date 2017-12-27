@@ -479,7 +479,7 @@ mod test {
     use exonum::crypto;
     use exonum::storage::StorageValue;
 
-    use service::asset::{Asset, FeeType, MetaAsset};
+    use service::asset::{Asset, MetaAsset};
 
     use service::transaction::add_assets::TxAddAsset;
     use service::transaction::create_wallet::TxCreateWallet;
@@ -517,15 +517,15 @@ mod test {
         let (public_key, secret_key) = crypto::gen_keypair();
 
         let fees_foobar = fee::Builder::new()
-            .trade(10, FeeType::Ratio)
-            .exchange(10, FeeType::Ratio)
-            .transfer(10, FeeType::Ratio)
+            .trade(10, 10)
+            .exchange(10, 10)
+            .transfer(10, 10)
             .build();
 
         let fees_bazqux = fee::Builder::new()
-            .trade(11, FeeType::Ratio)
-            .exchange(11, FeeType::Ratio)
-            .transfer(11, FeeType::Ratio)
+            .trade(11, 10)
+            .exchange(11, 10)
+            .transfer(11, 10)
             .build();
 
         let asset_foobar = MetaAsset::new("foobar", 9, fees_foobar);

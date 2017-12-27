@@ -7,9 +7,8 @@ use exonum::messages::Message;
 use exonum::storage::Fork;
 use serde_json::Value;
 use std::collections::BTreeMap;
-use std::str::FromStr;
 
-use service::asset::{Asset, TradeAsset, FeeType};
+use service::asset::{Asset, TradeAsset};
 use service::transaction::TX_TRADE_FEE;
 use service::wallet::Wallet;
 
@@ -44,7 +43,7 @@ impl TradeFee {
     pub fn new(tx_fee: u64, fees: BTreeMap<Wallet, u64>) -> Self {
         TradeFee {
             transaction_fee: tx_fee,
-            assets_fees: fees
+            assets_fees: fees,
         }
     }
 
@@ -89,22 +88,13 @@ impl TxTrade {
 
     pub fn get_fee(&self, view: &mut Fork) -> TradeFee {
         let mut assets_fees = BTreeMap::new();
-        let fee_ratio = |price: u64, coef: u64| (price as f64 / coef as f64).round() as u64;
+        let fee_ratio = |price: u64, ratio: u64| (price as f64 / ratio as f64).round() as u64;
 
         for asset in self.offer().assets() {
             if let Some(info) = AssetSchema::map(view, |mut schema| schema.info(&asset.id())) {
 
                 let trade_fee = info.fees().trade();
-                let fee_pattern = match FeeType::from_str(trade_fee.pattern()) {
-                    Ok(pattern) => pattern,
-                    Err(error) => { println!("Invalid fee pattern: {:?}", error); continue; },
-                };
-                let fee_value = trade_fee.value();
-
-                let fee = match fee_pattern {
-                    FeeType::Amount => fee_value,
-                    FeeType::Ratio => fee_ratio(asset.total_price(), fee_value),
-                };
+                let fee = trade_fee.tax() + fee_ratio(asset.total_price(), trade_fee.ratio());
 
                 if let Some(creator) = WalletSchema::map(
                     view,
@@ -146,7 +136,6 @@ impl Transaction for TxTrade {
             let is_sufficient_funds = seller.balance() + price >= fee.amount();
             let tx_status = if (buyer.balance() >= price) && seller_have_assets &&
                 is_sufficient_funds
-            //todo: необходимо определится с генергацией fee
             {
                 println!("--   Trade transaction   --");
                 println!("Seller's balance before transaction : {:?}", seller);
@@ -186,49 +175,6 @@ impl Transaction for TxTrade {
     fn info(&self) -> Value {
         json!({
             "transaction_data": self,
-            // "tx_fee": self.get_fee().amount(),
         })
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::TxTrade;
-    use exonum::blockchain::Transaction;
-
-    fn get_json() -> String {
-        r#"{
-            "body": {
-                "buyer": "f2ab7abcae9363496ccc458a30ec0a58200d9890a12fdfeca35010da6b276e19",
-                "offer": {
-                    "seller": "dedb2438fca19f04d2236d3005db0f28caa014f34caf98e23634cb49aef1c307",
-                    "assets": [
-                        {
-                            "id": "67e5504410b1426f9247bb680e5fe0c8",
-                            "amount": 5,
-                            "price": "44"
-                        },
-                        {
-                            "id": "a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8",
-                            "amount": 7,
-                            "price": "44"
-                        }
-                    ]
-                },
-                "seed": "4",
-                "seller_signature": "4e7d8d57fdc5c102b241d4e7a8d1228658c1de62a9334fa4e70776759268d67f9cdd8c4d20f7db8b226422c644bf442b0e28d9cbecece7753656c92915b02c06"
-            },
-            "network_id": 0,
-            "protocol_version": 0,
-            "service_id": 2,
-            "message_id": 5,
-            "signature": "aac7ce5fee4fca99fb66c978b94f42ba899834fa6b840491ab5c9245967b5a07bda688c0da52876258ee25d63dc1278cf97a6a90e84c8cb3880b5d6d3e606b06"
-        }"#.to_string()
-    }
-
-    #[test]
-    fn exchange_info_test() {
-        let tx: TxTrade = ::serde_json::from_str(&get_json()).unwrap();
-        // assert_eq!(tx.get_fee().amount(), tx.info()["tx_fee"]);
     }
 }

@@ -7,105 +7,59 @@ use serde_json::value::Value;
 use std::{fmt, mem};
 use std::convert::From;
 use std::error::Error;
-use std::str::FromStr;
 use std::string::ToString;
 use uuid;
 use uuid::Uuid;
 
 pub const ASSET_HASH_ID_MAX_LENGTH: usize = 10 * 1024; // 10 KBytes
 
-pub enum FeeType {
-    Amount,
-    Ratio,
-}
-
-#[allow(missing_docs)]
-#[derive(PartialEq, Eq, Clone, Debug)]
-pub enum FeeParseError {
-    InvalidType(String),
-}
-
-impl fmt::Display for FeeParseError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            FeeParseError::InvalidType(ref found) => {
-                write!(
-                    f,
-                    "Invalid type; expecting {} or {}, found {}",
-                    FeeType::Amount.to_string(),
-                    FeeType::Ratio.to_string(),
-                    found
-                )
-            }
-        }
-    }
-}
-
-impl FromStr for FeeType {
-    type Err = FeeParseError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "amount" => Ok(FeeType::Amount),
-            "ratio" => Ok(FeeType::Ratio),
-            _ => Err(FeeParseError::InvalidType(s.to_string())),
-        }
-    }
-}
-
-impl fmt::Display for FeeType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let printable = match *self {
-            FeeType::Amount => "amount",
-            FeeType::Ratio => "ratio",
-
-        };
-        write!(f, "{}", printable)
-    }
-}
-
 encoding_struct! {
     struct Fee {
         const SIZE = 16;
 
-        field value:   u64  [0 => 8]
-        field pattern: &str [8 => 16]
+        field tax:   u64  [0 => 8]
+        field ratio: u64  [8 => 16]
     }
 }
 
 encoding_struct! {
     struct Fees {
-        const SIZE = 48;
+        const SIZE = 24;
 
-        field trade:    Fee [0 => 16]
-        field exchange: Fee [16 => 32]
-        field transfer: Fee [32 => 48]
+        field trade:    Fee [0 => 8]
+        field exchange: Fee [8 => 16]
+        field transfer: Fee [16 => 24]
     }
 }
 
 encoding_struct! {
     struct MetaAsset {
-        const SIZE = 60;
+        const SIZE = 20;
 
         field data: &str   [0 => 8]
         field amount: u32  [8 => 12]
-        field fees: Fees   [12 => 60]
+        field fees: Fees   [12 => 20]
     }
 }
 
 impl MetaAsset {
     pub fn is_valid(&self) -> bool {
-        self.data().len() <= ASSET_HASH_ID_MAX_LENGTH
+        let trade_fee_is_ok = self.fees().trade().ratio() != 0;
+        let exchange_fee_is_ok = self.fees().exchange().ratio() != 0;
+        let transfer_fee_is_ok = self.fees().transfer().ratio() != 0;
+        let data_is_ok = self.data().len() <= ASSET_HASH_ID_MAX_LENGTH;
+
+        trade_fee_is_ok && exchange_fee_is_ok && transfer_fee_is_ok && data_is_ok
     }
 }
 
 encoding_struct! {
     struct AssetInfo {
-        const SIZE = 84;
+        const SIZE = 44;
 
         field creator: &PublicKey [0  => 32]
         field amount:  u32        [32 => 36]
-        field fees:    Fees       [36 => 84]
+        field fees:    Fees       [36 => 44]
     }
 }
 
