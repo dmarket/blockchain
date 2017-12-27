@@ -5,14 +5,17 @@ use exonum::crypto::{PublicKey, Signature, verify};
 use exonum::messages::Message;
 use exonum::storage::Fork;
 use serde_json::Value;
+use std::str::FromStr;
+use std::collections::BTreeMap;
 
-use service::asset::Asset;
-use service::transaction::{PER_EXCHANGE_ASSET_FEE, TX_EXCHANGE_FEE};
-use service::transaction::fee;
+use service::asset::{Asset, FeeType};
+use service::transaction::TX_EXCHANGE_FEE;
+use service::wallet::Wallet;
 
 use super::{SERVICE_ID, TX_EXCHANGE_ID};
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
 use super::schema::wallet::WalletSchema;
+use super::schema::asset::AssetSchema;
 
 encoding_struct! {
     struct ExchangeOffer {
@@ -27,6 +30,30 @@ encoding_struct! {
         field recipient_value:        u64          [88 => 96]
 
         field fee_strategy:           u8           [96 => 97]
+    }
+}
+
+pub struct ExchangeFee {
+    transaction_fee: u64,
+    assets_fees: BTreeMap<Wallet, u64>,
+}
+
+impl ExchangeFee {
+    pub fn new(tx_fee: u64, fees: BTreeMap<Wallet, u64>) -> Self {
+        ExchangeFee { 
+            transaction_fee: tx_fee, 
+            assets_fees: fees 
+        }
+    }
+
+    pub fn amount(&self) -> u64 {
+        let mut amount = self.transaction_fee;
+        amount += self.assets_fees.iter().fold(0, |acc, asset| acc + asset.1);
+        amount
+    }
+
+    pub fn assets_fees(&self) -> BTreeMap<Wallet, u64> {
+        self.assets_fees.clone()
     }
 }
 
@@ -47,20 +74,42 @@ impl TxExchange {
         self.offer().raw
     }
 
-    pub fn get_fee(&self) -> fee::Fee {
+    pub fn get_fee(&self, view: &mut Fork) -> ExchangeFee {
         let exchange_assets = [
             &self.offer().sender_assets()[..],
             &self.offer().recipient_assets()[..],
         ].concat();
 
-        let fee = fee::TxCalculator::new()
-            .tx_fee(TX_EXCHANGE_FEE)
-            .exchange_calculator()
-            .per_asset_fee(PER_EXCHANGE_ASSET_FEE)
-            .assets(&exchange_assets)
-            .calculate();
+        let mut assets_fees = BTreeMap::new();
 
-        fee
+        let fee_ratio = |count: u32, coef: u64| (count as f64 / coef as f64).round() as u64;
+        for asset in exchange_assets {
+            if let Some(info) = AssetSchema::map(view, |mut schema| schema.info(&asset.id())) {
+
+                let exchange_fee = info.fees().exchange();
+                let fee_pattern = match FeeType::from_str(exchange_fee.pattern()) {
+                    Ok(pattern) => pattern,
+                    Err(error) => { println!("Invalid fee pattern: {:?}", error); continue; },
+                };
+                let fee_value = exchange_fee.value();
+
+                let fee = match fee_pattern {
+                    FeeType::Amount => fee_value,
+                    FeeType::Ratio => fee_ratio(asset.amount(), fee_value),
+                };
+
+                if let Some(creator) = WalletSchema::map(
+                    view,
+                    |mut schema| schema.wallet(info.creator()),
+                )
+                {
+                    *assets_fees.entry(creator).or_insert(0) += fee;
+                }
+
+            }
+        }
+
+        ExchangeFee::new(TX_EXCHANGE_FEE, assets_fees)
     }
 }
 

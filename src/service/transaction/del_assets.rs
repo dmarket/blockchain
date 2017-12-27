@@ -7,7 +7,6 @@ use exonum::storage::Fork;
 use serde_json::Value;
 
 use service::transaction::TX_DEL_ASSET_FEE;
-use service::transaction::fee;
 
 use super::{SERVICE_ID, TX_DEL_ASSETS_ID};
 use service::asset::Asset;
@@ -29,12 +28,7 @@ message! {
 
 impl TxDelAsset {
     pub fn get_fee(&self) -> u64 {
-        let fee = fee::TxCalculator::new()
-            .tx_fee(TX_DEL_ASSET_FEE)
-            .del_asset_calculator()
-            .calculate();
-
-        fee.amount()
+        TX_DEL_ASSET_FEE
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {

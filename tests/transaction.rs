@@ -384,7 +384,8 @@ fn trade_assets() {
 
     tx.execute(fork);
 
-    let creators_fee = tx.get_fee().fees_from_trade().iter().fold(
+    let fee = tx.get_fee(fork);
+    let creators_fee = fee.assets_fees().iter().fold(
         0,
         |acc, asset| {
             acc + asset.1
@@ -403,7 +404,7 @@ fn trade_assets() {
         assert_eq!(Some(10), buyer.asset(half_id).map(|a| a.amount()));
 
         assert_eq!(2000 - price, buyer.balance());
-        assert_eq!(2000 + price - tx.get_fee().amount(), seller.balance());
+        assert_eq!(2000 + price - fee.amount(), seller.balance());
 
         assert_eq!(creators_fee, creator.balance());
     });

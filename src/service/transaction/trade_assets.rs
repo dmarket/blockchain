@@ -9,7 +9,7 @@ use serde_json::Value;
 use std::collections::BTreeMap;
 use std::str::FromStr;
 
-use service::asset::{Asset, TradeAsset, FeeType, AssetID};
+use service::asset::{Asset, TradeAsset, FeeType};
 use service::transaction::TX_TRADE_FEE;
 use service::wallet::Wallet;
 
@@ -17,8 +17,6 @@ use super::{SERVICE_ID, TX_TRADE_ASSETS_ID};
 use super::schema::asset::AssetSchema;
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
 use super::schema::wallet::WalletSchema;
-
-const FEE_FOR_TRADE: f64 = 0.025; // 1/40 = 0.025
 
 encoding_struct! {
     struct TradeOffer {
@@ -39,14 +37,14 @@ impl TradeOffer {
 
 pub struct TradeFee {
     transaction_fee: u64,
-    assets_fees: Vec<(AssetID, u64)>,
+    assets_fees: BTreeMap<Wallet, u64>,
 }
 
 impl TradeFee {
-    pub fn new(tx_fee: u64, assets: Vec<(AssetID, u64)>) -> Self {
+    pub fn new(tx_fee: u64, fees: BTreeMap<Wallet, u64>) -> Self {
         TradeFee {
             transaction_fee: tx_fee,
-            assets_fees: assets
+            assets_fees: fees
         }
     }
 
@@ -56,7 +54,7 @@ impl TradeFee {
         amount
     }
 
-    pub fn assets_fees(&self) -> Vec<(AssetID, u64)> {
+    pub fn assets_fees(&self) -> BTreeMap<Wallet, u64> {
         self.assets_fees.clone()
     }
 }
@@ -90,8 +88,7 @@ impl TxTrade {
     }
 
     pub fn get_fee(&self, view: &mut Fork) -> TradeFee {
-        let mut assets: Vec<(AssetID, u64)> = Vec::new();
-
+        let mut assets_fees = BTreeMap::new();
         let fee_ratio = |price: u64, coef: u64| (price as f64 / coef as f64).round() as u64;
 
         for asset in self.offer().assets() {
@@ -109,29 +106,17 @@ impl TxTrade {
                     FeeType::Ratio => fee_ratio(asset.total_price(), fee_value),
                 };
 
-                assets.push((asset.id(), fee));
-            }
-        }
-
-        TradeFee::new(TX_TRADE_FEE, assets)
-    }
-
-    fn get_creators_and_fees(&self, view: &mut Fork, fee: TradeFee) -> BTreeMap<Wallet, u64> {
-        let mut creators_and_fees = BTreeMap::new();
-
-        for (assetid, fee) in fee.assets_fees() {
-            if let Some(info) = AssetSchema::map(view, |mut schema| schema.info(&assetid)) {
                 if let Some(creator) = WalletSchema::map(
                     view,
                     |mut schema| schema.wallet(info.creator()),
                 )
                 {
-                    *creators_and_fees.entry(creator).or_insert(0) += fee;
+                    *assets_fees.entry(creator).or_insert(0) += fee;
                 }
             }
         }
 
-        creators_and_fees
+        TradeFee::new(TX_TRADE_FEE, assets_fees)
     }
 }
 
@@ -179,7 +164,7 @@ impl Transaction for TxTrade {
                 });
 
                 // send fee to creators of assets
-                for (mut creator, fee) in self.get_creators_and_fees(view, fee) {
+                for (mut creator, fee) in fee.assets_fees() {
                     println!("Creator {:?} will receive {}", creator.pub_key(), fee);
                     creator.increase(fee);
                     WalletSchema::map(view, |mut schema| {
