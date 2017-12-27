@@ -64,12 +64,12 @@ encoding_struct! {
 }
 
 /// A 128-bit (16 byte) buffer containing the ID.
-type AssetIDBytes = [u8; 16];
+type AssetIdBytes = [u8; 16];
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct AssetID {
+pub struct AssetId {
     /// The 128-bit number stored in 16 bytes
-    bytes: AssetIDBytes,
+    bytes: AssetIdBytes,
 }
 
 /// Error details for string parsing failures.
@@ -111,16 +111,16 @@ impl fmt::Display for ParseError {
 
 impl Error for ParseError {
     fn description(&self) -> &str {
-        "AssetID parse error"
+        "AssetId parse error"
     }
 }
 
-impl AssetID {
-    pub fn zero() -> AssetID {
-        AssetID { bytes: [0u8; 16] }
+impl AssetId {
+    pub fn zero() -> AssetId {
+        AssetId { bytes: [0u8; 16] }
     }
 
-    /// Creates unique `AssetID` from
+    /// Creates unique `AssetId` from
     /// `&str` and `&PublicKey`
     /// # Example:
     /// ```
@@ -131,41 +131,41 @@ impl AssetID {
     /// #
     /// # use exonum::crypto::{PublicKey};
     /// # use exonum::encoding::serialize::FromHex;
-    /// # use dmbc::service::asset::AssetID;
+    /// # use dmbc::service::asset::AssetId;
     ///
     /// let data = "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f";
     /// let public_key = PublicKey::from_hex("3115dbc2ff73f4819672d5e9e421692305a9de1a18e4389df041c0cf6c8918a8").unwrap();
     ///
-    /// let assetid = AssetID::new(&data, &public_key).unwrap();
+    /// let assetid = AssetId::new(&data, &public_key).unwrap();
     /// assert_eq!(assetid.to_string(), "82c1f90bed24508e9ce74b536f97fa9c");
     /// # }
     /// ```
-    pub fn new(data: &str, pub_key: &PublicKey) -> Result<AssetID, ParseError> {
+    pub fn new(data: &str, pub_key: &PublicKey) -> Result<AssetId, ParseError> {
         let s = pub_key.to_hex();
         let ful_s = s + &data;
 
         let uuid = Uuid::new_v5(&uuid::NAMESPACE_DNS, &ful_s);
-        AssetID::from_bytes(uuid.as_bytes())
+        AssetId::from_bytes(uuid.as_bytes())
     }
 
     pub fn as_bytes(&self) -> &[u8; 16] {
         &self.bytes
     }
 
-    pub fn from_bytes(b: &[u8]) -> Result<AssetID, ParseError> {
+    pub fn from_bytes(b: &[u8]) -> Result<AssetId, ParseError> {
         let len = b.len();
-        if len != mem::size_of::<AssetIDBytes>() {
+        if len != mem::size_of::<AssetIdBytes>() {
             return Err(ParseError::InvalidLength(len));
         }
 
-        let mut assetid = AssetID::zero();
+        let mut assetid = AssetId::zero();
         assetid.bytes.copy_from_slice(b);
         Ok(assetid)
     }
 
-    pub fn from_str(us: &str) -> Result<AssetID, ParseError> {
+    pub fn from_str(us: &str) -> Result<AssetId, ParseError> {
         let len = us.len();
-        if len != mem::size_of::<AssetIDBytes>() * 2 {
+        if len != mem::size_of::<AssetIdBytes>() * 2 {
             return Err(ParseError::InvalidLength(len));
         }
 
@@ -187,11 +187,11 @@ impl AssetID {
             }
         }
 
-        AssetID::from_bytes(&bytes)
+        AssetId::from_bytes(&bytes)
     }
 }
 
-impl ToString for AssetID {
+impl ToString for AssetId {
     fn to_string(&self) -> String {
         let mut assetid_hex = "".to_string();
         let len = self.bytes.len();
@@ -204,15 +204,15 @@ impl ToString for AssetID {
 }
 
 
-impl StorageKey for AssetID {
+impl StorageKey for AssetId {
     fn size(&self) -> usize {
-        mem::size_of::<AssetIDBytes>()
+        mem::size_of::<AssetIdBytes>()
     }
 
     fn read(buffer: &[u8]) -> Self {
         let mut bytes = [0u8; 16];
         bytes.copy_from_slice(buffer);
-        AssetID { bytes: bytes }
+        AssetId { bytes: bytes }
     }
 
     fn write(&self, buffer: &mut [u8]) {
@@ -220,15 +220,15 @@ impl StorageKey for AssetID {
     }
 }
 
-impl<'a> Field<'a> for AssetID {
+impl<'a> Field<'a> for AssetId {
     fn field_size() -> Offset {
-        mem::size_of::<AssetIDBytes>() as Offset
+        mem::size_of::<AssetIdBytes>() as Offset
     }
 
-    unsafe fn read(buffer: &'a [u8], from: Offset, to: Offset) -> AssetID {
+    unsafe fn read(buffer: &'a [u8], from: Offset, to: Offset) -> AssetId {
         let mut bytes = [0u8; 16];
         bytes.copy_from_slice(&buffer[from as usize..to as usize]);
-        AssetID { bytes: bytes }
+        AssetId { bytes: bytes }
     }
 
     fn write(&self, buffer: &mut Vec<u8>, from: Offset, to: Offset) {
@@ -246,7 +246,7 @@ impl<'a> Field<'a> for AssetID {
     }
 }
 
-impl ExonumJson for AssetID {
+impl ExonumJson for AssetId {
     fn deserialize_field<B: WriteBufferWrapper>(
         value: &Value,
         buffer: &mut B,
@@ -254,7 +254,7 @@ impl ExonumJson for AssetID {
         to: Offset,
     ) -> Result<(), Box<Error>> {
         let val = value.as_str().ok_or("Can't cast json as string")?;
-        match AssetID::from_str(&val) {
+        match AssetId::from_str(&val) {
             Ok(assetid) => {
                 buffer.write(from, to, assetid);
                 Ok(())
@@ -268,7 +268,7 @@ impl ExonumJson for AssetID {
     }
 }
 
-impl fmt::Debug for AssetID {
+impl fmt::Debug for AssetId {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "AssetId({})", self.to_string())
     }
@@ -278,7 +278,7 @@ encoding_struct! {
     struct Asset {
         const SIZE = 20;
 
-        field id: AssetID [0 =>  16]
+        field id: AssetId [0 =>  16]
         field amount:  u32 [16 => 20]
     }
 }
@@ -293,11 +293,11 @@ impl Asset {
     }
 
     pub fn from_meta_asset(meta_asset: &MetaAsset, pub_key: &PublicKey) -> Asset {
-        Asset::from_str(&meta_asset.data(), meta_asset.amount(), pub_key)
+        Asset::from_parts(&meta_asset.data(), meta_asset.amount(), pub_key)
     }
 
-    pub fn from_str(s: &str, amount: u32, pub_key: &PublicKey) -> Asset {
-        let id = AssetID::new(s, pub_key).unwrap();
+    pub fn from_parts(s: &str, amount: u32, pub_key: &PublicKey) -> Asset {
+        let id = AssetId::new(s, pub_key).unwrap();
         Asset::new(id, amount)
     }
 
@@ -316,7 +316,7 @@ encoding_struct! {
     struct TradeAsset {
         const SIZE = 28;
 
-        field id: AssetID [0 => 16]
+        field id: AssetId [0 => 16]
         field amount: u32 [16 => 20]
         field price: u64  [20 => 28] 
     }
@@ -330,13 +330,13 @@ impl TradeAsset {
 
 #[cfg(test)]
 mod tests {
-    use super::AssetID;
+    use super::AssetId;
     use super::ParseError::*;
     use exonum::encoding::{Field, Offset};
 
     #[test]
     fn assetid_zero() {
-        let assetid = AssetID::zero();
+        let assetid = AssetId::zero();
         let expected = "00000000000000000000000000000000";
 
         assert_eq!(assetid.to_string(), expected);
@@ -364,7 +364,7 @@ mod tests {
             0xd8,
         ];
 
-        let assetid = AssetID::from_bytes(&b).unwrap();
+        let assetid = AssetId::from_bytes(&b).unwrap();
 
         assert_eq!(assetid.as_bytes(), &b);
     }
@@ -372,16 +372,16 @@ mod tests {
     #[test]
     fn assetid_from_str() {
         // Invalid
-        assert_eq!(AssetID::from_str(""), Err(InvalidLength(0)));
-        assert_eq!(AssetID::from_str("!"), Err(InvalidLength(1)));
+        assert_eq!(AssetId::from_str(""), Err(InvalidLength(0)));
+        assert_eq!(AssetId::from_str("!"), Err(InvalidLength(1)));
         assert_eq!(
-            AssetID::from_str("67e5504410b1426%9247bb680e5fe0c8"),
+            AssetId::from_str("67e5504410b1426%9247bb680e5fe0c8"),
             Err(InvalidCharacter('%', 15))
         );
 
         // Valid
-        assert!(AssetID::from_str("00000000000000000000000000000000").is_ok());
-        assert!(AssetID::from_str("67e5504410b1426f9247bb680e5fe0c8").is_ok());
+        assert!(AssetId::from_str("00000000000000000000000000000000").is_ok());
+        assert!(AssetId::from_str("67e5504410b1426f9247bb680e5fe0c8").is_ok());
     }
 
     #[test]
@@ -404,7 +404,7 @@ mod tests {
             0xd7,
             0xd8,
         ];
-        let assetid = AssetID::from_str("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8").unwrap();
+        let assetid = AssetId::from_str("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8").unwrap();
 
         assert_eq!(assetid.as_bytes(), &expected);
     }
@@ -430,7 +430,7 @@ mod tests {
             0xd8,
         ];
 
-        let assetid = AssetID::from_bytes(&b).unwrap();
+        let assetid = AssetId::from_bytes(&b).unwrap();
         let expected = "a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8";
 
         assert_eq!(assetid.to_string(), expected);
@@ -440,8 +440,8 @@ mod tests {
     fn assetid_read() {
         let buffer = vec![0; 16];
         unsafe {
-            let assetid = AssetID::read(&buffer, 0, 16);
-            assert_eq!(assetid, AssetID::zero());
+            let assetid = AssetId::read(&buffer, 0, 16);
+            assert_eq!(assetid, AssetId::zero());
         }
 
         let buffer = vec![
@@ -463,16 +463,16 @@ mod tests {
             0xd8,
         ];
         unsafe {
-            let assetid = AssetID::read(&buffer, 0, buffer.len() as Offset);
-            let expected = AssetID::from_bytes(&buffer).unwrap();
+            let assetid = AssetId::read(&buffer, 0, buffer.len() as Offset);
+            let expected = AssetId::from_bytes(&buffer).unwrap();
             assert_eq!(assetid, expected);
         }
 
         let mut extended_buffer = vec![0xde, 0xad];
         extended_buffer.extend(&buffer);
         unsafe {
-            let assetid = AssetID::read(&extended_buffer, 2, extended_buffer.len() as Offset);
-            let expected = AssetID::from_bytes(&buffer).unwrap();
+            let assetid = AssetId::read(&extended_buffer, 2, extended_buffer.len() as Offset);
+            let expected = AssetId::from_bytes(&buffer).unwrap();
             assert_eq!(assetid, expected);
         }
     }
@@ -497,7 +497,7 @@ mod tests {
             0xd7,
             0xd8,
         ];
-        let assetid = AssetID::from_bytes(&expected).unwrap();
+        let assetid = AssetId::from_bytes(&expected).unwrap();
         let mut buffer = vec![0; expected.len()];
 
         assetid.write(&mut buffer, 0, expected.len() as Offset);
@@ -525,7 +525,7 @@ mod tests {
             0x0,
             0x0,
         ];
-        let assetid = AssetID::from_bytes(&expected[2..18]).unwrap();
+        let assetid = AssetId::from_bytes(&expected[2..18]).unwrap();
         let mut buffer = vec![0; expected.len()];
 
         assetid.write(&mut buffer, 2, 18);

@@ -1,6 +1,6 @@
 use exonum::crypto::PublicKey;
 
-use service::asset::{Asset, AssetID};
+use service::asset::{Asset, AssetId};
 use service::wallet::Wallet;
 
 pub struct Builder {
@@ -43,7 +43,7 @@ impl Builder {
 
     pub fn build(self) -> Asset {
         self.validate();
-        let id = AssetID::new(self.data.as_ref().unwrap(), self.creator.as_ref().unwrap()).unwrap();
+        let id = AssetId::new(self.data.as_ref().unwrap(), self.creator.as_ref().unwrap()).unwrap();
         Asset::new(id, self.amount)
     }
 

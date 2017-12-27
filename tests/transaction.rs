@@ -6,7 +6,7 @@ use exonum::crypto;
 use exonum::messages::Message;
 use exonum::storage::{Database, MemoryDB};
 
-use dmbc::service::asset::{Asset, AssetID, AssetInfo};
+use dmbc::service::asset::{Asset, AssetId, AssetInfo};
 use dmbc::service::builders::fee;
 use dmbc::service::builders::transaction;
 use dmbc::service::builders::wallet;
@@ -21,8 +21,8 @@ fn add_assets() {
     let absent_data = "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f";
     let existing_data = "a8d5c97d-9978-4111-9947-7a95dcb31d0f";
 
-    let absent_id = AssetID::new(absent_data, &public_key).unwrap();
-    let existing_id = AssetID::new(existing_data, &public_key).unwrap();
+    let absent_id = AssetId::new(absent_data, &public_key).unwrap();
+    let existing_id = AssetId::new(existing_data, &public_key).unwrap();
 
     let absent_fees = fee::Builder::new()
         .trade(10, 10)
@@ -128,9 +128,9 @@ fn delete_assets() {
     let db = MemoryDB::new();
     let fork = &mut db.fork();
 
-    let id_1 = AssetID::new(data_1, &public_key).unwrap();
-    let id_2 = AssetID::new(data_2, &public_key).unwrap();
-    let id_3 = AssetID::new(data_3, &public_key).unwrap();
+    let id_1 = AssetId::new(data_1, &public_key).unwrap();
+    let id_2 = AssetId::new(data_2, &public_key).unwrap();
+    let id_3 = AssetId::new(data_3, &public_key).unwrap();
 
     let fee = fee::Builder::new()
         .trade(10, 10)
@@ -167,7 +167,7 @@ fn delete_assets_fails() {
     let (public_key, secret_key) = crypto::gen_keypair();
 
     let data = "asset";
-    let id = AssetID::new(data, &public_key).unwrap();
+    let id = AssetId::new(data, &public_key).unwrap();
 
     let wallet = wallet::Builder::new()
         .key(public_key)
@@ -229,16 +229,16 @@ fn exchange() {
     let (recipient_public, _) = crypto::gen_keypair();
 
     let sender_data_1 = "sender asset 1";
-    let sender_id_1 = AssetID::new(sender_data_1, &sender_public).unwrap();
+    let sender_id_1 = AssetId::new(sender_data_1, &sender_public).unwrap();
 
     let sender_data_2 = "sender asset 2";
-    let sender_id_2 = AssetID::new(sender_data_2, &sender_public).unwrap();
+    let sender_id_2 = AssetId::new(sender_data_2, &sender_public).unwrap();
 
     let recipient_data_1 = "recipient asset 1";
-    let recipient_id_1 = AssetID::new(recipient_data_1, &recipient_public).unwrap();
+    let recipient_id_1 = AssetId::new(recipient_data_1, &recipient_public).unwrap();
 
     let recipient_data_2 = "recipient asset 2";
-    let recipient_id_2 = AssetID::new(recipient_data_2, &recipient_public).unwrap();
+    let recipient_id_2 = AssetId::new(recipient_data_2, &recipient_public).unwrap();
 
     let sender = wallet::Builder::new()
         .key(sender_public)
@@ -316,10 +316,10 @@ fn trade_assets() {
     let (buyer_public, _) = crypto::gen_keypair();
 
     let full_data = "fully transferred asset";
-    let full_id = AssetID::new(full_data, &creator_public).unwrap();
+    let full_id = AssetId::new(full_data, &creator_public).unwrap();
 
     let half_data = "partially transferred asset";
-    let half_id = AssetID::new(half_data, &creator_public).unwrap();
+    let half_id = AssetId::new(half_data, &creator_public).unwrap();
 
     let asset1 = Asset::new(full_id, 20);
     let asset2 = Asset::new(half_id, 20);
@@ -411,10 +411,10 @@ fn transfer() {
     let (recipient_public, _) = crypto::gen_keypair();
 
     let full_data = "fully transferred asset";
-    let full_id = AssetID::new(full_data, &sender_public).unwrap();
+    let full_id = AssetId::new(full_data, &sender_public).unwrap();
 
     let half_data = "partially transferred asset";
-    let half_id = AssetID::new(half_data, &sender_public).unwrap();
+    let half_id = AssetId::new(half_data, &sender_public).unwrap();
 
     let sender = wallet::Builder::new()
         .key(sender_public)

@@ -201,7 +201,7 @@ impl TxDelAssetBuilder {
     }
 
     pub fn add_asset(self, name: &str, count: u32) -> Self {
-        let asset = Asset::from_str(name, count, &self.meta.public_key);
+        let asset = Asset::from_parts(name, count, &self.meta.public_key);
         self.add_asset_value(asset)
     }
 
@@ -261,7 +261,7 @@ impl TxExchangeBuilder {
     }
 
     pub fn sender_add_asset(self, name: &str, count: u32) -> Self {
-        let asset = Asset::from_str(name, count, &self.meta.public_key);
+        let asset = Asset::from_parts(name, count, &self.meta.public_key);
         self.sender_add_asset_value(asset)
     }
 
@@ -285,7 +285,7 @@ impl TxExchangeBuilder {
     }
 
     pub fn recipient_add_asset(self, name: &str, count: u32) -> Self {
-        let asset = Asset::from_str(name, count, &self.recipient.unwrap());
+        let asset = Asset::from_parts(name, count, &self.recipient.unwrap());
         self.recipient_add_asset_value(asset)
     }
 
@@ -379,7 +379,7 @@ impl TxTradeBuilder {
     }
 
     pub fn add_asset(self, name: &str, count: u32, price: u64) -> Self {
-        let asset = Asset::from_str(name, count, &self.meta.public_key);
+        let asset = Asset::from_parts(name, count, &self.meta.public_key);
         let trade = asset.into_trade_asset(price);
         self.add_asset_value(trade)
     }
@@ -443,7 +443,7 @@ impl TxTransferBuilder {
     }
 
     pub fn add_asset(self, name: &str, count: u32) -> Self {
-        let asset = Asset::from_str(name, count, &self.meta.public_key);
+        let asset = Asset::from_parts(name, count, &self.meta.public_key);
         self.add_asset_value(asset)
     }
 
@@ -560,7 +560,7 @@ mod test {
     #[test]
     fn del_assets() {
         let (public_key, secret_key) = crypto::gen_keypair();
-        let asset = Asset::from_str("foobar", 9, &public_key);
+        let asset = Asset::from_parts("foobar", 9, &public_key);
         let transaction = transaction::Builder::new()
             .keypair(public_key, secret_key.clone())
             .tx_del_assets()
@@ -579,8 +579,8 @@ mod test {
         let (public_key, secret_key) = crypto::gen_keypair();
 
         let (recipient, _) = crypto::gen_keypair();
-        let sender_asset = Asset::from_str("foobar", 9, &public_key);
-        let recipient_asset = Asset::from_str("bazqux", 13, &public_key);
+        let sender_asset = Asset::from_parts("foobar", 9, &public_key);
+        let recipient_asset = Asset::from_parts("bazqux", 13, &public_key);
 
         let transaction = transaction::Builder::new()
             .keypair(public_key, secret_key.clone())
@@ -627,7 +627,7 @@ mod test {
     fn trade_assets() {
         let (public_key, secret_key) = crypto::gen_keypair();
         let (buyer, _) = crypto::gen_keypair();
-        let asset = Asset::from_str("foobar", 9, &public_key);
+        let asset = Asset::from_parts("foobar", 9, &public_key);
         let trade_asset = asset.into_trade_asset(9);
         let transaction = transaction::Builder::new()
             .keypair(public_key, secret_key.clone())
@@ -648,7 +648,7 @@ mod test {
     fn transfer() {
         let (public_key, secret_key) = crypto::gen_keypair();
         let (recipient, _) = crypto::gen_keypair();
-        let asset = Asset::from_str("foobar", 9, &public_key);
+        let asset = Asset::from_parts("foobar", 9, &public_key);
         let transaction = transaction::Builder::new()
             .keypair(public_key, secret_key.clone())
             .tx_transfer()

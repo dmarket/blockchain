@@ -3,7 +3,7 @@ use exonum::storage::{Fork, MapIndex};
 use std::collections::HashMap;
 
 use service::SERVICE_NAME;
-use service::asset::{Asset, AssetID, AssetInfo, Fees, MetaAsset};
+use service::asset::{Asset, AssetId, AssetInfo, Fees, MetaAsset};
 
 pub struct AssetSchema<'a>(&'a mut Fork);
 
@@ -36,18 +36,18 @@ pub fn external_internal(
 }
 
 impl<'a> AssetSchema<'a> {
-    pub fn assets(&mut self) -> MapIndex<&mut Fork, AssetID, AssetInfo> {
+    pub fn assets(&mut self) -> MapIndex<&mut Fork, AssetId, AssetInfo> {
         let name = SERVICE_NAME.to_string().replace("/", "_") + ".assets";
         MapIndex::new(name, self.0)
     }
 
-    pub fn info(&mut self, asset_id: &AssetID) -> Option<AssetInfo> {
+    pub fn info(&mut self, asset_id: &AssetId) -> Option<AssetInfo> {
         self.assets().get(&asset_id)
     }
 
     pub fn add_asset(
         &mut self,
-        asset_id: &AssetID,
+        asset_id: &AssetId,
         creator: &PublicKey,
         amount: u32,
         fees: Fees,
