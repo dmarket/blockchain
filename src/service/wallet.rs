@@ -2,7 +2,7 @@ extern crate exonum;
 
 use exonum::crypto::PublicKey;
 use exonum::encoding::Field;
-use service::asset::{Asset, AssetID};
+use service::asset::{Asset, AssetId};
 
 encoding_struct! {
     #[derive(Eq, PartialOrd, Ord)]
@@ -79,7 +79,7 @@ impl Wallet {
         asset_list.into_iter().all(|a| self.allow_amount(&a))
     }
 
-    pub fn asset(&self, id: AssetID) -> Option<Asset> {
+    pub fn asset(&self, id: AssetId) -> Option<Asset> {
         self.assets().into_iter().find(|asset| asset.id() == id)
     }
 }
@@ -87,16 +87,16 @@ impl Wallet {
 #[cfg(test)]
 mod tests {
     use super::Wallet;
-    use service::asset::{Asset, AssetID};
+    use service::asset::{Asset, AssetId};
 
     #[test]
     fn test_is_assets_in_wallet() {
         let (pub_key, _) = ::exonum::crypto::gen_keypair();
 
-        let assetid1 = AssetID::from_str("67e5504410b1426f9247bb680e5fe0c8").unwrap();
-        let assetid2 = AssetID::from_str("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8").unwrap();
-        let assetid3 = AssetID::from_str("8d7d6d5d4d3d2d1d2c1c2b1b4a3a2a1a").unwrap();
-        let assetid4 = AssetID::from_str("8c0ef5e086bb7429f6241b0144055e76").unwrap();
+        let assetid1 = AssetId::from_str("67e5504410b1426f9247bb680e5fe0c8").unwrap();
+        let assetid2 = AssetId::from_str("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8").unwrap();
+        let assetid3 = AssetId::from_str("8d7d6d5d4d3d2d1d2c1c2b1b4a3a2a1a").unwrap();
+        let assetid4 = AssetId::from_str("8c0ef5e086bb7429f6241b0144055e76").unwrap();
 
         let wallet = Wallet::new(
             &pub_key,
@@ -124,10 +124,10 @@ mod tests {
     fn test_add_assets() {
         let (pub_key, _) = ::exonum::crypto::gen_keypair();
 
-        let assetid1 = AssetID::from_str("67e5504410b1426f9247bb680e5fe0c8").unwrap();
-        let assetid2 = AssetID::from_str("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8").unwrap();
-        let assetid3 = AssetID::from_str("8d7d6d5d4d3d2d1d2c1c2b1b4a3a2a1a").unwrap();
-        let assetid4 = AssetID::from_str("8c0ef5e086bb7429f6241b0144055e76").unwrap();
+        let assetid1 = AssetId::from_str("67e5504410b1426f9247bb680e5fe0c8").unwrap();
+        let assetid2 = AssetId::from_str("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8").unwrap();
+        let assetid3 = AssetId::from_str("8d7d6d5d4d3d2d1d2c1c2b1b4a3a2a1a").unwrap();
+        let assetid4 = AssetId::from_str("8c0ef5e086bb7429f6241b0144055e76").unwrap();
 
         let mut wallet = Wallet::new(
             &pub_key,
@@ -149,10 +149,10 @@ mod tests {
     fn test_del_assets() {
         let (pub_key, _) = ::exonum::crypto::gen_keypair();
 
-        let assetid1 = AssetID::from_str("67e5504410b1426f9247bb680e5fe0c8").unwrap();
-        let assetid2 = AssetID::from_str("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8").unwrap();
-        let assetid3 = AssetID::from_str("8d7d6d5d4d3d2d1d2c1c2b1b4a3a2a1a").unwrap();
-        let assetid4 = AssetID::from_str("8c0ef5e086bb7429f6241b0144055e76").unwrap();
+        let assetid1 = AssetId::from_str("67e5504410b1426f9247bb680e5fe0c8").unwrap();
+        let assetid2 = AssetId::from_str("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8").unwrap();
+        let assetid3 = AssetId::from_str("8d7d6d5d4d3d2d1d2c1c2b1b4a3a2a1a").unwrap();
+        let assetid4 = AssetId::from_str("8c0ef5e086bb7429f6241b0144055e76").unwrap();
 
         let mut wallet = Wallet::new(
             &pub_key,

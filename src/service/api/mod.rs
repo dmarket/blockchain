@@ -8,14 +8,14 @@ extern crate params;
 use exonum::api::Api;
 use exonum::blockchain::Blockchain;
 use exonum::node::ApiSender;
+use hyper::header::{AccessControlAllowHeaders, AccessControlAllowMethods, Headers};
+use hyper::method::Method;
+use hyper::status::StatusCode;
+use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use router::Router;
-use iron::headers::AccessControlAllowOrigin;
-use hyper::header::{AccessControlAllowMethods, AccessControlAllowHeaders, Headers};
-use hyper::status::StatusCode;
-use hyper::method::Method;
-use unicase::UniCase;
 use std::cmp;
+use unicase::UniCase;
 
 use self::asset::AssetApi;
 use self::hash::HashApi;
@@ -62,8 +62,12 @@ impl ServiceApi {
 
     pub fn add_option_headers(headers: &mut Headers) {
         headers.set(AccessControlAllowOrigin::Any);
-        headers.set(AccessControlAllowHeaders(vec![UniCase("content-type".to_owned())]));
-        headers.set(AccessControlAllowMethods(vec![Method::Get, Method::Post, Method::Options]));
+        headers.set(AccessControlAllowHeaders(
+            vec![UniCase("content-type".to_owned())],
+        ));
+        headers.set(AccessControlAllowMethods(
+            vec![Method::Get, Method::Post, Method::Options],
+        ));
     }
 }
 

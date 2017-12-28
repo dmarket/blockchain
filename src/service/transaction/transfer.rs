@@ -8,7 +8,6 @@ use serde_json::Value;
 use service::asset::Asset;
 
 use service::transaction::TX_TRANSFER_FEE;
-use service::transaction::fee;
 
 use super::{SERVICE_ID, TX_TRANSFER_ID};
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
@@ -30,12 +29,7 @@ message! {
 
 impl TxTransfer {
     pub fn get_fee(&self) -> u64 {
-        let fee = fee::TxCalculator::new()
-            .tx_fee(TX_TRANSFER_FEE)
-            .transfer_callculator()
-            .calculate();
-
-        fee.amount()
+        TX_TRANSFER_FEE
     }
 }
 

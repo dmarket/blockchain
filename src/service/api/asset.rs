@@ -11,7 +11,7 @@ use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use router::Router;
 
-use service::asset::{AssetID, AssetInfo};
+use service::asset::{AssetId, AssetInfo};
 use service::schema::asset::AssetSchema;
 
 #[derive(Clone)]
@@ -21,7 +21,7 @@ pub struct AssetApi {
 
 /// Shortcut to get data on wallets.
 impl AssetApi {
-    fn get_owner_for_asset(&self, asset_id: &AssetID) -> Option<AssetInfo> {
+    fn get_owner_for_asset(&self, asset_id: &AssetId) -> Option<AssetInfo> {
         let mut view = self.blockchain.fork();
         AssetSchema::map(&mut view, |mut schema| schema.info(asset_id))
     }
@@ -33,7 +33,7 @@ impl Api for AssetApi {
         let get_owner_for_asset_id = move |req: &mut Request| -> IronResult<Response> {
             let path = req.url.path();
             let asset_id_str = path.last().unwrap();
-            let asset_id = AssetID::from_str(&asset_id_str);
+            let asset_id = AssetId::from_str(&asset_id_str);
             if asset_id.is_err() {
                 let res =
                     self_.not_found_response(&serde_json::to_value("Invalid Asset ID").unwrap());
