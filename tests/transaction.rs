@@ -17,6 +17,7 @@ use dmbc::service::schema::wallet::WalletSchema;
 #[test]
 fn add_assets() {
     let (public_key, secret_key) = crypto::gen_keypair();
+    let (receiver_key, _) = crypto::gen_keypair();
 
     let absent_data = "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f";
     let existing_data = "a8d5c97d-9978-4111-9947-7a95dcb31d0f";
@@ -39,8 +40,8 @@ fn add_assets() {
     let tx = transaction::Builder::new()
         .keypair(public_key, secret_key.clone())
         .tx_add_assets()
-        .add_asset(absent_data, 45, absent_fees.clone())
-        .add_asset(existing_data, 17, existing_fees.clone())
+        .add_asset(receiver_key, absent_data, 45, absent_fees.clone())
+        .add_asset(receiver_key, existing_data, 17, existing_fees.clone())
         .seed(85)
         .build();
 
