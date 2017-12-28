@@ -16,7 +16,14 @@ doc = false
 
 [[bin]]
 name = "fuzz"
-path = "src/bin/fuzz/main.rs"
+path = "src/bin/fuzz.rs"
+test = false
+bench = false
+doc = false
+
+[[bin]]
+name = "setup-fuzz"
+path = "src/bin/setup_fuzz.rs"
 test = false
 bench = false
 doc = false
@@ -34,6 +41,9 @@ toml = "0.4.5"
 uuid = { version = "0.5", features = ["v5"] }
 exonum = "0.4"
 exonum-configuration = "0.4"
+exonum-testkit = "0.1"
+bincode = "*"
 
 [dev-dependencies]
 afl = "0.3"
+
