@@ -21,12 +21,7 @@ use dmbc::service::builders::transaction;
 use fuzz_data::FuzzData;
 
 fn setup() -> Result<(), Box<Error>> {
-    // TODO:
-    // write fuzz data to fuzz/data.in
-    // write each transaction to fuzz/tx_<kind>.in
-    //   if such file already exists, rewrite if it is older than data.in
-
-    let data : FuzzData = File::create("./fuzz/data.in")
+    let data : FuzzData = File::create("./fuzz-data.toml")
         .and_then(|mut f| {
             let (genesis, _) = crypto::gen_keypair();
             let (alice, _) = crypto::gen_keypair();
@@ -40,12 +35,12 @@ fn setup() -> Result<(), Box<Error>> {
                 return Err(e);
             }
             let mut data = Vec::new();
-            File::open("./fuzz/data.in")?.read_to_end(&mut data)?;
+            File::open("./fuzz-data.toml")?.read_to_end(&mut data)?;
             Ok(toml::from_slice(&data).unwrap())
         })
         .map_err(Box::new)?;
 
-    tx_file("./fuzz/tx_add_assets.in").and_then(|mut f| {
+    tx_file("./fuzz-in/tx_add_assets.in").and_then(|mut f| {
         let tx = transaction::Builder::new()
             .keypair(data.alice, SecretKey::zero())
             .tx_add_assets()
@@ -56,7 +51,7 @@ fn setup() -> Result<(), Box<Error>> {
         f.write_all(&tx).map_err(|e| e.into())
     }).unwrap_or_else(|e| eprintln!("{}", e));
 
-    tx_file("./fuzz/tx_create_wallet.in").and_then(|mut f| {
+    tx_file("./fuzz-in/tx_create_wallet.in").and_then(|mut f| {
         let tx = transaction::Builder::new()
             .keypair(data.alice, SecretKey::zero())
             .tx_create_wallet()
@@ -65,7 +60,7 @@ fn setup() -> Result<(), Box<Error>> {
         f.write_all(&tx).map_err(|e| e.into())
     }).unwrap_or_else(|e| eprintln!("{}", e));
 
-    tx_file("./fuzz/tx_del_assets.in").and_then(|mut f| {
+    tx_file("./fuzz-in/tx_del_assets.in").and_then(|mut f| {
         let tx = transaction::Builder::new()
             .keypair(data.alice, SecretKey::zero())
             .tx_add_assets()
@@ -76,7 +71,7 @@ fn setup() -> Result<(), Box<Error>> {
         f.write_all(&tx).map_err(|e| e.into())
     }).unwrap_or_else(|e| eprintln!("{}", e));
 
-    tx_file("./fuzz/tx_exchange.in").and_then(|mut f| {
+    tx_file("./fuzz-in/tx_exchange.in").and_then(|mut f| {
         let tx = transaction::Builder::new()
             .keypair(data.alice, SecretKey::zero())
             .tx_exchange()
@@ -92,7 +87,7 @@ fn setup() -> Result<(), Box<Error>> {
         f.write_all(&tx).map_err(|e| e.into())
     }).unwrap_or_else(|e| eprintln!("{}", e));
 
-    tx_file("./fuzz/tx_mining.in").and_then(|mut f| {
+    tx_file("./fuzz-in/tx_mining.in").and_then(|mut f| {
         let tx = transaction::Builder::new()
             .keypair(data.alice, SecretKey::zero())
             .tx_mining()
@@ -102,7 +97,7 @@ fn setup() -> Result<(), Box<Error>> {
         f.write_all(&tx).map_err(|e| e.into())
     }).unwrap_or_else(|e| eprintln!("{}", e));
 
-    tx_file("./fuzz/tx_trade_assets.in").and_then(|mut f| {
+    tx_file("./fuzz-in/tx_trade_assets.in").and_then(|mut f| {
         let tx = transaction::Builder::new()
             .keypair(data.alice, SecretKey::zero())
             .tx_trade_assets()
@@ -115,7 +110,7 @@ fn setup() -> Result<(), Box<Error>> {
         f.write_all(&tx).map_err(|e| e.into())
     }).unwrap_or_else(|e| eprintln!("{}", e));
 
-    tx_file("./fuzz/tx_transfer.in").and_then(|mut f| {
+    tx_file("./fuzz-in/tx_transfer.in").and_then(|mut f| {
         let tx = transaction::Builder::new()
             .keypair(data.alice, SecretKey::zero())
             .tx_transfer()
@@ -132,7 +127,7 @@ fn setup() -> Result<(), Box<Error>> {
 }
 
 fn tx_file(path: &str) -> Result<File, Box<Error>> {
-    let data_modified = fs::metadata("./fuzz/data.in")
+    let data_modified = fs::metadata("./fuzz-data.toml")
         .and_then(|md| md.modified())
         .map_err(Box::new)?;
     let tx_is_newer = fs::metadata(path)
@@ -140,7 +135,7 @@ fn tx_file(path: &str) -> Result<File, Box<Error>> {
         .map(|modified| modified > data_modified);
 
     if let Ok(true) = tx_is_newer {
-        return Err(format!("File is newer than data.in: {}", path).into());
+        return Err(format!("File is newer than fuzz-data.toml: {}", path).into());
     }
 
     File::create(path).map_err(|e| e.into())

@@ -17,5 +17,7 @@ Cargo.lock
 /var/keys/test.json
 #!/var/keys/.gitkeep
 
-# Fuzzing directory.
-/fuzz/
+# Fuzzer
+/fuzz-data.toml
+/fuzz-in/
+/fuzz-out/

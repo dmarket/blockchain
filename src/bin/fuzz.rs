@@ -41,23 +41,13 @@ use dmbc::service::transaction::transfer::TxTransfer;
 
 use fuzz_data::FuzzData;
 
-fn tx_from_raw(rm: RawMessage) -> Box<Transaction> {
-    match rm.message_type() {
-        TX_ADD_ASSETS_ID => Box::new(TxAddAsset::from_raw(rm).unwrap()),
-        TX_CREATE_WALLET_ID => Box::new(TxCreateWallet::from_raw(rm).unwrap()),
-        TX_DEL_ASSETS_ID => Box::new(TxDelAsset::from_raw(rm).unwrap()),
-        TX_EXCHANGE_ID => Box::new(TxExchange::from_raw(rm).unwrap()),
-        TX_TRADE_ASSETS_ID => Box::new(TxTrade::from_raw(rm).unwrap()),
-        TX_TRANSFER_ID => Box::new(TxTransfer::from_raw(rm).unwrap()),
-        TX_MINING_ID => Box::new(TxMining::from_raw(rm).unwrap()),
-        _ => panic!("Unknown message type!"),
-    }
-}
-
 fn main() {
     fuzz(|| {
         let mut data_vec = Vec::new();
-        File::open("./fuzz/data.in").unwrap().read_to_end(&mut data_vec).unwrap();
+        File::open("./fuzz-data.toml")
+            .expect("Unable to open fuzz-data.toml")
+            .read_to_end(&mut data_vec)
+            .unwrap();
         let data : FuzzData = toml::from_slice(&data_vec).unwrap();
         let setup = setup_transactions(&data);
 
@@ -72,14 +62,25 @@ fn main() {
         let mut data = Vec::new();
         io::stdin().read_to_end(&mut data).unwrap();
         let message = RawMessage::new(MessageBuffer::from_vec(data));
-        let tx = tx_from_raw(message);
+        let tx = tx_from_raw(message.clone());
 
         testkit.create_block_with_transactions(Some(tx));
 
-        // make raw transaction from buffer
-        // verify or exit early
-        // launch testkit and pipe the transaction through API.
+        testkit.snapshot();
     });
+}
+
+fn tx_from_raw(rm: RawMessage) -> Box<Transaction> {
+    match rm.message_type() {
+        TX_ADD_ASSETS_ID => Box::new(TxAddAsset::from_raw(rm).unwrap()),
+        TX_CREATE_WALLET_ID => Box::new(TxCreateWallet::from_raw(rm).unwrap()),
+        TX_DEL_ASSETS_ID => Box::new(TxDelAsset::from_raw(rm).unwrap()),
+        TX_EXCHANGE_ID => Box::new(TxExchange::from_raw(rm).unwrap()),
+        TX_TRADE_ASSETS_ID => Box::new(TxTrade::from_raw(rm).unwrap()),
+        TX_TRANSFER_ID => Box::new(TxTransfer::from_raw(rm).unwrap()),
+        TX_MINING_ID => Box::new(TxMining::from_raw(rm).unwrap()),
+        _ => panic!("Unknown message type!"),
+    }
 }
 
 fn setup_transactions(fuzz: &FuzzData) -> Vec<Box<Transaction>> {
@@ -117,9 +118,18 @@ fn setup_transactions(fuzz: &FuzzData) -> Vec<Box<Transaction>> {
 }
 
 fn fuzz<F>(f: F) where F: FnOnce() {
-    panic::catch_unwind(AssertUnwindSafe(f)).unwrap_or_else(|e| {
-        eprintln!("{:?}", e);
+    let result = panic::catch_unwind(AssertUnwindSafe(f));
+    if let Err(error) = result {
+        if let Some(e) = error.downcast_ref::<&str>() {
+            eprintln!("{}", e);
+        } else if let Some(e) = error.downcast_ref::<String>() {
+            eprintln!("{}", e);
+        } else if let Some(e) = error.downcast_ref::<::std::io::Error>() {
+            eprintln!("{}", e);
+        } else {
+            eprintln!("Unknown error.");
+        }
         process::abort();
-    });
+    }
 }
 
