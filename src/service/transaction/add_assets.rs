@@ -34,6 +34,10 @@ impl TxAddAsset {
 
 impl Transaction for TxAddAsset {
     fn verify(&self) -> bool {
+        if cfg!(fuzzing) {
+            return false;
+        }
+
         if self.verify_signature(self.pub_key()) {
             for asset in self.meta_assets().iter() {
                 if !asset.is_valid() {

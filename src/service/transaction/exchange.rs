@@ -53,6 +53,10 @@ impl TxExchange {
 
 impl Transaction for TxExchange {
     fn verify(&self) -> bool {
+        if cfg!(fuzzing) {
+            return false;
+        }
+
         *self.offer().sender() != *self.offer().recipient() &&
             self.verify_signature(self.offer().recipient()) &&
             verify(

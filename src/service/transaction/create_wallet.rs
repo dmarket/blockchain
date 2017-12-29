@@ -31,6 +31,10 @@ impl TxCreateWallet {
 
 impl Transaction for TxCreateWallet {
     fn verify(&self) -> bool {
+        if cfg!(fuzzing) {
+            return false;
+        }
+
         self.verify_signature(self.pub_key())
     }
 

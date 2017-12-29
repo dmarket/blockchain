@@ -63,6 +63,10 @@ impl TxTrade {
 
 impl Transaction for TxTrade {
     fn verify(&self) -> bool {
+        if cfg!(fuzzing) {
+            return false;
+        }
+
         self.offer_verify() && self.verify_signature(self.buyer())
     }
 

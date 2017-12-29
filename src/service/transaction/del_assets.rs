@@ -68,6 +68,10 @@ impl TxDelAsset {
 
 impl Transaction for TxDelAsset {
     fn verify(&self) -> bool {
+        if cfg!(fuzzing) {
+            return false;
+        }
+
         self.verify_signature(self.pub_key())
     }
 
