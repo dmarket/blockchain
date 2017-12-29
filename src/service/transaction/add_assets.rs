@@ -5,12 +5,13 @@ use exonum::crypto::PublicKey;
 use exonum::messages::Message;
 use exonum::storage::Fork;
 use serde_json::Value;
+use std::collections::HashMap;
 
 use service::asset::{Asset, Fees, MetaAsset};
 use service::transaction::{PER_ADD_ASSET_FEE, TX_ADD_ASSET_FEE};
 
 use super::{SERVICE_ID, TX_ADD_ASSETS_ID};
-use super::schema::asset::{AssetSchema, external_internal};
+use super::schema::asset::AssetSchema;
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
 use super::schema::wallet::WalletSchema;
 
@@ -46,6 +47,34 @@ impl TxAddAsset {
         }
 
         (assets, fees_list)
+    }
+
+    fn from_meta_to_asset_map(
+        meta_assets: Vec<MetaAsset>,
+        pub_key: &PublicKey,
+    ) -> HashMap<String, Asset> {
+        let mut map_asset_id: HashMap<String, Asset> = HashMap::new();
+
+        for meta_asset in meta_assets {
+            let key = &meta_asset.data();
+            let new_asset = Asset::from_meta_asset(&meta_asset, pub_key);
+            map_asset_id.insert(key.to_string(), new_asset);
+        }
+
+        map_asset_id
+    }
+
+    fn external_internal(
+        meta_assets: Vec<MetaAsset>,
+        pub_key: &PublicKey,
+    ) -> HashMap<String, String> {
+        let mut meta_asset_to_asset: HashMap<String, String> = HashMap::new();
+
+        for (key, asset) in Self::from_meta_to_asset_map(meta_assets, pub_key) {
+            meta_asset_to_asset.insert(key, asset.id().to_string());
+        }
+
+        meta_asset_to_asset
     }
 }
 
@@ -91,7 +120,7 @@ impl Transaction for TxAddAsset {
     fn info(&self) -> Value {
         json!({
             "transaction_data": self,
-            "external_internal": external_internal(self.meta_assets(), self.pub_key()),
+            "external_internal": Self::external_internal(self.meta_assets(), self.pub_key()),
         })
     }
 }

@@ -1,39 +1,10 @@
 use exonum::crypto::PublicKey;
 use exonum::storage::{Fork, MapIndex};
-use std::collections::HashMap;
 
 use service::SERVICE_NAME;
-use service::asset::{Asset, AssetId, AssetInfo, Fees, MetaAsset};
+use service::asset::{Asset, AssetId, AssetInfo, Fees};
 
 pub struct AssetSchema<'a>(&'a mut Fork);
-
-pub fn from_meta_to_asset_map(
-    meta_assets: Vec<MetaAsset>,
-    pub_key: &PublicKey,
-) -> HashMap<String, Asset> {
-    let mut map_asset_id: HashMap<String, Asset> = HashMap::new();
-
-    for meta_asset in meta_assets {
-        let key = &meta_asset.data();
-        let new_asset = Asset::from_meta_asset(&meta_asset, pub_key);
-        map_asset_id.insert(key.to_string(), new_asset);
-    }
-
-    map_asset_id
-}
-
-pub fn external_internal(
-    meta_assets: Vec<MetaAsset>,
-    pub_key: &PublicKey,
-) -> HashMap<String, String> {
-    let mut meta_asset_to_asset: HashMap<String, String> = HashMap::new();
-
-    for (key, asset) in from_meta_to_asset_map(meta_assets, pub_key) {
-        meta_asset_to_asset.insert(key, asset.id().to_string());
-    }
-
-    meta_asset_to_asset
-}
 
 impl<'a> AssetSchema<'a> {
     pub fn assets(&mut self) -> MapIndex<&mut Fork, AssetId, AssetInfo> {
