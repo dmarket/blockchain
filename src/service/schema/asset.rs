@@ -67,24 +67,11 @@ impl<'a> AssetSchema<'a> {
         }
     }
 
-    pub fn add_assets(
-        &mut self,
-        meta_assets: Vec<MetaAsset>,
-        pub_key: &PublicKey,
-    ) -> HashMap<String, Asset> {
-        let mut map_asset_id: HashMap<String, Asset> = HashMap::new();
-        for meta_asset in meta_assets {
-            let new_asset = Asset::from_meta_asset(&meta_asset, pub_key);
-            self.add_asset(
-                &new_asset.id(),
-                pub_key,
-                new_asset.amount(),
-                meta_asset.fees(),
-            );
-            map_asset_id.insert(new_asset.id().to_string(), new_asset);
+    pub fn add_assets(&mut self, assets: &Vec<Asset>, fees_list: &Vec<Fees>, pub_key: &PublicKey) {
+        let assets_and_fees = assets.iter().zip(fees_list);
+        for (asset, fees) in assets_and_fees {
+            self.add_asset(&asset.id(), pub_key, asset.amount(), fees.clone());
         }
-
-        map_asset_id
     }
 
     pub fn del_assets(&mut self, deleted: &[Asset]) {

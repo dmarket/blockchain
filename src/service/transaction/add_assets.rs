@@ -6,7 +6,7 @@ use exonum::messages::Message;
 use exonum::storage::Fork;
 use serde_json::Value;
 
-use service::asset::{Asset, MetaAsset};
+use service::asset::{Asset, Fees, MetaAsset};
 use service::transaction::{PER_ADD_ASSET_FEE, TX_ADD_ASSET_FEE};
 
 use super::{SERVICE_ID, TX_ADD_ASSETS_ID};
@@ -34,6 +34,19 @@ impl TxAddAsset {
 
         TX_ADD_ASSET_FEE + PER_ADD_ASSET_FEE * count
     }
+
+    fn get_assets_and_fees(&self) -> (Vec<Asset>, Vec<Fees>) {
+        let mut assets = Vec::new();
+        let mut fees_list = Vec::new();
+
+        for meta_asset in self.meta_assets() {
+            let asset = Asset::from_meta_asset(&meta_asset.clone(), self.pub_key());
+            assets.push(asset);
+            fees_list.push(meta_asset.fees());
+        }
+
+        (assets, fees_list)
+    }
 }
 
 impl Transaction for TxAddAsset {
@@ -55,16 +68,13 @@ impl Transaction for TxAddAsset {
         let creator = WalletSchema::map(view, |mut schema| schema.wallet(self.pub_key()));
         if let Some(mut creator) = creator {
             if creator.balance() >= self.get_fee() {
-                let map_assets = AssetSchema::map(view, |mut schema| {
-                    schema.add_assets(self.meta_assets(), self.pub_key())
+
+                let (assets, fees_list) = self.get_assets_and_fees();
+                AssetSchema::map(view, |mut schema| {
+                    schema.add_assets(&assets, &fees_list, self.pub_key())
                 });
                 creator.decrease(self.get_fee());
-                println!("Convert {:?}", map_assets);
-                let new_assets: Vec<Asset> = map_assets
-                    .iter()
-                    .map(|(_, asset)| Asset::new(asset.id(), asset.amount()))
-                    .collect();
-                creator.add_assets(&new_assets);
+                creator.add_assets(&assets);
                 tx_status = TxStatus::Success;
             }
             println!("Wallet after mining asset: {:?}", creator);
