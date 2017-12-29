@@ -58,10 +58,18 @@ fn add_assets() {
     let wallet = wallet::Builder::new()
         .key(public_key)
         .balance(2000)
-        .add_asset(existing_data, 3)
         .build();
 
-    WalletSchema::map(fork, |mut s| s.wallets().put(&public_key, wallet));
+    let receiver_wallet = wallet::Builder::new()
+        .key(receiver_key)
+        .add_asset_value(Asset::new(existing_id, 3))
+        .balance(0)
+        .build();
+
+    WalletSchema::map(fork, |mut s| {
+        s.wallets().put(&public_key, wallet);
+        s.wallets().put(&receiver_key, receiver_wallet);
+    });
 
     tx.execute(fork);
 
@@ -70,10 +78,12 @@ fn add_assets() {
     assert_eq!(20, existing_info.amount());
 
     let wallet = WalletSchema::map(fork, |mut s| s.wallet(tx.pub_key()).unwrap());
+    let receiver_waller = WalletSchema::map(fork, |mut s| s.wallet(&receiver_key).unwrap());
 
     assert_eq!(2000 - tx.get_fee(), wallet.balance());
-    assert_eq!(20, wallet.asset(existing_id).unwrap().amount());
-    assert_eq!(45, wallet.asset(absent_id).unwrap().amount());
+    assert_eq!(20, receiver_waller.asset(existing_id).unwrap().amount());
+    assert_eq!(45, receiver_waller.asset(absent_id).unwrap().amount());
+    
 }
 
 #[test]

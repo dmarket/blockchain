@@ -36,17 +36,19 @@ impl TxAddAsset {
         TX_ADD_ASSET_FEE + PER_ADD_ASSET_FEE * count
     }
 
-    fn get_assets_and_fees(&self) -> (Vec<Asset>, Vec<Fees>) {
+    fn get_assets_fees_receivers(&self) -> (Vec<Asset>, Vec<Fees>, Vec<PublicKey>) {
         let mut assets = Vec::new();
         let mut fees_list = Vec::new();
+        let mut receivers = Vec::new();
 
         for meta_asset in self.meta_assets() {
             let asset = Asset::from_meta_asset(&meta_asset.clone(), self.pub_key());
             assets.push(asset);
             fees_list.push(meta_asset.fees());
+            receivers.push(meta_asset.receiver().clone());
         }
 
-        (assets, fees_list)
+        (assets, fees_list, receivers)
     }
 
     fn from_meta_to_asset_map(
@@ -97,13 +99,26 @@ impl Transaction for TxAddAsset {
         let creator = WalletSchema::map(view, |mut schema| schema.wallet(self.pub_key()));
         if let Some(mut creator) = creator {
             if creator.balance() >= self.get_fee() {
+                // remove fee from creator
+                creator.decrease(self.get_fee());
 
-                let (assets, fees_list) = self.get_assets_and_fees();
+                let (assets, fees_list, receivers) = self.get_assets_fees_receivers();
+                // Store new assets in schema
                 AssetSchema::map(view, |mut schema| {
                     schema.add_assets(&assets, &fees_list, self.pub_key())
                 });
-                creator.decrease(self.get_fee());
-                creator.add_assets(&assets);
+
+                // send assets to receivers
+                for (receiver_key, asset) in receivers.iter().zip(assets) {
+                    if let Some(mut receiver) = WalletSchema::map(view, |mut schema| schema.wallet(receiver_key)) {
+                        receiver.add_assets(&[asset]);
+
+                        WalletSchema::map(view, |mut schema| {
+                            schema.wallets().put(receiver_key, receiver)
+                        });
+                    }
+                }
+
                 tx_status = TxStatus::Success;
             }
             println!("Wallet after mining asset: {:?}", creator);
