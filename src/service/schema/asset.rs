@@ -31,6 +31,7 @@ impl<'a> AssetSchema<'a> {
                 true
             }
             Some(info) => {
+                if info.creator() != creator { return false }
                 let info = AssetInfo::new(creator, info.amount() + amount, fees);
                 self.assets().put(&asset_id, info);
                 true
@@ -38,11 +39,15 @@ impl<'a> AssetSchema<'a> {
         }
     }
 
-    pub fn add_assets(&mut self, assets: &Vec<Asset>, fees_list: &Vec<Fees>, pub_key: &PublicKey) {
+    pub fn add_assets(&mut self, assets: &Vec<Asset>, fees_list: &Vec<Fees>, pub_key: &PublicKey) -> bool {
         let assets_and_fees = assets.iter().zip(fees_list);
         for (asset, fees) in assets_and_fees {
-            self.add_asset(&asset.id(), pub_key, asset.amount(), fees.clone());
+            if !self.add_asset(&asset.id(), pub_key, asset.amount(), fees.clone()) {
+                return false
+            }
         }
+
+        true
     }
 
     pub fn del_assets(&mut self, deleted: &[Asset]) {

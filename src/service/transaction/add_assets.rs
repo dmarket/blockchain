@@ -97,35 +97,61 @@ impl Transaction for TxAddAsset {
     fn execute(&self, view: &mut Fork) {
         let mut tx_status = TxStatus::Fail;
         let creator = WalletSchema::map(view, |mut schema| schema.wallet(self.pub_key()));
-        if let Some(mut creator) = creator {
-            if creator.balance() >= self.get_fee() {
-                // remove fee from creator
-                creator.decrease(self.get_fee());
 
+        if let Some(mut creator) = creator {
+            let fee = self.get_fee();
+
+            if creator.balance() >= fee {
+                // remove fee from creator and update creator wallet balance
+                // TODO: send fee to `blockchain platform`
+                creator.decrease(fee);
+                WalletSchema::map(view, |mut schema| {
+                    schema.wallets().put(self.pub_key(), creator.clone())
+                });
+
+                // create for existing db fork before execution
+                view.checkpoint();
+
+                // store new assets in asset schema
                 let (assets, fees_list, receivers) = self.get_assets_fees_receivers();
-                // Store new assets in schema
-                AssetSchema::map(view, |mut schema| {
+                let is_assets_added = AssetSchema::map(view, |mut schema| {
                     schema.add_assets(&assets, &fees_list, self.pub_key())
                 });
 
-                // send assets to receivers
-                for (receiver_key, asset) in receivers.iter().zip(assets) {
-                    if let Some(mut receiver) = WalletSchema::map(view, |mut schema| schema.wallet(receiver_key)) {
-                        receiver.add_assets(&[asset]);
+                if is_assets_added {
+                    tx_status = TxStatus::Success;
 
-                        WalletSchema::map(view, |mut schema| {
-                            schema.wallets().put(receiver_key, receiver)
-                        });
+                    // send assets to receivers
+                    for (receiver_key, asset) in receivers.iter().zip(assets) {
+                        if let Some(mut receiver) = WalletSchema::map(view, |mut schema| schema.wallet(receiver_key)) {
+                            receiver.add_assets(&[asset]);
+
+                            WalletSchema::map(view, |mut schema| {
+                                schema.wallets().put(receiver_key, receiver)
+                            });
+                        } else {
+
+                            tx_status = TxStatus::Fail;
+                            break;
+                        }
                     }
+
+                } else {
+                    tx_status = TxStatus::Fail;
                 }
 
-                tx_status = TxStatus::Success;
+                // rollback changes if adding procedure has failed
+                if tx_status == TxStatus::Fail {
+                    println!("Unable to add assets {:?}", self.meta_assets());
+                    view.rollback();
+                }
+
+                println!("Wallet after mining asset: {:?}", creator);
+            } else {  // if creator.balance() >= fee
+                println!("Insuficient funds at {:?} wallet, required {}", creator, fee);
             }
-            println!("Wallet after mining asset: {:?}", creator);
-            WalletSchema::map(view, |mut schema| {
-                schema.wallets().put(self.pub_key(), creator)
-            });
         }
+
         TxStatusSchema::map(
             view,
             |mut schema| schema.set_status(&self.hash(), tx_status),
