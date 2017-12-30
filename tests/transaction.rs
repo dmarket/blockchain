@@ -95,6 +95,7 @@ fn add_assets_fails() {
     let (receiver_key, _) = crypto::gen_keypair();
 
     let data = "a8d5c97d-9978-4111-9947-7a95dcb31d0f";
+    let id = AssetId::new(data, &public_key).unwrap();
 
     let fees = fee::Builder::new()
         .trade(10, 10)
@@ -125,9 +126,12 @@ fn add_assets_fails() {
 
     let wallet = WalletSchema::map(fork, |mut s| s.wallet(tx.pub_key()).unwrap());
     let tx_status = TxStatusSchema::map(fork, |mut s| s.get_status(&tx.hash())).unwrap();
+    let asset_info = AssetSchema::map(fork, |mut s| { s.assets().get(&id) });
+
     let expected_status = TxStatus::Fail;
     assert_eq!(tx_status, expected_status);
     assert_eq!(2000 - tx.get_fee(), wallet.balance());
+    assert!(asset_info.is_none());
 }
 
 #[test]
