@@ -24,6 +24,7 @@ use exonum_testkit::TestKitBuilder;
 
 use dmbc::service::CurrencyService;
 use dmbc::service::builders::transaction;
+use dmbc::service::builders::fee;
 use dmbc::service::transaction::{TX_CREATE_WALLET_ID,
                                  TX_TRANSFER_ID,
                                  TX_ADD_ASSETS_ID,
@@ -86,6 +87,12 @@ fn tx_from_raw(rm: RawMessage) -> Box<Transaction> {
 fn setup_transactions(fuzz: &FuzzData) -> Vec<Box<Transaction>> {
     let mut transactions : Vec<Box<Transaction>> = Vec::new();
 
+    let zero_fee = fee::Builder::new()
+        .trade(0, 1)
+        .exchange(0, 1)
+        .transfer(0, 1)
+        .build();
+
     // setup alice
     transactions.push(Box::new(transaction::Builder::new()
                       .keypair(fuzz.genesis, SecretKey::zero())
@@ -97,7 +104,7 @@ fn setup_transactions(fuzz: &FuzzData) -> Vec<Box<Transaction>> {
     transactions.push(Box::new(transaction::Builder::new()
                       .keypair(fuzz.alice, SecretKey::zero())
                       .tx_add_assets()
-                      .add_asset("alice_asset", 10)
+                      .add_asset("alice_asset", 10, zero_fee.clone())
                       .build()));
 
     // setup bob
@@ -111,7 +118,7 @@ fn setup_transactions(fuzz: &FuzzData) -> Vec<Box<Transaction>> {
     transactions.push(Box::new(transaction::Builder::new()
                       .keypair(fuzz.bob, SecretKey::zero())
                       .tx_add_assets()
-                      .add_asset("bob_asset", 10)
+                      .add_asset("bob_asset", 10, zero_fee.clone())
                       .build()));
 
     transactions

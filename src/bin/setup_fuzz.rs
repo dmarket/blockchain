@@ -17,6 +17,7 @@ use exonum::crypto;
 use exonum::crypto::SecretKey;
 use exonum::storage::StorageValue;
 use dmbc::service::builders::transaction;
+use dmbc::service::builders::fee;
 
 use fuzz_data::FuzzData;
 
@@ -44,7 +45,13 @@ fn setup() -> Result<(), Box<Error>> {
         let tx = transaction::Builder::new()
             .keypair(data.alice, SecretKey::zero())
             .tx_add_assets()
-            .add_asset("foo", 9)
+            .add_asset("foo",
+                       9,
+                       fee::Builder::new()
+                           .trade(1, 10)
+                           .exchange(2, 10)
+                           .transfer(3, 10)
+                           .build())
             .seed(3)
             .build()
             .into_bytes();
@@ -63,7 +70,7 @@ fn setup() -> Result<(), Box<Error>> {
     tx_file("./fuzz-in/tx_del_assets.in").and_then(|mut f| {
         let tx = transaction::Builder::new()
             .keypair(data.alice, SecretKey::zero())
-            .tx_add_assets()
+            .tx_del_assets()
             .add_asset("foo", 9)
             .seed(6)
             .build()
@@ -102,8 +109,7 @@ fn setup() -> Result<(), Box<Error>> {
             .keypair(data.alice, SecretKey::zero())
             .tx_trade_assets()
             .buyer(data.bob)
-            .add_asset("alice_asset", 10)
-            .price(9001)
+            .add_asset("alice_asset", 10, 9001)
             .seed(38)
             .build()
             .into_bytes();
