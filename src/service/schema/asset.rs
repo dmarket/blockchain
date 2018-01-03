@@ -1,39 +1,10 @@
 use exonum::crypto::PublicKey;
 use exonum::storage::{Fork, MapIndex};
-use std::collections::HashMap;
 
 use service::SERVICE_NAME;
-use service::asset::{Asset, AssetId, AssetInfo, Fees, MetaAsset};
+use service::asset::{Asset, AssetId, AssetInfo, Fees};
 
 pub struct AssetSchema<'a>(&'a mut Fork);
-
-pub fn from_meta_to_asset_map(
-    meta_assets: Vec<MetaAsset>,
-    pub_key: &PublicKey,
-) -> HashMap<String, Asset> {
-    let mut map_asset_id: HashMap<String, Asset> = HashMap::new();
-
-    for meta_asset in meta_assets {
-        let key = &meta_asset.data();
-        let new_asset = Asset::from_meta_asset(&meta_asset, pub_key);
-        map_asset_id.insert(key.to_string(), new_asset);
-    }
-
-    map_asset_id
-}
-
-pub fn external_internal(
-    meta_assets: Vec<MetaAsset>,
-    pub_key: &PublicKey,
-) -> HashMap<String, String> {
-    let mut meta_asset_to_asset: HashMap<String, String> = HashMap::new();
-
-    for (key, asset) in from_meta_to_asset_map(meta_assets, pub_key) {
-        meta_asset_to_asset.insert(key, asset.id().to_string());
-    }
-
-    meta_asset_to_asset
-}
 
 impl<'a> AssetSchema<'a> {
     pub fn assets(&mut self) -> MapIndex<&mut Fork, AssetId, AssetInfo> {
@@ -60,6 +31,7 @@ impl<'a> AssetSchema<'a> {
                 true
             }
             Some(info) => {
+                if info.creator() != creator { return false }
                 let info = AssetInfo::new(creator, info.amount() + amount, fees);
                 self.assets().put(&asset_id, info);
                 true
@@ -67,24 +39,15 @@ impl<'a> AssetSchema<'a> {
         }
     }
 
-    pub fn add_assets(
-        &mut self,
-        meta_assets: Vec<MetaAsset>,
-        pub_key: &PublicKey,
-    ) -> HashMap<String, Asset> {
-        let mut map_asset_id: HashMap<String, Asset> = HashMap::new();
-        for meta_asset in meta_assets {
-            let new_asset = Asset::from_meta_asset(&meta_asset, pub_key);
-            self.add_asset(
-                &new_asset.id(),
-                pub_key,
-                new_asset.amount(),
-                meta_asset.fees(),
-            );
-            map_asset_id.insert(new_asset.id().to_string(), new_asset);
+    pub fn add_assets(&mut self, assets: &Vec<Asset>, fees_list: &Vec<Fees>, pub_key: &PublicKey) -> bool {
+        let assets_and_fees = assets.iter().zip(fees_list);
+        for (asset, fees) in assets_and_fees {
+            if !self.add_asset(&asset.id(), pub_key, asset.amount(), fees.clone()) {
+                return false
+            }
         }
 
-        map_asset_id
+        true
     }
 
     pub fn del_assets(&mut self, deleted: &[Asset]) {

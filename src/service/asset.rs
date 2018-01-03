@@ -34,11 +34,12 @@ encoding_struct! {
 
 encoding_struct! {
     struct MetaAsset {
-        const SIZE = 20;
+        const SIZE = 52;
 
-        field data: &str   [0 => 8]
-        field amount: u32  [8 => 12]
-        field fees: Fees   [12 => 20]
+        field receiver: &PublicKey [0 => 32]
+        field data: &str           [32 => 40]
+        field amount: u32          [40 => 44]
+        field fees: Fees           [44 => 52]
     }
 }
 

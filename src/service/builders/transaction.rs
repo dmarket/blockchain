@@ -142,13 +142,18 @@ impl TxAddAssetBuilder {
     }
 
     pub fn add_asset(self, name: &str, count: u32, fees: Fees) -> Self {
-        let asset = MetaAsset::new(name, count, fees);
+        let asset = MetaAsset::new(&self.meta.public_key, name, count, fees);
         self.add_asset_value(asset)
     }
 
     pub fn add_asset_value(mut self, asset: MetaAsset) -> Self {
         self.assets.push(asset);
         self
+    }
+
+    pub fn add_asset_receiver(self, receiver: PublicKey, name: &str, count: u32, fees: Fees) -> Self {
+        let asset = MetaAsset::new(&receiver, name, count, fees);
+        self.add_asset_value(asset)
     }
 
     pub fn seed(self, seed: u64) -> Self {
@@ -515,6 +520,7 @@ mod test {
     #[test]
     fn add_assets() {
         let (public_key, secret_key) = crypto::gen_keypair();
+        let (receiver_key, _) = crypto::gen_keypair();
 
         let fees_foobar = fee::Builder::new()
             .trade(10, 10)
@@ -528,8 +534,8 @@ mod test {
             .transfer(11, 10)
             .build();
 
-        let asset_foobar = MetaAsset::new("foobar", 9, fees_foobar);
-        let asset_bazqux = MetaAsset::new("bazqux", 18, fees_bazqux);
+        let asset_foobar = MetaAsset::new(&receiver_key, "foobar", 9, fees_foobar);
+        let asset_bazqux = MetaAsset::new(&receiver_key, "bazqux", 18, fees_bazqux);
 
         let transaction = transaction::Builder::new()
             .keypair(public_key, secret_key.clone())
