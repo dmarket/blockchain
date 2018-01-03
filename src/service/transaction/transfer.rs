@@ -35,6 +35,10 @@ impl TxTransfer {
 
 impl Transaction for TxTransfer {
     fn verify(&self) -> bool {
+        if cfg!(fuzzing) {
+            return false;
+        }
+
         (*self.from() != *self.to()) && self.verify_signature(self.from())
     }
 

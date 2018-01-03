@@ -3,6 +3,10 @@ name = "dmarket-blockchain"
 version = "0.1.0"
 authors = ["Ilya Sinyakin <sinyakin.ilya@gmail.com>"]
 
+[features]
+default = []
+fuzzing = []
+
 [lib]
 name = "dmbc"
 path = "src/lib.rs"
@@ -10,6 +14,20 @@ path = "src/lib.rs"
 [[bin]]
 name = "dmarket-blockchain"
 path = "src/main.rs"
+test = false
+bench = false
+doc = false
+
+[[bin]]
+name = "fuzz"
+path = "src/bin/fuzz.rs"
+test = false
+bench = false
+doc = false
+
+[[bin]]
+name = "setup-fuzz"
+path = "src/bin/setup_fuzz.rs"
 test = false
 bench = false
 doc = false
@@ -27,5 +45,10 @@ toml = "0.4.5"
 uuid = { version = "0.5", features = ["v5"] }
 exonum = "0.4"
 exonum-configuration = "0.4"
+exonum-testkit = "0.1"
 hyper = "0.10.13"
 unicase = "1.0"
+
+[dev-dependencies]
+afl = "0.3"
+

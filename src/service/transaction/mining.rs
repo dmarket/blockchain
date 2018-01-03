@@ -32,6 +32,10 @@ impl TxMining {
 
 impl Transaction for TxMining {
     fn verify(&self) -> bool {
+        if cfg!(fuzzing) {
+            return false;
+        }
+
         self.verify_signature(self.pub_key())
     }
 
