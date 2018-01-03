@@ -46,6 +46,8 @@ uuid = { version = "0.5", features = ["v5"] }
 exonum = "0.4"
 exonum-configuration = "0.4"
 exonum-testkit = "0.1"
+hyper = "0.10.13"
+unicase = "1.0"
 
 [dev-dependencies]
 afl = "0.3"

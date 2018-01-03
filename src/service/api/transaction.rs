@@ -118,8 +118,8 @@ impl Api for TransactionApi {
             }
         };
 
-        router.post("/wallets/transaction", transaction, "transaction");
-        router.get("/transaction/:hash", get_status, "get_transaction_status");
+        router.post("/transactions", transaction, "transaction");
+        router.get("/transactions/:hash", get_status, "get_transaction_status");
 
     }
 }

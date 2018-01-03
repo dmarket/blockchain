@@ -3,15 +3,16 @@ extern crate dmbc;
 
 use exonum::blockchain::Transaction;
 use exonum::crypto;
-use exonum::storage::{Database, MemoryDB};
 use exonum::messages::Message;
+use exonum::storage::{Database, MemoryDB};
 
-use dmbc::service::asset::{Asset, AssetID, AssetInfo};
+use dmbc::service::asset::{Asset, AssetId, AssetInfo};
+use dmbc::service::builders::fee;
 use dmbc::service::builders::transaction;
 use dmbc::service::builders::wallet;
 use dmbc::service::schema::asset::AssetSchema;
+use dmbc::service::schema::transaction_status::{TxStatus, TxStatusSchema};
 use dmbc::service::schema::wallet::WalletSchema;
-use dmbc::service::schema::transaction_status::{TxStatusSchema, TxStatus};
 
 #[test]
 fn add_assets() {
@@ -20,14 +21,26 @@ fn add_assets() {
     let absent_data = "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f";
     let existing_data = "a8d5c97d-9978-4111-9947-7a95dcb31d0f";
 
-    let absent_id = AssetID::new(absent_data, &public_key).unwrap();
-    let existing_id = AssetID::new(existing_data, &public_key).unwrap();
+    let absent_id = AssetId::new(absent_data, &public_key).unwrap();
+    let existing_id = AssetId::new(existing_data, &public_key).unwrap();
+
+    let absent_fees = fee::Builder::new()
+        .trade(10, 10)
+        .exchange(10, 10)
+        .transfer(10, 10)
+        .build();
+
+    let existing_fees = fee::Builder::new()
+        .trade(11, 10)
+        .exchange(11, 10)
+        .transfer(11, 10)
+        .build();
 
     let tx = transaction::Builder::new()
         .keypair(public_key, secret_key.clone())
         .tx_add_assets()
-        .add_asset(absent_data, 45)
-        .add_asset(existing_data, 17)
+        .add_asset(absent_data, 45, absent_fees.clone())
+        .add_asset(existing_data, 17, existing_fees.clone())
         .seed(85)
         .build();
 
@@ -35,7 +48,10 @@ fn add_assets() {
     let fork = &mut db.fork();
 
     AssetSchema::map(fork, |mut s| {
-        s.assets().put(&existing_id, AssetInfo::new(&public_key, 3))
+        s.assets().put(
+            &existing_id,
+            AssetInfo::new(&public_key, 3, existing_fees),
+        )
     });
 
     let wallet = wallet::Builder::new()
@@ -112,14 +128,20 @@ fn delete_assets() {
     let db = MemoryDB::new();
     let fork = &mut db.fork();
 
-    let id_1 = AssetID::new(data_1, &public_key).unwrap();
-    let id_2 = AssetID::new(data_2, &public_key).unwrap();
-    let id_3 = AssetID::new(data_3, &public_key).unwrap();
+    let id_1 = AssetId::new(data_1, &public_key).unwrap();
+    let id_2 = AssetId::new(data_2, &public_key).unwrap();
+    let id_3 = AssetId::new(data_3, &public_key).unwrap();
+
+    let fee = fee::Builder::new()
+        .trade(10, 10)
+        .exchange(10, 10)
+        .transfer(10, 10)
+        .build();
 
     AssetSchema::map(fork, |mut s| {
-        s.add_asset(&id_1, &public_key, 30);
-        s.add_asset(&id_2, &public_key, 30);
-        s.add_asset(&id_3, &public_key, 30);
+        s.add_asset(&id_1, &public_key, 30, fee.clone());
+        s.add_asset(&id_2, &public_key, 30, fee.clone());
+        s.add_asset(&id_3, &public_key, 30, fee.clone());
     });
 
     WalletSchema::map(fork, move |mut s| s.wallets().put(&public_key, wallet));
@@ -145,7 +167,7 @@ fn delete_assets_fails() {
     let (public_key, secret_key) = crypto::gen_keypair();
 
     let data = "asset";
-    let id = AssetID::new(data, &public_key).unwrap();
+    let id = AssetId::new(data, &public_key).unwrap();
 
     let wallet = wallet::Builder::new()
         .key(public_key)
@@ -170,7 +192,13 @@ fn delete_assets_fails() {
     let db = MemoryDB::new();
     let fork = &mut db.fork();
 
-    AssetSchema::map(fork, |mut s| s.add_asset(&id, &public_key, 20));
+    let fee = fee::Builder::new()
+        .trade(10, 10)
+        .exchange(10, 10)
+        .transfer(10, 10)
+        .build();
+
+    AssetSchema::map(fork, |mut s| s.add_asset(&id, &public_key, 20, fee));
     WalletSchema::map(fork, |mut s| s.wallets().put(&public_key, wallet));
 
     tx_too_many.execute(fork);
@@ -182,9 +210,10 @@ fn delete_assets_fails() {
     WalletSchema::map(fork, |mut s| {
         assert_eq!(
             Some(20),
-            s.wallet(&public_key)
-             .and_then(|w| w.asset(id))
-             .map(|a| a.amount()));
+            s.wallet(&public_key).and_then(|w| w.asset(id)).map(|a| {
+                a.amount()
+            })
+        );
     });
 
     tx_doesnt_exist.execute(fork);
@@ -200,16 +229,16 @@ fn exchange() {
     let (recipient_public, _) = crypto::gen_keypair();
 
     let sender_data_1 = "sender asset 1";
-    let sender_id_1 = AssetID::new(sender_data_1, &sender_public).unwrap();
+    let sender_id_1 = AssetId::new(sender_data_1, &sender_public).unwrap();
 
     let sender_data_2 = "sender asset 2";
-    let sender_id_2 = AssetID::new(sender_data_2, &sender_public).unwrap();
+    let sender_id_2 = AssetId::new(sender_data_2, &sender_public).unwrap();
 
     let recipient_data_1 = "recipient asset 1";
-    let recipient_id_1 = AssetID::new(recipient_data_1, &recipient_public).unwrap();
+    let recipient_id_1 = AssetId::new(recipient_data_1, &recipient_public).unwrap();
 
     let recipient_data_2 = "recipient asset 2";
-    let recipient_id_2 = AssetID::new(recipient_data_2, &recipient_public).unwrap();
+    let recipient_id_2 = AssetId::new(recipient_data_2, &recipient_public).unwrap();
 
     let sender = wallet::Builder::new()
         .key(sender_public)
@@ -241,11 +270,17 @@ fn exchange() {
     let db = MemoryDB::new();
     let fork = &mut db.fork();
 
+    let fee = fee::Builder::new()
+        .trade(10, 10)
+        .exchange(10, 10)
+        .transfer(10, 10)
+        .build();
+
     AssetSchema::map(fork, |mut s| {
-        s.add_asset(&sender_id_1, &sender_public, 10);
-        s.add_asset(&sender_id_2, &sender_public, 30);
-        s.add_asset(&recipient_id_1, &recipient_public, 30);
-        s.add_asset(&recipient_id_2, &recipient_public, 50);
+        s.add_asset(&sender_id_1, &sender_public, 10, fee.clone());
+        s.add_asset(&sender_id_2, &sender_public, 30, fee.clone());
+        s.add_asset(&recipient_id_1, &recipient_public, 30, fee.clone());
+        s.add_asset(&recipient_id_2, &recipient_public, 50, fee.clone());
     });
 
     WalletSchema::map(fork, |mut s| {
@@ -265,7 +300,10 @@ fn exchange() {
         assert_eq!(Some(25), sender.asset(recipient_id_2).map(|a| a.amount()));
 
         assert_eq!(None, recipient.asset(recipient_id_1).map(|a| a.amount()));
-        assert_eq!(Some(25), recipient.asset(recipient_id_2).map(|a| a.amount()));
+        assert_eq!(
+            Some(25),
+            recipient.asset(recipient_id_2).map(|a| a.amount())
+        );
         assert_eq!(Some(10), recipient.asset(sender_id_1).map(|a| a.amount()));
         assert_eq!(Some(15), recipient.asset(sender_id_2).map(|a| a.amount()));
     });
@@ -273,20 +311,29 @@ fn exchange() {
 
 #[test]
 fn trade_assets() {
+    let (creator_public, _) = crypto::gen_keypair();
     let (seller_public, seller_secret) = crypto::gen_keypair();
     let (buyer_public, _) = crypto::gen_keypair();
 
     let full_data = "fully transferred asset";
-    let full_id = AssetID::new(full_data, &seller_public).unwrap();
+    let full_id = AssetId::new(full_data, &creator_public).unwrap();
 
     let half_data = "partially transferred asset";
-    let half_id = AssetID::new(half_data, &seller_public).unwrap();
+    let half_id = AssetId::new(half_data, &creator_public).unwrap();
+
+    let asset1 = Asset::new(full_id, 20);
+    let asset2 = Asset::new(half_id, 20);
+
+    let creator = wallet::Builder::new()
+        .key(creator_public)
+        .balance(0)
+        .build();
 
     let seller = wallet::Builder::new()
         .key(seller_public)
         .balance(2000)
-        .add_asset(full_data, 20)
-        .add_asset(half_data, 20)
+        .add_asset_value(asset1.clone())
+        .add_asset_value(asset2.clone())
         .build();
 
     let buyer = wallet::Builder::new()
@@ -294,43 +341,67 @@ fn trade_assets() {
         .balance(2000)
         .build();
 
+    let full_asset = Asset::new(asset1.id(), asset1.amount());
+    let hald_asset = Asset::new(asset2.id(), asset1.amount() / 2);
+
     let tx = transaction::Builder::new()
         .keypair(seller_public, seller_secret)
         .tx_trade_assets()
         .buyer(buyer_public)
-        .add_asset(full_data, 20)
-        .add_asset(half_data, 10)
-        .price(88)
+        .add_asset_value(full_asset.into_trade_asset(60))
+        .add_asset_value(hald_asset.into_trade_asset(20))
         .seed(4)
         .build();
+
+    let price = tx.offer().total_price();
+    assert_eq!(price, 1400);
 
     let db = MemoryDB::new();
     let fork = &mut db.fork();
 
+    let fee = fee::Builder::new()
+        .trade(10, 10)
+        .exchange(10, 10)
+        .transfer(10, 10)
+        .build();
+
     AssetSchema::map(fork, |mut s| {
-        s.assets().put(&full_id, AssetInfo::new(&seller_public, 20));
-        s.assets().put(&half_id, AssetInfo::new(&seller_public, 20));
+        s.assets().put(
+            &full_id,
+            AssetInfo::new(&creator_public, 20, fee.clone()),
+        );
+        s.assets().put(
+            &half_id,
+            AssetInfo::new(&creator_public, 20, fee.clone()),
+        );
     });
 
     WalletSchema::map(fork, |mut s| {
+        s.wallets().put(&creator_public, creator);
         s.wallets().put(&seller_public, seller);
         s.wallets().put(&buyer_public, buyer);
     });
 
     tx.execute(fork);
 
+    let fee = tx.get_fee(fork);
+    let creators_fee = fee.assets_fees().iter().fold(0, |acc, asset| acc + asset.1);
+
     WalletSchema::map(fork, |mut s| {
         let seller = s.wallet(&seller_public).unwrap();
         let buyer = s.wallet(&buyer_public).unwrap();
+        let creator = s.wallet(&creator_public).unwrap();
 
-        assert_eq!(None,     seller.asset(full_id).map(|a| a.amount()));
+        assert_eq!(None, seller.asset(full_id).map(|a| a.amount()));
         assert_eq!(Some(10), seller.asset(half_id).map(|a| a.amount()));
 
         assert_eq!(Some(20), buyer.asset(full_id).map(|a| a.amount()));
         assert_eq!(Some(10), buyer.asset(half_id).map(|a| a.amount()));
 
-        assert_eq!(2000 - tx.get_fee() + 88, seller.balance());
-        assert_eq!(2000 - 88, buyer.balance());
+        assert_eq!(2000 - price, buyer.balance());
+        assert_eq!(2000 + price - fee.amount(), seller.balance());
+
+        assert_eq!(creators_fee, creator.balance());
     });
 }
 
@@ -340,10 +411,10 @@ fn transfer() {
     let (recipient_public, _) = crypto::gen_keypair();
 
     let full_data = "fully transferred asset";
-    let full_id = AssetID::new(full_data, &sender_public).unwrap();
+    let full_id = AssetId::new(full_data, &sender_public).unwrap();
 
     let half_data = "partially transferred asset";
-    let half_id = AssetID::new(half_data, &sender_public).unwrap();
+    let half_id = AssetId::new(half_data, &sender_public).unwrap();
 
     let sender = wallet::Builder::new()
         .key(sender_public)
@@ -370,9 +441,21 @@ fn transfer() {
     let db = MemoryDB::new();
     let fork = &mut db.fork();
 
+    let fee = fee::Builder::new()
+        .trade(10, 10)
+        .exchange(10, 10)
+        .transfer(10, 10)
+        .build();
+
     AssetSchema::map(fork, |mut s| {
-        s.assets().put(&full_id, AssetInfo::new(&sender_public, 20));
-        s.assets().put(&half_id, AssetInfo::new(&sender_public, 20));
+        s.assets().put(
+            &full_id,
+            AssetInfo::new(&sender_public, 20, fee.clone()),
+        );
+        s.assets().put(
+            &half_id,
+            AssetInfo::new(&sender_public, 20, fee.clone()),
+        );
     });
 
     WalletSchema::map(fork, |mut s| {
@@ -386,7 +469,7 @@ fn transfer() {
         let sender = s.wallet(&sender_public).unwrap();
         let recipient = s.wallet(&recipient_public).unwrap();
 
-        assert_eq!(None,     sender.asset(full_id).map(|a| a.amount()));
+        assert_eq!(None, sender.asset(full_id).map(|a| a.amount()));
         assert_eq!(Some(10), sender.asset(half_id).map(|a| a.amount()));
 
         assert_eq!(Some(20), recipient.asset(full_id).map(|a| a.amount()));
@@ -396,4 +479,3 @@ fn transfer() {
         assert_eq!(2000 + 100, recipient.balance());
     });
 }
-

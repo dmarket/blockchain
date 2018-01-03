@@ -59,33 +59,6 @@ impl Transaction for TxCreateWallet {
     fn info(&self) -> Value {
         json!({
             "transaction_data": self,
-            "tx_fee": 0,
         })
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use exonum::blockchain::Transaction;
-
-    use service::transaction::create_wallet::TxCreateWallet;
-
-    fn get_json() -> String {
-        r#"{
-               "body": {
-                   "pub_key": "06f2b8853d37d317639132d3e9646adee97c56dcbc3899bfb2b074477d7ef31a"
-               },
-               "network_id": 0,
-               "protocol_version": 0,
-               "service_id": 2,
-               "message_id": 1,
-               "signature": "8b46f5e5034c4168c7bd8a305b7173c0467df3cea9b62fc8f0da03e1d9a6f9a09ca14d259f714ada1e7c52787bdbcaa5eaa3d940c4a5ced453a3c56930f73e0a"
-        }"#.to_string()
-    }
-
-    #[test]
-    fn create_wallet_info_test() {
-        let tx_create: TxCreateWallet = ::serde_json::from_str(&get_json()).unwrap();
-        assert_eq!(0, tx_create.info()["tx_fee"]);
     }
 }

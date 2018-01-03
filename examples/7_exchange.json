@@ -4,11 +4,11 @@
       "sender": "1b4ff6ea64068ded4adc777172b99c8da8f64366a909a29c0fdc9ac0eb3e86ec",
       "sender_assets": [
         {
-          "hash_id": "14d496e5-30da-5360-a9a1-6569c8f97884",
+          "id": "14d496e5-30da-5360-a9a1-6569c8f97884",
           "amount": 3
         },
         {
-          "hash_id": "dc4fc26f-e6c9-5be4-9ba1-4f98307c3d59",
+          "id": "dc4fc26f-e6c9-5be4-9ba1-4f98307c3d59",
           "amount": 1
         }
       ],
@@ -16,7 +16,7 @@
       "recipient": "1ba9d70af01cb80485ce11d3c542a23bb963872af991a5f771f1ca1757a29702",
       "recipient_assets": [
         {
-          "hash_id": "16c64ad5-679c-5754-9364-4b89e3b768ae",
+          "id": "16c64ad5-679c-5754-9364-4b89e3b768ae",
           "amount": 1
         }
       ],

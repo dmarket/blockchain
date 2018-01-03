@@ -3,7 +3,7 @@
     "pub_key": "1ba9d70af01cb80485ce11d3c542a23bb963872af991a5f771f1ca1757a29702",
     "assets": [
       {
-        "hash_id": "u2_asset1",
+        "id": "u2_asset1",
         "amount": 3
       }
     ],
