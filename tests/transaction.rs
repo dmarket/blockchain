@@ -17,6 +17,7 @@ use dmbc::service::schema::wallet::WalletSchema;
 #[test]
 fn add_assets() {
     let (public_key, secret_key) = crypto::gen_keypair();
+    let (receiver_key, _) = crypto::gen_keypair();
 
     let absent_data = "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f";
     let existing_data = "a8d5c97d-9978-4111-9947-7a95dcb31d0f";
@@ -39,8 +40,8 @@ fn add_assets() {
     let tx = transaction::Builder::new()
         .keypair(public_key, secret_key.clone())
         .tx_add_assets()
-        .add_asset(absent_data, 45, absent_fees.clone())
-        .add_asset(existing_data, 17, existing_fees.clone())
+        .add_asset_receiver(receiver_key, absent_data, 45, absent_fees.clone())
+        .add_asset_receiver(receiver_key, existing_data, 17, existing_fees.clone())
         .seed(85)
         .build();
 
@@ -57,10 +58,18 @@ fn add_assets() {
     let wallet = wallet::Builder::new()
         .key(public_key)
         .balance(2000)
-        .add_asset(existing_data, 3)
         .build();
 
-    WalletSchema::map(fork, |mut s| s.wallets().put(&public_key, wallet));
+    let receiver_wallet = wallet::Builder::new()
+        .key(receiver_key)
+        .add_asset_value(Asset::new(existing_id, 3))
+        .balance(0)
+        .build();
+
+    WalletSchema::map(fork, |mut s| {
+        s.wallets().put(&public_key, wallet);
+        s.wallets().put(&receiver_key, receiver_wallet);
+    });
 
     tx.execute(fork);
 
@@ -69,10 +78,60 @@ fn add_assets() {
     assert_eq!(20, existing_info.amount());
 
     let wallet = WalletSchema::map(fork, |mut s| s.wallet(tx.pub_key()).unwrap());
+    let receiver_waller = WalletSchema::map(fork, |mut s| s.wallet(&receiver_key).unwrap());
 
     assert_eq!(2000 - tx.get_fee(), wallet.balance());
-    assert_eq!(20, wallet.asset(existing_id).unwrap().amount());
-    assert_eq!(45, wallet.asset(absent_id).unwrap().amount());
+    assert_eq!(20, receiver_waller.asset(existing_id).unwrap().amount());
+    assert_eq!(45, receiver_waller.asset(absent_id).unwrap().amount());
+    
+    let tx_status = TxStatusSchema::map(fork, |mut s| s.get_status(&tx.hash())).unwrap();
+    let expected_status = TxStatus::Success;
+    assert_eq!(tx_status, expected_status);
+}
+
+#[test]
+fn add_assets_fails() {
+    let (public_key, secret_key) = crypto::gen_keypair();
+    let (receiver_key, _) = crypto::gen_keypair();
+
+    let data = "a8d5c97d-9978-4111-9947-7a95dcb31d0f";
+    let id = AssetId::new(data, &public_key).unwrap();
+
+    let fees = fee::Builder::new()
+        .trade(10, 10)
+        .exchange(10, 10)
+        .transfer(10, 10)
+        .build();
+
+    let tx = transaction::Builder::new()
+        .keypair(public_key, secret_key.clone())
+        .tx_add_assets()
+        .add_asset_receiver(receiver_key, data, 45, fees.clone())
+        .seed(85)
+        .build();
+
+    let db = MemoryDB::new();
+    let fork = &mut db.fork();
+
+    let wallet = wallet::Builder::new()
+        .key(public_key)
+        .balance(2000)
+        .build();
+
+    WalletSchema::map(fork, |mut s| {
+        s.wallets().put(&public_key, wallet);
+    });
+
+    tx.execute(fork);
+
+    let wallet = WalletSchema::map(fork, |mut s| s.wallet(tx.pub_key()).unwrap());
+    let tx_status = TxStatusSchema::map(fork, |mut s| s.get_status(&tx.hash())).unwrap();
+    let asset_info = AssetSchema::map(fork, |mut s| { s.assets().get(&id) });
+
+    let expected_status = TxStatus::Fail;
+    assert_eq!(tx_status, expected_status);
+    assert_eq!(2000 - tx.get_fee(), wallet.balance());
+    assert!(asset_info.is_none());
 }
 
 #[test]

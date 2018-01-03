@@ -5,12 +5,13 @@ use exonum::crypto::PublicKey;
 use exonum::messages::Message;
 use exonum::storage::Fork;
 use serde_json::Value;
+use std::collections::HashMap;
 
-use service::asset::{Asset, MetaAsset};
+use service::asset::{Asset, Fees, MetaAsset};
 use service::transaction::{PER_ADD_ASSET_FEE, TX_ADD_ASSET_FEE};
 
 use super::{SERVICE_ID, TX_ADD_ASSETS_ID};
-use super::schema::asset::{AssetSchema, external_internal};
+use super::schema::asset::AssetSchema;
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
 use super::schema::wallet::WalletSchema;
 
@@ -34,6 +35,49 @@ impl TxAddAsset {
 
         TX_ADD_ASSET_FEE + PER_ADD_ASSET_FEE * count
     }
+
+    fn get_assets_fees_receivers(&self) -> (Vec<Asset>, Vec<Fees>, Vec<PublicKey>) {
+        let mut assets = Vec::new();
+        let mut fees_list = Vec::new();
+        let mut receivers = Vec::new();
+
+        for meta_asset in self.meta_assets() {
+            let asset = Asset::from_meta_asset(&meta_asset.clone(), self.pub_key());
+            assets.push(asset);
+            fees_list.push(meta_asset.fees());
+            receivers.push(meta_asset.receiver().clone());
+        }
+
+        (assets, fees_list, receivers)
+    }
+
+    fn from_meta_to_asset_map(
+        meta_assets: Vec<MetaAsset>,
+        pub_key: &PublicKey,
+    ) -> HashMap<String, Asset> {
+        let mut map_asset_id: HashMap<String, Asset> = HashMap::new();
+
+        for meta_asset in meta_assets {
+            let key = &meta_asset.data();
+            let new_asset = Asset::from_meta_asset(&meta_asset, pub_key);
+            map_asset_id.insert(key.to_string(), new_asset);
+        }
+
+        map_asset_id
+    }
+
+    fn external_internal(
+        meta_assets: Vec<MetaAsset>,
+        pub_key: &PublicKey,
+    ) -> HashMap<String, String> {
+        let mut meta_asset_to_asset: HashMap<String, String> = HashMap::new();
+
+        for (key, asset) in Self::from_meta_to_asset_map(meta_assets, pub_key) {
+            meta_asset_to_asset.insert(key, asset.id().to_string());
+        }
+
+        meta_asset_to_asset
+    }
 }
 
 impl Transaction for TxAddAsset {
@@ -53,25 +97,64 @@ impl Transaction for TxAddAsset {
     fn execute(&self, view: &mut Fork) {
         let mut tx_status = TxStatus::Fail;
         let creator = WalletSchema::map(view, |mut schema| schema.wallet(self.pub_key()));
+
         if let Some(mut creator) = creator {
-            if creator.balance() >= self.get_fee() {
-                let map_assets = AssetSchema::map(view, |mut schema| {
-                    schema.add_assets(self.meta_assets(), self.pub_key())
+            let fee = self.get_fee();
+
+            if creator.balance() >= fee {
+                // remove fee from creator and update creator wallet balance
+                // TODO: send fee to `blockchain platform`
+                creator.decrease(fee);
+                WalletSchema::map(view, |mut schema| {
+                    schema.wallets().put(self.pub_key(), creator.clone())
                 });
-                creator.decrease(self.get_fee());
-                println!("Convert {:?}", map_assets);
-                let new_assets: Vec<Asset> = map_assets
-                    .iter()
-                    .map(|(_, asset)| Asset::new(asset.id(), asset.amount()))
-                    .collect();
-                creator.add_assets(&new_assets);
-                tx_status = TxStatus::Success;
+
+                // initial point for db rollback, in case if transaction has failed
+                view.checkpoint();
+
+                // store new assets in asset schema
+                let (assets, fees_list, receivers) = self.get_assets_fees_receivers();
+                let is_assets_added = AssetSchema::map(view, |mut schema| {
+                    schema.add_assets(&assets, &fees_list, self.pub_key())
+                });
+
+                if is_assets_added {
+                    tx_status = TxStatus::Success;
+
+                    // send assets to receivers
+                    for (receiver_key, asset) in receivers.iter().zip(assets) {
+                        if let Some(mut receiver) = WalletSchema::map(view, |mut schema| schema.wallet(receiver_key)) {
+                            receiver.add_assets(&[asset]);
+
+                            WalletSchema::map(view, |mut schema| {
+                                schema.wallets().put(receiver_key, receiver)
+                            });
+                        } else {
+
+                            tx_status = TxStatus::Fail;
+                            break;
+                        }
+                    }
+
+                } else {
+                    tx_status = TxStatus::Fail;
+                }
+
+                // `Fail` status can occur due two reasons:
+                // 1. `schema.add_assets` will fail if asset id generation has collision
+                // 2. any from receivers wallet does not exist
+                // rollback changes if adding procedure has failed
+                if tx_status == TxStatus::Fail {
+                    println!("Unable to add assets {:?}", self.meta_assets());
+                    view.rollback();
+                }
+
+                println!("Wallet after mining asset: {:?}", creator);
+            } else {  // if creator.balance() >= fee
+                println!("Insuficient funds at {:?} wallet, required {}", creator, fee);
             }
-            println!("Wallet after mining asset: {:?}", creator);
-            WalletSchema::map(view, |mut schema| {
-                schema.wallets().put(self.pub_key(), creator)
-            });
         }
+
         TxStatusSchema::map(
             view,
             |mut schema| schema.set_status(&self.hash(), tx_status),
@@ -81,7 +164,7 @@ impl Transaction for TxAddAsset {
     fn info(&self) -> Value {
         json!({
             "transaction_data": self,
-            "external_internal": external_internal(self.meta_assets(), self.pub_key()),
+            "external_internal": Self::external_internal(self.meta_assets(), self.pub_key()),
         })
     }
 }
