@@ -1,2 +1,2 @@
 error_on_line_overflow = false
-error_on_line_overflow_comments = false
+error_on_unformatted = false

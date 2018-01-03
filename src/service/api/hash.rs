@@ -1,9 +1,9 @@
+extern crate bodyparser;
+extern crate exonum;
+extern crate iron;
+extern crate router;
 extern crate serde;
 extern crate serde_json;
-extern crate exonum;
-extern crate router;
-extern crate bodyparser;
-extern crate iron;
 
 use exonum::api::{Api, ApiError};
 use exonum::blockchain::Transaction;
@@ -87,18 +87,14 @@ impl Api for HashApi {
                     let transaction: Box<Transaction> = transaction.into();
                     let raw_ = transaction.raw().clone();
                     let vec_hash = match transaction.raw().message_type() {
-                        TX_EXCHANGE_ID => {
-                            match TxExchange::from_raw(raw_) {
-                                Ok(exchange) => exchange.get_offer_raw(),
-                                Err(_) => vec![],
-                            }
-                        }
-                        TX_TRADE_ASSETS_ID => {
-                            match TxTrade::from_raw(raw_) {
-                                Ok(trade) => trade.get_offer_raw(),
-                                Err(_) => vec![],
-                            }
-                        }
+                        TX_EXCHANGE_ID => match TxExchange::from_raw(raw_) {
+                            Ok(exchange) => exchange.get_offer_raw(),
+                            Err(_) => vec![],
+                        },
+                        TX_TRADE_ASSETS_ID => match TxTrade::from_raw(raw_) {
+                            Ok(trade) => trade.get_offer_raw(),
+                            Err(_) => vec![],
+                        },
                         _ => vec![],
                     };
                     let hash = HashApi::hex_string(vec_hash);

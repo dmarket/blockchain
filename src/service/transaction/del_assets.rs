@@ -77,10 +77,9 @@ impl Transaction for TxDelAsset {
 
     fn execute(&self, view: &mut Fork) {
         let tx_status = self.process(view);
-        TxStatusSchema::map(
-            view,
-            |mut schema| schema.set_status(&self.hash(), tx_status),
-        );
+        TxStatusSchema::map(view, |mut schema| {
+            schema.set_status(&self.hash(), tx_status)
+        });
     }
 
     fn info(&self) -> Value {

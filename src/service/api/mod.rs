@@ -62,12 +62,14 @@ impl ServiceApi {
 
     pub fn add_option_headers(headers: &mut Headers) {
         headers.set(AccessControlAllowOrigin::Any);
-        headers.set(AccessControlAllowHeaders(
-            vec![UniCase("content-type".to_owned())],
-        ));
-        headers.set(AccessControlAllowMethods(
-            vec![Method::Get, Method::Post, Method::Options],
-        ));
+        headers.set(AccessControlAllowHeaders(vec![
+            UniCase("content-type".to_owned()),
+        ]));
+        headers.set(AccessControlAllowMethods(vec![
+            Method::Get,
+            Method::Post,
+            Method::Options,
+        ]));
     }
 }
 
@@ -80,10 +82,14 @@ impl Api for ServiceApi {
         };
         api.wire(router);
 
-        let api = AssetApi { blockchain: self.clone().blockchain };
+        let api = AssetApi {
+            blockchain: self.clone().blockchain,
+        };
         api.wire(router);
 
-        let api = WalletApi { blockchain: self.clone().blockchain };
+        let api = WalletApi {
+            blockchain: self.clone().blockchain,
+        };
         api.wire(router);
 
         let api = HashApi {};

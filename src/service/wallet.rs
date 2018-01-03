@@ -32,11 +32,13 @@ impl Wallet {
         for (i, asset) in asset_list.iter().enumerate() {
             assets = assets
                 .into_iter()
-                .map(|a| if a.is_eq(&asset) {
-                    new_assets.remove(i);
-                    Asset::new(a.id(), a.amount() + asset.amount())
-                } else {
-                    a
+                .map(|a| {
+                    if a.is_eq(&asset) {
+                        new_assets.remove(i);
+                        Asset::new(a.id(), a.amount() + asset.amount())
+                    } else {
+                        a
+                    }
                 })
                 .collect::<Vec<_>>();
         }
@@ -70,9 +72,9 @@ impl Wallet {
     }
 
     fn allow_amount(&self, input_asset: &Asset) -> bool {
-        self.assets().into_iter().any(|asset| {
-            asset.is_eq(input_asset) && asset.is_available_to_transfer(input_asset)
-        })
+        self.assets()
+            .into_iter()
+            .any(|asset| asset.is_eq(input_asset) && asset.is_available_to_transfer(input_asset))
     }
 
     pub fn is_assets_in_wallet(&self, asset_list: &[Asset]) -> bool {
@@ -110,14 +112,10 @@ mod tests {
         assert!(wallet.is_assets_in_wallet(&vec![Asset::new(assetid2, 3)]));
         assert!(!wallet.is_assets_in_wallet(&vec![Asset::new(assetid2, 33)]));
         assert!(!wallet.is_assets_in_wallet(&vec![Asset::new(assetid4, 1)]));
-        assert!(!wallet.is_assets_in_wallet(&vec![
-            Asset::new(assetid1, 1),
-            Asset::new(assetid4, 1),
-        ]));
-        assert!(!wallet.is_assets_in_wallet(&vec![
-            Asset::new(assetid1, 1),
-            Asset::new(assetid3, 31),
-        ]));
+        assert!(!wallet
+            .is_assets_in_wallet(&vec![Asset::new(assetid1, 1), Asset::new(assetid4, 1)]));
+        assert!(!wallet
+            .is_assets_in_wallet(&vec![Asset::new(assetid1, 1), Asset::new(assetid3, 31)]));
     }
 
     #[test]
@@ -168,10 +166,7 @@ mod tests {
         assert!(wallet.is_assets_in_wallet(&vec![Asset::new(assetid2, 15)]));
         assert!(!wallet.del_assets(&vec![Asset::new(assetid4, 3)]));
         assert!(!wallet.del_assets(&vec![Asset::new(assetid3, 31)]));
-        assert!(!wallet.del_assets(&vec![
-            Asset::new(assetid1, 10),
-            Asset::new(assetid3, 31),
-        ]));
+        assert!(!wallet.del_assets(&vec![Asset::new(assetid1, 10), Asset::new(assetid3, 31)]));
         assert!(wallet.is_assets_in_wallet(&vec![Asset::new(assetid1, 30)]));
     }
 }

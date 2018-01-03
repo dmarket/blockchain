@@ -88,23 +88,16 @@ const SIMPLE_LENGTH: usize = 32;
 impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            ParseError::InvalidLength(found) => {
-                write!(
-                    f,
-                    "Invalid length; expecting {}, found {}",
-                    SIMPLE_LENGTH,
-                    found
-                )
-            }
-            ParseError::InvalidCharacter(found, pos) => {
-                write!(
-                    f,
-                    "Invalid character; found `{}` (0x{:02x}) at offset {}",
-                    found,
-                    found as usize,
-                    pos
-                )
-            }
+            ParseError::InvalidLength(found) => write!(
+                f,
+                "Invalid length; expecting {}, found {}",
+                SIMPLE_LENGTH, found
+            ),
+            ParseError::InvalidCharacter(found, pos) => write!(
+                f,
+                "Invalid character; found `{}` (0x{:02x}) at offset {}",
+                found, found as usize, pos
+            ),
             ParseError::UnexpectedErrorAt(pos) => write!(f, "Unexpected, at {}", pos),
         }
     }
@@ -203,7 +196,6 @@ impl ToString for AssetId {
         assetid_hex
     }
 }
-
 
 impl StorageKey for AssetId {
     fn size(&self) -> usize {
@@ -319,7 +311,7 @@ encoding_struct! {
 
         field id: AssetId [0 => 16]
         field amount: u32 [16 => 20]
-        field price: u64  [20 => 28] 
+        field price: u64  [20 => 28]
     }
 }
 
@@ -347,22 +339,8 @@ mod tests {
     #[test]
     fn assetid_from_bytes() {
         let b = [
-            0xa1,
-            0xa2,
-            0xa3,
-            0xa4,
-            0xb1,
-            0xb2,
-            0xc1,
-            0xc2,
-            0xd1,
-            0xd2,
-            0xd3,
-            0xd4,
-            0xd5,
-            0xd6,
-            0xd7,
-            0xd8,
+            0xa1, 0xa2, 0xa3, 0xa4, 0xb1, 0xb2, 0xc1, 0xc2, 0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6,
+            0xd7, 0xd8,
         ];
 
         let assetid = AssetId::from_bytes(&b).unwrap();
@@ -388,22 +366,8 @@ mod tests {
     #[test]
     fn assetid_as_bytes() {
         let expected = [
-            0xa1,
-            0xa2,
-            0xa3,
-            0xa4,
-            0xb1,
-            0xb2,
-            0xc1,
-            0xc2,
-            0xd1,
-            0xd2,
-            0xd3,
-            0xd4,
-            0xd5,
-            0xd6,
-            0xd7,
-            0xd8,
+            0xa1, 0xa2, 0xa3, 0xa4, 0xb1, 0xb2, 0xc1, 0xc2, 0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6,
+            0xd7, 0xd8,
         ];
         let assetid = AssetId::from_str("a1a2a3a4b1b2c1c2d1d2d3d4d5d6d7d8").unwrap();
 
@@ -413,22 +377,8 @@ mod tests {
     #[test]
     fn assetid_to_string() {
         let b = [
-            0xa1,
-            0xa2,
-            0xa3,
-            0xa4,
-            0xb1,
-            0xb2,
-            0xc1,
-            0xc2,
-            0xd1,
-            0xd2,
-            0xd3,
-            0xd4,
-            0xd5,
-            0xd6,
-            0xd7,
-            0xd8,
+            0xa1, 0xa2, 0xa3, 0xa4, 0xb1, 0xb2, 0xc1, 0xc2, 0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6,
+            0xd7, 0xd8,
         ];
 
         let assetid = AssetId::from_bytes(&b).unwrap();
@@ -446,22 +396,8 @@ mod tests {
         }
 
         let buffer = vec![
-            0xa1,
-            0xa2,
-            0xa3,
-            0xa4,
-            0xb1,
-            0xb2,
-            0xc1,
-            0xc2,
-            0xd1,
-            0xd2,
-            0xd3,
-            0xd4,
-            0xd5,
-            0xd6,
-            0xd7,
-            0xd8,
+            0xa1, 0xa2, 0xa3, 0xa4, 0xb1, 0xb2, 0xc1, 0xc2, 0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6,
+            0xd7, 0xd8,
         ];
         unsafe {
             let assetid = AssetId::read(&buffer, 0, buffer.len() as Offset);
@@ -481,22 +417,8 @@ mod tests {
     #[test]
     fn assetid_write() {
         let expected = [
-            0xa1,
-            0xa2,
-            0xa3,
-            0xa4,
-            0xb1,
-            0xb2,
-            0xc1,
-            0xc2,
-            0xd1,
-            0xd2,
-            0xd3,
-            0xd4,
-            0xd5,
-            0xd6,
-            0xd7,
-            0xd8,
+            0xa1, 0xa2, 0xa3, 0xa4, 0xb1, 0xb2, 0xc1, 0xc2, 0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6,
+            0xd7, 0xd8,
         ];
         let assetid = AssetId::from_bytes(&expected).unwrap();
         let mut buffer = vec![0; expected.len()];
@@ -505,26 +427,8 @@ mod tests {
         assert_eq!(buffer, expected);
 
         let expected = [
-            0x0,
-            0x0,
-            0xa1,
-            0xa2,
-            0xa3,
-            0xa4,
-            0xb1,
-            0xb2,
-            0xc1,
-            0xc2,
-            0xd1,
-            0xd2,
-            0xd3,
-            0xd4,
-            0xd5,
-            0xd6,
-            0xd7,
-            0xd8,
-            0x0,
-            0x0,
+            0x0, 0x0, 0xa1, 0xa2, 0xa3, 0xa4, 0xb1, 0xb2, 0xc1, 0xc2, 0xd1, 0xd2, 0xd3, 0xd4, 0xd5,
+            0xd6, 0xd7, 0xd8, 0x0, 0x0,
         ];
         let assetid = AssetId::from_bytes(&expected[2..18]).unwrap();
         let mut buffer = vec![0; expected.len()];

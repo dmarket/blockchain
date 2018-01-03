@@ -47,10 +47,10 @@ impl Transaction for TxTransfer {
         let mut tx_status = TxStatus::Fail;
         if let Some(mut sender) = sender {
             let amount = self.amount();
-            let update_amount = amount == 0 && sender.balance() >= self.get_fee() ||
-                amount > 0 && sender.balance() >= amount + self.get_fee();
-            let update_assets = self.assets().is_empty() ||
-                !self.assets().is_empty() && sender.is_assets_in_wallet(&self.assets());
+            let update_amount = amount == 0 && sender.balance() >= self.get_fee()
+                || amount > 0 && sender.balance() >= amount + self.get_fee();
+            let update_assets = self.assets().is_empty()
+                || !self.assets().is_empty() && sender.is_assets_in_wallet(&self.assets());
             if update_amount && update_assets {
                 sender.decrease(amount + self.get_fee());
                 sender.del_assets(&self.assets());
@@ -65,10 +65,9 @@ impl Transaction for TxTransfer {
                 tx_status = TxStatus::Success;
             }
         }
-        TxStatusSchema::map(
-            view,
-            |mut schema| schema.set_status(&self.hash(), tx_status),
-        );
+        TxStatusSchema::map(view, |mut schema| {
+            schema.set_status(&self.hash(), tx_status)
+        });
     }
 
     fn info(&self) -> Value {

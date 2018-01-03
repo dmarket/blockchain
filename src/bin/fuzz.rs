@@ -1,10 +1,10 @@
-extern crate toml;
 extern crate exonum;
 extern crate exonum_testkit;
 extern crate serde;
-extern crate serde_json;
 #[macro_use]
 extern crate serde_derive;
+extern crate serde_json;
+extern crate toml;
 
 extern crate dmbc;
 
@@ -25,13 +25,8 @@ use exonum_testkit::TestKitBuilder;
 use dmbc::service::CurrencyService;
 use dmbc::service::builders::transaction;
 use dmbc::service::builders::fee;
-use dmbc::service::transaction::{TX_CREATE_WALLET_ID,
-                                 TX_TRANSFER_ID,
-                                 TX_ADD_ASSETS_ID,
-                                 TX_DEL_ASSETS_ID,
-                                 TX_TRADE_ASSETS_ID,
-                                 TX_EXCHANGE_ID,
-                                 TX_MINING_ID};
+use dmbc::service::transaction::{TX_ADD_ASSETS_ID, TX_CREATE_WALLET_ID, TX_DEL_ASSETS_ID,
+                                 TX_EXCHANGE_ID, TX_MINING_ID, TX_TRADE_ASSETS_ID, TX_TRANSFER_ID};
 use dmbc::service::transaction::add_assets::TxAddAsset;
 use dmbc::service::transaction::create_wallet::TxCreateWallet;
 use dmbc::service::transaction::del_assets::TxDelAsset;
@@ -49,7 +44,7 @@ fn main() {
             .expect("Unable to open fuzz-data.toml")
             .read_to_end(&mut data_vec)
             .unwrap();
-        let data : FuzzData = toml::from_slice(&data_vec).unwrap();
+        let data: FuzzData = toml::from_slice(&data_vec).unwrap();
         let setup = setup_transactions(&data);
 
         let mut testkit = TestKitBuilder::validator()
@@ -85,7 +80,7 @@ fn tx_from_raw(rm: RawMessage) -> Box<Transaction> {
 }
 
 fn setup_transactions(fuzz: &FuzzData) -> Vec<Box<Transaction>> {
-    let mut transactions : Vec<Box<Transaction>> = Vec::new();
+    let mut transactions: Vec<Box<Transaction>> = Vec::new();
 
     let zero_fee = fee::Builder::new()
         .trade(0, 1)
@@ -94,37 +89,48 @@ fn setup_transactions(fuzz: &FuzzData) -> Vec<Box<Transaction>> {
         .build();
 
     // setup alice
-    transactions.push(Box::new(transaction::Builder::new()
-                      .keypair(fuzz.genesis, SecretKey::zero())
-                      .tx_transfer()
-                      .recipient(fuzz.alice)
-                      .amount(10_000_000_000)
-                      .build()));
+    transactions.push(Box::new(
+        transaction::Builder::new()
+            .keypair(fuzz.genesis, SecretKey::zero())
+            .tx_transfer()
+            .recipient(fuzz.alice)
+            .amount(10_000_000_000)
+            .build(),
+    ));
 
-    transactions.push(Box::new(transaction::Builder::new()
-                      .keypair(fuzz.alice, SecretKey::zero())
-                      .tx_add_assets()
-                      .add_asset("alice_asset", 10, zero_fee.clone())
-                      .build()));
+    transactions.push(Box::new(
+        transaction::Builder::new()
+            .keypair(fuzz.alice, SecretKey::zero())
+            .tx_add_assets()
+            .add_asset("alice_asset", 10, zero_fee.clone())
+            .build(),
+    ));
 
     // setup bob
-    transactions.push(Box::new(transaction::Builder::new()
-                      .keypair(fuzz.genesis, SecretKey::zero())
-                      .tx_transfer()
-                      .recipient(fuzz.bob)
-                      .amount(10_000_000_000)
-                      .build()));
+    transactions.push(Box::new(
+        transaction::Builder::new()
+            .keypair(fuzz.genesis, SecretKey::zero())
+            .tx_transfer()
+            .recipient(fuzz.bob)
+            .amount(10_000_000_000)
+            .build(),
+    ));
 
-    transactions.push(Box::new(transaction::Builder::new()
-                      .keypair(fuzz.bob, SecretKey::zero())
-                      .tx_add_assets()
-                      .add_asset("bob_asset", 10, zero_fee.clone())
-                      .build()));
+    transactions.push(Box::new(
+        transaction::Builder::new()
+            .keypair(fuzz.bob, SecretKey::zero())
+            .tx_add_assets()
+            .add_asset("bob_asset", 10, zero_fee.clone())
+            .build(),
+    ));
 
     transactions
 }
 
-fn fuzz<F>(f: F) where F: FnOnce() {
+fn fuzz<F>(f: F)
+where
+    F: FnOnce(),
+{
     let result = panic::catch_unwind(AssertUnwindSafe(f));
     if let Err(error) = result {
         if let Some(e) = error.downcast_ref::<&str>() {
@@ -139,4 +145,3 @@ fn fuzz<F>(f: F) where F: FnOnce() {
         process::abort();
     }
 }
-

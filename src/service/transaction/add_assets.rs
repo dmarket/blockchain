@@ -29,9 +29,9 @@ message! {
 
 impl TxAddAsset {
     pub fn get_fee(&self) -> u64 {
-        let count = self.meta_assets().iter().fold(0, |acc, asset| {
-            acc + asset.amount() as u64
-        });
+        let count = self.meta_assets()
+            .iter()
+            .fold(0, |acc, asset| acc + asset.amount() as u64);
 
         TX_ADD_ASSET_FEE + PER_ADD_ASSET_FEE * count
     }
@@ -127,19 +127,19 @@ impl Transaction for TxAddAsset {
 
                     // send assets to receivers
                     for (receiver_key, asset) in receivers.iter().zip(assets) {
-                        if let Some(mut receiver) = WalletSchema::map(view, |mut schema| schema.wallet(receiver_key)) {
+                        if let Some(mut receiver) =
+                            WalletSchema::map(view, |mut schema| schema.wallet(receiver_key))
+                        {
                             receiver.add_assets(&[asset]);
 
                             WalletSchema::map(view, |mut schema| {
                                 schema.wallets().put(receiver_key, receiver)
                             });
                         } else {
-
                             tx_status = TxStatus::Fail;
                             break;
                         }
                     }
-
                 } else {
                     tx_status = TxStatus::Fail;
                 }
@@ -154,15 +154,18 @@ impl Transaction for TxAddAsset {
                 }
 
                 println!("Wallet after mining asset: {:?}", creator);
-            } else {  // if creator.balance() >= fee
-                println!("Insuficient funds at {:?} wallet, required {}", creator, fee);
+            } else {
+                // if creator.balance() >= fee
+                println!(
+                    "Insuficient funds at {:?} wallet, required {}",
+                    creator, fee
+                );
             }
         }
 
-        TxStatusSchema::map(
-            view,
-            |mut schema| schema.set_status(&self.hash(), tx_status),
-        );
+        TxStatusSchema::map(view, |mut schema| {
+            schema.set_status(&self.hash(), tx_status)
+        });
     }
 
     fn info(&self) -> Value {

@@ -76,19 +76,16 @@ impl Api {
         match env::var("API_KEYS_PATH") {
             Ok(value) => value,
             Err(_) => self.keys_path.unwrap(),
-
         }
     }
     pub fn peer_address(self) -> String {
         match env::var("API_PEER_ADDRESS") {
             Ok(value) => value,
             Err(_) => self.peer_address.unwrap(),
-
         }
     }
 
     pub fn peers(self) -> Vec<SocketAddr> {
-
         match env::var("API_PEERS") {
             Ok(_) => vec![], // todo: add parse environment
             Err(_) => {
@@ -120,20 +117,22 @@ impl Db {
 impl Nats {
     pub fn enabled(self) -> bool {
         match env::var("NATS_ENABLED") {
-            Ok(value) => if value == "false" { false } else { true },
+            Ok(value) => if value == "false" {
+                false
+            } else {
+                true
+            },
             Err(_) => self.enabled.unwrap(),
         }
     }
 
     pub fn addresses(self) -> Vec<String> {
         match env::var("NATS_ADDRESSES") {
-            Ok(addresses) => {
-                addresses
-                    .split(',')
-                    .into_iter()
-                    .map(|a| a.to_string())
-                    .collect()
-            }
+            Ok(addresses) => addresses
+                .split(',')
+                .into_iter()
+                .map(|a| a.to_string())
+                .collect(),
             Err(_) => self.addresses.unwrap(),
         }
     }

@@ -1,4 +1,4 @@
-use std::sync::{ONCE_INIT, Once};
+use std::sync::{Once, ONCE_INIT};
 use std::sync::mpsc;
 use std::sync::mpsc::{Receiver, Sender};
 use std::thread;
@@ -10,9 +10,8 @@ use config;
 
 pub fn publish(subject: String, msg: String) {
     let pipe = Pipe::get();
-    pipe.as_ref().map(
-        |p| p.sender.send((subject, msg)).unwrap(),
-    );
+    pipe.as_ref()
+        .map(|p| p.sender.send((subject, msg)).unwrap());
 }
 
 type PublishPair = (String, String);
@@ -66,16 +65,14 @@ impl Pipe {
         let discard_duration = Duration::from_secs(DISCARD_MODE_SECONDS);
 
         let mut process_pair = |pair: PublishPair| match mode {
-            Mode::Publish => {
-                match client.publish(&pair.0, pair.1.as_bytes()) {
-                    Ok(_) => println!("success published"),
-                    Err(e) => {
-                        println!("{:?}", e);
-                        println!("Discarding messages for {} seconds.", DISCARD_MODE_SECONDS);
-                        mode = Mode::Discard(Instant::now());
-                    }
+            Mode::Publish => match client.publish(&pair.0, pair.1.as_bytes()) {
+                Ok(_) => println!("success published"),
+                Err(e) => {
+                    println!("{:?}", e);
+                    println!("Discarding messages for {} seconds.", DISCARD_MODE_SECONDS);
+                    mode = Mode::Discard(Instant::now());
                 }
-            }
+            },
             Mode::Discard(begin) if begin.elapsed() < discard_duration => (),
             Mode::Discard(_) => {
                 println!("Accepting messages again.");

@@ -1,7 +1,7 @@
 extern crate exonum;
 
 use exonum::blockchain::Transaction;
-use exonum::crypto::{PublicKey, Signature, verify};
+use exonum::crypto::{verify, PublicKey, Signature};
 use exonum::messages::Message;
 use exonum::storage::Fork;
 use serde_json::Value;
@@ -84,18 +84,14 @@ impl TxExchange {
         let fee_ratio = |count: u32, coef: u64| (count as f64 / coef as f64).round() as u64;
         for asset in exchange_assets {
             if let Some(info) = AssetSchema::map(view, |mut schema| schema.info(&asset.id())) {
-
                 let exchange_fee = info.fees().exchange();
                 let fee = exchange_fee.tax() + fee_ratio(asset.amount(), exchange_fee.ratio());
 
-                if let Some(creator) = WalletSchema::map(
-                    view,
-                    |mut schema| schema.wallet(info.creator()),
-                )
+                if let Some(creator) =
+                    WalletSchema::map(view, |mut schema| schema.wallet(info.creator()))
                 {
                     *assets_fees.entry(creator).or_insert(0) += fee;
                 }
-
             }
         }
 
@@ -109,14 +105,13 @@ impl Transaction for TxExchange {
             return false;
         }
 
-        *self.offer().sender() != *self.offer().recipient() &&
-            self.verify_signature(self.offer().recipient()) &&
-            verify(
+        *self.offer().sender() != *self.offer().recipient()
+            && self.verify_signature(self.offer().recipient())
+            && verify(
                 self.sender_signature(),
                 &self.offer().raw,
                 self.offer().sender(),
             )
-
     }
 
     fn execute(&self, view: &mut Fork) {
@@ -125,10 +120,10 @@ impl Transaction for TxExchange {
             let sender = schema.wallet(self.offer().sender());
             let recipient = schema.wallet(self.offer().recipient());
             if let (Some(mut sender), Some(mut recipient)) = (sender, recipient) {
-                if sender.balance() >= self.offer().sender_value() &&
-                    sender.is_assets_in_wallet(&self.offer().sender_assets()) &&
-                    recipient.balance() >= self.offer().recipient_value() &&
-                    recipient.is_assets_in_wallet(&self.offer().recipient_assets())
+                if sender.balance() >= self.offer().sender_value()
+                    && sender.is_assets_in_wallet(&self.offer().sender_assets())
+                    && recipient.balance() >= self.offer().recipient_value()
+                    && recipient.is_assets_in_wallet(&self.offer().recipient_assets())
                 {
                     println!("--   Exchange transaction   --");
                     println!("Sender's balance before transaction : {:?}", sender);

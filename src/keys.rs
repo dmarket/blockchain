@@ -37,9 +37,7 @@ impl Disc for KeyPair {
         };
     }
 
-
     fn read(filename: &str) -> KeyPair {
-
         let path = config::config().api().keys_path();
         let path = Path::new(&path).join(filename);
         let display = path.display();

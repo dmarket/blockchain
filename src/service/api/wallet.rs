@@ -1,10 +1,10 @@
-extern crate serde;
-extern crate serde_json;
-extern crate exonum;
-extern crate router;
 extern crate bodyparser;
+extern crate exonum;
 extern crate iron;
 extern crate params;
+extern crate router;
+extern crate serde;
+extern crate serde_json;
 extern crate std;
 
 use exonum::api::{Api, ApiError};
@@ -54,7 +54,6 @@ impl WalletApi {
 
 impl Api for WalletApi {
     fn wire(&self, router: &mut Router) {
-
         // Gets status of the wallet corresponding to the public key.
         let self_ = self.clone();
         let wallet_info = move |req: &mut Request| -> IronResult<Response> {
@@ -93,10 +92,9 @@ impl Api for WalletApi {
                 res.headers.set(AccessControlAllowOrigin::Any);
                 Ok(res)
             } else {
-                let res = self_.not_found_response(
-                    &serde_json::to_value("Wallets database is empty")
-                        .unwrap(),
-                );
+                let res = self_
+                    .not_found_response(&serde_json::to_value("Wallets database is empty")
+                        .unwrap());
                 let mut res = res.unwrap();
                 res.headers.set(AccessControlAllowOrigin::Any);
                 Ok(res)

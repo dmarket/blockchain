@@ -28,9 +28,9 @@ encoding_struct! {
 
 impl TradeOffer {
     pub fn total_price(&self) -> u64 {
-        self.assets().iter().fold(0, |total, item| {
-            total + item.total_price()
-        })
+        self.assets()
+            .iter()
+            .fold(0, |total, item| total + item.total_price())
     }
 }
 
@@ -74,8 +74,8 @@ message! {
 
 impl TxTrade {
     fn offer_verify(&self) -> bool {
-        *self.buyer() != *self.offer().seller() &&
-            crypto::verify(
+        *self.buyer() != *self.offer().seller()
+            && crypto::verify(
                 self.seller_signature(),
                 &self.offer().raw,
                 self.offer().seller(),
@@ -92,14 +92,11 @@ impl TxTrade {
 
         for asset in self.offer().assets() {
             if let Some(info) = AssetSchema::map(view, |mut schema| schema.info(&asset.id())) {
-
                 let trade_fee = info.fees().trade();
                 let fee = trade_fee.tax() + fee_ratio(asset.total_price(), trade_fee.ratio());
 
-                if let Some(creator) = WalletSchema::map(
-                    view,
-                    |mut schema| schema.wallet(info.creator()),
-                )
+                if let Some(creator) =
+                    WalletSchema::map(view, |mut schema| schema.wallet(info.creator()))
                 {
                     *assets_fees.entry(creator).or_insert(0) += fee;
                 }
@@ -168,10 +165,9 @@ impl Transaction for TxTrade {
                 } else {
                     TxStatus::Fail
                 };
-            TxStatusSchema::map(
-                view,
-                |mut schema| schema.set_status(&self.hash(), tx_status),
-            );
+            TxStatusSchema::map(view, |mut schema| {
+                schema.set_status(&self.hash(), tx_status)
+            });
         }
     }
 

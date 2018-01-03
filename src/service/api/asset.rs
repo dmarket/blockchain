@@ -1,9 +1,9 @@
+extern crate bodyparser;
+extern crate exonum;
+extern crate iron;
+extern crate router;
 extern crate serde;
 extern crate serde_json;
-extern crate exonum;
-extern crate router;
-extern crate bodyparser;
-extern crate iron;
 
 use exonum::api::Api;
 use exonum::blockchain::Blockchain;

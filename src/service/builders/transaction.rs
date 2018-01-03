@@ -151,7 +151,13 @@ impl TxAddAssetBuilder {
         self
     }
 
-    pub fn add_asset_receiver(self, receiver: PublicKey, name: &str, count: u32, fees: Fees) -> Self {
+    pub fn add_asset_receiver(
+        self,
+        receiver: PublicKey,
+        name: &str,
+        count: u32,
+        fees: Fees,
+    ) -> Self {
         let asset = MetaAsset::new(&receiver, name, count, fees);
         self.add_asset_value(asset)
     }

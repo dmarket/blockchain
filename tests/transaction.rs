@@ -1,5 +1,5 @@
-extern crate exonum;
 extern crate dmbc;
+extern crate exonum;
 
 use exonum::blockchain::Transaction;
 use exonum::crypto;
@@ -49,16 +49,11 @@ fn add_assets() {
     let fork = &mut db.fork();
 
     AssetSchema::map(fork, |mut s| {
-        s.assets().put(
-            &existing_id,
-            AssetInfo::new(&public_key, 3, existing_fees),
-        )
+        s.assets()
+            .put(&existing_id, AssetInfo::new(&public_key, 3, existing_fees))
     });
 
-    let wallet = wallet::Builder::new()
-        .key(public_key)
-        .balance(2000)
-        .build();
+    let wallet = wallet::Builder::new().key(public_key).balance(2000).build();
 
     let receiver_wallet = wallet::Builder::new()
         .key(receiver_key)
@@ -83,7 +78,7 @@ fn add_assets() {
     assert_eq!(2000 - tx.get_fee(), wallet.balance());
     assert_eq!(20, receiver_waller.asset(existing_id).unwrap().amount());
     assert_eq!(45, receiver_waller.asset(absent_id).unwrap().amount());
-    
+
     let tx_status = TxStatusSchema::map(fork, |mut s| s.get_status(&tx.hash())).unwrap();
     let expected_status = TxStatus::Success;
     assert_eq!(tx_status, expected_status);
@@ -113,10 +108,7 @@ fn add_assets_fails() {
     let db = MemoryDB::new();
     let fork = &mut db.fork();
 
-    let wallet = wallet::Builder::new()
-        .key(public_key)
-        .balance(2000)
-        .build();
+    let wallet = wallet::Builder::new().key(public_key).balance(2000).build();
 
     WalletSchema::map(fork, |mut s| {
         s.wallets().put(&public_key, wallet);
@@ -126,7 +118,7 @@ fn add_assets_fails() {
 
     let wallet = WalletSchema::map(fork, |mut s| s.wallet(tx.pub_key()).unwrap());
     let tx_status = TxStatusSchema::map(fork, |mut s| s.get_status(&tx.hash())).unwrap();
-    let asset_info = AssetSchema::map(fork, |mut s| { s.assets().get(&id) });
+    let asset_info = AssetSchema::map(fork, |mut s| s.assets().get(&id));
 
     let expected_status = TxStatus::Fail;
     assert_eq!(tx_status, expected_status);
@@ -269,9 +261,9 @@ fn delete_assets_fails() {
     WalletSchema::map(fork, |mut s| {
         assert_eq!(
             Some(20),
-            s.wallet(&public_key).and_then(|w| w.asset(id)).map(|a| {
-                a.amount()
-            })
+            s.wallet(&public_key)
+                .and_then(|w| w.asset(id))
+                .map(|a| a.amount())
         );
     });
 
@@ -425,14 +417,10 @@ fn trade_assets() {
         .build();
 
     AssetSchema::map(fork, |mut s| {
-        s.assets().put(
-            &full_id,
-            AssetInfo::new(&creator_public, 20, fee.clone()),
-        );
-        s.assets().put(
-            &half_id,
-            AssetInfo::new(&creator_public, 20, fee.clone()),
-        );
+        s.assets()
+            .put(&full_id, AssetInfo::new(&creator_public, 20, fee.clone()));
+        s.assets()
+            .put(&half_id, AssetInfo::new(&creator_public, 20, fee.clone()));
     });
 
     WalletSchema::map(fork, |mut s| {
@@ -507,14 +495,10 @@ fn transfer() {
         .build();
 
     AssetSchema::map(fork, |mut s| {
-        s.assets().put(
-            &full_id,
-            AssetInfo::new(&sender_public, 20, fee.clone()),
-        );
-        s.assets().put(
-            &half_id,
-            AssetInfo::new(&sender_public, 20, fee.clone()),
-        );
+        s.assets()
+            .put(&full_id, AssetInfo::new(&sender_public, 20, fee.clone()));
+        s.assets()
+            .put(&half_id, AssetInfo::new(&sender_public, 20, fee.clone()));
     });
 
     WalletSchema::map(fork, |mut s| {

@@ -6,4 +6,3 @@ pub struct FuzzData {
     pub alice: PublicKey,
     pub bob: PublicKey,
 }
-

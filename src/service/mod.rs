@@ -86,9 +86,7 @@ impl Service for CurrencyService {
         for hash in list.iter() {
             let tx_hash = hash.to_hex();
             let status = service_tx_schema.get_status(&hash);
-            let msg = json!({
-                tx_hash: status
-            }).to_string();
+            let msg = json!({ tx_hash: status }).to_string();
             let queuename = config::config().nats().queuename();
             nats::publish(queuename, msg);
             println!("Made transaction {:?}", hash.to_hex());

@@ -1,9 +1,9 @@
+extern crate bodyparser;
+extern crate exonum;
+extern crate iron;
+extern crate router;
 extern crate serde;
 extern crate serde_json;
-extern crate exonum;
-extern crate router;
-extern crate bodyparser;
-extern crate iron;
 
 use exonum::api::{Api, ApiError};
 use exonum::blockchain::{Blockchain, Transaction};
@@ -22,7 +22,6 @@ use service::transaction::exchange::TxExchange;
 use service::transaction::mining::TxMining;
 use service::transaction::trade_assets::TxTrade;
 use service::transaction::transfer::TxTransfer;
-
 
 #[derive(Clone)]
 pub struct TransactionApi {
@@ -102,16 +101,14 @@ impl Api for TransactionApi {
             let tx_hash_str = path.last().unwrap();
             let tx_hash = Hash::from_hex(tx_hash_str).unwrap();
             if let Some(status) = self_.get_status(&tx_hash) {
-                let res = self_.ok_response(&json!({
-                    "tx_status": status
-                }));
+                let res = self_.ok_response(&json!({ "tx_status": status }));
                 let mut res = res.unwrap();
                 res.headers.set(AccessControlAllowOrigin::Any);
                 Ok(res)
             } else {
-                let res = self_.not_found_response(
-                    &serde_json::to_value("Transaction hash not found").unwrap(),
-                );
+                let res = self_
+                    .not_found_response(&serde_json::to_value("Transaction hash not found")
+                        .unwrap());
                 let mut res = res.unwrap();
                 res.headers.set(AccessControlAllowOrigin::Any);
                 Ok(res)
@@ -120,6 +117,5 @@ impl Api for TransactionApi {
 
         router.post("/transactions", transaction, "transaction");
         router.get("/transactions/:hash", get_status, "get_transaction_status");
-
     }
 }
