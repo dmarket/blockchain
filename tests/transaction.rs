@@ -40,8 +40,8 @@ fn add_assets() {
     let tx = transaction::Builder::new()
         .keypair(public_key, secret_key.clone())
         .tx_add_assets()
-        .add_asset(receiver_key, absent_data, 45, absent_fees.clone())
-        .add_asset(receiver_key, existing_data, 17, existing_fees.clone())
+        .add_asset_receiver(receiver_key, absent_data, 45, absent_fees.clone())
+        .add_asset_receiver(receiver_key, existing_data, 17, existing_fees.clone())
         .seed(85)
         .build();
 
@@ -106,7 +106,7 @@ fn add_assets_fails() {
     let tx = transaction::Builder::new()
         .keypair(public_key, secret_key.clone())
         .tx_add_assets()
-        .add_asset(receiver_key, data, 45, fees.clone())
+        .add_asset_receiver(receiver_key, data, 45, fees.clone())
         .seed(85)
         .build();
 

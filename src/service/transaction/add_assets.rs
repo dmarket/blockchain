@@ -109,7 +109,7 @@ impl Transaction for TxAddAsset {
                     schema.wallets().put(self.pub_key(), creator.clone())
                 });
 
-                // create for existing db fork before execution
+                // initial point for db rollback, in case if transaction has failed
                 view.checkpoint();
 
                 // store new assets in asset schema
@@ -140,6 +140,9 @@ impl Transaction for TxAddAsset {
                     tx_status = TxStatus::Fail;
                 }
 
+                // `Fail` status can occur due two reasons:
+                // 1. `schema.add_assets` will fail if asset id generation has collision
+                // 2. any from receivers wallet does not exist
                 // rollback changes if adding procedure has failed
                 if tx_status == TxStatus::Fail {
                     println!("Unable to add assets {:?}", self.meta_assets());

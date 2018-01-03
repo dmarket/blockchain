@@ -141,14 +141,19 @@ impl TxAddAssetBuilder {
         }
     }
 
-    pub fn add_asset(self, receiver: PublicKey, name: &str, count: u32, fees: Fees) -> Self {
-        let asset = MetaAsset::new(&receiver, name, count, fees);
+    pub fn add_asset(self, name: &str, count: u32, fees: Fees) -> Self {
+        let asset = MetaAsset::new(&self.meta.public_key, name, count, fees);
         self.add_asset_value(asset)
     }
 
     pub fn add_asset_value(mut self, asset: MetaAsset) -> Self {
         self.assets.push(asset);
         self
+    }
+
+    pub fn add_asset_receiver(self, receiver: PublicKey, name: &str, count: u32, fees: Fees) -> Self {
+        let asset = MetaAsset::new(&receiver, name, count, fees);
+        self.add_asset_value(asset)
     }
 
     pub fn seed(self, seed: u64) -> Self {
