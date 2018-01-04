@@ -1,0 +1,30 @@
+[package]
+name = "dmbc-fuzzer"
+version = "0.1.0"
+authors = ["Mikola Samardak <niksaak@gmail.com>"]
+
+[[bin]]
+name = "fuzz"
+path = "src/fuzz.rs"
+test = false
+bench = false
+doc = false
+
+[[bin]]
+name = "setup-fuzz"
+path = "src/setup_fuzz.rs"
+test = false
+bench = false
+doc = false
+
+[dependencies]
+dmbc = { path = "../dmbc", features = ["fuzzing"] }
+exonum = "0.4"
+exonum-testkit = "0.1"
+toml = "0.4.5"
+serde = "1.0"
+serde_derive = "1.0"
+
+[dev-dependencies]
+afl = "0.3"
+
