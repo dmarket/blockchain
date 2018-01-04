@@ -1,31 +1,15 @@
-#![allow(dead_code)]
-extern crate bodyparser;
-#[macro_use]
 extern crate exonum;
 extern crate exonum_configuration;
-extern crate hyper;
-extern crate iron;
-extern crate nats;
-extern crate router;
-extern crate serde;
-#[macro_use]
-extern crate serde_derive;
-#[macro_use]
-extern crate serde_json;
-extern crate unicase;
-extern crate uuid;
-
-mod service;
-mod config;
-mod keys;
+extern crate dmbc;
 
 use exonum::blockchain::{ConsensusConfig, GenesisConfig, Service, TimeoutAdjusterConfig,
                          ValidatorKeys};
 use exonum::node::{Node, NodeApiConfig, NodeConfig};
 use exonum::storage::{RocksDB, RocksDBOptions};
 use exonum_configuration::ConfigurationService;
-use keys::{Disc, KeyPair};
-use service::CurrencyService;
+use dmbc::config;
+use dmbc::keys::{Disc, KeyPair};
+use dmbc::service::CurrencyService;
 
 fn main() {
     exonum::helpers::init_logger().unwrap();

@@ -1,0 +1,16 @@
+[package]
+name = "dmbc-node"
+version = "0.1.0"
+authors = ["Mikola Samardak <niksaak@gmail.com>"]
+
+[[bin]]
+name = "dmbc-node"
+path = "src/main.rs"
+test = false
+bench = false
+doc = false
+
+[dependencies]
+dmbc = { path = "../dmbc" }
+exonum = "0.4"
+exonum-configuration = "0.4"

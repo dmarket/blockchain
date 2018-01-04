@@ -18,9 +18,9 @@ jobs:
           key: suntechsoft-dmarket-blockchain-{{ .Branch }}-{{ checksum "Cargo.toml" }}
 
       - run:
-          name: Install Project Dependencies
+          name: Build project
           command: |
-            cargo install -vv
+            cargo build --all -vv
 
       - save_cache:
           key: suntechsoft-dmarket-blockchain-{{ .Branch }}-{{ checksum "Cargo.toml" }}
@@ -34,7 +34,8 @@ jobs:
 
       - run:
           name: Run Tests
-          command: cargo test -vv
+          command: |
+            cargo test
 
 #      - store_artifacts:
 #          path: /project/report/
