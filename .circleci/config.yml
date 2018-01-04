@@ -17,10 +17,10 @@ jobs:
       - restore_cache:
           key: suntechsoft-dmarket-blockchain-{{ .Branch }}-{{ checksum "Cargo.toml" }}
 
-#      - run:
-#          name: Install Project Dependencies
-#          command: |
-#            cargo build --all -vv
+      - run:
+          name: Build project
+          command: |
+            cargo build --all -vv
 
       - save_cache:
           key: suntechsoft-dmarket-blockchain-{{ .Branch }}-{{ checksum "Cargo.toml" }}
@@ -35,7 +35,6 @@ jobs:
       - run:
           name: Run Tests
           command: |
-            cargo build --all -vv
             cargo test
 
 #      - store_artifacts:
