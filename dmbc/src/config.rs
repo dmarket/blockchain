@@ -163,7 +163,7 @@ pub fn read_config() -> Result<Config, Error> {
 }
 
 pub fn config() -> Config {
-    read_config().ok().unwrap()
+    read_config().unwrap()
 }
 
 #[test]
