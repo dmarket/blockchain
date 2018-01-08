@@ -9,6 +9,7 @@ extern crate dmbc;
 
 mod fuzz_data;
 
+use std::error::Error;
 use std::io;
 use std::io::Read;
 use std::fs::File;
@@ -52,29 +53,42 @@ fn main() {
             .create();
 
         testkit.create_block();
-        testkit.create_block_with_transactions(setup);
 
         let mut data = Vec::new();
         io::stdin().read_to_end(&mut data).unwrap();
         let message = RawMessage::new(MessageBuffer::from_vec(data));
         let tx = tx_from_raw(message.clone());
 
-        testkit.create_block_with_transactions(Some(tx));
-
-        testkit.snapshot();
+        if let Ok(tx) = tx {
+            let iter = setup.into_iter().chain(Some(tx).into_iter());
+            testkit.create_block_with_transactions(iter);
+        }
     });
 }
 
-fn tx_from_raw(rm: RawMessage) -> Box<Transaction> {
+#[derive(Debug)]
+struct TxFromRawError;
+
+impl Error for TxFromRawError {
+    fn description(&self) -> &str { "Unknown message type" }
+}
+
+impl ::std::fmt::Display for TxFromRawError {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> Result<(), ::std::fmt::Error> {
+        write!(f, "{}.", self.description())
+    }
+}
+
+fn tx_from_raw(rm: RawMessage) -> Result<Box<Transaction>, Box<Error>> {
     match rm.message_type() {
-        TX_ADD_ASSETS_ID => Box::new(TxAddAsset::from_raw(rm).unwrap()),
-        TX_CREATE_WALLET_ID => Box::new(TxCreateWallet::from_raw(rm).unwrap()),
-        TX_DEL_ASSETS_ID => Box::new(TxDelAsset::from_raw(rm).unwrap()),
-        TX_EXCHANGE_ID => Box::new(TxExchange::from_raw(rm).unwrap()),
-        TX_TRADE_ASSETS_ID => Box::new(TxTrade::from_raw(rm).unwrap()),
-        TX_TRANSFER_ID => Box::new(TxTransfer::from_raw(rm).unwrap()),
-        TX_MINING_ID => Box::new(TxMining::from_raw(rm).unwrap()),
-        _ => panic!("Unknown message type!"),
+        TX_ADD_ASSETS_ID => TxAddAsset::from_raw(rm).map(|t| t.into()).map_err(|e| e.into()),
+        TX_CREATE_WALLET_ID => TxCreateWallet::from_raw(rm).map(|t| t.into()).map_err(|e| e.into()),
+        TX_DEL_ASSETS_ID => TxDelAsset::from_raw(rm).map(|t| t.into()).map_err(|e| e.into()),
+        TX_EXCHANGE_ID => TxExchange::from_raw(rm).map(|t| t.into()).map_err(|e| e.into()),
+        TX_TRADE_ASSETS_ID => TxTrade::from_raw(rm).map(|t| t.into()).map_err(|e| e.into()),
+        TX_TRANSFER_ID => TxTransfer::from_raw(rm).map(|t| t.into()).map_err(|e| e.into()),
+        TX_MINING_ID => TxMining::from_raw(rm).map(|t| t.into()).map_err(|e| e.into()),
+        _ => Err(Box::new(TxFromRawError)),
     }
 }
 
