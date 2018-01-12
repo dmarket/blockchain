@@ -70,7 +70,9 @@ fn main() {
 struct TxFromRawError;
 
 impl Error for TxFromRawError {
-    fn description(&self) -> &str { "Unknown message type" }
+    fn description(&self) -> &str {
+        "Unknown message type"
+    }
 }
 
 impl ::std::fmt::Display for TxFromRawError {
@@ -81,13 +83,27 @@ impl ::std::fmt::Display for TxFromRawError {
 
 fn tx_from_raw(rm: RawMessage) -> Result<Box<Transaction>, Box<Error>> {
     match rm.message_type() {
-        TX_ADD_ASSETS_ID => TxAddAsset::from_raw(rm).map(|t| t.into()).map_err(|e| e.into()),
-        TX_CREATE_WALLET_ID => TxCreateWallet::from_raw(rm).map(|t| t.into()).map_err(|e| e.into()),
-        TX_DEL_ASSETS_ID => TxDelAsset::from_raw(rm).map(|t| t.into()).map_err(|e| e.into()),
-        TX_EXCHANGE_ID => TxExchange::from_raw(rm).map(|t| t.into()).map_err(|e| e.into()),
-        TX_TRADE_ASSETS_ID => TxTrade::from_raw(rm).map(|t| t.into()).map_err(|e| e.into()),
-        TX_TRANSFER_ID => TxTransfer::from_raw(rm).map(|t| t.into()).map_err(|e| e.into()),
-        TX_MINING_ID => TxMining::from_raw(rm).map(|t| t.into()).map_err(|e| e.into()),
+        TX_ADD_ASSETS_ID => TxAddAsset::from_raw(rm)
+            .map(|t| t.into())
+            .map_err(|e| e.into()),
+        TX_CREATE_WALLET_ID => TxCreateWallet::from_raw(rm)
+            .map(|t| t.into())
+            .map_err(|e| e.into()),
+        TX_DEL_ASSETS_ID => TxDelAsset::from_raw(rm)
+            .map(|t| t.into())
+            .map_err(|e| e.into()),
+        TX_EXCHANGE_ID => TxExchange::from_raw(rm)
+            .map(|t| t.into())
+            .map_err(|e| e.into()),
+        TX_TRADE_ASSETS_ID => TxTrade::from_raw(rm)
+            .map(|t| t.into())
+            .map_err(|e| e.into()),
+        TX_TRANSFER_ID => TxTransfer::from_raw(rm)
+            .map(|t| t.into())
+            .map_err(|e| e.into()),
+        TX_MINING_ID => TxMining::from_raw(rm)
+            .map(|t| t.into())
+            .map_err(|e| e.into()),
         _ => Err(Box::new(TxFromRawError)),
     }
 }
