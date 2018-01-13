@@ -8,8 +8,8 @@ use serde_json::Value;
 use std::collections::BTreeMap;
 
 use service::asset::Asset;
-use service::transaction::TX_EXCHANGE_FEE;
 use service::wallet::Wallet;
+use service::configuration::Configuration;
 
 use super::{SERVICE_ID, TX_EXCHANGE_ID};
 use super::schema::asset::AssetSchema;
@@ -95,7 +95,8 @@ impl TxExchange {
             }
         }
 
-        ExchangeFee::new(TX_EXCHANGE_FEE, assets_fees)
+        let tx_fee = Configuration::extract(view).fees().exchange();
+        ExchangeFee::new(tx_fee, assets_fees)
     }
 }
 
