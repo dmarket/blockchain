@@ -38,15 +38,14 @@ encoding_struct! {
 
 impl Default for Configuration {
     fn default() -> Configuration {
-        Configuration::new(
-            TransactionFees::new(
-                TX_ADD_ASSET_FEE,
-                PER_ADD_ASSET_FEE,
-                TX_DEL_ASSET_FEE,
-                TX_EXCHANGE_FEE,
-                TX_TRADE_FEE,
-                TX_TRANSFER_FEE
-            ))
+        Configuration::new(TransactionFees::new(
+            TX_ADD_ASSET_FEE,
+            PER_ADD_ASSET_FEE,
+            TX_DEL_ASSET_FEE,
+            TX_EXCHANGE_FEE,
+            TX_TRADE_FEE,
+            TX_TRANSFER_FEE,
+        ))
     }
 }
 
@@ -57,7 +56,7 @@ impl Configuration {
 
         match stored_configuration.services.get(service::SERVICE_NAME) {
             Some(json) => serde_json::from_value(json.clone()).unwrap_or(Configuration::default()),
-            None => Configuration::default(), 
+            None => Configuration::default(),
         }
     }
 }
@@ -84,9 +83,7 @@ mod tests {
     fn proposed_service_configuration() {
         let mut testkit = TestKitBuilder::auditor().with_validators(3).create();
 
-        let configuration = Configuration::new(
-            TransactionFees::new(100, 2, 100, 100, 100, 100)
-        );
+        let configuration = Configuration::new(TransactionFees::new(100, 2, 100, 100, 100, 100));
         let cfg_change_height = Height(5);
         let proposal = {
             let mut cfg = testkit.configuration_change_proposal();
