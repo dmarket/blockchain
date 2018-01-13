@@ -8,7 +8,7 @@ use serde_json::Value;
 use std::collections::HashMap;
 
 use service::asset::{Asset, Fees, MetaAsset};
-use service::transaction::{PER_ADD_ASSET_FEE, TX_ADD_ASSET_FEE};
+use service::configuration::Configuration;
 
 use super::{SERVICE_ID, TX_ADD_ASSETS_ID};
 use super::schema::asset::AssetSchema;
@@ -28,12 +28,13 @@ message! {
 }
 
 impl TxAddAsset {
-    pub fn get_fee(&self) -> u64 {
+    pub fn get_fee(&self, fork: &Fork) -> u64 {
+        let configuration = Configuration::extract(fork);
         let count = self.meta_assets()
             .iter()
             .fold(0, |acc, asset| acc + asset.amount() as u64);
 
-        TX_ADD_ASSET_FEE + PER_ADD_ASSET_FEE * count
+        configuration.fees().add_asset() + configuration.fees().per_add_asset() * count
     }
 
     fn get_assets_fees_receivers(&self) -> (Vec<Asset>, Vec<Fees>, Vec<PublicKey>) {
@@ -103,7 +104,7 @@ impl Transaction for TxAddAsset {
         let creator = WalletSchema::map(view, |mut schema| schema.wallet(self.pub_key()));
 
         if let Some(mut creator) = creator {
-            let fee = self.get_fee();
+            let fee = self.get_fee(view);
 
             if creator.balance() >= fee {
                 // remove fee from creator and update creator wallet balance

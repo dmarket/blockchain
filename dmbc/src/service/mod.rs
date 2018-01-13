@@ -4,6 +4,7 @@ pub mod wallet;
 pub mod api;
 pub mod asset;
 pub mod builders;
+pub mod configuration;
 
 mod nats;
 

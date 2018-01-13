@@ -3,6 +3,8 @@ extern crate bodyparser;
 #[macro_use]
 extern crate exonum;
 extern crate exonum_configuration;
+#[cfg(test)]
+extern crate exonum_testkit;
 extern crate hyper;
 extern crate iron;
 extern crate nats;
