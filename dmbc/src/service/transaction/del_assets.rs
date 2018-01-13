@@ -6,13 +6,12 @@ use exonum::messages::Message;
 use exonum::storage::Fork;
 use serde_json::Value;
 
-use service::transaction::TX_DEL_ASSET_FEE;
-
 use super::{SERVICE_ID, TX_DEL_ASSETS_ID};
 use service::asset::Asset;
 use service::schema::asset::AssetSchema;
 use service::schema::transaction_status::{TxStatus, TxStatusSchema};
 use service::schema::wallet::WalletSchema;
+use service::configuration::Configuration;
 
 message! {
     struct TxDelAsset {
@@ -27,8 +26,8 @@ message! {
 }
 
 impl TxDelAsset {
-    pub fn get_fee(&self) -> u64 {
-        TX_DEL_ASSET_FEE
+    pub fn get_fee(&self, fork: &Fork) -> u64 {
+        Configuration::extract(fork).fees().del_asset()
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {
@@ -47,10 +46,11 @@ impl TxDelAsset {
             }
         }
 
+        let fee = self.get_fee(view);
         match WalletSchema::map(view, |mut schema| schema.wallet(self.pub_key())) {
             Some(mut creator) => {
-                if creator.balance() >= self.get_fee() && creator.del_assets(&self.assets()) {
-                    creator.decrease(self.get_fee());
+                if creator.balance() >= fee && creator.del_assets(&self.assets()) {
+                    creator.decrease(fee);
                     println!("Asset {:?}", self.assets());
                     println!("Wallet after delete assets: {:?}", creator);
                     WalletSchema::map(view, |mut schema| {
