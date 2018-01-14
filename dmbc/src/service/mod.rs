@@ -10,6 +10,7 @@ mod nats;
 
 use exonum::api::Api;
 use exonum::blockchain::{ApiContext, Schema, Service, ServiceContext, Transaction};
+use exonum::storage::Snapshot;
 use exonum::crypto::PublicKey;
 use exonum::encoding;
 use exonum::encoding::serialize::FromHex;
@@ -33,6 +34,7 @@ use self::transaction::mining::TxMining;
 use self::transaction::trade_assets::TxTrade;
 use self::transaction::transfer::TxTransfer;
 use self::wallet::Wallet;
+use self::configuration::Configuration;
 use config;
 
 // Service identifier
@@ -41,6 +43,19 @@ pub const SERVICE_NAME: &str = "cryptocurrency/v1";
 // Identifier for wallet creation transaction type
 
 pub struct CurrencyService;
+
+impl CurrencyService {
+    fn configuration_check(&self, snapshot: &Snapshot) {
+        match Configuration::is_valid(snapshot) {
+            Err(error) => println!(
+                "Unable to parse configuration for service {}: {:?}",
+                self.service_name(),
+                error
+            ),
+            Ok(_) => (),
+        }
+    }
+}
 
 impl Service for CurrencyService {
     fn service_name(&self) -> &'static str {
@@ -92,6 +107,7 @@ impl Service for CurrencyService {
             nats::publish(queuename, msg);
             println!("Made transaction {:?}", hash.to_hex());
         }
+        self.configuration_check(ctx.snapshot());
     }
 
     fn initialize(&self, fork: &mut Fork) -> serde_json::Value {

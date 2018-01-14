@@ -50,6 +50,10 @@ impl Default for Configuration {
 }
 
 impl Configuration {
+    /// Returns `Configuration` for the service.
+    ///
+    /// If configuration is invalid or not stored on the blockchain,
+    /// default configuration will be returned.
     pub fn extract(snapshot: &Snapshot) -> Configuration {
         let schema = Schema::new(snapshot);
         let stored_configuration = schema.actual_configuration();
@@ -57,6 +61,29 @@ impl Configuration {
         match stored_configuration.services.get(service::SERVICE_NAME) {
             Some(json) => serde_json::from_value(json.clone()).unwrap_or(Configuration::default()),
             None => Configuration::default(),
+        }
+    }
+
+    /// Returns `Ok(())` if `snapshot contains valid configuration for service.
+    /// Othervise, returns `Err(serde_json::Error)`.
+    ///
+    /// Valid configuration has two states:
+    /// 1. When json value is `null`
+    /// 2. When json value is convertible to `Configuration`.
+    pub fn is_valid(snapshot: &Snapshot) -> Result<(), serde_json::Error> {
+        let schema = Schema::new(snapshot);
+        let stored_configuration = schema.actual_configuration();
+
+        match stored_configuration.services.get(service::SERVICE_NAME) {
+            Some(json) => {
+                let result: Result<Configuration, serde_json::Error> =
+                    serde_json::from_value(json.clone());
+                if !json.is_null() && result.is_err() {
+                    return Err(result.err().unwrap());
+                }
+                Ok(())
+            }
+            None => Ok(()),
         }
     }
 }
