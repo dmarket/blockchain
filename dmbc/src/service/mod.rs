@@ -119,6 +119,6 @@ impl Service for CurrencyService {
         println!("Create the wallet: {:?}", wallet);
         WalletSchema::map(fork, |mut db| db.wallets().put(&basic_wallet, wallet));
 
-        serde_json::Value::Null
+        serde_json::to_value(Configuration::default()).unwrap()
     }
 }
