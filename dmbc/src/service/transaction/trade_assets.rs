@@ -9,8 +9,8 @@ use serde_json::Value;
 use std::collections::BTreeMap;
 
 use service::asset::{Asset, TradeAsset};
-use service::transaction::TX_TRADE_FEE;
 use service::wallet::Wallet;
+use service::configuration::Configuration;
 
 use super::{SERVICE_ID, TX_TRADE_ASSETS_ID};
 use super::schema::asset::AssetSchema;
@@ -103,7 +103,8 @@ impl TxTrade {
             }
         }
 
-        TradeFee::new(TX_TRADE_FEE, assets_fees)
+        let tx_fee = Configuration::extract(view).fees().trade();
+        TradeFee::new(tx_fee, assets_fees)
     }
 }
 

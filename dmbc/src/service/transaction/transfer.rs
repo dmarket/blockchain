@@ -6,8 +6,7 @@ use exonum::messages::Message;
 use exonum::storage::Fork;
 use serde_json::Value;
 use service::asset::Asset;
-
-use service::transaction::TX_TRANSFER_FEE;
+use service::configuration::Configuration;
 
 use super::{SERVICE_ID, TX_TRANSFER_ID};
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
@@ -28,8 +27,8 @@ message! {
 }
 
 impl TxTransfer {
-    pub fn get_fee(&self) -> u64 {
-        TX_TRANSFER_FEE
+    pub fn get_fee(&self, fork: &Fork) -> u64 {
+        Configuration::extract(fork).fees().transfer()
     }
 }
 
@@ -47,12 +46,14 @@ impl Transaction for TxTransfer {
         let mut tx_status = TxStatus::Fail;
         if let Some(mut sender) = sender {
             let amount = self.amount();
-            let update_amount = amount == 0 && sender.balance() >= self.get_fee()
-                || amount > 0 && sender.balance() >= amount + self.get_fee();
+            let fee = self.get_fee(view);
+
+            let update_amount = amount == 0 && sender.balance() >= fee
+                || amount > 0 && sender.balance() >= amount + fee;
             let update_assets = self.assets().is_empty()
                 || !self.assets().is_empty() && sender.is_assets_in_wallet(&self.assets());
             if update_amount && update_assets {
-                sender.decrease(amount + self.get_fee());
+                sender.decrease(amount + fee);
                 sender.del_assets(&self.assets());
                 WalletSchema::map(view, |mut schema| {
                     let mut receiver = schema.create_wallet(self.to());
@@ -73,41 +74,6 @@ impl Transaction for TxTransfer {
     fn info(&self) -> Value {
         json!({
             "transaction_data": self,
-            "tx_fee": self.get_fee(),
         })
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::TxTransfer;
-    use exonum::blockchain::Transaction;
-
-    fn get_json() -> String {
-        r#"{
-            "body": {
-                "from": "739fe1c8507aac54b5d4af116544fec304cf8b0f759d0bce39a7934630c0457e",
-                "to": "c08575875170900ac946fc9c0c521bea3d61c138380512cc8d1f55ba27289d27",
-                "amount": "3",
-                "assets": [
-                {
-                    "id": "67e5504410b1426f9247bb680e5fe0c8",
-                    "amount": 3
-                }
-                ],
-                "seed": "123"
-            },
-            "network_id": 0,
-            "protocol_version": 0,
-            "service_id": 2,
-            "message_id": 2,
-            "signature": "4f9c0a9ddb32a1d8e61d3b656dec5786fb447c19362853ddac67a2c4f48c9ad65a377ee86a02727a27a35d16a14dea84f6920878ab82a6e850e8e7814bb64701"
-        }"#.to_string()
-    }
-
-    #[test]
-    fn test_transfer_info() {
-        let tx: TxTransfer = ::serde_json::from_str(&get_json()).unwrap();
-        assert_eq!(tx.get_fee(), tx.info()["tx_fee"]);
     }
 }
