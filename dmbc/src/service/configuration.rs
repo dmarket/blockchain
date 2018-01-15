@@ -97,7 +97,7 @@ mod tests {
     use service::configuration::*;
 
     #[test]
-    fn default_service_config() {
+    fn default_service_configuration() {
         let mut testkit = TestKitBuilder::validator().with_validators(1).create();
 
         testkit.create_block();
