@@ -14,6 +14,7 @@ pub struct Config {
     api: Api,
     db: Db,
     nats: Nats,
+    service_discovery: ServiceDiscovery,
 }
 
 #[derive(Deserialize)]
@@ -38,6 +39,11 @@ pub struct Nats {
     queuename: Option<String>,
 }
 
+#[derive(Deserialize)]
+pub struct ServiceDiscovery {
+    address: Option<String>,
+}
+
 impl Config {
     pub fn api(self) -> Api {
         self.api
@@ -47,6 +53,9 @@ impl Config {
     }
     pub fn nats(self) -> Nats {
         self.nats
+    }
+    pub fn service_discovery(self) -> ServiceDiscovery {
+        self.service_discovery
     }
 }
 
@@ -142,6 +151,15 @@ impl Nats {
             Ok(queuename) => queuename,
             Err(_) if self.queuename.is_none() => "dmbc.transaction.commit".to_string(),
             Err(_) => self.queuename.unwrap(),
+        }
+    }
+}
+
+impl ServiceDiscovery {
+    pub fn address(self) -> String {
+        match env::var("SD_ADDRESS") {
+            Ok(address) => address,
+            Err(_) => self.address.unwrap(),
         }
     }
 }

@@ -22,4 +22,5 @@ exonum = "0.4"
 exonum-configuration = "0.4"
 hyper = "0.10.13"
 unicase = "1.0"
+curl = "0.4"
 

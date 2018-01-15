@@ -14,7 +14,9 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate unicase;
 extern crate uuid;
+extern crate curl;
 
 pub mod config;
 pub mod keys;
 pub mod service;
+pub mod net_config;

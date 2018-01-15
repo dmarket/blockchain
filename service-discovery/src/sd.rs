@@ -7,13 +7,12 @@ use futures::future;
 use futures::future::Future;
 use futures::stream::Stream;
 use serde_json;
-
 use hyper;
 use hyper::{Body, Method, StatusCode};
 use hyper::server::{Request, Response, Service};
 
 #[derive(Debug, Hash, Serialize, Deserialize, Eq, PartialEq)]
-pub struct NodeInfo {
+pub struct ValidatorInfo {
     public: SocketAddr,
     private: SocketAddr,
     peer: SocketAddr,
@@ -22,7 +21,7 @@ pub struct NodeInfo {
 }
 
 pub struct ServiceDiscovery {
-    nodes: Arc<RwLock<HashSet<NodeInfo>>>,
+    nodes: Arc<RwLock<HashSet<ValidatorInfo>>>,
 }
 
 impl ServiceDiscovery {
@@ -49,7 +48,7 @@ impl ServiceDiscovery {
     fn post_node(&self, body: Body) -> <Self as Service>::Future {
         let nodes = Arc::clone(&self.nodes);
         Box::new(body.concat2().and_then(move |v| {
-            match serde_json::from_slice::<NodeInfo>(&v) {
+            match serde_json::from_slice::<ValidatorInfo>(&v) {
                 Ok(info) => {
                     println!("got value: {:?}", &info);
                     nodes.write().unwrap().insert(info);
@@ -79,3 +78,4 @@ impl Service for ServiceDiscovery {
         response
     }
 }
+
