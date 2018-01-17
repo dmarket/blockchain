@@ -39,6 +39,8 @@ use config;
 // Service identifier
 pub const SERVICE_ID: u16 = 2;
 pub const SERVICE_NAME: &str = "cryptocurrency/v1";
+pub const PLATFORM_WALLET: &str =
+    "36a05e418393fb4b23819753f6e6dd51550ce030d53842c43dd1349857a96a61";
 // Identifier for wallet creation transaction type
 
 pub struct CurrencyService;
@@ -96,9 +98,7 @@ impl Service for CurrencyService {
     }
 
     fn initialize(&self, fork: &mut Fork) -> serde_json::Value {
-        let basic_wallet = PublicKey::from_hex(
-            "36a05e418393fb4b23819753f6e6dd51550ce030d53842c43dd1349857a96a61",
-        ).unwrap();
+        let basic_wallet = PublicKey::from_hex(PLATFORM_WALLET).unwrap();
         let assets: Vec<Asset> = vec![];
         let wallet = Wallet::new(&basic_wallet, 13_700_000_000_000_000, assets);
         println!("Create the wallet: {:?}", wallet);

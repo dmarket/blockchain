@@ -31,7 +31,7 @@ impl<'a> AssetSchema<'a> {
                 true
             }
             Some(info) => {
-                if info.creator() != creator {
+                if info.creator() != creator || info.fees() != fees {
                     return false;
                 }
                 let info = AssetInfo::new(creator, info.amount() + amount, fees);

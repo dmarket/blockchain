@@ -4,9 +4,11 @@ use exonum::blockchain::Transaction;
 use exonum::crypto::PublicKey;
 use exonum::messages::Message;
 use exonum::storage::Fork;
+use exonum::encoding::serialize::FromHex;
 use serde_json::Value;
 use std::collections::HashMap;
 
+use service;
 use service::asset::{Asset, Fees, MetaAsset};
 use service::configuration::Configuration;
 
@@ -102,16 +104,22 @@ impl Transaction for TxAddAsset {
     fn execute(&self, view: &mut Fork) {
         let mut tx_status = TxStatus::Fail;
         let creator = WalletSchema::map(view, |mut schema| schema.wallet(self.pub_key()));
+        let platform_key = PublicKey::from_hex(service::PLATFORM_WALLET).unwrap();
+        let platform = WalletSchema::map(view, |mut schema| schema.wallet(&platform_key));
 
-        if let Some(mut creator) = creator {
+        if let (Some(mut creator), Some(mut platform)) = (creator, platform) {
             let fee = self.get_fee(view);
 
             if creator.balance() >= fee {
                 // remove fee from creator and update creator wallet balance
-                // TODO: send fee to `blockchain platform`
                 creator.decrease(fee);
                 WalletSchema::map(view, |mut schema| {
                     schema.wallets().put(self.pub_key(), creator.clone())
+                });
+                // put fee to platfrom wallet
+                platform.increase(fee);
+                WalletSchema::map(view, |mut schema| {
+                    schema.wallets().put(&platform_key, platform.clone())
                 });
 
                 // initial point for db rollback, in case if transaction has failed
@@ -128,6 +136,7 @@ impl Transaction for TxAddAsset {
 
                     // send assets to receivers
                     for (receiver_key, asset) in receivers.iter().zip(assets) {
+
                         if let Some(mut receiver) =
                             WalletSchema::map(view, |mut schema| schema.wallet(receiver_key))
                         {
