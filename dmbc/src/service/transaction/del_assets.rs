@@ -44,21 +44,19 @@ impl TxDelAsset {
 
         // Fail if not enough coins on creators balance
         if creator.balance() < fee {
-            return TxStatus::Fail
+            return TxStatus::Fail;
         }
 
         // Take coins for executing transaction
         creator.decrease(fee);
-        WalletSchema::map(view, |mut schema| {
-            schema.wallets().put(self.pub_key(), creator.clone())
-        });
         // put fee to platfrom wallet
         platform.increase(fee);
         WalletSchema::map(view, |mut schema| {
-            schema.wallets().put(&platform_key, platform.clone())
+            schema.wallets().put(self.pub_key(), creator.clone());
+            schema.wallets().put(&platform_key, platform.clone());
         });
 
-        // Check if asset exists, Fail if not. 
+        // Check if asset exists, Fail if not.
         // If sender (pub_key) is not a creator of asset, then Fail.
         // If amount of assets to delete is bigger than amount of assets are stored, then Fail.
         for asset in self.assets() {
@@ -74,18 +72,16 @@ impl TxDelAsset {
 
         // if there are no assets to delete, Fail
         if !creator.del_assets(&self.assets()) {
-            return TxStatus::Fail
+            return TxStatus::Fail;
         }
 
         println!("Asset {:?}", self.assets());
         println!("Wallet after delete assets: {:?}", creator);
 
         // Remove wallet from db if it is empty, otherwise update db with changed wallet
-        WalletSchema::map(view, |mut schema| {
-            match creator.is_empty() {
-                true => schema.wallets().remove(self.pub_key()),
-                false => schema.wallets().put(self.pub_key(), creator)
-            }
+        WalletSchema::map(view, |mut schema| match creator.is_empty() {
+            true => schema.wallets().remove(self.pub_key()),
+            false => schema.wallets().put(self.pub_key(), creator),
         });
 
         AssetSchema::map(view, |mut schema| schema.del_assets(&self.assets()));

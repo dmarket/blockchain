@@ -112,13 +112,11 @@ impl Transaction for TxAddAsset {
         if creator.balance() >= fee {
             // remove fee from creator and update creator wallet balance
             creator.decrease(fee);
-            WalletSchema::map(view, |mut schema| {
-                schema.wallets().put(self.pub_key(), creator.clone())
-            });
             // put fee to platfrom wallet
             platform.increase(fee);
             WalletSchema::map(view, |mut schema| {
-                schema.wallets().put(&platform_key, platform.clone())
+                schema.wallets().put(self.pub_key(), creator.clone());
+                schema.wallets().put(&platform_key, platform.clone());
             });
 
             // initial point for db rollback, in case if transaction has failed

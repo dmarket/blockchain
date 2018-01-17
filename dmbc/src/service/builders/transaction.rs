@@ -429,6 +429,7 @@ pub struct TxTransferBuilder {
     amount: u64,
     assets: Vec<Asset>,
     seed: u64,
+    data_info: Option<String>,
 }
 
 impl TxTransferBuilder {
@@ -439,6 +440,7 @@ impl TxTransferBuilder {
             amount: 0,
             assets: Vec::new(),
             seed: 0,
+            data_info: None,
         }
     }
 
@@ -467,6 +469,13 @@ impl TxTransferBuilder {
         TxTransferBuilder { seed, ..self }
     }
 
+    pub fn data_info(self, data_info: &str) -> Self {
+        TxTransferBuilder {
+            data_info: Some(data_info.to_string()),
+            ..self
+        }
+    }
+
     pub fn build(self) -> TxTransfer {
         self.verify();
 
@@ -476,6 +485,7 @@ impl TxTransferBuilder {
             self.amount,
             self.assets,
             self.seed,
+            &self.data_info.unwrap(),
             &self.meta.secret_key,
         )
     }
@@ -668,9 +678,18 @@ mod test {
             .amount(9)
             .add_asset_value(asset.clone())
             .seed(1)
+            .data_info("info")
             .build();
 
-        let equivalent = TxTransfer::new(&public_key, &recipient, 9, vec![asset], 1, &secret_key);
+        let equivalent = TxTransfer::new(
+            &public_key,
+            &recipient,
+            9,
+            vec![asset],
+            1,
+            "info",
+            &secret_key,
+        );
 
         assert!(transaction == equivalent);
     }
