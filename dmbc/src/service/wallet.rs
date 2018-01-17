@@ -84,6 +84,10 @@ impl Wallet {
     pub fn asset(&self, id: AssetId) -> Option<Asset> {
         self.assets().into_iter().find(|asset| asset.id() == id)
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.balance() == 0 && self.assets().is_empty()
+    }
 }
 
 #[cfg(test)]
