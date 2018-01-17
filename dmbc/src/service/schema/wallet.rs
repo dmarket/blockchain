@@ -15,22 +15,20 @@ impl<'a> WalletSchema<'a> {
         MapIndex::new(key, self.0)
     }
 
-    // Utility method to quickly get a separate wallet from the storage
-    pub fn wallet(&mut self, pub_key: &PublicKey) -> Option<Wallet> {
-        self.wallets().get(pub_key)
+    // Utility method to quickly get a separate wallet from the storage.
+    // If wallet doesn't exist, create new one
+    pub fn wallet(&mut self, pub_key: &PublicKey) -> Wallet {
+        self.wallets()
+            .get(pub_key)
+            .unwrap_or(self.create_wallet(pub_key))
     }
 
-    pub fn create_wallet(&mut self, pub_key: &PublicKey) -> Wallet {
-        match self.wallet(pub_key) {
-            None => {
-                let assets: Vec<Asset> = vec![];
-                let wallet = Wallet::new(pub_key, 0, assets);
-                println!("Create the wallet: {:?}", wallet);
-                self.wallets().put(pub_key, wallet.clone());
-                wallet
-            }
-            Some(wallet) => wallet,
-        }
+    fn create_wallet(&mut self, pub_key: &PublicKey) -> Wallet {
+        let assets: Vec<Asset> = vec![];
+        let wallet = Wallet::new(pub_key, 0, assets);
+        println!("Create the wallet: {:?}", wallet);
+        self.wallets().put(pub_key, wallet.clone());
+        wallet
     }
 
     pub fn map<F, T>(view: &'a mut Fork, f: F) -> T

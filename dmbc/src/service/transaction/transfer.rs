@@ -42,29 +42,28 @@ impl Transaction for TxTransfer {
     }
 
     fn execute(&self, view: &mut Fork) {
-        let sender = WalletSchema::map(view, |mut schema| schema.wallet(self.from()));
+        let mut sender = WalletSchema::map(view, |mut schema| schema.wallet(self.from()));
         let mut tx_status = TxStatus::Fail;
-        if let Some(mut sender) = sender {
-            let amount = self.amount();
-            let fee = self.get_fee(view);
 
-            let update_amount = amount == 0 && sender.balance() >= fee
-                || amount > 0 && sender.balance() >= amount + fee;
-            let update_assets = self.assets().is_empty()
-                || !self.assets().is_empty() && sender.is_assets_in_wallet(&self.assets());
-            if update_amount && update_assets {
-                sender.decrease(amount + fee);
-                sender.del_assets(&self.assets());
-                WalletSchema::map(view, |mut schema| {
-                    let mut receiver = schema.create_wallet(self.to());
-                    receiver.increase(amount);
-                    receiver.add_assets(&self.assets());
-                    println!("Transfer between wallets: {:?} => {:?}", sender, receiver);
-                    schema.wallets().put(self.from(), sender);
-                    schema.wallets().put(self.to(), receiver);
-                });
-                tx_status = TxStatus::Success;
-            }
+        let amount = self.amount();
+        let fee = self.get_fee(view);
+
+        let update_amount = amount == 0 && sender.balance() >= fee
+            || amount > 0 && sender.balance() >= amount + fee;
+        let update_assets = self.assets().is_empty()
+            || !self.assets().is_empty() && sender.is_assets_in_wallet(&self.assets());
+        if update_amount && update_assets {
+            sender.decrease(amount + fee);
+            sender.del_assets(&self.assets());
+            WalletSchema::map(view, |mut schema| {
+                let mut receiver = schema.wallet(self.to());
+                receiver.increase(amount);
+                receiver.add_assets(&self.assets());
+                println!("Transfer between wallets: {:?} => {:?}", sender, receiver);
+                schema.wallets().put(self.from(), sender);
+                schema.wallets().put(self.to(), receiver);
+            });
+            tx_status = TxStatus::Success;
         }
         TxStatusSchema::map(view, |mut schema| {
             schema.set_status(&self.hash(), tx_status)

@@ -40,14 +40,10 @@ impl Transaction for TxCreateWallet {
 
     fn execute(&self, view: &mut Fork) {
         let tx_status = WalletSchema::map(view, |mut schema| {
-            if schema.wallet(self.pub_key()).is_none() {
-                let wallet = Wallet::new(self.pub_key(), INIT_BALANCE, vec![]);
-                println!("Create the wallet: {:?}", wallet);
-                schema.wallets().put(self.pub_key(), wallet);
-                TxStatus::Success
-            } else {
-                TxStatus::Fail
-            }
+            let wallet = Wallet::new(self.pub_key(), INIT_BALANCE, vec![]);
+            println!("Create the wallet: {:?}", wallet);
+            schema.wallets().put(self.pub_key(), wallet);
+            TxStatus::Success
         });
         TxStatusSchema::map(view, |mut schema| {
             schema.set_status(&self.hash(), tx_status)

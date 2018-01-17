@@ -47,18 +47,14 @@ impl TxDelAsset {
         }
 
         let fee = self.get_fee(view);
-        match WalletSchema::map(view, |mut schema| schema.wallet(self.pub_key())) {
-            Some(mut creator) => {
-                if creator.balance() >= fee && creator.del_assets(&self.assets()) {
-                    creator.decrease(fee);
-                    println!("Asset {:?}", self.assets());
-                    println!("Wallet after delete assets: {:?}", creator);
-                    WalletSchema::map(view, |mut schema| {
-                        schema.wallets().put(self.pub_key(), creator)
-                    });
-                }
-            }
-            _ => return TxStatus::Fail,
+        let mut creator = WalletSchema::map(view, |mut schema| schema.wallet(self.pub_key()));
+        if creator.balance() >= fee && creator.del_assets(&self.assets()) {
+            creator.decrease(fee);
+            println!("Asset {:?}", self.assets());
+            println!("Wallet after delete assets: {:?}", creator);
+            WalletSchema::map(view, |mut schema| {
+                schema.wallets().put(self.pub_key(), creator)
+            });
         }
 
         AssetSchema::map(view, |mut schema| schema.del_assets(&self.assets()));
