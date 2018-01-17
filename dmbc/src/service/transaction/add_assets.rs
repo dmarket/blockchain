@@ -148,7 +148,7 @@ impl Transaction for TxAddAsset {
 
             // `Fail` status can occur due two reasons:
             // 1. `schema.add_assets` will fail if asset id generation has collision
-            // 2. any from receivers wallet does not exist
+            // 2. Asset exists and AssetId is the same but new fees are different for existing asset
             // rollback changes if adding procedure has failed
             if tx_status == TxStatus::Fail {
                 println!("Unable to add assets {:?}", self.meta_assets());
