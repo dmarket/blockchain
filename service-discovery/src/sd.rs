@@ -14,7 +14,6 @@ use hyper::server::{Request, Response, Service};
 #[derive(Debug, Hash, Serialize, Deserialize, Eq, PartialEq)]
 pub struct ValidatorInfo {
     public: SocketAddr,
-    private: SocketAddr,
     peer: SocketAddr,
     consensus: PublicKey,
     service: PublicKey,
@@ -37,9 +36,11 @@ impl ServiceDiscovery {
         match serde_json::to_string_pretty(&*self.nodes.read().unwrap()) {
             Ok(nodes) => Box::new(future::ok(Response::new().with_body(nodes))),
             Err(e) => {
-                println!("error in GET: {}", e);
+                eprintln!("Error when parsing GET: {}", e);
                 Box::new(future::ok(
-                    Response::new().with_status(StatusCode::ImATeapot),
+                    Response::new()
+                        .with_status(StatusCode::ImATeapot)
+                        .with_body(serde_json::to_string(&json!{()}).unwrap()),
                 ))
             }
         }
@@ -50,12 +51,12 @@ impl ServiceDiscovery {
         Box::new(body.concat2().and_then(move |v| {
             match serde_json::from_slice::<ValidatorInfo>(&v) {
                 Ok(info) => {
-                    println!("got value: {:?}", &info);
+                    eprintln!("Received value: {:?}", &info);
                     nodes.write().unwrap().insert(info);
                 }
-                Err(e) => println!("error in POST: {}", e),
+                Err(e) => eprintln!("Error when parsing POST: {}", e),
             };
-            future::ok(Response::new())
+            future::ok(Response::new().with_body(serde_json::to_string(&json!{()}).unwrap()))
         }))
     }
 }
@@ -67,7 +68,7 @@ impl Service for ServiceDiscovery {
     type Future = Box<Future<Item = Self::Response, Error = Self::Error>>;
 
     fn call(&self, req: Request) -> Self::Future {
-        println!("Got request: {:?}", req);
+        eprintln!("Got request: {:?}", req);
         let response = match (req.method(), req.path()) {
             (&Method::Get, "/nodes") => self.get_nodes(),
             (&Method::Post, "/nodes") => self.post_node(req.body()),
@@ -78,4 +79,3 @@ impl Service for ServiceDiscovery {
         response
     }
 }
-
