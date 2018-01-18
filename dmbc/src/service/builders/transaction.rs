@@ -251,6 +251,8 @@ pub struct TxExchangeBuilder {
     fee_strategy: u8,
 
     seed: u64,
+
+    data_info: Option<String>,
 }
 
 impl TxExchangeBuilder {
@@ -268,6 +270,8 @@ impl TxExchangeBuilder {
             fee_strategy: 1,
 
             seed: 0,
+
+            data_info: None,
         }
     }
 
@@ -323,6 +327,13 @@ impl TxExchangeBuilder {
         TxExchangeBuilder { seed, ..self }
     }
 
+    pub fn data_info(self, data_info: &str) -> Self {
+        TxExchangeBuilder {
+            data_info: Some(data_info.to_string()),
+            ..self
+        }
+    }
+
     pub fn build(self) -> TxExchange {
         self.verify();
         let offer = ExchangeOffer::new(
@@ -335,7 +346,13 @@ impl TxExchangeBuilder {
             self.fee_strategy,
         );
         let signature = crypto::sign(&offer.clone().into_bytes(), &self.meta.secret_key);
-        TxExchange::new(offer, self.seed, &signature, &self.meta.secret_key)
+        TxExchange::new(
+            offer,
+            self.seed,
+            &signature,
+            &self.data_info.unwrap(),
+            &self.meta.secret_key,
+        )
     }
 
     fn verify(&self) {
@@ -614,6 +631,7 @@ mod test {
             .recipient_value(13)
             .fee_strategy(1)
             .seed(1)
+            .data_info("test_exchange")
             .build();
 
         let offer = ExchangeOffer::new(
@@ -626,7 +644,7 @@ mod test {
             1,
         );
         let signature = crypto::sign(&offer.clone().into_bytes(), &secret_key);
-        let equivalent = TxExchange::new(offer, 1, &signature, &secret_key);
+        let equivalent = TxExchange::new(offer, 1, &signature, "test_exchange", &secret_key);
 
         assert!(transaction == equivalent);
     }

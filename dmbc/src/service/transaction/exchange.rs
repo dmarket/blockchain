@@ -32,39 +32,28 @@ encoding_struct! {
     }
 }
 
+pub enum FeeStrategy {
+    Recipient = 1,
+    Sender = 2,
+    RecipientAndSender = 3,
+    Intermediary = 4,
+}
+
 pub struct ExchangeFee {
     transaction_fee: u64,
     assets_fees: BTreeMap<Wallet, u64>,
-}
-
-impl ExchangeFee {
-    pub fn new(tx_fee: u64, fees: BTreeMap<Wallet, u64>) -> Self {
-        ExchangeFee {
-            transaction_fee: tx_fee,
-            assets_fees: fees,
-        }
-    }
-
-    pub fn amount(&self) -> u64 {
-        let mut amount = self.transaction_fee;
-        amount += self.assets_fees.iter().fold(0, |acc, asset| acc + asset.1);
-        amount
-    }
-
-    pub fn assets_fees(&self) -> BTreeMap<Wallet, u64> {
-        self.assets_fees.clone()
-    }
 }
 
 message! {
     struct TxExchange {
         const TYPE = SERVICE_ID;
         const ID = TX_EXCHANGE_ID;
-        const SIZE = 80;
+        const SIZE = 88;
 
         field offer:             ExchangeOffer     [00 => 8]
         field seed:              u64               [8 => 16]
         field sender_signature:  &Signature        [16 => 80]
+        field data_info:         &str              [80 => 88]
     }
 }
 
@@ -103,13 +92,16 @@ impl Transaction for TxExchange {
             return false;
         }
 
-        *self.offer().sender() != *self.offer().recipient()
-            && self.verify_signature(self.offer().recipient())
-            && verify(
-                self.sender_signature(),
-                &self.offer().raw,
-                self.offer().sender(),
-            )
+        let keys_ok = *self.offer().sender() != *self.offer().recipient();
+        let fee_strategy_ok = FeeStrategy::from_u8(self.offer().fee_strategy()).is_some();
+        let verify_recipient_ok = self.verify_signature(self.offer().recipient());
+        let verify_sender_ok = verify(
+            self.sender_signature(),
+            &self.offer().raw,
+            self.offer().sender(),
+        );
+
+        keys_ok && fee_strategy_ok && verify_recipient_ok && verify_sender_ok
     }
 
     fn execute(&self, view: &mut Fork) {
@@ -155,5 +147,36 @@ impl Transaction for TxExchange {
         json!({
             "transaction_data": self,
         })
+    }
+}
+
+impl FeeStrategy {
+    fn from_u8(value: u8) -> Option<FeeStrategy> {
+        match value {
+            1 => Some(FeeStrategy::Recipient),
+            2 => Some(FeeStrategy::Sender),
+            3 => Some(FeeStrategy::RecipientAndSender),
+            4 => Some(FeeStrategy::Intermediary),
+            _ => None,
+        }
+    }
+}
+
+impl ExchangeFee {
+    pub fn new(tx_fee: u64, fees: BTreeMap<Wallet, u64>) -> Self {
+        ExchangeFee {
+            transaction_fee: tx_fee,
+            assets_fees: fees,
+        }
+    }
+
+    pub fn amount(&self) -> u64 {
+        let mut amount = self.transaction_fee;
+        amount += self.assets_fees.iter().fold(0, |acc, asset| acc + asset.1);
+        amount
+    }
+
+    pub fn assets_fees(&self) -> BTreeMap<Wallet, u64> {
+        self.assets_fees.clone()
     }
 }
