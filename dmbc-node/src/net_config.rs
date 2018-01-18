@@ -56,9 +56,10 @@ fn send_node(discovery: &str, info: &ValidatorInfo) -> Result<(), Box<Error>> {
     let mut handle = Easy::new();
     handle.url(discovery).map_err(Box::new)?;
     handle.post(true).map_err(Box::new)?;
-    handle.post_fields_copy(node_post.as_bytes()).map_err(Box::new)?;
+    handle
+        .post_fields_copy(node_post.as_bytes())
+        .map_err(Box::new)?;
     handle.perform().map_err(Box::new)?;
 
     Ok(())
 }
-

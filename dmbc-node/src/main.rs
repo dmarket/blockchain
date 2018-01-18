@@ -33,7 +33,10 @@ fn main() {
     exonum::helpers::init_logger().unwrap();
 
     /** Create Keys */
-    println!("Initializing node: {}", config::config().api().current_node());
+    println!(
+        "Initializing node: {}",
+        config::config().api().current_node()
+    );
 
     let consensus_public_key = PublicKey::from_hex(GENESIS_VALIDATOR_PUBLIC).unwrap();
     let consensus_secret_key = SecretKey::from_hex(GENESIS_VALIDATOR_SECRET).unwrap();
@@ -56,12 +59,12 @@ fn main() {
         Ok(peers) => {
             eprintln!("Connected as validator, peers: {:?}", &peers);
             peers
-        },
+        }
         Err(e) => {
             eprintln!("Unable to connect as validator: {}", &e);
             eprintln!("Running in loner-mode.");
             Default::default()
-        },
+        }
     };
 
     let consensus_config = ConsensusConfig {
