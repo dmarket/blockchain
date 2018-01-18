@@ -6,7 +6,9 @@ use exonum::messages::Message;
 use exonum::storage::Fork;
 use serde_json::Value;
 use std::collections::BTreeMap;
+use std::cmp;
 
+use service::CurrencyService;
 use service::asset::Asset;
 use service::wallet::Wallet;
 use service::configuration::Configuration;
@@ -32,6 +34,7 @@ encoding_struct! {
     }
 }
 
+#[derive(PartialEq)]
 pub enum FeeStrategy {
     Recipient = 1,
     Sender = 2,
@@ -84,6 +87,107 @@ impl TxExchange {
         let tx_fee = Configuration::extract(view).fees().exchange();
         ExchangeFee::new(tx_fee, assets_fees)
     }
+
+    fn process(&self, view: &mut Fork) -> TxStatus {
+        let platform_key = CurrencyService::get_platfrom_wallet();
+        let mut platform = WalletSchema::map(view, |mut schema| schema.wallet(&platform_key));
+        let mut sender = WalletSchema::map(view, |mut schema| schema.wallet(self.offer().sender()));
+        let mut recipient =
+            WalletSchema::map(view, |mut schema| schema.wallet(self.offer().recipient()));
+
+        let fee_strategy = FeeStrategy::from_u8(self.offer().fee_strategy()).unwrap();
+        let fee = self.get_fee(view);
+
+        // helper
+        let can_pay_both = |a: u64, b: u64| {
+            let min = cmp::min(a, b) as f64;
+            let half = (fee.transaction_fee() as f64 / 2.0).ceil();
+            half <= min
+        };
+
+        // get fee for platform
+        let sufficient_funds = match fee_strategy {
+            FeeStrategy::Recipient => recipient.balance() >= fee.transaction_fee(),
+            FeeStrategy::Sender => sender.balance() >= fee.transaction_fee(),
+            FeeStrategy::RecipientAndSender => can_pay_both(recipient.balance(), sender.balance()),
+            _ => false,
+        };
+        // if participant(s) doesn't have enough coins, than fail.
+        if !sufficient_funds {
+            return TxStatus::Fail;
+        }
+
+        // move coins from participant(s) to platform
+        match fee_strategy {
+            FeeStrategy::Recipient => {
+                recipient.decrease(fee.transaction_fee());
+                platform.increase(fee.transaction_fee());
+            }
+            FeeStrategy::Sender => {
+                sender.decrease(fee.transaction_fee());
+                platform.increase(fee.transaction_fee());
+            }
+            FeeStrategy::RecipientAndSender => {
+                let half = (fee.transaction_fee() as f64 / 2.0).ceil() as u64;
+                recipient.decrease(half);
+                sender.decrease(half);
+                platform.increase(half);
+                platform.increase(half);
+            }
+            _ => return TxStatus::Fail,
+        }
+
+        // store changes
+        WalletSchema::map(view, |mut schema| {
+            schema.wallets().put(self.offer().sender(), sender.clone());
+            schema
+                .wallets()
+                .put(self.offer().recipient(), recipient.clone());
+            schema.wallets().put(&platform_key, platform.clone());
+        });
+
+        // initial point for db rollback, in case if transaction has failed
+        view.checkpoint();
+
+        // check if recipient and sender have mentioned assets/coins for exchange
+        // fail if not
+        let recipient_assets_ok = recipient.is_assets_in_wallet(&self.offer().recipient_assets());
+        let sender_assets_ok = sender.is_assets_in_wallet(&self.offer().sender_assets());
+        let recipient_value_ok = recipient.balance() >= self.offer().recipient_value();
+        let sender_value_ok = sender.balance() >= self.offer().sender_value();
+
+        if !recipient_assets_ok || !sender_assets_ok || !recipient_value_ok || !sender_value_ok {
+            view.rollback();
+            return TxStatus::Fail;
+        }
+
+        println!("--   Exchange transaction   --");
+        println!("Sender's balance before transaction : {:?}", sender);
+        println!("Recipient's balance before transaction : {:?}", recipient);
+
+        sender.decrease(self.offer().sender_value());
+        recipient.increase(self.offer().sender_value());
+
+        sender.increase(self.offer().recipient_value());
+        recipient.decrease(self.offer().recipient_value());
+
+        sender.del_assets(&self.offer().sender_assets());
+        recipient.add_assets(&self.offer().sender_assets());
+
+        sender.add_assets(&self.offer().recipient_assets());
+        recipient.del_assets(&self.offer().recipient_assets());
+
+        println!("Sender's balance before transaction : {:?}", sender);
+        println!("Recipient's balance before transaction : {:?}", recipient);
+
+        // store changes
+        WalletSchema::map(view, |mut schema| {
+            schema.wallets().put(self.offer().sender(), sender.clone());
+            schema.wallets().put(self.offer().recipient(), recipient.clone());
+        });
+
+        TxStatus::Success
+    }
 }
 
 impl Transaction for TxExchange {
@@ -93,7 +197,11 @@ impl Transaction for TxExchange {
         }
 
         let keys_ok = *self.offer().sender() != *self.offer().recipient();
-        let fee_strategy_ok = FeeStrategy::from_u8(self.offer().fee_strategy()).is_some();
+        // Fee Strategy cannot be intermediary
+        let fee_strategy_ok = match FeeStrategy::from_u8(self.offer().fee_strategy()) {
+            Some(fee_strategy) => fee_strategy != FeeStrategy::Intermediary,
+            None => false,
+        };
         let verify_recipient_ok = self.verify_signature(self.offer().recipient());
         let verify_sender_ok = verify(
             self.sender_signature(),
@@ -105,41 +213,7 @@ impl Transaction for TxExchange {
     }
 
     fn execute(&self, view: &mut Fork) {
-        let mut tx_status = TxStatus::Fail;
-        WalletSchema::map(view, |mut schema| {
-            let mut sender = schema.wallet(self.offer().sender());
-            let mut recipient = schema.wallet(self.offer().recipient());
-            if sender.balance() >= self.offer().sender_value()
-                && sender.is_assets_in_wallet(&self.offer().sender_assets())
-                && recipient.balance() >= self.offer().recipient_value()
-                && recipient.is_assets_in_wallet(&self.offer().recipient_assets())
-            {
-                println!("--   Exchange transaction   --");
-                println!("Sender's balance before transaction : {:?}", sender);
-                println!("Recipient's balance before transaction : {:?}", recipient);
-
-                sender.decrease(self.offer().sender_value());
-                recipient.increase(self.offer().sender_value());
-
-                sender.increase(self.offer().recipient_value());
-                recipient.decrease(self.offer().recipient_value());
-
-                sender.del_assets(&self.offer().sender_assets());
-                recipient.add_assets(&self.offer().sender_assets());
-
-                sender.add_assets(&self.offer().recipient_assets());
-                recipient.del_assets(&self.offer().recipient_assets());
-
-                println!("Sender's balance before transaction : {:?}", sender);
-                println!("Recipient's balance before transaction : {:?}", recipient);
-                let mut wallets = schema.wallets();
-                wallets.put(self.offer().sender(), sender);
-                wallets.put(self.offer().recipient(), recipient);
-
-                tx_status = TxStatus::Success;
-            }
-        });
-
+        let tx_status = self.process(view);
         TxStatusSchema::map(view, |mut db| db.set_status(&self.hash(), tx_status))
     }
 
@@ -168,6 +242,10 @@ impl ExchangeFee {
             transaction_fee: tx_fee,
             assets_fees: fees,
         }
+    }
+
+    pub fn transaction_fee(&self) -> u64 {
+        self.transaction_fee
     }
 
     pub fn amount(&self) -> u64 {
