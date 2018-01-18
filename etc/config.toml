@@ -14,5 +14,5 @@ enabled = true
 addresses = ["nats://vRJY4vOIoNSsG72F:UCF0IsKwMlYON4g7@35.197.200.238:4222"]
 queuename = "transaction.commit"
 
-[service-discovery]
-address = "127.0.0.1:3000"
+[service_discovery]
+address = "127.0.0.1:3000/nodes"
