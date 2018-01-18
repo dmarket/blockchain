@@ -1,6 +1,11 @@
+extern crate curl;
 extern crate dmbc;
 extern crate exonum;
 extern crate exonum_configuration;
+
+extern crate dmbc;
+
+mod net_config;
 
 use exonum::blockchain::{ConsensusConfig, GenesisConfig, Service, TimeoutAdjusterConfig,
                          ValidatorKeys};
