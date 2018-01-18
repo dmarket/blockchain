@@ -4,10 +4,9 @@ use exonum::blockchain::Transaction;
 use exonum::crypto::PublicKey;
 use exonum::messages::Message;
 use exonum::storage::Fork;
-use exonum::encoding::serialize::FromHex;
 use serde_json::Value;
 
-use service;
+use service::CurrencyService;
 use service::asset::Asset;
 use service::configuration::Configuration;
 
@@ -36,7 +35,7 @@ impl TxTransfer {
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {
-        let platform_key = PublicKey::from_hex(service::PLATFORM_WALLET).unwrap();
+        let platform_key = CurrencyService::get_platfrom_wallet();
         let mut platform = WalletSchema::map(view, |mut schema| schema.wallet(&platform_key));
         let mut sender = WalletSchema::map(view, |mut schema| schema.wallet(self.from()));
         let mut receiver = WalletSchema::map(view, |mut schema| schema.wallet(self.to()));

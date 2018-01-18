@@ -4,11 +4,10 @@ use exonum::blockchain::Transaction;
 use exonum::crypto::PublicKey;
 use exonum::messages::Message;
 use exonum::storage::Fork;
-use exonum::encoding::serialize::FromHex;
 use serde_json::Value;
 
 use super::{SERVICE_ID, TX_DEL_ASSETS_ID};
-use service;
+use service::CurrencyService;
 use service::asset::Asset;
 use service::schema::asset::AssetSchema;
 use service::schema::transaction_status::{TxStatus, TxStatusSchema};
@@ -37,7 +36,7 @@ impl TxDelAsset {
         // all wallets for this asset id is equal to the amonut stored in the
         // AssetInfo associated with this asset id.
 
-        let platform_key = PublicKey::from_hex(service::PLATFORM_WALLET).unwrap();
+        let platform_key = CurrencyService::get_platfrom_wallet();
         let mut platform = WalletSchema::map(view, |mut schema| schema.wallet(&platform_key));
         let mut creator = WalletSchema::map(view, |mut schema| schema.wallet(self.pub_key()));
         let fee = self.get_fee(view);
