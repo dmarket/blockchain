@@ -39,25 +39,6 @@ pub struct TradeFee {
     assets_fees: BTreeMap<Wallet, u64>,
 }
 
-impl TradeFee {
-    pub fn new(tx_fee: u64, fees: BTreeMap<Wallet, u64>) -> Self {
-        TradeFee {
-            transaction_fee: tx_fee,
-            assets_fees: fees,
-        }
-    }
-
-    pub fn amount(&self) -> u64 {
-        let mut amount = self.transaction_fee;
-        amount += self.assets_fees.iter().fold(0, |acc, asset| acc + asset.1);
-        amount
-    }
-
-    pub fn assets_fees(&self) -> BTreeMap<Wallet, u64> {
-        self.assets_fees.clone()
-    }
-}
-
 message! {
     struct TxTrade {
         const TYPE = SERVICE_ID;
@@ -171,5 +152,24 @@ impl Transaction for TxTrade {
         json!({
             "transaction_data": self,
         })
+    }
+}
+
+impl TradeFee {
+    pub fn new(tx_fee: u64, fees: BTreeMap<Wallet, u64>) -> Self {
+        TradeFee {
+            transaction_fee: tx_fee,
+            assets_fees: fees,
+        }
+    }
+
+    pub fn amount(&self) -> u64 {
+        let mut amount = self.transaction_fee;
+        amount += self.assets_fees.iter().fold(0, |acc, asset| acc + asset.1);
+        amount
+    }
+
+    pub fn assets_fees(&self) -> BTreeMap<Wallet, u64> {
+        self.assets_fees.clone()
     }
 }
