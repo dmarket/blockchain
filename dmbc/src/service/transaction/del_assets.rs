@@ -52,7 +52,7 @@ impl TxDelAsset {
         platform.increase(fee);
         WalletSchema::map(view, |mut schema| {
             schema.wallets().put(self.pub_key(), creator.clone());
-            schema.wallets().put(&platform_key, platform.clone());
+            schema.wallets().put(&platform.pub_key(), platform.clone());
         });
 
         // Check if asset exists, Fail if not.
@@ -77,7 +77,7 @@ impl TxDelAsset {
         println!("Asset {:?}", self.assets());
         println!("Wallet after delete assets: {:?}", creator);
 
-        // Remove wallet from db if it is empty, otherwise update db with changed wallet
+        // Remove wallet from db if it is empty completely, otherwise update db with changed wallet
         WalletSchema::map(view, |mut schema| match creator.is_empty() {
             true => schema.wallets().remove(self.pub_key()),
             false => schema.wallets().put(self.pub_key(), creator),

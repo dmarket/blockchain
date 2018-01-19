@@ -30,7 +30,7 @@ message! {
 
 pub struct AddAssetFee {
     transaction_fee: u64,
-    per_asset_fees: u64,
+    assets_fees: u64,
 }
 
 impl TxAddAsset {
@@ -41,8 +41,8 @@ impl TxAddAsset {
             .fold(0, |acc, asset| acc + asset.amount() as u64);
 
         let tx_fee = configuration.fees().add_asset();
-        let per_asset_fees = configuration.fees().per_add_asset() * count;
-        AddAssetFee::new(tx_fee, per_asset_fees)
+        let assets_fees = configuration.fees().per_add_asset() * count;
+        AddAssetFee::new(tx_fee, assets_fees)
     }
 
     fn get_assets_fees_receivers(&self) -> (Vec<Asset>, Vec<Fees>, Vec<PublicKey>) {
@@ -110,7 +110,7 @@ impl TxAddAsset {
         });
 
         // Now, check if creator has enough coins for asset fees
-        if creator.balance() < fee.per_asset_fees() {
+        if creator.balance() < fee.assets_fees() {
             return TxStatus::Fail
         }
         // initial point for db rollback, in case if transaction has failed
@@ -118,9 +118,9 @@ impl TxAddAsset {
 
         // extract fee
         // remove fee from creator and update creator wallet balance
-        creator.decrease(fee.per_asset_fees());
+        creator.decrease(fee.assets_fees());
         // put fee to platfrom wallet
-        platform.increase(fee.per_asset_fees());
+        platform.increase(fee.assets_fees());
         WalletSchema::map(view, |mut schema| {
             schema.wallets().put(self.pub_key(), creator.clone());
             schema.wallets().put(&platform.pub_key(), platform.clone());
@@ -194,22 +194,22 @@ impl Transaction for TxAddAsset {
 }
 
 impl AddAssetFee {
-    pub fn new(tx_fee: u64, per_asset_fees: u64) -> Self {
+    pub fn new(tx_fee: u64, assets_fees: u64) -> Self {
         AddAssetFee {
             transaction_fee: tx_fee,
-            per_asset_fees: per_asset_fees,
+            assets_fees: assets_fees,
         }
     }
 
     pub fn amount(&self) -> u64 {
-        self.transaction_fee + self.per_asset_fees
+        self.transaction_fee + self.assets_fees
     }
 
     pub fn transaction_fee(&self) -> u64 {
         self.transaction_fee
     }
 
-    pub fn per_asset_fees(&self) -> u64 {
-        self.per_asset_fees
+    pub fn assets_fees(&self) -> u64 {
+        self.assets_fees
     }
 }
