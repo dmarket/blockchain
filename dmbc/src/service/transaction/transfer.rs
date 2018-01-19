@@ -81,11 +81,10 @@ impl TxTransfer {
         let send_assets = !self.assets().is_empty();
         if send_assets {
             if sender.is_assets_in_wallet(&self.assets()) {
-
                 // Check if sender has enough coins to pay fee to creators of assets
                 if sender.balance() < fee.assets_fees_total() {
                     view.rollback();
-                    return TxStatus::Fail
+                    return TxStatus::Fail;
                 }
 
                 sender.del_assets(&self.assets());
@@ -98,9 +97,9 @@ impl TxTransfer {
                     creator.increase(fee);
                     WalletSchema::map(view, |mut schema| {
                         schema.wallets().put(creator.pub_key(), creator.clone());
+                        schema.wallets().put(sender.pub_key(), sender.clone());
                     });
                 }
-
             } else {
                 view.rollback();
                 return TxStatus::Fail;

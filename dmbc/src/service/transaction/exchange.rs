@@ -183,7 +183,9 @@ impl TxExchange {
         // store changes
         WalletSchema::map(view, |mut schema| {
             schema.wallets().put(self.offer().sender(), sender.clone());
-            schema.wallets().put(self.offer().recipient(), recipient.clone());
+            schema
+                .wallets()
+                .put(self.offer().recipient(), recipient.clone());
         });
 
         TxStatus::Success

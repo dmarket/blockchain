@@ -51,7 +51,7 @@ fn add_assets() {
     let mut testkit = TestKitBuilder::validator()
         .with_service(CurrencyService::new())
         .create();
-    
+
     let fork = &mut testkit.blockchain_mut().fork();
 
     AssetSchema::map(fork, |mut s| {
@@ -120,7 +120,7 @@ fn add_assets_fails() {
     let mut testkit = TestKitBuilder::validator()
         .with_service(CurrencyService::new())
         .create();
-    
+
     let fork = &mut testkit.blockchain_mut().fork();
 
     let wallet = wallet::Builder::new().key(public_key).balance(2000).build();
@@ -197,7 +197,7 @@ fn delete_assets() {
     let mut testkit = TestKitBuilder::validator()
         .with_service(CurrencyService::new())
         .create();
-    
+
     let fork = &mut testkit.blockchain_mut().fork();
 
     let id_1 = AssetId::new(data_1, &public_key).unwrap();
@@ -264,7 +264,7 @@ fn delete_assets_fails() {
     let mut testkit = TestKitBuilder::validator()
         .with_service(CurrencyService::new())
         .create();
-    
+
     let fork = &mut testkit.blockchain_mut().fork();
 
     let fee = fee::Builder::new()
@@ -285,9 +285,7 @@ fn delete_assets_fails() {
     WalletSchema::map(fork, |mut s| {
         assert_eq!(
             Some(20),
-            s.wallet(&public_key)
-                .asset(id)
-                .map(|a| a.amount())
+            s.wallet(&public_key).asset(id).map(|a| a.amount())
         );
     });
 
@@ -346,7 +344,7 @@ fn exchange() {
     let mut testkit = TestKitBuilder::validator()
         .with_service(CurrencyService::new())
         .create();
-    
+
     let fork = &mut testkit.blockchain_mut().fork();
 
     let fee = fee::Builder::new()
@@ -438,7 +436,7 @@ fn trade_assets() {
     let mut testkit = TestKitBuilder::validator()
         .with_service(CurrencyService::new())
         .create();
-    
+
     let fork = &mut testkit.blockchain_mut().fork();
 
     let fee = fee::Builder::new()
@@ -522,7 +520,7 @@ fn transfer() {
     let mut testkit = TestKitBuilder::validator()
         .with_service(CurrencyService::new())
         .create();
-    
+
     let fork = &mut testkit.blockchain_mut().fork();
 
     let fee = fee::Builder::new()
@@ -549,7 +547,7 @@ fn transfer() {
     assert_eq!(tx_status, TxStatus::Success);
 
     let (sender, recipient) = WalletSchema::map(fork, |mut s| {
-        (s.wallet(&sender_public) ,s.wallet(&recipient_public))
+        (s.wallet(&sender_public), s.wallet(&recipient_public))
     });
 
     assert_eq!(None, sender.asset(full_id).map(|a| a.amount()));

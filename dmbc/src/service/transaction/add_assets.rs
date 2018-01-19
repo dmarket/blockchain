@@ -96,7 +96,7 @@ impl TxAddAsset {
 
         // Check if creator has enough coins to execute transaction, fail otherwise
         if creator.balance() < fee.transaction_fee() {
-            return TxStatus::Fail
+            return TxStatus::Fail;
         }
 
         // extract fee
@@ -111,7 +111,7 @@ impl TxAddAsset {
 
         // Now, check if creator has enough coins for asset fees
         if creator.balance() < fee.assets_fees() {
-            return TxStatus::Fail
+            return TxStatus::Fail;
         }
         // initial point for db rollback, in case if transaction has failed
         view.checkpoint();
@@ -126,7 +126,6 @@ impl TxAddAsset {
             schema.wallets().put(&platform.pub_key(), platform.clone());
         });
 
-
         // `Fail` status can occur due two reasons:
         // 1. `schema.add_assets` will fail if asset id generation has collision
         // 2. Asset exists and AssetId is the same but new fees are different for existing asset
@@ -139,7 +138,6 @@ impl TxAddAsset {
         });
 
         if is_assets_added {
-
             // send assets to receivers
             for (receiver_key, asset) in receivers.iter().zip(assets) {
                 let mut receiver =
@@ -150,9 +148,12 @@ impl TxAddAsset {
                 });
             }
         } else {
-            println!("Unable to add assets {:?}, rolling back transaction...", self.meta_assets());
+            println!(
+                "Unable to add assets {:?}, rolling back transaction...",
+                self.meta_assets()
+            );
             view.rollback();
-            return TxStatus::Fail
+            return TxStatus::Fail;
         }
 
         TxStatus::Success

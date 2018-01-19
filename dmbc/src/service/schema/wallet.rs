@@ -20,7 +20,7 @@ impl<'a> WalletSchema<'a> {
     pub fn wallet(&mut self, pub_key: &PublicKey) -> Wallet {
         match self.wallets().get(pub_key) {
             Some(wallet) => wallet,
-            None => self.create_wallet(pub_key)
+            None => self.create_wallet(pub_key),
         }
     }
 
