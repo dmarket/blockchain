@@ -94,6 +94,7 @@ impl TxTransfer {
                 // send fees to creators of assets
                 for (mut creator, fee) in fee.assets_fees() {
                     println!("Creator {:?} will receive {}", creator.pub_key(), fee);
+                    sender.decrease(fee);
                     creator.increase(fee);
                     WalletSchema::map(view, |mut schema| {
                         schema.wallets().put(creator.pub_key(), creator.clone());

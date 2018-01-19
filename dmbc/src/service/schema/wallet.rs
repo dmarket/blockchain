@@ -18,15 +18,16 @@ impl<'a> WalletSchema<'a> {
     // Utility method to quickly get a separate wallet from the storage.
     // If wallet doesn't exist, create new one
     pub fn wallet(&mut self, pub_key: &PublicKey) -> Wallet {
-        self.wallets()
-            .get(pub_key)
-            .unwrap_or(self.create_wallet(pub_key))
+        match self.wallets().get(pub_key) {
+            Some(wallet) => wallet,
+            None => self.create_wallet(pub_key)
+        }
     }
 
     fn create_wallet(&mut self, pub_key: &PublicKey) -> Wallet {
         let assets: Vec<Asset> = vec![];
         let wallet = Wallet::new(pub_key, 0, assets);
-        println!("Create the wallet: {:?}", wallet);
+        println!("No wallet in schema. Creating the wallet: {:?}", wallet);
         self.wallets().put(pub_key, wallet.clone());
         wallet
     }

@@ -164,12 +164,14 @@ impl TradeFee {
     }
 
     pub fn amount(&self) -> u64 {
-        let mut amount = self.transaction_fee;
-        amount += self.assets_fees.iter().fold(0, |acc, asset| acc + asset.1);
-        amount
+        self.transaction_fee + self.assets_fees_total()
     }
 
     pub fn assets_fees(&self) -> BTreeMap<Wallet, u64> {
         self.assets_fees.clone()
+    }
+
+    pub fn assets_fees_total(&self) -> u64 {
+        self.assets_fees.iter().fold(0, |acc, asset| acc + asset.1)
     }
 }

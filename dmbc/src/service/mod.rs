@@ -46,6 +46,10 @@ pub const PLATFORM_WALLET: &str =
 pub struct CurrencyService;
 
 impl CurrencyService {
+    pub fn new() -> Self {
+        CurrencyService {}
+    }
+
     pub fn get_platfrom_wallet() -> PublicKey {
         PublicKey::from_hex(PLATFORM_WALLET).unwrap()
     }
@@ -107,7 +111,7 @@ impl Service for CurrencyService {
         let basic_wallet = Self::get_platfrom_wallet();
         let assets: Vec<Asset> = vec![];
         let wallet = Wallet::new(&basic_wallet, 13_700_000_000_000_000, assets);
-        println!("Create the wallet: {:?}", wallet);
+        println!("Create platform wallet: {:?}", wallet);
         WalletSchema::map(fork, |mut db| db.wallets().put(&basic_wallet, wallet));
 
         serde_json::to_value(Configuration::default()).unwrap()
