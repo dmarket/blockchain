@@ -98,56 +98,31 @@ impl TxExchange {
         let fee_strategy = FeeStrategy::from_u8(self.offer().fee_strategy()).unwrap();
         let fee = self.get_fee(view);
 
-        // helper
-        let can_pay_both = |a: u64, b: u64| {
-            let min = cmp::min(a, b) as f64;
-            let half = (fee.transaction_fee() as f64 / 2.0).ceil();
-            half <= min
-        };
-
-        // get fee for platform
-        let sufficient_funds = match fee_strategy {
-            FeeStrategy::Recipient => recipient.balance() >= fee.transaction_fee(),
-            FeeStrategy::Sender => sender.balance() >= fee.transaction_fee(),
-            FeeStrategy::RecipientAndSender => can_pay_both(recipient.balance(), sender.balance()),
-            _ => false,
-        };
         // if participant(s) doesn't have enough coins, than fail.
-        if !sufficient_funds {
+        if !sufficient_funds(&fee_strategy, &recipient, &sender, fee.transaction_fee()) {
             return TxStatus::Fail;
         }
 
         // move coins from participant(s) to platform
-        match fee_strategy {
-            FeeStrategy::Recipient => {
-                recipient.decrease(fee.transaction_fee());
-                platform.increase(fee.transaction_fee());
-            }
-            FeeStrategy::Sender => {
-                sender.decrease(fee.transaction_fee());
-                platform.increase(fee.transaction_fee());
-            }
-            FeeStrategy::RecipientAndSender => {
-                let half = (fee.transaction_fee() as f64 / 2.0).ceil() as u64;
-                recipient.decrease(half);
-                sender.decrease(half);
-                platform.increase(half);
-                platform.increase(half);
-            }
-            _ => return TxStatus::Fail,
+        if !move_coins(
+            view,
+            &fee_strategy,
+            &mut recipient,
+            &mut sender,
+            &mut platform,
+            fee.transaction_fee(),
+        ) {
+            return TxStatus::Fail;
         }
-
-        // store changes
-        WalletSchema::map(view, |mut schema| {
-            schema.wallets().put(self.offer().sender(), sender.clone());
-            schema
-                .wallets()
-                .put(self.offer().recipient(), recipient.clone());
-            schema.wallets().put(&platform_key, platform.clone());
-        });
 
         // initial point for db rollback, in case if transaction has failed
         view.checkpoint();
+
+        // check if participant(s) have enough coins to pay creators for assets
+        if !sufficient_funds(&fee_strategy, &recipient, &sender, fee.assets_fees_total()) {
+            view.rollback();
+            return TxStatus::Fail;
+        }
 
         // check if recipient and sender have mentioned assets/coins for exchange
         // fail if not
@@ -164,6 +139,22 @@ impl TxExchange {
         println!("--   Exchange transaction   --");
         println!("Sender's balance before transaction : {:?}", sender);
         println!("Recipient's balance before transaction : {:?}", recipient);
+
+        // send fee to creators of assets
+        for (mut creator, fee) in fee.assets_fees() {
+            println!("\tCreator {:?} will receive {}", creator.pub_key(), fee);
+            if !move_coins(
+                view,
+                &fee_strategy,
+                &mut recipient,
+                &mut sender,
+                &mut creator,
+                fee,
+            ) {
+                view.rollback();
+                return TxStatus::Fail;
+            }
+        }
 
         sender.decrease(self.offer().sender_value());
         recipient.increase(self.offer().sender_value());
@@ -182,10 +173,8 @@ impl TxExchange {
 
         // store changes
         WalletSchema::map(view, |mut schema| {
-            schema.wallets().put(self.offer().sender(), sender.clone());
-            schema
-                .wallets()
-                .put(self.offer().recipient(), recipient.clone());
+            schema.wallets().put(sender.pub_key(), sender.clone());
+            schema.wallets().put(recipient.pub_key(), recipient.clone());
         });
 
         TxStatus::Success
@@ -251,12 +240,70 @@ impl ExchangeFee {
     }
 
     pub fn amount(&self) -> u64 {
-        let mut amount = self.transaction_fee;
-        amount += self.assets_fees.iter().fold(0, |acc, asset| acc + asset.1);
-        amount
+        self.transaction_fee + self.assets_fees_total()
     }
 
     pub fn assets_fees(&self) -> BTreeMap<Wallet, u64> {
         self.assets_fees.clone()
     }
+
+    pub fn assets_fees_total(&self) -> u64 {
+        self.assets_fees.iter().fold(0, |acc, asset| acc + asset.1)
+    }
+}
+
+fn sufficient_funds(strategy: &FeeStrategy, recipient: &Wallet, sender: &Wallet, fee: u64) -> bool {
+    // helper
+    let can_pay_both = |a: u64, b: u64| {
+        let min = cmp::min(a, b) as f64;
+        let half = (fee as f64 / 2.0).ceil();
+        half <= min
+    };
+
+    // check if participant(s) have enough coins to pay platform fee
+    match *strategy {
+        FeeStrategy::Recipient => recipient.balance() >= fee,
+        FeeStrategy::Sender => sender.balance() >= fee,
+        FeeStrategy::RecipientAndSender => can_pay_both(recipient.balance(), sender.balance()),
+        _ => false,
+    }
+}
+
+fn move_coins(
+    view: &mut Fork,
+    strategy: &FeeStrategy,
+    recipient: &mut Wallet,
+    sender: &mut Wallet,
+    fee_receiver: &mut Wallet,
+    fee: u64,
+) -> bool {
+    // move coins from participant(s) to fee receiver
+    match *strategy {
+        FeeStrategy::Recipient => {
+            recipient.decrease(fee);
+            fee_receiver.increase(fee);
+        }
+        FeeStrategy::Sender => {
+            sender.decrease(fee);
+            fee_receiver.increase(fee);
+        }
+        FeeStrategy::RecipientAndSender => {
+            let half = (fee as f64 / 2.0).ceil() as u64;
+            recipient.decrease(half);
+            sender.decrease(half);
+            fee_receiver.increase(half);
+            fee_receiver.increase(half);
+        }
+        _ => return false,
+    }
+
+    // store changes
+    WalletSchema::map(view, |mut schema| {
+        schema.wallets().put(recipient.pub_key(), recipient.clone());
+        schema.wallets().put(sender.pub_key(), sender.clone());
+        schema
+            .wallets()
+            .put(fee_receiver.pub_key(), fee_receiver.clone());
+    });
+    true
 }
