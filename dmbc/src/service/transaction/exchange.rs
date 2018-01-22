@@ -89,11 +89,14 @@ impl TxExchange {
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {
-        let platform_key = CurrencyService::get_platfrom_wallet();
-        let mut platform = WalletSchema::map(view, |mut schema| schema.wallet(&platform_key));
-        let mut sender = WalletSchema::map(view, |mut schema| schema.wallet(self.offer().sender()));
-        let mut recipient =
-            WalletSchema::map(view, |mut schema| schema.wallet(self.offer().recipient()));
+        let (mut platform, mut sender, mut recipient) = WalletSchema::map(view, |mut schema| {
+            let platform_key = CurrencyService::get_platfrom_wallet();
+            (
+                schema.wallet(&platform_key),
+                schema.wallet(self.offer().sender()),
+                schema.wallet(self.offer().recipient()),
+            )
+        });
 
         let fee_strategy = FeeStrategy::from_u8(self.offer().fee_strategy()).unwrap();
         let fee = self.get_fee(view);
