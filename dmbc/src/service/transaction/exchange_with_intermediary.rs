@@ -12,55 +12,56 @@ use service::CurrencyService;
 use service::asset::Asset;
 use service::wallet::Wallet;
 use service::configuration::Configuration;
+use service::transaction::exchange::FeeStrategy;
+use service::transaction::exchange::ExchangeFee;
 
-use super::{SERVICE_ID, TX_EXCHANGE_ID};
+use super::{SERVICE_ID, TX_EXCHANGE_WITH_INTERMEDIARY_ID};
 use super::schema::asset::AssetSchema;
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
 use super::schema::wallet::WalletSchema;
 
-#[derive(PartialEq)]
-pub enum FeeStrategy {
-    Recipient = 1,
-    Sender = 2,
-    RecipientAndSender = 3,
-    Intermediary = 4,
-}
+encoding_struct! {
+    struct Intermediary {
+        const SIZE = 104;
 
-pub struct ExchangeFee {
-    transaction_fee: u64,
-    assets_fees: BTreeMap<Wallet, u64>,
+        field wallet:       &PublicKey [0 => 32]
+        field commision:    u64        [32 => 40]
+        field signature:    &Signature [40 => 104]
+    }
 }
 
 encoding_struct! {
-    struct ExchangeOffer {
-        const SIZE = 97;
+    struct ExchangeOfferWithIntermediary {
+        const SIZE = 103;
 
-        field sender:                 &PublicKey   [00 => 32]
-        field sender_assets:          Vec<Asset>   [32 => 40]
-        field sender_value:           u64          [40 => 48]
+        field intermediary:           Intermediary [00 => 8]
 
-        field recipient:              &PublicKey   [48 => 80]
-        field recipient_assets:       Vec<Asset>   [80 => 88]
-        field recipient_value:        u64          [88 => 96]
+        field sender:                 &PublicKey   [08 => 40]
+        field sender_assets:          Vec<Asset>   [40 => 48]
+        field sender_value:           u64          [48 => 56]
 
-        field fee_strategy:           u8           [96 => 97]
+        field recipient:              &PublicKey   [56 => 88]
+        field recipient_assets:       Vec<Asset>   [88 => 96]
+        field recipient_value:        u64          [96 => 102]
+
+        field fee_strategy:           u8           [102 => 103]
     }
 }
 
 message! {
-    struct TxExchange {
+    struct TxExchangeWithIntermediary {
         const TYPE = SERVICE_ID;
-        const ID = TX_EXCHANGE_ID;
-        const SIZE = 88;
+        const ID = TX_EXCHANGE_WITH_INTERMEDIARY_ID;
+        const SIZE = 0;
 
-        field offer:             ExchangeOffer     [00 => 8]
-        field seed:              u64               [8 => 16]
-        field sender_signature:  &Signature        [16 => 80]
-        field data_info:         &str              [80 => 88]
+        field offer:            ExchangeOfferWithIntermediary [0 => 8]
+        field seed:             u64                           [8 => 16]
+        field sender_signature: &Signature                    [16 => 80]
+        field data_info:        &str                          [80 => 88]
     }
 }
 
-impl TxExchange {
+impl TxExchangeWithIntermediary {
     pub fn get_offer_raw(&self) -> Vec<u8> {
         self.offer().raw
     }
@@ -94,6 +95,9 @@ impl TxExchange {
         let mut sender = WalletSchema::map(view, |mut schema| schema.wallet(self.offer().sender()));
         let mut recipient =
             WalletSchema::map(view, |mut schema| schema.wallet(self.offer().recipient()));
+        let mut intermediary = WalletSchema::map(view, |mut schema| {
+            schema.wallet(self.offer().intermediary().wallet())
+        });
 
         let fee_strategy = FeeStrategy::from_u8(self.offer().fee_strategy()).unwrap();
         let fee = self.get_fee(view);
@@ -105,6 +109,7 @@ impl TxExchange {
             &mut recipient,
             &mut sender,
             &mut platform,
+            &mut intermediary,
             fee.transaction_fee(),
         ) {
             return TxStatus::Fail;
@@ -138,6 +143,7 @@ impl TxExchange {
                 &mut recipient,
                 &mut sender,
                 &mut creator,
+                &mut intermediary,
                 fee,
             ) {
                 view.rollback();
@@ -170,18 +176,18 @@ impl TxExchange {
     }
 }
 
-impl Transaction for TxExchange {
+impl Transaction for TxExchangeWithIntermediary {
     fn verify(&self) -> bool {
         if cfg!(fuzzing) {
             return false;
         }
 
-        let keys_ok = *self.offer().sender() != *self.offer().recipient();
-        // Fee Strategy cannot be intermediary
-        let fee_strategy_ok = match FeeStrategy::from_u8(self.offer().fee_strategy()) {
-            Some(fee_strategy) => fee_strategy != FeeStrategy::Intermediary,
-            None => false,
-        };
+        let mut keys_ok = *self.offer().sender() != *self.offer().recipient();
+        keys_ok &= *self.offer().sender() != *self.offer().intermediary().wallet();
+        keys_ok &= *self.offer().recipient() != *self.offer().intermediary().wallet();
+
+        let fee_strategy_ok = FeeStrategy::from_u8(self.offer().fee_strategy()).is_some();
+
         let verify_recipient_ok = self.verify_signature(self.offer().recipient());
         let verify_sender_ok = verify(
             self.sender_signature(),
@@ -189,7 +195,15 @@ impl Transaction for TxExchange {
             self.offer().sender(),
         );
 
-        keys_ok && fee_strategy_ok && verify_recipient_ok && verify_sender_ok
+        let bytes: [u8; 8] =
+            unsafe { ::std::mem::transmute(self.offer().intermediary().commision().to_be()) };
+        let verify_commision_ok = verify(
+            self.offer().intermediary().signature(),
+            &bytes,
+            self.offer().intermediary().wallet(),
+        );
+
+        keys_ok && fee_strategy_ok && verify_recipient_ok && verify_sender_ok && verify_commision_ok
     }
 
     fn execute(&self, view: &mut Fork) {
@@ -204,53 +218,17 @@ impl Transaction for TxExchange {
     }
 }
 
-impl FeeStrategy {
-    pub fn from_u8(value: u8) -> Option<FeeStrategy> {
-        match value {
-            1 => Some(FeeStrategy::Recipient),
-            2 => Some(FeeStrategy::Sender),
-            3 => Some(FeeStrategy::RecipientAndSender),
-            4 => Some(FeeStrategy::Intermediary),
-            _ => None,
-        }
-    }
-}
-
-impl ExchangeFee {
-    pub fn new(tx_fee: u64, fees: BTreeMap<Wallet, u64>) -> Self {
-        ExchangeFee {
-            transaction_fee: tx_fee,
-            assets_fees: fees,
-        }
-    }
-
-    pub fn transaction_fee(&self) -> u64 {
-        self.transaction_fee
-    }
-
-    pub fn amount(&self) -> u64 {
-        self.transaction_fee + self.assets_fees_total()
-    }
-
-    pub fn assets_fees(&self) -> BTreeMap<Wallet, u64> {
-        self.assets_fees.clone()
-    }
-
-    pub fn assets_fees_total(&self) -> u64 {
-        self.assets_fees.iter().fold(0, |acc, asset| acc + asset.1)
-    }
-}
-
 fn move_coins(
     view: &mut Fork,
     strategy: &FeeStrategy,
     recipient: &mut Wallet,
     sender: &mut Wallet,
+    intermediary: &mut Wallet,
     fee_receiver: &mut Wallet,
     fee: u64,
 ) -> bool {
     // check if participant(s) have enough coins to pay fee
-    if !sufficient_funds(strategy, recipient, sender, fee) {
+    if !sufficient_funds(strategy, recipient, sender, intermediary, fee) {
         return false;
     }
     // move coins from participant(s) to fee receiver
@@ -270,7 +248,10 @@ fn move_coins(
             fee_receiver.increase(half);
             fee_receiver.increase(half);
         }
-        _ => return false,
+        FeeStrategy::Intermediary => {
+            intermediary.decrease(fee);
+            fee_receiver.increase(fee);
+        }
     }
 
     // store changes
@@ -279,12 +260,21 @@ fn move_coins(
         schema.wallets().put(sender.pub_key(), sender.clone());
         schema
             .wallets()
+            .put(intermediary.pub_key(), intermediary.clone());
+        schema
+            .wallets()
             .put(fee_receiver.pub_key(), fee_receiver.clone());
     });
     true
 }
 
-fn sufficient_funds(strategy: &FeeStrategy, recipient: &Wallet, sender: &Wallet, fee: u64) -> bool {
+fn sufficient_funds(
+    strategy: &FeeStrategy,
+    recipient: &Wallet,
+    sender: &Wallet,
+    intermediary: &Wallet,
+    fee: u64,
+) -> bool {
     // helper
     let can_pay_both = |a: u64, b: u64| {
         let min = cmp::min(a, b) as f64;
@@ -297,6 +287,6 @@ fn sufficient_funds(strategy: &FeeStrategy, recipient: &Wallet, sender: &Wallet,
         FeeStrategy::Recipient => recipient.balance() >= fee,
         FeeStrategy::Sender => sender.balance() >= fee,
         FeeStrategy::RecipientAndSender => can_pay_both(recipient.balance(), sender.balance()),
-        _ => false,
+        FeeStrategy::Intermediary => intermediary.balance() >= fee,
     }
 }

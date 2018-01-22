@@ -28,8 +28,11 @@ pub const TX_TRADE_ASSETS_ID: u16 = 5;
 pub mod trade_assets;
 
 // Buy Transaction
-pub const TX_EXCHANGE_ID: u16 = 6;
+pub const TX_EXCHANGE_ID: u16 = 601;
 pub mod exchange;
+
+pub const TX_EXCHANGE_WITH_INTERMEDIARY_ID: u16 = 602;
+pub mod exchange_with_intermediary;
 
 // Mining coin
 pub const TX_MINING_ID: u16 = 7;
