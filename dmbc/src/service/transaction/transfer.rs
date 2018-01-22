@@ -54,10 +54,15 @@ impl TxTransfer {
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {
-        let platform_key = CurrencyService::get_platfrom_wallet();
-        let mut platform = WalletSchema::map(view, |mut schema| schema.wallet(&platform_key));
-        let mut sender = WalletSchema::map(view, |mut schema| schema.wallet(self.from()));
-        let mut receiver = WalletSchema::map(view, |mut schema| schema.wallet(self.to()));
+        let (mut platform, mut sender, mut receiver) = WalletSchema::map(view, |mut schema| {
+            let platform_key = CurrencyService::get_platfrom_wallet();
+            (
+                schema.wallet(&platform_key),
+                schema.wallet(self.from()),
+                schema.wallet(self.to()),
+            )
+        });
+
         let fee = self.get_fee(view);
 
         // Fail if not enough coins on senders balance

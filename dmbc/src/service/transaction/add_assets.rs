@@ -89,9 +89,11 @@ impl TxAddAsset {
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {
-        let platform_key = CurrencyService::get_platfrom_wallet();
-        let mut platform = WalletSchema::map(view, |mut schema| schema.wallet(&platform_key));
-        let mut creator = WalletSchema::map(view, |mut schema| schema.wallet(self.pub_key()));
+        let (mut platform, mut creator) = WalletSchema::map(view, |mut schema| {
+            let platform_key = CurrencyService::get_platfrom_wallet();
+            (schema.wallet(&platform_key), schema.wallet(self.pub_key()))
+        });
+
         let fee = self.get_fee(view);
 
         // Check if creator has enough coins to execute transaction, fail otherwise
