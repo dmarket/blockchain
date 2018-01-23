@@ -12,7 +12,7 @@ use service::transaction::exchange_with_intermediary::{ExchangeOfferWithIntermed
                                                        Intermediary, TxExchangeWithIntermediary};
 use service::transaction::mining::TxMining;
 use service::transaction::trade_assets::{TradeOffer, TxTrade};
-use service::transaction::ask::{AskOffer, TxAsk};
+use service::transaction::trade_ask_assets::{TradeAskOffer, TxTradeAsk};
 use service::transaction::transfer::TxTransfer;
 
 pub struct Builder {
@@ -630,12 +630,12 @@ impl TxAskBuilder {
         }
     }
 
-    pub fn build(self) -> TxAsk {
+    pub fn build(self) -> TxTradeAsk {
         self.verify();
 
-        let offer = AskOffer::new(&self.meta.public_key, self.assets);
+        let offer = TradeAskOffer::new(&self.meta.public_key, self.assets);
         let signature = crypto::sign(&offer.clone().into_bytes(), &self.meta.secret_key);
-        TxAsk::new(
+        TxTradeAsk::new(
             &self.buyer.unwrap(),
             offer,
             self.seed,

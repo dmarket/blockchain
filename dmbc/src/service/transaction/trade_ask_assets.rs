@@ -13,13 +13,13 @@ use service::asset::{Asset, TradeAsset};
 use service::wallet::Wallet;
 use service::configuration::Configuration;
 
-use super::{SERVICE_ID, TX_ASK_ASSETS_ID};
+use super::{SERVICE_ID, TX_TRADE_ASK_ASSETS_ID};
 use super::schema::asset::AssetSchema;
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
 use super::schema::wallet::WalletSchema;
 
 encoding_struct! {
-    struct AskOffer {
+    struct TradeAskOffer {
         const SIZE = 40;
 
         field seller: &PublicKey        [00 => 32]
@@ -28,26 +28,26 @@ encoding_struct! {
 }
 
 message! {
-    struct TxAsk {
+    struct TxTradeAsk {
         const TYPE = SERVICE_ID;
-        const ID = TX_ASK_ASSETS_ID;
+        const ID = TX_TRADE_ASK_ASSETS_ID;
         const SIZE = 120;
 
         field buyer:              &PublicKey    [00 => 32]
-        field offer:              AskOffer      [32 => 40]
+        field offer:              TradeAskOffer [32 => 40]
         field seed:               u64           [40 => 48]
         field seller_signature:   &Signature    [48 => 112]
         field data_info:          &str          [112 => 120]
     }
 }
 
-pub struct AskFee {
+pub struct TradeAskFee {
     transaction_fee: u64,
     assets_fees: BTreeMap<Wallet, u64>,
 }
 
-impl TxAsk {
-    pub fn get_fee(&self, view: &mut Fork) -> AskFee {
+impl TxTradeAsk {
+    pub fn get_fee(&self, view: &mut Fork) -> TradeAskFee {
         let mut assets_fees = BTreeMap::new();
         let fee_ratio = |price: u64, ratio: u64| (price as f64 / ratio as f64).round() as u64;
 
@@ -62,7 +62,7 @@ impl TxAsk {
         }
 
         let tx_fee = Configuration::extract(view).fees().trade();
-        AskFee::new(tx_fee, assets_fees)
+        TradeAskFee::new(tx_fee, assets_fees)
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {
@@ -141,7 +141,7 @@ impl TxAsk {
     }
 }
 
-impl Transaction for TxAsk {
+impl Transaction for TxTradeAsk {
     fn verify(&self) -> bool {
         if cfg!(fuzzing) {
             return false;
@@ -171,7 +171,7 @@ impl Transaction for TxAsk {
     }
 }
 
-impl AskOffer {
+impl TradeAskOffer {
     pub fn total_price(&self) -> u64 {
         self.assets()
             .iter()
@@ -179,9 +179,9 @@ impl AskOffer {
     }
 }
 
-impl AskFee {
+impl TradeAskFee {
     pub fn new(tx_fee: u64, fees: BTreeMap<Wallet, u64>) -> Self {
-        AskFee {
+        TradeAskFee {
             transaction_fee: tx_fee,
             assets_fees: fees,
         }

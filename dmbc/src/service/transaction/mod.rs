@@ -23,8 +23,8 @@ pub mod add_assets;
 pub const TX_DEL_ASSETS_ID: u16 = 4;
 pub mod del_assets;
 
-pub const TX_ASK_ASSETS_ID: u16 = 501;
-pub mod ask;
+pub const TX_TRADE_ASK_ASSETS_ID: u16 = 501;
+pub mod trade_ask_assets;
 
 // Buy Transaction
 pub const TX_TRADE_ASSETS_ID: u16 = 502;
