@@ -19,13 +19,16 @@ pub mod transfer;
 pub const TX_ADD_ASSETS_ID: u16 = 3;
 pub mod add_assets;
 
-// Add Assets
+// delete Assets
 pub const TX_DEL_ASSETS_ID: u16 = 4;
 pub mod del_assets;
 
+pub const TX_ASK_ASSETS_ID: u16 = 501;
+pub mod ask;
+
 // Buy Transaction
-pub const TX_TRADE_ASSETS_ID: u16 = 5;
-pub mod trade_assets;
+pub const TX_TRADE_ASSETS_ID: u16 = 502;
+pub mod trade;
 
 // Buy Transaction
 pub const TX_EXCHANGE_ID: u16 = 601;

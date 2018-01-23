@@ -16,8 +16,9 @@ use service::transaction::add_assets::TxAddAsset;
 use service::transaction::create_wallet::TxCreateWallet;
 use service::transaction::del_assets::TxDelAsset;
 use service::transaction::exchange::TxExchange;
+use service::transaction::exchange_with_intermediary::TxExchangeWithIntermediary;
 use service::transaction::mining::TxMining;
-use service::transaction::trade_assets::TxTrade;
+use service::transaction::trade::TxTrade;
 use service::transaction::transfer::TxTransfer;
 
 #[derive(Clone)]
@@ -32,6 +33,7 @@ enum TransactionRequest {
     DelAsset(TxDelAsset),
     TradeAsset(TxTrade),
     Exchange(TxExchange),
+    ExchangeWithIntermediary(TxExchangeWithIntermediary),
     Mining(TxMining),
 }
 
@@ -45,6 +47,7 @@ impl Into<Box<Transaction>> for TransactionRequest {
             TransactionRequest::TradeAsset(trans) => Box::new(trans),
             TransactionRequest::Exchange(trans) => Box::new(trans),
             TransactionRequest::Mining(trans) => Box::new(trans),
+            TransactionRequest::ExchangeWithIntermediary(trans) => Box::new(trans),
         }
     }
 }

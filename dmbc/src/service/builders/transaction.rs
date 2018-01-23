@@ -11,7 +11,8 @@ use service::transaction::exchange::{ExchangeOffer, FeeStrategy, TxExchange};
 use service::transaction::exchange_with_intermediary::{ExchangeOfferWithIntermediary,
                                                        Intermediary, TxExchangeWithIntermediary};
 use service::transaction::mining::TxMining;
-use service::transaction::trade_assets::{TradeOffer, TxTrade};
+use service::transaction::trade::{TradeOffer, TxTrade};
+use service::transaction::ask::{AskOffer, TxAsk};
 use service::transaction::transfer::TxTransfer;
 
 pub struct Builder {
@@ -571,19 +572,82 @@ impl TxTradeBuilder {
     pub fn build(self) -> TxTrade {
         self.verify();
 
-        let offer = TradeOffer::new(&self.meta.public_key, self.assets);
+        let offer = TradeOffer::new(&self.buyer.unwrap(), &self.meta.public_key, self.assets);
         let signature = crypto::sign(&offer.clone().into_bytes(), &self.meta.secret_key);
-        TxTrade::new(
-            self.buyer.as_ref().unwrap(),
+        TxTrade::new(offer, self.seed, &signature, &self.meta.secret_key)
+    }
+
+    fn verify(&self) {
+        assert!(self.buyer.is_some());
+    }
+}
+
+pub struct TxAskBuilder {
+    meta: TransactionMetadata,
+    buyer: Option<PublicKey>,
+    assets: Vec<TradeAsset>,
+    seed: u64,
+    data_info: Option<String>,
+}
+
+impl TxAskBuilder {
+    fn new(meta: TransactionMetadata) -> Self {
+        TxAskBuilder {
+            meta,
+            buyer: None,
+            assets: Vec::new(),
+            seed: 0,
+            data_info: None,
+        }
+    }
+
+    pub fn buyer(self, pub_key: PublicKey) -> Self {
+        TxAskBuilder {
+            buyer: Some(pub_key),
+            ..self
+        }
+    }
+
+    pub fn add_asset(self, name: &str, count: u32, price: u64) -> Self {
+        let asset = Asset::from_parts(name, count, &self.meta.public_key);
+        let trade = asset.into_trade_asset(price);
+        self.add_asset_value(trade)
+    }
+
+    pub fn add_asset_value(mut self, asset: TradeAsset) -> Self {
+        self.assets.push(asset);
+        self
+    }
+
+    pub fn seed(self, seed: u64) -> Self {
+        TxAskBuilder { seed, ..self }
+    }
+
+    pub fn data_info(self, data_info: &str) -> Self {
+        TxAskBuilder {
+            data_info: Some(data_info.to_string()),
+            ..self
+        }
+    }
+
+    pub fn build(self) -> TxAsk {
+        self.verify();
+
+        let offer = AskOffer::new(&self.meta.public_key, self.assets);
+        let signature = crypto::sign(&offer.clone().into_bytes(), &self.meta.secret_key);
+        TxAsk::new(
+            &self.buyer.unwrap(),
             offer,
             self.seed,
             &signature,
+            &self.data_info.unwrap(),
             &self.meta.secret_key,
         )
     }
 
     fn verify(&self) {
         assert!(self.buyer.is_some());
+        assert!(self.data_info.is_some());
     }
 }
 
@@ -674,7 +738,7 @@ mod test {
                                                            Intermediary,
                                                            TxExchangeWithIntermediary};
     use service::transaction::mining::TxMining;
-    use service::transaction::trade_assets::{TradeOffer, TxTrade};
+    use service::transaction::trade::{TradeOffer, TxTrade};
     use service::transaction::transfer::TxTransfer;
 
     use service::builders::fee;
@@ -873,9 +937,30 @@ mod test {
             .seed(1)
             .build();
 
-        let offer = TradeOffer::new(&public_key, vec![trade_asset]);
+        let offer = TradeOffer::new(&buyer, &public_key, vec![trade_asset]);
         let signature = crypto::sign(&offer.clone().into_bytes(), &secret_key);
-        let equivalent = TxTrade::new(&buyer, offer, 1, &signature, &secret_key);
+        let equivalent = TxTrade::new(offer, 1, &signature, &secret_key);
+
+        assert!(transaction == equivalent);
+    }
+
+    #[test]
+    fn ask_assets() {
+        let (public_key, secret_key) = crypto::gen_keypair();
+        let (buyer, _) = crypto::gen_keypair();
+        let asset = Asset::from_parts("foobar", 9, &public_key);
+        let trade_asset = asset.into_trade_asset(9);
+        let transaction = transaction::Builder::new()
+            .keypair(public_key, secret_key.clone())
+            .tx_trade_assets()
+            .add_asset_value(trade_asset.clone())
+            .buyer(buyer)
+            .seed(1)
+            .build();
+
+        let offer = TradeOffer::new(&buyer, &public_key, vec![trade_asset]);
+        let signature = crypto::sign(&offer.clone().into_bytes(), &secret_key);
+        let equivalent = TxTrade::new(offer, 1, &signature, &secret_key);
 
         assert!(transaction == equivalent);
     }
