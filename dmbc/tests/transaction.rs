@@ -336,7 +336,6 @@ fn exchange() {
         .recipient(recipient_public)
         .recipient_add_asset(recipient_data_1, 30)
         .recipient_add_asset(recipient_data_2, 25)
-        .recipient_value(0)
         .fee_strategy(1)
         .data_info("test_transaction")
         .build();

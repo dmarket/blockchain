@@ -7,7 +7,7 @@ use service::asset::{Asset, Fees, MetaAsset, TradeAsset};
 use service::transaction::add_assets::TxAddAsset;
 use service::transaction::create_wallet::TxCreateWallet;
 use service::transaction::del_assets::TxDelAsset;
-use service::transaction::exchange::{ExchangeOffer, TxExchange};
+use service::transaction::exchange::{ExchangeOffer, FeeStrategy, TxExchange};
 use service::transaction::exchange_with_intermediary::{ExchangeOfferWithIntermediary,
                                                        Intermediary, TxExchangeWithIntermediary};
 use service::transaction::mining::TxMining;
@@ -253,7 +253,6 @@ pub struct TxExchangeBuilder {
 
     recipient: Option<PublicKey>,
     recipient_assets: Vec<Asset>,
-    recipient_value: u64,
 
     fee_strategy: u8,
 
@@ -272,7 +271,6 @@ impl TxExchangeBuilder {
 
             recipient: None,
             recipient_assets: Vec::new(),
-            recipient_value: 0,
 
             fee_strategy: 1,
 
@@ -316,13 +314,6 @@ impl TxExchangeBuilder {
         self
     }
 
-    pub fn recipient_value(self, recipient_value: u64) -> Self {
-        TxExchangeBuilder {
-            recipient_value,
-            ..self
-        }
-    }
-
     pub fn fee_strategy(self, fee_strategy: u8) -> Self {
         TxExchangeBuilder {
             fee_strategy,
@@ -349,7 +340,6 @@ impl TxExchangeBuilder {
             self.sender_value,
             self.recipient.as_ref().unwrap(),
             self.recipient_assets,
-            self.recipient_value,
             self.fee_strategy,
         );
         let signature = crypto::sign(&offer.clone().into_bytes(), &self.meta.secret_key);
@@ -365,6 +355,7 @@ impl TxExchangeBuilder {
     fn verify(&self) {
         assert!(self.recipient.is_some());
         assert!(self.data_info.is_some());
+        assert!(FeeStrategy::from_u8(self.fee_strategy).is_some());
     }
 }
 
@@ -380,7 +371,6 @@ pub struct TxExchangeWithIntermediaryBuilder {
 
     recipient: Option<PublicKey>,
     recipient_assets: Vec<Asset>,
-    recipient_value: u64,
 
     fee_strategy: u8,
 
@@ -403,7 +393,6 @@ impl TxExchangeWithIntermediaryBuilder {
 
             recipient: None,
             recipient_assets: Vec::new(),
-            recipient_value: 0,
 
             fee_strategy: 1,
 
@@ -462,13 +451,6 @@ impl TxExchangeWithIntermediaryBuilder {
         self
     }
 
-    pub fn recipient_value(self, recipient_value: u64) -> Self {
-        TxExchangeWithIntermediaryBuilder {
-            recipient_value,
-            ..self
-        }
-    }
-
     pub fn fee_strategy(self, fee_strategy: u8) -> Self {
         TxExchangeWithIntermediaryBuilder {
             fee_strategy,
@@ -500,7 +482,6 @@ impl TxExchangeWithIntermediaryBuilder {
             self.sender_value,
             self.recipient.as_ref().unwrap(),
             self.recipient_assets,
-            self.recipient_value,
             self.fee_strategy,
         );
         let signature = crypto::sign(&offer.clone().into_bytes(), &self.meta.secret_key);
@@ -797,7 +778,6 @@ mod test {
             .sender_value(9)
             .recipient(recipient)
             .recipient_add_asset_value(recipient_asset.clone())
-            .recipient_value(13)
             .fee_strategy(1)
             .seed(1)
             .data_info("test_exchange")
@@ -809,7 +789,6 @@ mod test {
             9,
             &recipient,
             vec![recipient_asset.clone()],
-            13,
             1,
         );
         let signature = crypto::sign(&offer.clone().into_bytes(), &secret_key);
@@ -835,7 +814,6 @@ mod test {
             .sender_value(9)
             .recipient(recipient)
             .recipient_add_asset_value(recipient_asset.clone())
-            .recipient_value(13)
             .fee_strategy(1)
             .seed(1)
             .data_info("test_exchange")
@@ -850,7 +828,6 @@ mod test {
             9,
             &recipient,
             vec![recipient_asset.clone()],
-            13,
             1,
         );
         let signature = crypto::sign(&offer.clone().into_bytes(), &secret_key);

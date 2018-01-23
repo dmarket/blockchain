@@ -31,7 +31,7 @@ encoding_struct! {
 
 encoding_struct! {
     struct ExchangeOfferWithIntermediary {
-        const SIZE = 105;
+        const SIZE = 97;
 
         field intermediary:           Intermediary [00 => 8]
 
@@ -41,9 +41,8 @@ encoding_struct! {
 
         field recipient:              &PublicKey   [56 => 88]
         field recipient_assets:       Vec<Asset>   [88 => 96]
-        field recipient_value:        u64          [96 => 104]
 
-        field fee_strategy:           u8           [104 => 105]
+        field fee_strategy:           u8           [96 => 97]
     }
 }
 
@@ -137,10 +136,9 @@ impl TxExchangeWithIntermediary {
         // fail if not
         let recipient_assets_ok = recipient.is_assets_in_wallet(&self.offer().recipient_assets());
         let sender_assets_ok = sender.is_assets_in_wallet(&self.offer().sender_assets());
-        let recipient_value_ok = recipient.balance() >= self.offer().recipient_value();
         let sender_value_ok = sender.balance() >= self.offer().sender_value();
 
-        if !recipient_assets_ok || !sender_assets_ok || !recipient_value_ok || !sender_value_ok {
+        if !recipient_assets_ok || !sender_assets_ok || !sender_value_ok {
             view.rollback();
             return TxStatus::Fail;
         }
@@ -168,9 +166,6 @@ impl TxExchangeWithIntermediary {
 
         sender.decrease(self.offer().sender_value());
         recipient.increase(self.offer().sender_value());
-
-        sender.increase(self.offer().recipient_value());
-        recipient.decrease(self.offer().recipient_value());
 
         sender.del_assets(&self.offer().sender_assets());
         recipient.add_assets(&self.offer().sender_assets());

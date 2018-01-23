@@ -33,7 +33,7 @@ pub struct ExchangeFee {
 
 encoding_struct! {
     struct ExchangeOffer {
-        const SIZE = 97;
+        const SIZE = 89;
 
         field sender:                 &PublicKey   [00 => 32]
         field sender_assets:          Vec<Asset>   [32 => 40]
@@ -41,9 +41,8 @@ encoding_struct! {
 
         field recipient:              &PublicKey   [48 => 80]
         field recipient_assets:       Vec<Asset>   [80 => 88]
-        field recipient_value:        u64          [88 => 96]
 
-        field fee_strategy:           u8           [96 => 97]
+        field fee_strategy:           u8           [88 => 89]
     }
 }
 
@@ -120,10 +119,9 @@ impl TxExchange {
         // fail if not
         let recipient_assets_ok = recipient.is_assets_in_wallet(&self.offer().recipient_assets());
         let sender_assets_ok = sender.is_assets_in_wallet(&self.offer().sender_assets());
-        let recipient_value_ok = recipient.balance() >= self.offer().recipient_value();
         let sender_value_ok = sender.balance() >= self.offer().sender_value();
 
-        if !recipient_assets_ok || !sender_assets_ok || !recipient_value_ok || !sender_value_ok {
+        if !recipient_assets_ok || !sender_assets_ok || !sender_value_ok {
             view.rollback();
             return TxStatus::Fail;
         }
@@ -150,9 +148,6 @@ impl TxExchange {
 
         sender.decrease(self.offer().sender_value());
         recipient.increase(self.offer().sender_value());
-
-        sender.increase(self.offer().recipient_value());
-        recipient.decrease(self.offer().recipient_value());
 
         sender.del_assets(&self.offer().sender_assets());
         recipient.add_assets(&self.offer().sender_assets());
