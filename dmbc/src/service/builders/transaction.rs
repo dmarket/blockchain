@@ -11,7 +11,7 @@ use service::transaction::exchange::{ExchangeOffer, FeeStrategy, TxExchange};
 use service::transaction::exchange_with_intermediary::{ExchangeOfferWithIntermediary,
                                                        Intermediary, TxExchangeWithIntermediary};
 use service::transaction::mining::TxMining;
-use service::transaction::trade::{TradeOffer, TxTrade};
+use service::transaction::trade_assets::{TradeOffer, TxTrade};
 use service::transaction::ask::{AskOffer, TxAsk};
 use service::transaction::transfer::TxTransfer;
 
@@ -738,7 +738,7 @@ mod test {
                                                            Intermediary,
                                                            TxExchangeWithIntermediary};
     use service::transaction::mining::TxMining;
-    use service::transaction::trade::{TradeOffer, TxTrade};
+    use service::transaction::trade_assets::{TradeOffer, TxTrade};
     use service::transaction::transfer::TxTransfer;
 
     use service::builders::fee;

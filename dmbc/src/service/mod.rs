@@ -32,7 +32,7 @@ use self::transaction::del_assets::TxDelAsset;
 use self::transaction::exchange::TxExchange;
 use self::transaction::exchange_with_intermediary::TxExchangeWithIntermediary;
 use self::transaction::mining::TxMining;
-use self::transaction::trade::TxTrade;
+use self::transaction::trade_assets::TxTrade;
 use self::transaction::ask::TxAsk;
 use self::transaction::transfer::TxTransfer;
 use self::wallet::Wallet;

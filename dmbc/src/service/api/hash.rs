@@ -18,7 +18,7 @@ use service::transaction::del_assets::TxDelAsset;
 use service::transaction::exchange::TxExchange;
 use service::transaction::exchange_with_intermediary::TxExchangeWithIntermediary;
 use service::transaction::mining::TxMining;
-use service::transaction::trade::TxTrade;
+use service::transaction::trade_assets::TxTrade;
 use service::transaction::transfer::TxTransfer;
 
 #[derive(Clone)]
