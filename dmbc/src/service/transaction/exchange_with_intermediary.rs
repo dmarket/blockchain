@@ -227,6 +227,12 @@ impl Transaction for TxExchangeWithIntermediary {
     }
 }
 
+fn split_coins(coins: u64) -> (u64, u64) {
+    let first_half = (coins as f64 / 2.0).ceil() as u64;
+    let second_half = coins - first_half;
+    (first_half, second_half)
+}
+
 fn move_coins(
     view: &mut Fork,
     strategy: &FeeStrategy,
@@ -251,11 +257,11 @@ fn move_coins(
             coins_receiver.increase(coins);
         }
         FeeStrategy::RecipientAndSender => {
-            let half = (coins as f64 / 2.0).ceil() as u64;
-            recipient.decrease(half);
-            sender.decrease(half);
-            coins_receiver.increase(half);
-            coins_receiver.increase(half);
+            let (recipient_half, sender_half) = split_coins(coins);
+            recipient.decrease(recipient_half);
+            sender.decrease(sender_half);
+            coins_receiver.increase(recipient_half);
+            coins_receiver.increase(sender_half);
         }
         FeeStrategy::Intermediary => {
             intermediary.decrease(coins);
@@ -286,9 +292,9 @@ fn sufficient_funds(
 ) -> bool {
     // helper
     let can_pay_both = |a: u64, b: u64| {
-        let min = cmp::min(a, b) as f64;
-        let half = (coins as f64 / 2.0).ceil();
-        half <= min
+        let min = cmp::min(a, b);
+        let (a_half, b_half) = split_coins(coins);
+        a_half <= min && b_half <= min
     };
 
     // check if participant(s) have enough coins to pay platform fee

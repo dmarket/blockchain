@@ -239,34 +239,40 @@ impl ExchangeFee {
     }
 }
 
+fn split_coins(coins: u64) -> (u64, u64) {
+    let first_half = (coins as f64 / 2.0).ceil() as u64;
+    let second_half = coins - first_half;
+    (first_half, second_half)
+}
+
 fn move_coins(
     view: &mut Fork,
     strategy: &FeeStrategy,
     recipient: &mut Wallet,
     sender: &mut Wallet,
-    fee_receiver: &mut Wallet,
-    fee: u64,
+    coins_receiver: &mut Wallet,
+    coins: u64,
 ) -> bool {
-    // check if participant(s) have enough coins to pay fee
-    if !sufficient_funds(strategy, recipient, sender, fee) {
+    // check if participant(s) have enough coins
+    if !sufficient_funds(strategy, recipient, sender, coins) {
         return false;
     }
     // move coins from participant(s) to fee receiver
     match *strategy {
         FeeStrategy::Recipient => {
-            recipient.decrease(fee);
-            fee_receiver.increase(fee);
+            recipient.decrease(coins);
+            coins_receiver.increase(coins);
         }
         FeeStrategy::Sender => {
-            sender.decrease(fee);
-            fee_receiver.increase(fee);
+            sender.decrease(coins);
+            coins_receiver.increase(coins);
         }
         FeeStrategy::RecipientAndSender => {
-            let half = (fee as f64 / 2.0).ceil() as u64;
-            recipient.decrease(half);
-            sender.decrease(half);
-            fee_receiver.increase(half);
-            fee_receiver.increase(half);
+            let (recipient_half, sender_half) = split_coins(coins);
+            recipient.decrease(recipient_half);
+            sender.decrease(sender_half);
+            coins_receiver.increase(recipient_half);
+            coins_receiver.increase(sender_half);
         }
         _ => return false,
     }
@@ -277,23 +283,28 @@ fn move_coins(
         schema.wallets().put(sender.pub_key(), sender.clone());
         schema
             .wallets()
-            .put(fee_receiver.pub_key(), fee_receiver.clone());
+            .put(coins_receiver.pub_key(), coins_receiver.clone());
     });
     true
 }
 
-fn sufficient_funds(strategy: &FeeStrategy, recipient: &Wallet, sender: &Wallet, fee: u64) -> bool {
+fn sufficient_funds(
+    strategy: &FeeStrategy,
+    recipient: &Wallet,
+    sender: &Wallet,
+    coins: u64,
+) -> bool {
     // helper
     let can_pay_both = |a: u64, b: u64| {
-        let min = cmp::min(a, b) as f64;
-        let half = (fee as f64 / 2.0).ceil();
-        half <= min
+        let min = cmp::min(a, b);
+        let (a_half, b_half) = split_coins(coins);
+        a_half <= min && b_half <= min
     };
 
-    // check if participant(s) have enough coins to pay platform fee
+    // check if participant(s) have enough coins to pay platform
     match *strategy {
-        FeeStrategy::Recipient => recipient.balance() >= fee,
-        FeeStrategy::Sender => sender.balance() >= fee,
+        FeeStrategy::Recipient => recipient.balance() >= coins,
+        FeeStrategy::Sender => sender.balance() >= coins,
         FeeStrategy::RecipientAndSender => can_pay_both(recipient.balance(), sender.balance()),
         _ => false,
     }
