@@ -63,4 +63,3 @@ fn send_node(discovery: &str, info: &ValidatorInfo) -> Result<(), Box<Error>> {
 
     Ok(())
 }
-

@@ -27,21 +27,24 @@ fn main() {
     let server = core.handle();
     let client = core.handle();
 
-    let serve = Http::new().serve_addr_handle(
-        &addr,
-        &server,
-        move || Ok(ServiceDiscovery::new(client.clone()))
-    ).unwrap();
+    let serve = Http::new()
+        .serve_addr_handle(&addr, &server, move || {
+            Ok(ServiceDiscovery::new(client.clone()))
+        })
+        .unwrap();
 
     let server2 = server.clone();
-    server.spawn(serve.for_each(move |conn| {
-        server2.spawn(
-            conn.map(|_| ())
-                .map_err(|err| eprintln!("Serve error: {:?}", err))
-        );
-        Ok(())
-    }).map_err(|_| ()));
+    server.spawn(
+        serve
+            .for_each(move |conn| {
+                server2.spawn(
+                    conn.map(|_| ())
+                        .map_err(|err| eprintln!("Serve error: {:?}", err)),
+                );
+                Ok(())
+            })
+            .map_err(|_| ()),
+    );
 
-    core.run(future::empty::<(),()>()).unwrap();
+    core.run(future::empty::<(), ()>()).unwrap();
 }
-
