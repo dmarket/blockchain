@@ -10,6 +10,11 @@ extern crate dmbc;
 
 mod net_config;
 
+use std::path::Path;
+use std::io;
+use std::io::Read;
+use std::fs::File;
+
 use exonum::blockchain::{ConsensusConfig, GenesisConfig, Service, TimeoutAdjusterConfig,
                          ValidatorKeys};
 use exonum::crypto::{PublicKey, SecretKey};
@@ -22,12 +27,8 @@ use dmbc::service::CurrencyService;
 
 const GENESIS_VALIDATOR_PUBLIC: &'static str =
     "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f";
-const GENESIS_VALIDATOR_SECRET: &'static str =
-    "a5bc1d2f4de5f48d95e6b607f9975a2021a176e8b9bf74735c92653318ad98d34e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f";
 const GENESIS_SERVICE_PUBLIC: &'static str =
     "68e774a4339cccfae644dcf3e44360839c84a6475c7d2943ed59b81d7eb6e9f0";
-const GENESIS_SERVICE_SECRET: &'static str =
-    "b72ae0c3cdea13e3ec510120436aca00e102f47d4232acc8f72bfb516382a53568e774a4339cccfae644dcf3e44360839c84a6475c7d2943ed59b81d7eb6e9f0";
 
 fn main() {
     exonum::helpers::init_logger().unwrap();
@@ -38,10 +39,16 @@ fn main() {
         config::config().api().current_node()
     );
 
-    let consensus_public_key = PublicKey::from_hex(GENESIS_VALIDATOR_PUBLIC).unwrap();
-    let consensus_secret_key = SecretKey::from_hex(GENESIS_VALIDATOR_SECRET).unwrap();
-    let service_public_key = PublicKey::from_hex(GENESIS_SERVICE_PUBLIC).unwrap();
-    let service_secret_key = SecretKey::from_hex(GENESIS_SERVICE_SECRET).unwrap();
+    let keys_path = config::config().api().keys_path();
+
+    let consensus_public_key =
+        PublicKey::from_hex(slurp(keys_path.clone() + "/consensus.pub").unwrap()).unwrap();
+    let consensus_secret_key =
+        SecretKey::from_hex(slurp(keys_path.clone() + "/consensus").unwrap()).unwrap();
+    let service_public_key =
+        PublicKey::from_hex(slurp(keys_path.clone() + "/service.pub").unwrap()).unwrap();
+    let service_secret_key =
+        SecretKey::from_hex(slurp(keys_path.clone() + "/service").unwrap()).unwrap();
 
     let public_api = config::config().api().address().parse().unwrap();
     let private_api = config::config().api().private_address().parse().unwrap();
@@ -81,8 +88,8 @@ fn main() {
 
     // Configure Node
     let validators = Some(ValidatorKeys {
-        consensus_key: consensus_public_key,
-        service_key: service_public_key,
+        consensus_key: PublicKey::from_hex(GENESIS_VALIDATOR_PUBLIC).unwrap(),
+        service_key: PublicKey::from_hex(GENESIS_SERVICE_PUBLIC).unwrap(),
     });
 
     let genesis = GenesisConfig::new_with_consensus(consensus_config, validators.into_iter());
@@ -127,4 +134,12 @@ fn main() {
 
     let node = Node::new(db, services, node_cfg);
     node.run().unwrap();
+}
+
+fn slurp<P: AsRef<Path>>(filename: P) -> io::Result<String> {
+    let mut out = String::new();
+    File::open(filename)
+        .and_then(|mut file| file.read_to_string(&mut out))
+        .map(|_| eprintln!("Slurped: {}", &out))
+        .map(move |_| out)
 }
