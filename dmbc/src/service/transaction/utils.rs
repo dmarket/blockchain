@@ -2,8 +2,9 @@ extern crate exonum;
 use exonum::crypto::PublicKey;
 use exonum::storage::Fork;
 
-use service::asset::Asset;
+use service::asset::{Asset, AssetId, AssetInfo, Fees};
 use service::wallet::Wallet;
+use service::schema::asset::AssetSchema;
 use service::schema::wallet::WalletSchema;
 
 encoding_struct! {
@@ -15,8 +16,49 @@ encoding_struct! {
     }
 }
 
-pub fn get_wallet<'a>(view: &mut Fork, pub_key: &PublicKey) -> Wallet {
+pub fn get_wallet(view: &mut Fork, pub_key: &PublicKey) -> Wallet {
     WalletSchema::map(view, |mut schema| schema.wallet(pub_key))
+}
+
+pub fn add_assets_to_wallet(view: &mut Fork, wallet: &mut Wallet, assets: &[Asset]) -> bool {
+    wallet.add_assets(assets);
+    WalletSchema::map(view, |mut schema| {
+        schema.wallets().put(wallet.pub_key(), wallet.clone())
+    });
+    true
+}
+
+pub fn delete_assets_from_wallet(view: &mut Fork, wallet: &mut Wallet, assets: &[Asset]) -> bool {
+    if !wallet.del_assets(assets) {
+        return false;
+    }
+
+    // Remove wallet from db if it is empty completely, otherwise update db with changed wallet
+    WalletSchema::map(view, |mut schema| match wallet.is_empty() {
+        true => schema.wallets().remove(wallet.pub_key()),
+        false => schema.wallets().put(wallet.pub_key(), wallet.clone()),
+    });
+    true
+}
+
+pub fn store_assets(
+    view: &mut Fork,
+    creator_key: &PublicKey,
+    assets: &Vec<Asset>,
+    fees_list: &Vec<Fees>,
+) -> bool {
+    AssetSchema::map(view, |mut schema| {
+        schema.add_assets(assets, fees_list, creator_key)
+    })
+}
+
+pub fn remove_assets(view: &mut Fork, assets: &Vec<Asset>) -> bool {
+    AssetSchema::map(view, |mut schema| schema.del_assets(assets));
+    true
+}
+
+pub fn get_asset_info(view: &mut Fork, id: &AssetId) -> Option<AssetInfo> {
+    AssetSchema::map(view, |mut assets| assets.info(id))
 }
 
 pub fn transfer_coins(

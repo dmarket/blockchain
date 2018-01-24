@@ -9,9 +9,7 @@ use serde_json::Value;
 use super::{SERVICE_ID, TX_DEL_ASSETS_ID};
 use service::CurrencyService;
 use service::asset::Asset;
-use service::schema::asset::AssetSchema;
 use service::schema::transaction_status::{TxStatus, TxStatusSchema};
-use service::schema::wallet::WalletSchema;
 use service::transaction::fee::{calculate_fees_for_del_assets, TxFees};
 use service::transaction::utils;
 
@@ -51,7 +49,7 @@ impl TxDelAsset {
         // If sender (pub_key) is not a creator of asset, then Fail.
         // If amount of assets to delete is bigger than amount of assets are stored, then Fail.
         for asset in self.assets() {
-            match AssetSchema::map(view, |mut assets| assets.info(&asset.id())) {
+            match utils::get_asset_info(view, &asset.id()) {
                 Some(ref info) => {
                     if info.creator() != self.pub_key() || asset.amount() > info.amount() {
                         return TxStatus::Fail;
@@ -62,20 +60,14 @@ impl TxDelAsset {
         }
 
         // if there are no assets to delete, Fail
-        if !creator.del_assets(&self.assets()) {
+        if !utils::delete_assets_from_wallet(view, &mut creator, &self.assets()) {
             return TxStatus::Fail;
         }
 
         println!("Asset {:?}", self.assets());
         println!("Wallet after delete assets: {:?}", creator);
 
-        // Remove wallet from db if it is empty completely, otherwise update db with changed wallet
-        WalletSchema::map(view, |mut schema| match creator.is_empty() {
-            true => schema.wallets().remove(self.pub_key()),
-            false => schema.wallets().put(self.pub_key(), creator),
-        });
-
-        AssetSchema::map(view, |mut schema| schema.del_assets(&self.assets()));
+        utils::remove_assets(view, &self.assets());
         TxStatus::Success
     }
 }

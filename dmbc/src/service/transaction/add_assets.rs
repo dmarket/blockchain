@@ -13,9 +13,7 @@ use service::transaction::fee::{calculate_fees_for_add_assets, TxFees};
 use service::transaction::utils;
 
 use super::{SERVICE_ID, TX_ADD_ASSETS_ID};
-use super::schema::asset::AssetSchema;
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
-use super::schema::wallet::WalletSchema;
 
 message! {
     struct TxAddAsset {
@@ -104,26 +102,18 @@ impl TxAddAsset {
 
         // store new assets in asset schema
         let (assets, fees_list, receivers) = self.get_assets_fees_receivers();
-        let is_assets_added = AssetSchema::map(view, |mut schema| {
-            schema.add_assets(&assets, &fees_list, self.pub_key())
-        });
-
-        if is_assets_added {
-            // send assets to receivers
-            for (receiver_key, asset) in receivers.iter().zip(assets) {
-                let mut receiver = utils::get_wallet(view, receiver_key);
-                receiver.add_assets(&[asset]);
-                WalletSchema::map(view, |mut schema| {
-                    schema.wallets().put(receiver_key, receiver)
-                });
-            }
-        } else {
-            println!(
-                "Unable to add assets {:?}, rolling back transaction...",
-                self.meta_assets()
-            );
+        if !utils::store_assets(view, self.pub_key(), &assets, &fees_list) {
             view.rollback();
             return TxStatus::Fail;
+        }
+
+        // send assets to receivers
+        for (receiver_key, asset) in receivers.iter().zip(assets) {
+            let mut receiver = utils::get_wallet(view, receiver_key);
+            if !utils::add_assets_to_wallet(view, &mut receiver, &[asset]) {
+                view.rollback();
+                return TxStatus::Fail;
+            }
         }
 
         TxStatus::Success
