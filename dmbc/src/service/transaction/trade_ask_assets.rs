@@ -56,7 +56,7 @@ impl TxTradeAsk {
         let fee = self.get_fee(view);
 
         // Fail if not enough coins on seller balance
-        if seller.balance() < fee.transaction_fee() {
+        if !seller.is_sufficient_funds(fee.transaction_fee()) {
             return TxStatus::Fail;
         }
 
@@ -83,8 +83,8 @@ impl TxTradeAsk {
 
         let offer_price = self.offer().total_price();
         let seller_assets_ok = seller.is_assets_in_wallet(&assets);
-        let seller_balance_ok = seller.balance() >= fee.assets_fees_total();
-        let buyer_balance_ok = buyer.balance() >= offer_price;
+        let seller_balance_ok = seller.is_sufficient_funds(fee.assets_fees_total());
+        let buyer_balance_ok = buyer.is_sufficient_funds(offer_price);
 
         if !seller_assets_ok || !seller_balance_ok || !buyer_balance_ok {
             view.rollback();

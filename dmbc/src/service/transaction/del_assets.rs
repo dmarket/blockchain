@@ -44,7 +44,7 @@ impl TxDelAsset {
         let fee = self.get_fee(view);
 
         // Fail if not enough coins on creators balance
-        if creator.balance() < fee.amount() {
+        if !creator.is_sufficient_funds(fee.amount()) {
             return TxStatus::Fail;
         }
 

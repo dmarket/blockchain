@@ -90,7 +90,7 @@ impl TxExchange {
         // fail if not
         let recipient_assets_ok = recipient.is_assets_in_wallet(&self.offer().recipient_assets());
         let sender_assets_ok = sender.is_assets_in_wallet(&self.offer().sender_assets());
-        let sender_value_ok = sender.balance() >= self.offer().sender_value();
+        let sender_value_ok = sender.is_sufficient_funds(self.offer().sender_value());
 
         if !recipient_assets_ok || !sender_assets_ok || !sender_value_ok {
             view.rollback();
@@ -249,8 +249,8 @@ fn sufficient_funds(
 
     // check if participant(s) have enough coins to pay platform
     match *strategy {
-        FeeStrategy::Recipient => recipient.balance() >= coins,
-        FeeStrategy::Sender => sender.balance() >= coins,
+        FeeStrategy::Recipient => recipient.is_sufficient_funds(coins),
+        FeeStrategy::Sender => sender.is_sufficient_funds(coins),
         FeeStrategy::RecipientAndSender => can_pay_both(recipient.balance(), sender.balance()),
         _ => false,
     }

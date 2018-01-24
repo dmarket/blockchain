@@ -85,7 +85,7 @@ impl TxAddAsset {
         let fee = self.get_fee(view);
 
         // Check if creator has enough coins to execute transaction, fail otherwise
-        if creator.balance() < fee.transaction_fee() {
+        if !creator.is_sufficient_funds(fee.transaction_fee()) {
             return TxStatus::Fail;
         }
 
@@ -100,7 +100,7 @@ impl TxAddAsset {
         });
 
         // Now, check if creator has enough coins for asset fees
-        if creator.balance() < fee.assets_fees_total() {
+        if !creator.is_sufficient_funds(fee.assets_fees_total()) {
             return TxStatus::Fail;
         }
         // initial point for db rollback, in case if transaction has failed

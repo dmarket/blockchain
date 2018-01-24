@@ -6,11 +6,9 @@ use exonum::crypto::{PublicKey, Signature};
 use exonum::messages::Message;
 use exonum::storage::Fork;
 use serde_json::Value;
-use std::collections::BTreeMap;
 
 use service::CurrencyService;
 use service::asset::{Asset, TradeAsset};
-use service::wallet::Wallet;
 use service::transaction::fee::{calculate_fees_for_trade, TxFees};
 
 use super::{SERVICE_ID, TX_TRADE_ASSETS_ID};
@@ -37,11 +35,6 @@ message! {
         field seed:               u64           [8 => 16]
         field seller_signature:   &Signature    [16 => 80]
     }
-}
-
-pub struct TradeFee {
-    transaction_fee: u64,
-    assets_fees: BTreeMap<Wallet, u64>,
 }
 
 impl TradeOffer {
@@ -74,7 +67,7 @@ impl TxTrade {
         let fee = self.get_fee(view);
 
         // Fail if not enough coins on seller balance
-        if seller.balance() < fee.transaction_fee() {
+        if !seller.is_sufficient_funds(fee.transaction_fee()) {
             return TxStatus::Fail;
         }
 
@@ -101,8 +94,8 @@ impl TxTrade {
 
         let offer_price = self.offer().total_price();
         let seller_assets_ok = seller.is_assets_in_wallet(&assets);
-        let seller_balance_ok = seller.balance() >= fee.assets_fees_total();
-        let buyer_balance_ok = buyer.balance() >= offer_price;
+        let seller_balance_ok = seller.is_sufficient_funds(fee.assets_fees_total());
+        let buyer_balance_ok = buyer.is_sufficient_funds(offer_price);
 
         if !seller_assets_ok || !seller_balance_ok || !buyer_balance_ok {
             view.rollback();
@@ -167,30 +160,5 @@ impl Transaction for TxTrade {
         json!({
             "transaction_data": self,
         })
-    }
-}
-
-impl TradeFee {
-    pub fn new(tx_fee: u64, fees: BTreeMap<Wallet, u64>) -> Self {
-        TradeFee {
-            transaction_fee: tx_fee,
-            assets_fees: fees,
-        }
-    }
-
-    pub fn transaction_fee(&self) -> u64 {
-        self.transaction_fee
-    }
-
-    pub fn amount(&self) -> u64 {
-        self.transaction_fee() + self.assets_fees_total()
-    }
-
-    pub fn assets_fees(&self) -> BTreeMap<Wallet, u64> {
-        self.assets_fees.clone()
-    }
-
-    pub fn assets_fees_total(&self) -> u64 {
-        self.assets_fees.iter().fold(0, |acc, asset| acc + asset.1)
     }
 }
