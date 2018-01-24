@@ -25,9 +25,9 @@ use exonum_configuration::ConfigurationService;
 use dmbc::config;
 use dmbc::service::CurrencyService;
 
-const GENESIS_VALIDATOR_PUBLIC: &'static str =
+const GENESIS_VALIDATOR_PUBLIC: &str =
     "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f";
-const GENESIS_SERVICE_PUBLIC: &'static str =
+const GENESIS_SERVICE_PUBLIC: &str =
     "68e774a4339cccfae644dcf3e44360839c84a6475c7d2943ed59b81d7eb6e9f0";
 
 fn main() {
@@ -56,6 +56,7 @@ fn main() {
 
     let info = net_config::ValidatorInfo {
         public: public_api,
+        private: private_api,
         peer: peer_address,
         consensus: consensus_public_key,
         service: service_public_key,
