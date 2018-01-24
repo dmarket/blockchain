@@ -86,7 +86,7 @@ impl TxAddAsset {
         let fee = self.get_fee(view);
 
         // Pay tx fee
-        if !utils::pay(view, &mut creator, &mut platform, fee.transaction_fee()) {
+        if !utils::transfer_coins(view, &mut creator, &mut platform, fee.transaction_fee()) {
             return TxStatus::Fail;
         }
 
@@ -94,7 +94,7 @@ impl TxAddAsset {
         view.checkpoint();
 
         // pay fee for assets
-        if !utils::pay(view, &mut creator, &mut platform, fee.assets_fees_total()) {
+        if !utils::transfer_coins(view, &mut creator, &mut platform, fee.assets_fees_total()) {
             view.rollback();
             return TxStatus::Fail;
         }

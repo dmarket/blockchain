@@ -48,7 +48,7 @@ impl TxTransfer {
         let fee = self.get_fee(view);
 
         // pay fee for tx execution
-        if !utils::pay(view, &mut sender, &mut platform, fee.transaction_fee()) {
+        if !utils::transfer_coins(view, &mut sender, &mut platform, fee.transaction_fee()) {
             return TxStatus::Fail;
         }
 
@@ -64,7 +64,7 @@ impl TxTransfer {
             // send fees to creators of assets
             for (mut creator, fee) in fee.assets_fees() {
                 println!("Creator {:?} will receive {}", creator.pub_key(), fee);
-                if !utils::pay(view, &mut sender, &mut creator, fee) {
+                if !utils::transfer_coins(view, &mut sender, &mut creator, fee) {
                     view.rollback();
                     return TxStatus::Fail;
                 }
@@ -74,7 +74,7 @@ impl TxTransfer {
         // check if sender wants to send coins and has enough coins to send, otherwise - Fail.
         let coins_to_send = self.amount();
         if coins_to_send > 0 {
-            if !utils::pay(view, &mut sender, &mut receiver, coins_to_send) {
+            if !utils::transfer_coins(view, &mut sender, &mut receiver, coins_to_send) {
                 view.rollback();
                 return TxStatus::Fail;
             }

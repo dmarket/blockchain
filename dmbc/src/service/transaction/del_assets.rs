@@ -45,7 +45,7 @@ impl TxDelAsset {
         let fee = self.get_fee(view);
 
         // pay fee for tx execution
-        if !utils::pay(view, &mut creator, &mut platform, fee.amount()) {
+        if !utils::transfer_coins(view, &mut creator, &mut platform, fee.amount()) {
             return TxStatus::Fail;
         }
 

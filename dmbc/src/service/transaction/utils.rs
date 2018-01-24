@@ -15,7 +15,12 @@ encoding_struct! {
     }
 }
 
-pub fn pay(view: &mut Fork, sender: &mut Wallet, receiver: &mut Wallet, coins: u64) -> bool {
+pub fn transfer_coins(
+    view: &mut Fork,
+    sender: &mut Wallet,
+    receiver: &mut Wallet,
+    coins: u64,
+) -> bool {
     if !sender.is_sufficient_funds(coins) {
         return false;
     }
@@ -54,6 +59,31 @@ pub fn transfer_assets(
     WalletSchema::map(view, |mut schema| {
         schema.wallets().put(sender.pub_key(), sender.clone());
         schema.wallets().put(receiver.pub_key(), receiver.clone());
+    });
+    true
+}
+
+pub fn exchange_assets(
+    view: &mut Fork,
+    part_a: &mut Wallet,
+    part_b: &mut Wallet,
+    assets_a: &[Asset],
+    assets_b: &[Asset],
+) -> bool {
+    if !part_a.is_assets_in_wallet(&assets_a) || !part_b.is_assets_in_wallet(&assets_b) {
+        return false;
+    }
+
+    part_a.del_assets(&assets_a);
+    part_b.add_assets(&assets_a);
+
+    part_b.del_assets(&assets_b);
+    part_a.add_assets(&assets_b);
+
+    // store changes
+    WalletSchema::map(view, |mut schema| {
+        schema.wallets().put(part_a.pub_key(), part_a.clone());
+        schema.wallets().put(part_b.pub_key(), part_b.clone());
     });
     true
 }

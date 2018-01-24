@@ -127,7 +127,7 @@ impl TxExchangeWithIntermediary {
             }
         }
 
-        if !utils::pay(
+        if !utils::transfer_coins(
             view,
             &mut sender,
             &mut recipient,
@@ -137,20 +137,11 @@ impl TxExchangeWithIntermediary {
             return TxStatus::Fail;
         }
 
-        if !utils::transfer_assets(
+        if !utils::exchange_assets(
             view,
             &mut sender,
             &mut recipient,
             &self.offer().sender_assets(),
-        ) {
-            view.rollback();
-            return TxStatus::Fail;
-        }
-
-        if !utils::transfer_assets(
-            view,
-            &mut recipient,
-            &mut sender,
             &self.offer().recipient_assets(),
         ) {
             view.rollback();
@@ -216,16 +207,19 @@ fn move_coins(
 ) -> bool {
     // move coins from participant(s) to fee receiver
     match *strategy {
-        FeeStrategy::Recipient => utils::pay(view, recipient, coins_receiver, coins),
-        FeeStrategy::Sender => utils::pay(view, sender, coins_receiver, coins),
+        FeeStrategy::Recipient => utils::transfer_coins(view, recipient, coins_receiver, coins),
+        FeeStrategy::Sender => utils::transfer_coins(view, sender, coins_receiver, coins),
         FeeStrategy::RecipientAndSender => {
             let (recipient_half, sender_half) = utils::split_coins(coins);
-            let recipient_ok = utils::pay(view, recipient, coins_receiver, recipient_half);
-            let sender_ok = utils::pay(view, sender, coins_receiver, sender_half);
+            let recipient_ok =
+                utils::transfer_coins(view, recipient, coins_receiver, recipient_half);
+            let sender_ok = utils::transfer_coins(view, sender, coins_receiver, sender_half);
 
             sender_ok && recipient_ok
         }
-        FeeStrategy::Intermediary => utils::pay(view, intermediary, coins_receiver, coins),
+        FeeStrategy::Intermediary => {
+            utils::transfer_coins(view, intermediary, coins_receiver, coins)
+        }
     }
 }
 
@@ -243,15 +237,15 @@ fn pay(
 
     match *strategy {
         FeeStrategy::Recipient => {
-            return utils::pay(view, recipient, intermediary, commision);
+            return utils::transfer_coins(view, recipient, intermediary, commision);
         }
         FeeStrategy::Sender => {
-            return utils::pay(view, sender, intermediary, commision);
+            return utils::transfer_coins(view, sender, intermediary, commision);
         }
         FeeStrategy::RecipientAndSender => {
             let (recipient_half, sender_half) = utils::split_coins(commision);
-            let recipient_ok = utils::pay(view, recipient, intermediary, recipient_half);
-            let sender_ok = utils::pay(view, sender, intermediary, sender_half);
+            let recipient_ok = utils::transfer_coins(view, recipient, intermediary, recipient_half);
+            let sender_ok = utils::transfer_coins(view, sender, intermediary, sender_half);
             return recipient_ok && sender_ok;
         }
         FeeStrategy::Intermediary => true,

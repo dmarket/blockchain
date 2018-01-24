@@ -74,7 +74,7 @@ impl TxTradeWithIntermediary {
         let fee = self.get_fee(view);
 
         // pay for tx execution
-        if !utils::pay(view, &mut seller, &mut platform, fee.transaction_fee()) {
+        if !utils::transfer_coins(view, &mut seller, &mut platform, fee.transaction_fee()) {
             return TxStatus::Fail;
         }
 
@@ -82,7 +82,7 @@ impl TxTradeWithIntermediary {
         view.checkpoint();
 
         // pay commison for the transaction to intermediary
-        if !utils::pay(
+        if !utils::transfer_coins(
             view,
             &mut seller,
             &mut intermediary,
@@ -105,7 +105,7 @@ impl TxTradeWithIntermediary {
         println!("Buyer's balance before transaction : {:?}", buyer);
 
         let offer_price = self.offer().total_price();
-        if !utils::pay(view, &mut buyer, &mut seller, offer_price) {
+        if !utils::transfer_coins(view, &mut buyer, &mut seller, offer_price) {
             view.rollback();
             return TxStatus::Fail;
         }
@@ -117,7 +117,7 @@ impl TxTradeWithIntermediary {
 
         for (mut creator, fee) in fee.assets_fees() {
             println!("\tCreator {:?} will receive {}", creator.pub_key(), fee);
-            if !utils::pay(view, &mut seller, &mut creator, fee) {
+            if !utils::transfer_coins(view, &mut seller, &mut creator, fee) {
                 view.rollback();
                 return TxStatus::Fail;
             }
