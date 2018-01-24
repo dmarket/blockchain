@@ -31,7 +31,7 @@ message! {
     struct TxTradeAskWithIntermediary {
         const TYPE = SERVICE_ID;
         const ID = TX_TRADE_ASK_ASSETS_ID;
-        const SIZE = 120;
+        const SIZE = 184;
 
         field buyer:                  &PublicKey                     [00 => 32]
         field offer:                  TradeAskOfferWithIntermediary  [32 => 40]

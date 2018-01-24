@@ -15,6 +15,8 @@ use service::transaction::exchange_with_intermediary::{ExchangeOfferWithIntermed
 use service::transaction::mining::TxMining;
 use service::transaction::trade_assets::{TradeOffer, TxTrade};
 use service::transaction::trade_ask_assets::{TradeAskOffer, TxTradeAsk};
+use service::transaction::trade_ask_assets_with_intermediary::{TradeAskOfferWithIntermediary,
+                                                               TxTradeAskWithIntermediary};
 use service::transaction::transfer::TxTransfer;
 
 pub struct Builder {
@@ -126,6 +128,11 @@ impl Builder {
     pub fn tx_trade_ask_assets(self) -> TxTradeAskBuilder {
         self.validate();
         TxTradeAskBuilder::new(self.into())
+    }
+
+    pub fn tx_trade_ask_assets_with_intermediary(self) -> TxTradeAskWithIntermediaryBuilder {
+        self.validate();
+        TxTradeAskWithIntermediaryBuilder::new(self.into())
     }
 
     pub fn tx_transfer(self) -> TxTransferBuilder {
@@ -658,6 +665,108 @@ impl TxTradeAskBuilder {
     }
 }
 
+pub struct TxTradeAskWithIntermediaryBuilder {
+    meta: TransactionMetadata,
+    buyer: Option<PublicKey>,
+    intermediary_public_key: Option<PublicKey>,
+    intermediary_secret_key: Option<SecretKey>,
+    commision: u64,
+
+    assets: Vec<TradeAsset>,
+    seed: u64,
+    data_info: Option<String>,
+}
+
+impl TxTradeAskWithIntermediaryBuilder {
+    fn new(meta: TransactionMetadata) -> Self {
+        TxTradeAskWithIntermediaryBuilder {
+            meta,
+            buyer: None,
+            intermediary_public_key: None,
+            intermediary_secret_key: None,
+            commision: 0,
+            assets: Vec::new(),
+            seed: 0,
+            data_info: None,
+        }
+    }
+
+    pub fn buyer(self, pub_key: PublicKey) -> Self {
+        TxTradeAskWithIntermediaryBuilder {
+            buyer: Some(pub_key),
+            ..self
+        }
+    }
+
+    pub fn intermediary_key_pair(self, public_key: PublicKey, secret_key: SecretKey) -> Self {
+        TxTradeAskWithIntermediaryBuilder {
+            intermediary_public_key: Some(public_key),
+            intermediary_secret_key: Some(secret_key),
+            ..self
+        }
+    }
+
+    pub fn commision(self, commision: u64) -> Self {
+        TxTradeAskWithIntermediaryBuilder {
+            commision: commision,
+            ..self
+        }
+    }
+
+    pub fn add_asset(self, name: &str, count: u32, price: u64) -> Self {
+        let asset = Asset::from_parts(name, count, &self.meta.public_key);
+        let trade = asset.into_trade_asset(price);
+        self.add_asset_value(trade)
+    }
+
+    pub fn add_asset_value(mut self, asset: TradeAsset) -> Self {
+        self.assets.push(asset);
+        self
+    }
+
+    pub fn seed(self, seed: u64) -> Self {
+        TxTradeAskWithIntermediaryBuilder { seed, ..self }
+    }
+
+    pub fn data_info(self, data_info: &str) -> Self {
+        TxTradeAskWithIntermediaryBuilder {
+            data_info: Some(data_info.to_string()),
+            ..self
+        }
+    }
+
+    pub fn build(self) -> TxTradeAskWithIntermediary {
+        self.verify();
+
+        let intermediary =
+            Intermediary::new(&self.intermediary_public_key.unwrap(), self.commision);
+
+        let offer =
+            TradeAskOfferWithIntermediary::new(intermediary, &self.meta.public_key, self.assets);
+        let signature = crypto::sign(&offer.clone().into_bytes(), &self.meta.secret_key);
+        let intermediary_signature = crypto::sign(
+            &offer.clone().into_bytes(),
+            &self.intermediary_secret_key.unwrap(),
+        );
+        TxTradeAskWithIntermediary::new(
+            &self.buyer.unwrap(),
+            offer,
+            self.seed,
+            &signature,
+            &intermediary_signature,
+            &self.data_info.unwrap(),
+            &self.meta.secret_key,
+        )
+    }
+
+    fn verify(&self) {
+        assert!(self.buyer.is_some());
+        assert!(self.data_info.is_some());
+        assert!(self.intermediary_public_key.is_some());
+        assert!(self.intermediary_secret_key.is_some());
+    }
+}
+
 pub struct TxTransferBuilder {
     meta: TransactionMetadata,
     recipient: Option<PublicKey>,
@@ -747,6 +856,8 @@ mod test {
     use service::transaction::mining::TxMining;
     use service::transaction::trade_assets::{TradeOffer, TxTrade};
     use service::transaction::trade_ask_assets::{TradeAskOffer, TxTradeAsk};
+    use service::transaction::trade_ask_assets_with_intermediary::{TradeAskOfferWithIntermediary,
+                                                                   TxTradeAskWithIntermediary};
     use service::transaction::transfer::TxTransfer;
 
     use service::builders::fee;
@@ -971,6 +1082,43 @@ mod test {
         let signature = crypto::sign(&offer.clone().into_bytes(), &secret_key);
         let equivalent =
             TxTradeAsk::new(&buyer, offer, 1, &signature, "trade_ask_test", &secret_key);
+
+        assert!(transaction == equivalent);
+    }
+
+    #[test]
+    fn trade_ask_assets_with_intermediary() {
+        let (public_key, secret_key) = crypto::gen_keypair();
+        let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
+        let (buyer, _) = crypto::gen_keypair();
+        let asset = Asset::from_parts("foobar", 9, &public_key);
+        let trade_asset = asset.into_trade_asset(9);
+        let transaction = transaction::Builder::new()
+            .keypair(public_key, secret_key.clone())
+            .tx_trade_ask_assets_with_intermediary()
+            .add_asset_value(trade_asset.clone())
+            .buyer(buyer)
+            .intermediary_key_pair(intermediary_public_key, intermediary_secret_key.clone())
+            .commision(30)
+            .seed(1)
+            .data_info("trade_ask_test")
+            .build();
+
+        let intermediary = Intermediary::new(&intermediary_public_key, 30);
+        let offer =
+            TradeAskOfferWithIntermediary::new(intermediary, &public_key, vec![trade_asset]);
+        let signature = crypto::sign(&offer.clone().into_bytes(), &secret_key);
+        let intermediary_signature =
+            crypto::sign(&offer.clone().into_bytes(), &intermediary_secret_key);
+        let equivalent = TxTradeAskWithIntermediary::new(
+            &buyer,
+            offer,
+            1,
+            &signature,
+            &intermediary_signature,
+            "trade_ask_test",
+            &secret_key,
+        );
 
         assert!(transaction == equivalent);
     }
