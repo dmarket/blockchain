@@ -71,7 +71,7 @@ impl TxExchange {
         let fee_strategy = FeeStrategy::from_u8(self.offer().fee_strategy()).unwrap();
         let fee = self.get_fee(view);
 
-        // move coins from participant(s) to platform
+        // Pay fee for tx execution
         if !move_coins(
             view,
             &fee_strategy,

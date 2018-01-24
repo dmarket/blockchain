@@ -67,7 +67,7 @@ impl TxTrade {
 
         let fee = self.get_fee(view);
 
-        // pay fee for tx execution
+        // Pay fee for tx execution
         if !utils::transfer_coins(view, &mut seller, &mut platform, fee.transaction_fee()) {
             return TxStatus::Fail;
         }

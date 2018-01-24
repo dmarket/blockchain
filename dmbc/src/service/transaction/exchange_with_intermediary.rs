@@ -77,7 +77,7 @@ impl TxExchangeWithIntermediary {
         let fee_strategy = FeeStrategy::from_u8(self.offer().fee_strategy()).unwrap();
         let fee = self.get_fee(view);
 
-        // move coins from participant(s) to platform
+        // Pay fee for tx execution
         if !move_coins(
             view,
             &fee_strategy,
@@ -94,7 +94,7 @@ impl TxExchangeWithIntermediary {
         view.checkpoint();
 
         // pay commison for the transaction to intermediary
-        if !pay(
+        if !pay_commision(
             view,
             &fee_strategy,
             &mut recipient,
@@ -223,7 +223,7 @@ fn move_coins(
     }
 }
 
-fn pay(
+fn pay_commision(
     view: &mut Fork,
     strategy: &FeeStrategy,
     recipient: &mut Wallet,
