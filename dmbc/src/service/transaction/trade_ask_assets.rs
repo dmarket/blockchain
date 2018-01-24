@@ -9,7 +9,7 @@ use serde_json::Value;
 
 use service::CurrencyService;
 use service::asset::{Asset, TradeAsset};
-use service::transaction::fee::{calculate_fee_for_trade, TradeExchangeFee};
+use service::transaction::fee::{calculate_fees_for_trade, TxFees};
 
 use super::{SERVICE_ID, TX_TRADE_ASK_ASSETS_ID};
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
@@ -39,8 +39,8 @@ message! {
 }
 
 impl TxTradeAsk {
-    pub fn get_fee(&self, view: &mut Fork) -> TradeExchangeFee {
-        calculate_fee_for_trade(view, self.offer().assets())
+    pub fn get_fee(&self, view: &mut Fork) -> TxFees {
+        calculate_fees_for_trade(view, self.offer().assets())
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {

@@ -10,7 +10,7 @@ use std::cmp;
 use service::CurrencyService;
 use service::asset::Asset;
 use service::wallet::Wallet;
-use service::transaction::fee::{calculate_fee_for_exchange, FeeStrategy, TradeExchangeFee};
+use service::transaction::fee::{calculate_fees_for_exchange, FeeStrategy, TxFees};
 
 use super::{SERVICE_ID, TX_EXCHANGE_ID};
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
@@ -49,13 +49,13 @@ impl TxExchange {
         self.offer().raw
     }
 
-    pub fn get_fee(&self, view: &mut Fork) -> TradeExchangeFee {
+    pub fn get_fee(&self, view: &mut Fork) -> TxFees {
         let exchange_assets = [
             &self.offer().sender_assets()[..],
             &self.offer().recipient_assets()[..],
         ].concat();
 
-        calculate_fee_for_exchange(view, exchange_assets)
+        calculate_fees_for_exchange(view, exchange_assets)
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {

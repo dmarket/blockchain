@@ -9,7 +9,7 @@ use std::collections::HashMap;
 
 use service::CurrencyService;
 use service::asset::{Asset, Fees, MetaAsset};
-use service::configuration::Configuration;
+use service::transaction::fee::{calculate_fees_for_add_assets, TxFees};
 
 use super::{SERVICE_ID, TX_ADD_ASSETS_ID};
 use super::schema::asset::AssetSchema;
@@ -28,21 +28,9 @@ message! {
     }
 }
 
-pub struct AddAssetFee {
-    transaction_fee: u64,
-    assets_fees: u64,
-}
-
 impl TxAddAsset {
-    pub fn get_fee(&self, fork: &Fork) -> AddAssetFee {
-        let configuration = Configuration::extract(fork);
-        let count = self.meta_assets()
-            .iter()
-            .fold(0, |acc, asset| acc + asset.amount() as u64);
-
-        let tx_fee = configuration.fees().add_asset();
-        let assets_fees = configuration.fees().per_add_asset() * count;
-        AddAssetFee::new(tx_fee, assets_fees)
+    pub fn get_fee(&self, fork: &mut Fork) -> TxFees {
+        calculate_fees_for_add_assets(fork, self.meta_assets(), self.pub_key())
     }
 
     fn get_assets_fees_receivers(&self) -> (Vec<Asset>, Vec<Fees>, Vec<PublicKey>) {
@@ -112,7 +100,7 @@ impl TxAddAsset {
         });
 
         // Now, check if creator has enough coins for asset fees
-        if creator.balance() < fee.assets_fees() {
+        if creator.balance() < fee.assets_fees_total() {
             return TxStatus::Fail;
         }
         // initial point for db rollback, in case if transaction has failed
@@ -120,9 +108,9 @@ impl TxAddAsset {
 
         // extract fee
         // remove fee from creator and update creator wallet balance
-        creator.decrease(fee.assets_fees());
+        creator.decrease(fee.assets_fees_total());
         // put fee to platfrom wallet
-        platform.increase(fee.assets_fees());
+        platform.increase(fee.assets_fees_total());
         WalletSchema::map(view, |mut schema| {
             schema.wallets().put(self.pub_key(), creator.clone());
             schema.wallets().put(&platform.pub_key(), platform.clone());
@@ -193,26 +181,5 @@ impl Transaction for TxAddAsset {
             "transaction_data": self,
             "external_internal": Self::external_internal(self.meta_assets(), self.pub_key()),
         })
-    }
-}
-
-impl AddAssetFee {
-    pub fn new(tx_fee: u64, assets_fees: u64) -> Self {
-        AddAssetFee {
-            transaction_fee: tx_fee,
-            assets_fees: assets_fees,
-        }
-    }
-
-    pub fn amount(&self) -> u64 {
-        self.transaction_fee + self.assets_fees
-    }
-
-    pub fn transaction_fee(&self) -> u64 {
-        self.transaction_fee
-    }
-
-    pub fn assets_fees(&self) -> u64 {
-        self.assets_fees
     }
 }

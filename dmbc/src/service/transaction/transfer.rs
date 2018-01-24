@@ -9,9 +9,8 @@ use std::collections::BTreeMap;
 
 use service::CurrencyService;
 use service::asset::Asset;
-use service::configuration::Configuration;
-use service::schema::asset::AssetSchema;
 use service::wallet::Wallet;
+use service::transaction::fee::{calculate_fees_for_transfer, TxFees};
 
 use super::{SERVICE_ID, TX_TRANSFER_ID};
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
@@ -38,19 +37,8 @@ pub struct TransferFee {
 }
 
 impl TxTransfer {
-    pub fn get_fee(&self, fork: &mut Fork) -> TransferFee {
-        let mut assets_fees = BTreeMap::new();
-        for asset in self.assets() {
-            if let Some(info) = AssetSchema::map(fork, |mut schema| schema.info(&asset.id())) {
-                let fee = info.fees().transfer().tax();
-
-                let creator = WalletSchema::map(fork, |mut schema| schema.wallet(info.creator()));
-                *assets_fees.entry(creator).or_insert(0) += fee;
-            }
-        }
-
-        let tx_fee = Configuration::extract(fork).fees().transfer();
-        TransferFee::new(tx_fee, assets_fees)
+    pub fn get_fee(&self, fork: &mut Fork) -> TxFees {
+        calculate_fees_for_transfer(fork, self.assets())
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {

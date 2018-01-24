@@ -12,7 +12,7 @@ use service::asset::Asset;
 use service::schema::asset::AssetSchema;
 use service::schema::transaction_status::{TxStatus, TxStatusSchema};
 use service::schema::wallet::WalletSchema;
-use service::configuration::Configuration;
+use service::transaction::fee::{calculate_fees_for_del_assets, TxFees};
 
 message! {
     struct TxDelAsset {
@@ -27,8 +27,8 @@ message! {
 }
 
 impl TxDelAsset {
-    pub fn get_fee(&self, fork: &Fork) -> u64 {
-        Configuration::extract(fork).fees().del_asset()
+    pub fn get_fee(&self, fork: &mut Fork) -> TxFees {
+        calculate_fees_for_del_assets(fork, self.assets())
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {
@@ -44,14 +44,14 @@ impl TxDelAsset {
         let fee = self.get_fee(view);
 
         // Fail if not enough coins on creators balance
-        if creator.balance() < fee {
+        if creator.balance() < fee.amount() {
             return TxStatus::Fail;
         }
 
         // Take coins for executing transaction
-        creator.decrease(fee);
+        creator.decrease(fee.amount());
         // put fee to platfrom wallet
-        platform.increase(fee);
+        platform.increase(fee.amount());
         WalletSchema::map(view, |mut schema| {
             schema.wallets().put(self.pub_key(), creator.clone());
             schema.wallets().put(&platform.pub_key(), platform.clone());
