@@ -162,24 +162,6 @@ impl Transaction for TxExchange {
     }
 }
 
-impl FeeStrategy {
-    pub fn from_u8(value: u8) -> Option<FeeStrategy> {
-        match value {
-            1 => Some(FeeStrategy::Recipient),
-            2 => Some(FeeStrategy::Sender),
-            3 => Some(FeeStrategy::RecipientAndSender),
-            4 => Some(FeeStrategy::Intermediary),
-            _ => None,
-        }
-    }
-}
-
-fn split_coins(coins: u64) -> (u64, u64) {
-    let first_half = (coins as f64 / 2.0).ceil() as u64;
-    let second_half = coins - first_half;
-    (first_half, second_half)
-}
-
 fn move_coins(
     view: &mut Fork,
     strategy: &FeeStrategy,
@@ -193,7 +175,7 @@ fn move_coins(
         FeeStrategy::Recipient => utils::transfer_coins(view, recipient, coins_receiver, coins),
         FeeStrategy::Sender => utils::transfer_coins(view, sender, coins_receiver, coins),
         FeeStrategy::RecipientAndSender => {
-            let (recipient_half, sender_half) = split_coins(coins);
+            let (recipient_half, sender_half) = utils::split_coins(coins);
             let recipient_ok =
                 utils::transfer_coins(view, recipient, coins_receiver, recipient_half);
             let sender_ok = utils::transfer_coins(view, sender, coins_receiver, sender_half);

@@ -22,6 +22,18 @@ pub struct TxFees {
     assets_fees: BTreeMap<Wallet, u64>,
 }
 
+impl FeeStrategy {
+    pub fn from_u8(value: u8) -> Option<FeeStrategy> {
+        match value {
+            1 => Some(FeeStrategy::Recipient),
+            2 => Some(FeeStrategy::Sender),
+            3 => Some(FeeStrategy::RecipientAndSender),
+            4 => Some(FeeStrategy::Intermediary),
+            _ => None,
+        }
+    }
+}
+
 impl TxFees {
     pub fn new(tx_fee: u64, fees: BTreeMap<Wallet, u64>) -> Self {
         TxFees {
