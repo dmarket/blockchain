@@ -86,17 +86,6 @@ impl TxExchange {
         // initial point for db rollback, in case if transaction has failed
         view.checkpoint();
 
-        // check if recipient and sender have mentioned assets/coins for exchange
-        // fail if not
-        let recipient_assets_ok = recipient.is_assets_in_wallet(&self.offer().recipient_assets());
-        let sender_assets_ok = sender.is_assets_in_wallet(&self.offer().sender_assets());
-        let sender_value_ok = sender.is_sufficient_funds(self.offer().sender_value());
-
-        if !recipient_assets_ok || !sender_assets_ok || !sender_value_ok {
-            view.rollback();
-            return TxStatus::Fail;
-        }
-
         println!("--   Exchange transaction   --");
         println!("Sender's balance before transaction : {:?}", sender);
         println!("Recipient's balance before transaction : {:?}", recipient);
@@ -117,23 +106,38 @@ impl TxExchange {
             }
         }
 
-        sender.decrease(self.offer().sender_value());
-        recipient.increase(self.offer().sender_value());
+        if !utils::pay(
+            view,
+            &mut sender,
+            &mut recipient,
+            self.offer().sender_value(),
+        ) {
+            view.rollback();
+            return TxStatus::Fail;
+        }
 
-        sender.del_assets(&self.offer().sender_assets());
-        recipient.add_assets(&self.offer().sender_assets());
+        if !utils::transfer_assets(
+            view,
+            &mut sender,
+            &mut recipient,
+            &self.offer().sender_assets(),
+        ) {
+            view.rollback();
+            return TxStatus::Fail;
+        }
 
-        sender.add_assets(&self.offer().recipient_assets());
-        recipient.del_assets(&self.offer().recipient_assets());
+        if !utils::transfer_assets(
+            view,
+            &mut recipient,
+            &mut sender,
+            &self.offer().recipient_assets(),
+        ) {
+            view.rollback();
+            return TxStatus::Fail;
+        }
 
         println!("Sender's balance before transaction : {:?}", sender);
         println!("Recipient's balance before transaction : {:?}", recipient);
-
-        // store changes
-        WalletSchema::map(view, |mut schema| {
-            schema.wallets().put(sender.pub_key(), sender.clone());
-            schema.wallets().put(recipient.pub_key(), recipient.clone());
-        });
 
         TxStatus::Success
     }

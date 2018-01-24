@@ -55,46 +55,32 @@ impl TxTransfer {
         // initial point for db rollback, in case if transaction has failed
         view.checkpoint();
 
-        let send_assets = !self.assets().is_empty();
-        if send_assets {
-            if sender.is_assets_in_wallet(&self.assets()) {
-                sender.del_assets(&self.assets());
-                receiver.add_assets(&self.assets());
-
-                // send fees to creators of assets
-                for (mut creator, fee) in fee.assets_fees() {
-                    println!("Creator {:?} will receive {}", creator.pub_key(), fee);
-                    if !utils::pay(view, &mut sender, &mut creator, fee) {
-                        view.rollback();
-                        return TxStatus::Fail;
-                    }
-                }
-            } else {
+        if !self.assets().is_empty() {
+            if !utils::transfer_assets(view, &mut sender, &mut receiver, &self.assets()) {
                 view.rollback();
                 return TxStatus::Fail;
+            }
+
+            // send fees to creators of assets
+            for (mut creator, fee) in fee.assets_fees() {
+                println!("Creator {:?} will receive {}", creator.pub_key(), fee);
+                if !utils::pay(view, &mut sender, &mut creator, fee) {
+                    view.rollback();
+                    return TxStatus::Fail;
+                }
             }
         }
 
         // check if sender wants to send coins and has enough coins to send, otherwise - Fail.
         let coins_to_send = self.amount();
-        let send_coins = coins_to_send > 0;
-        if send_coins {
+        if coins_to_send > 0 {
             if !utils::pay(view, &mut sender, &mut receiver, coins_to_send) {
                 view.rollback();
                 return TxStatus::Fail;
             }
         }
 
-        if send_assets {
-            WalletSchema::map(view, |mut schema| {
-                schema.wallets().put(self.from(), sender);
-                schema.wallets().put(self.to(), receiver);
-            });
-            return TxStatus::Success;
-        }
-
-        view.rollback();
-        TxStatus::Fail
+        TxStatus::Success
     }
 }
 
@@ -107,8 +93,9 @@ impl Transaction for TxTransfer {
         let data_info_ok = self.data_info().len() <= 1024;
         let signature_ok = self.verify_signature(self.from());
         let keys_ok = *self.from() != *self.to();
+        let payload_ok = self.amount() > 0 || !self.assets().is_empty();
 
-        keys_ok && signature_ok && data_info_ok
+        keys_ok && signature_ok && data_info_ok && payload_ok
     }
 
     fn execute(&self, view: &mut Fork) {

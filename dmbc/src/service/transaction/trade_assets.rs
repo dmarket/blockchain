@@ -83,24 +83,20 @@ impl TxTrade {
             .collect::<Vec<Asset>>();
         println!("Buyer {:?} => Seller {:?}", buyer, seller);
 
-        let offer_price = self.offer().total_price();
-        let seller_assets_ok = seller.is_assets_in_wallet(&assets);
-        let seller_balance_ok = seller.is_sufficient_funds(fee.assets_fees_total());
-        let buyer_balance_ok = buyer.is_sufficient_funds(offer_price);
-
-        if !seller_assets_ok || !seller_balance_ok || !buyer_balance_ok {
-            view.rollback();
-            return TxStatus::Fail;
-        }
-
         println!("--   Trade transaction   --");
         println!("Seller's balance before transaction : {:?}", seller);
         println!("Buyer's balance before transaction : {:?}", buyer);
 
-        seller.del_assets(&assets);
-        seller.increase(offer_price);
-        buyer.add_assets(&assets);
-        buyer.decrease(offer_price);
+        let offer_price = self.offer().total_price();
+        if !utils::pay(view, &mut buyer, &mut seller, offer_price) {
+            view.rollback();
+            return TxStatus::Fail;
+        }
+
+        if !utils::transfer_assets(view, &mut seller, &mut buyer, &assets) {
+            view.rollback();
+            return TxStatus::Fail;
+        }
 
         WalletSchema::map(view, |mut schema| {
             schema.wallets().put(buyer.pub_key(), buyer.clone());
