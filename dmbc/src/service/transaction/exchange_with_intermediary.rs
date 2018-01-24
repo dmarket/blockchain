@@ -5,29 +5,17 @@ use exonum::crypto::{verify, PublicKey, Signature};
 use exonum::messages::Message;
 use exonum::storage::Fork;
 use serde_json::Value;
-use std::collections::BTreeMap;
 use std::cmp;
 
 use service::CurrencyService;
 use service::asset::Asset;
 use service::wallet::Wallet;
-use service::configuration::Configuration;
-use service::transaction::exchange::FeeStrategy;
-use service::transaction::exchange::ExchangeFee;
+use service::transaction::intermediary::Intermediary;
+use service::transaction::fee::{calculate_fee_for_exchange, FeeStrategy, TradeExchangeFee};
 
 use super::{SERVICE_ID, TX_EXCHANGE_WITH_INTERMEDIARY_ID};
-use super::schema::asset::AssetSchema;
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
 use super::schema::wallet::WalletSchema;
-
-encoding_struct! {
-    struct Intermediary {
-        const SIZE = 40;
-
-        field wallet:       &PublicKey [0 => 32]
-        field commision:    u64        [32 => 40]
-    }
-}
 
 encoding_struct! {
     struct ExchangeOfferWithIntermediary {
@@ -65,27 +53,13 @@ impl TxExchangeWithIntermediary {
         self.offer().raw
     }
 
-    pub fn get_fee(&self, view: &mut Fork) -> ExchangeFee {
+    pub fn get_fee(&self, view: &mut Fork) -> TradeExchangeFee {
         let exchange_assets = [
             &self.offer().sender_assets()[..],
             &self.offer().recipient_assets()[..],
         ].concat();
 
-        let mut assets_fees = BTreeMap::new();
-
-        let fee_ratio = |count: u32, coef: u64| (count as f64 / coef as f64).round() as u64;
-        for asset in exchange_assets {
-            if let Some(info) = AssetSchema::map(view, |mut schema| schema.info(&asset.id())) {
-                let exchange_fee = info.fees().exchange();
-                let fee = exchange_fee.tax() + fee_ratio(asset.amount(), exchange_fee.ratio());
-
-                let creator = WalletSchema::map(view, |mut schema| schema.wallet(info.creator()));
-                *assets_fees.entry(creator).or_insert(0) += fee;
-            }
-        }
-
-        let tx_fee = Configuration::extract(view).fees().exchange();
-        ExchangeFee::new(tx_fee, assets_fees)
+        calculate_fee_for_exchange(view, exchange_assets)
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {

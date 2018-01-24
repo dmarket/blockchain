@@ -5,31 +5,16 @@ use exonum::crypto::{verify, PublicKey, Signature};
 use exonum::messages::Message;
 use exonum::storage::Fork;
 use serde_json::Value;
-use std::collections::BTreeMap;
 use std::cmp;
 
 use service::CurrencyService;
 use service::asset::Asset;
 use service::wallet::Wallet;
-use service::configuration::Configuration;
+use service::transaction::fee::{calculate_fee_for_exchange, FeeStrategy, TradeExchangeFee};
 
 use super::{SERVICE_ID, TX_EXCHANGE_ID};
-use super::schema::asset::AssetSchema;
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
 use super::schema::wallet::WalletSchema;
-
-#[derive(PartialEq)]
-pub enum FeeStrategy {
-    Recipient = 1,
-    Sender = 2,
-    RecipientAndSender = 3,
-    Intermediary = 4,
-}
-
-pub struct ExchangeFee {
-    transaction_fee: u64,
-    assets_fees: BTreeMap<Wallet, u64>,
-}
 
 encoding_struct! {
     struct ExchangeOffer {
@@ -64,27 +49,13 @@ impl TxExchange {
         self.offer().raw
     }
 
-    pub fn get_fee(&self, view: &mut Fork) -> ExchangeFee {
+    pub fn get_fee(&self, view: &mut Fork) -> TradeExchangeFee {
         let exchange_assets = [
             &self.offer().sender_assets()[..],
             &self.offer().recipient_assets()[..],
         ].concat();
 
-        let mut assets_fees = BTreeMap::new();
-
-        let fee_ratio = |count: u32, coef: u64| (count as f64 / coef as f64).round() as u64;
-        for asset in exchange_assets {
-            if let Some(info) = AssetSchema::map(view, |mut schema| schema.info(&asset.id())) {
-                let exchange_fee = info.fees().exchange();
-                let fee = exchange_fee.tax() + fee_ratio(asset.amount(), exchange_fee.ratio());
-
-                let creator = WalletSchema::map(view, |mut schema| schema.wallet(info.creator()));
-                *assets_fees.entry(creator).or_insert(0) += fee;
-            }
-        }
-
-        let tx_fee = Configuration::extract(view).fees().exchange();
-        ExchangeFee::new(tx_fee, assets_fees)
+        calculate_fee_for_exchange(view, exchange_assets)
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {
@@ -211,31 +182,6 @@ impl FeeStrategy {
             4 => Some(FeeStrategy::Intermediary),
             _ => None,
         }
-    }
-}
-
-impl ExchangeFee {
-    pub fn new(tx_fee: u64, fees: BTreeMap<Wallet, u64>) -> Self {
-        ExchangeFee {
-            transaction_fee: tx_fee,
-            assets_fees: fees,
-        }
-    }
-
-    pub fn transaction_fee(&self) -> u64 {
-        self.transaction_fee
-    }
-
-    pub fn amount(&self) -> u64 {
-        self.transaction_fee + self.assets_fees_total()
-    }
-
-    pub fn assets_fees(&self) -> BTreeMap<Wallet, u64> {
-        self.assets_fees.clone()
-    }
-
-    pub fn assets_fees_total(&self) -> u64 {
-        self.assets_fees.iter().fold(0, |acc, asset| acc + asset.1)
     }
 }
 

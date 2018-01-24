@@ -7,9 +7,11 @@ use service::asset::{Asset, Fees, MetaAsset, TradeAsset};
 use service::transaction::add_assets::TxAddAsset;
 use service::transaction::create_wallet::TxCreateWallet;
 use service::transaction::del_assets::TxDelAsset;
-use service::transaction::exchange::{ExchangeOffer, FeeStrategy, TxExchange};
+use service::transaction::exchange::{ExchangeOffer, TxExchange};
+use service::transaction::intermediary::Intermediary;
+use service::transaction::fee::FeeStrategy;
 use service::transaction::exchange_with_intermediary::{ExchangeOfferWithIntermediary,
-                                                       Intermediary, TxExchangeWithIntermediary};
+                                                       TxExchangeWithIntermediary};
 use service::transaction::mining::TxMining;
 use service::transaction::trade_assets::{TradeOffer, TxTrade};
 use service::transaction::trade_ask_assets::{TradeAskOffer, TxTradeAsk};
@@ -739,8 +741,8 @@ mod test {
     use service::transaction::create_wallet::TxCreateWallet;
     use service::transaction::del_assets::TxDelAsset;
     use service::transaction::exchange::{ExchangeOffer, TxExchange};
+    use service::transaction::intermediary::Intermediary;
     use service::transaction::exchange_with_intermediary::{ExchangeOfferWithIntermediary,
-                                                           Intermediary,
                                                            TxExchangeWithIntermediary};
     use service::transaction::mining::TxMining;
     use service::transaction::trade_assets::{TradeOffer, TxTrade};

@@ -11,10 +11,9 @@ use std::collections::BTreeMap;
 use service::CurrencyService;
 use service::asset::{Asset, TradeAsset};
 use service::wallet::Wallet;
-use service::configuration::Configuration;
+use service::transaction::fee::{calculate_fee_for_trade, TradeExchangeFee};
 
 use super::{SERVICE_ID, TX_TRADE_ASSETS_ID};
-use super::schema::asset::AssetSchema;
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
 use super::schema::wallet::WalletSchema;
 
@@ -58,22 +57,8 @@ impl TxTrade {
         self.offer().raw
     }
 
-    pub fn get_fee(&self, view: &mut Fork) -> TradeFee {
-        let mut assets_fees = BTreeMap::new();
-        let fee_ratio = |price: u64, ratio: u64| (price as f64 / ratio as f64).round() as u64;
-
-        for asset in self.offer().assets() {
-            if let Some(info) = AssetSchema::map(view, |mut schema| schema.info(&asset.id())) {
-                let trade_fee = info.fees().trade();
-                let fee = trade_fee.tax() + fee_ratio(asset.total_price(), trade_fee.ratio());
-
-                let creator = WalletSchema::map(view, |mut schema| schema.wallet(info.creator()));
-                *assets_fees.entry(creator).or_insert(0) += fee;
-            }
-        }
-
-        let tx_fee = Configuration::extract(view).fees().trade();
-        TradeFee::new(tx_fee, assets_fees)
+    pub fn get_fee(&self, view: &mut Fork) -> TradeExchangeFee {
+        calculate_fee_for_trade(view, self.offer().assets())
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {

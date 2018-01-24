@@ -6,6 +6,9 @@ use super::SERVICE_ID;
 
 pub const TRANSACTION_FEE: u64 = 1000;
 
+pub mod intermediary;
+pub mod fee;
+
 // Create Wallet
 pub const TX_CREATE_WALLET_ID: u16 = 1;
 pub const INIT_BALANCE: u64 = 100_000_000; // 1 DMC = 100_000_000 dimosh
@@ -29,6 +32,10 @@ pub mod trade_ask_assets;
 // Buy Transaction
 pub const TX_TRADE_ASSETS_ID: u16 = 502;
 pub mod trade_assets;
+
+// Trade Transaction
+pub const TX_TRADE_ASK_ASSETS_WITH_INTERMEDIARY_ID: u16 = 503;
+pub mod trade_ask_assets_with_intermediary;
 
 // Buy Transaction
 pub const TX_EXCHANGE_ID: u16 = 601;
