@@ -14,7 +14,6 @@ use service::transaction::utils;
 
 use super::{SERVICE_ID, TX_TRADE_ASK_ASSETS_ID};
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
-use super::schema::wallet::WalletSchema;
 
 encoding_struct! {
     struct TradeAskOffer {
@@ -45,14 +44,9 @@ impl TxTradeAsk {
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {
-        let (mut platform, mut buyer, mut seller) = WalletSchema::map(view, |mut schema| {
-            let platform_key = CurrencyService::get_platfrom_wallet();
-            (
-                schema.wallet(&platform_key),
-                schema.wallet(self.buyer()),
-                schema.wallet(self.offer().seller()),
-            )
-        });
+        let mut platform = utils::get_wallet(view, &CurrencyService::get_platform_pub_key());
+        let mut buyer = utils::get_wallet(view, self.buyer());
+        let mut seller = utils::get_wallet(view, self.offer().seller());
 
         let fee = self.get_fee(view);
 

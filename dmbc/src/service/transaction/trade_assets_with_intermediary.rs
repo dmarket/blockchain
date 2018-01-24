@@ -15,7 +15,6 @@ use service::transaction::utils::Intermediary;
 
 use super::{SERVICE_ID, TX_TRADE_ASSETS_WITH_INTERMEDIARY_ID};
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
-use super::schema::wallet::WalletSchema;
 
 encoding_struct! {
     struct TradeOfferWithIntermediary {
@@ -60,16 +59,10 @@ impl TxTradeWithIntermediary {
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {
-        let (mut platform, mut buyer, mut seller, mut intermediary) =
-            WalletSchema::map(view, |mut schema| {
-                let platform_key = CurrencyService::get_platfrom_wallet();
-                (
-                    schema.wallet(&platform_key),
-                    schema.wallet(self.offer().buyer()),
-                    schema.wallet(self.offer().seller()),
-                    schema.wallet(self.offer().intermediary().wallet()),
-                )
-            });
+        let mut platform = utils::get_wallet(view, &CurrencyService::get_platform_pub_key());
+        let mut buyer = utils::get_wallet(view, self.offer().buyer());
+        let mut seller = utils::get_wallet(view, self.offer().seller());
+        let mut intermediary = utils::get_wallet(view, self.offer().intermediary().wallet());
 
         let fee = self.get_fee(view);
 

@@ -13,7 +13,6 @@ use service::transaction::utils;
 
 use super::{SERVICE_ID, TX_TRANSFER_ID};
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
-use super::schema::wallet::WalletSchema;
 
 message! {
     struct TxTransfer {
@@ -36,14 +35,9 @@ impl TxTransfer {
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {
-        let (mut platform, mut sender, mut receiver) = WalletSchema::map(view, |mut schema| {
-            let platform_key = CurrencyService::get_platfrom_wallet();
-            (
-                schema.wallet(&platform_key),
-                schema.wallet(self.from()),
-                schema.wallet(self.to()),
-            )
-        });
+        let mut platform = utils::get_wallet(view, &CurrencyService::get_platform_pub_key());
+        let mut sender = utils::get_wallet(view, self.from());
+        let mut receiver = utils::get_wallet(view, self.to());
 
         let fee = self.get_fee(view);
 

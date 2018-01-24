@@ -78,10 +78,8 @@ impl TxAddAsset {
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {
-        let (mut platform, mut creator) = WalletSchema::map(view, |mut schema| {
-            let platform_key = CurrencyService::get_platfrom_wallet();
-            (schema.wallet(&platform_key), schema.wallet(self.pub_key()))
-        });
+        let mut platform = utils::get_wallet(view, &CurrencyService::get_platform_pub_key());
+        let mut creator = utils::get_wallet(view, self.pub_key());
 
         let fee = self.get_fee(view);
 
@@ -113,8 +111,7 @@ impl TxAddAsset {
         if is_assets_added {
             // send assets to receivers
             for (receiver_key, asset) in receivers.iter().zip(assets) {
-                let mut receiver =
-                    WalletSchema::map(view, |mut schema| schema.wallet(receiver_key));
+                let mut receiver = utils::get_wallet(view, receiver_key);
                 receiver.add_assets(&[asset]);
                 WalletSchema::map(view, |mut schema| {
                     schema.wallets().put(receiver_key, receiver)

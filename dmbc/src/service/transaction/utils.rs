@@ -15,6 +15,10 @@ encoding_struct! {
     }
 }
 
+pub fn get_wallet<'a>(view: &mut Fork, pub_key: &PublicKey) -> Wallet {
+    WalletSchema::map(view, |mut schema| schema.wallet(pub_key))
+}
+
 pub fn transfer_coins(
     view: &mut Fork,
     sender: &mut Wallet,

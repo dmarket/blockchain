@@ -15,7 +15,6 @@ use service::transaction::fee::{calculate_fees_for_exchange, FeeStrategy, TxFees
 
 use super::{SERVICE_ID, TX_EXCHANGE_WITH_INTERMEDIARY_ID};
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
-use super::schema::wallet::WalletSchema;
 
 encoding_struct! {
     struct ExchangeOfferWithIntermediary {
@@ -63,16 +62,10 @@ impl TxExchangeWithIntermediary {
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {
-        let (mut platform, mut sender, mut recipient, mut intermediary) =
-            WalletSchema::map(view, |mut schema| {
-                let platform_key = CurrencyService::get_platfrom_wallet();
-                (
-                    schema.wallet(&platform_key),
-                    schema.wallet(self.offer().sender()),
-                    schema.wallet(self.offer().recipient()),
-                    schema.wallet(self.offer().intermediary().wallet()),
-                )
-            });
+        let mut platform = utils::get_wallet(view, &CurrencyService::get_platform_pub_key());
+        let mut sender = utils::get_wallet(view, self.offer().sender());
+        let mut recipient = utils::get_wallet(view, self.offer().recipient());
+        let mut intermediary = utils::get_wallet(view, self.offer().intermediary().wallet());
 
         let fee_strategy = FeeStrategy::from_u8(self.offer().fee_strategy()).unwrap();
         let fee = self.get_fee(view);

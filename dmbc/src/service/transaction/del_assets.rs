@@ -37,10 +37,8 @@ impl TxDelAsset {
         // all wallets for this asset id is equal to the amonut stored in the
         // AssetInfo associated with this asset id.
 
-        let (mut platform, mut creator) = WalletSchema::map(view, |mut schema| {
-            let platform_key = CurrencyService::get_platfrom_wallet();
-            (schema.wallet(&platform_key), schema.wallet(self.pub_key()))
-        });
+        let mut platform = utils::get_wallet(view, &CurrencyService::get_platform_pub_key());
+        let mut creator = utils::get_wallet(view, self.pub_key());
 
         let fee = self.get_fee(view);
 
