@@ -3,6 +3,7 @@
 extern crate futures;
 extern crate hyper;
 extern crate tokio_core;
+extern crate tokio_timer;
 
 extern crate serde;
 #[macro_use]
@@ -27,10 +28,10 @@ fn main() {
     let server = core.handle();
     let client = core.handle();
 
+    let discovery = ServiceDiscovery::new(client.clone());
+
     let serve = Http::new()
-        .serve_addr_handle(&addr, &server, move || {
-            Ok(ServiceDiscovery::new(client.clone()))
-        })
+        .serve_addr_handle(&addr, &server, move || Ok(discovery.clone()))
         .unwrap();
 
     let server2 = server.clone();

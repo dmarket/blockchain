@@ -1,7 +1,7 @@
 [api]
 current_node = "node0"
-address = "0.0.0.0:8000"
-private_address = "0.0.0.0:8001"
+address = "127.0.0.1:8000"
+private_address = "127.0.0.1:8001"
 peer_address = "0.0.0.0:2000"
 peers = []
 keys_path = "./var/keys"

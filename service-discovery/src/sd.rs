@@ -2,6 +2,7 @@ use std::collections::HashSet;
 use std::io;
 use std::net::SocketAddr;
 use std::sync::{Arc, RwLock};
+use std::time::Duration;
 
 use exonum::blockchain::Block;
 use exonum::blockchain::config::{StoredConfiguration, ValidatorKeys};
@@ -19,6 +20,7 @@ use hyper::header::{ContentLength, ContentType};
 use hyper::server::Service;
 use hyper::client::Client;
 use tokio_core::reactor::Handle;
+use tokio_timer::{Sleep, Timer};
 
 const PROPOSE_HEIGHT_INCREMENT: u64 = 100;
 
@@ -31,8 +33,10 @@ pub struct ValidatorInfo {
     service: PublicKey,
 }
 
+#[derive(Clone, Debug)]
 pub struct ServiceDiscovery {
     handle: Handle,
+    timer: Timer,
     nodes: Arc<RwLock<HashSet<ValidatorInfo>>>,
 }
 
@@ -40,6 +44,7 @@ impl ServiceDiscovery {
     pub fn new(handle: Handle) -> Self {
         ServiceDiscovery {
             handle,
+            timer: Timer::default(),
             nodes: Arc::new(RwLock::new(HashSet::new())),
         }
     }
@@ -61,13 +66,15 @@ impl ServiceDiscovery {
     fn post_node(&self, body: Body) -> <Self as Service>::Future {
         let nodes = Arc::clone(&self.nodes);
         let handle = self.handle.clone();
+        let sleep = self.timer.sleep(Duration::new(5, 0));
         let post = body.concat2().and_then(move |v| {
             let publish = match serde_json::from_slice::<ValidatorInfo>(&v) {
                 Ok(info) => {
                     let mut nodes = nodes.write().unwrap();
                     eprintln!("Received value: {:?}", &info);
+                    let current_validators = nodes.clone();
                     nodes.insert(info);
-                    ServiceDiscovery::publish_peer(handle, nodes.clone())
+                    ServiceDiscovery::publish_peer(&handle, sleep, current_validators)
                 }
                 Err(e) => Box::new(future::err(io::Error::from(e).into())),
             };
@@ -79,12 +86,16 @@ impl ServiceDiscovery {
     }
 
     fn publish_peer(
-        handle: Handle,
+        handle: &Handle,
+        sleep: Sleep,
         nodes: HashSet<ValidatorInfo>,
     ) -> Box<Future<Item = (), Error = hyper::Error>> {
-        let api_node = nodes.iter().next().unwrap().clone();
+        let api_node = match nodes.iter().next() {
+            Some(node) => *node,
+            None => return Box::new(future::ok(())),
+        };
         let config = {
-            let client = Client::new(&handle);
+            let client = Client::new(handle);
             let uri = format!(
                 "http://{}/api/services/configuration/v1/configs/actual",
                 &api_node.public
@@ -94,13 +105,13 @@ impl ServiceDiscovery {
                 response.body().concat2().and_then(|config_data| {
                     let config = serde_json::from_slice::<ApiResponseConfigHashInfo>(&config_data)
                         .map_err(|e| io::Error::from(e).into());
-                    future::result(config)
+                    config
                 })
             })
         };
 
         let height = {
-            let client = Client::new(&handle);
+            let client = Client::new(handle);
             let uri = format!("http://{}/api/explorer/v1/blocks?count=1", &api_node.public)
                 .parse()
                 .unwrap();
@@ -108,10 +119,8 @@ impl ServiceDiscovery {
                 .get(uri)
                 .and_then(|response| {
                     response.body().concat2().and_then(|block_data| {
-                        future::result(
-                            serde_json::from_slice::<Block>(&block_data)
-                                .map_err(|e| io::Error::from(e).into()),
-                        )
+                        serde_json::from_slice::<Block>(&block_data)
+                            .map_err(|e| io::Error::from(e).into())
                     })
                 })
                 .map(|block| block.height())
@@ -125,32 +134,39 @@ impl ServiceDiscovery {
                 consensus_key: node.consensus,
             })
             .collect();
-        let propose = config
-            .join(height)
-            .and_then(move |(config, height)| {
-                let propose_config = ServiceDiscovery::gen_propose(&config, validators, height);
-                let client = Client::new(&propose_handle);
-                let uri = format!(
-                    "http://{}/api/services/configuration/v1/configs/postpropose",
-                    &api_node.private
-                ).parse()
-                    .unwrap();
-                let mut req = Request::new(Method::Post, uri);
-                req.headers_mut().set(ContentType::json());
-                req.headers_mut()
-                    .set(ContentLength(propose_config.len() as u64));
-                req.set_body(propose_config);
-                client.request(req)
-            })
-            .and_then(|response_stream| {
-                response_stream.body().concat2().and_then(|response| {
-                    let response = serde_json::from_slice::<ApiResponseProposePost>(&response);
-                    future::result(response.map_err(|e| io::Error::from(e).into()))
-                })
+        let propose = sleep
+            .map_err(|_| hyper::error::Error::Timeout)
+            .and_then(move |_| {
+                config
+                    .join(height)
+                    .and_then(move |(config, height)| {
+                        let propose_config =
+                            ServiceDiscovery::gen_propose(&config, validators, height);
+                        eprintln!("Proposing config: {}", &propose_config);
+                        let client = Client::new(&propose_handle);
+                        let uri = format!(
+                            "http://{}/api/services/configuration/v1/configs/postpropose",
+                            &api_node.private
+                        ).parse()
+                            .unwrap();
+                        let mut req = Request::new(Method::Post, uri);
+                        req.headers_mut().set(ContentType::json());
+                        req.headers_mut()
+                            .set(ContentLength(propose_config.len() as u64));
+                        req.set_body(propose_config);
+                        client.request(req)
+                    })
+                    .and_then(|response_stream| {
+                        response_stream.body().concat2().and_then(|response| {
+                            let response =
+                                serde_json::from_slice::<ApiResponseProposePost>(&response);
+                            response.map_err(|e| io::Error::from(e).into())
+                        })
+                    })
             });
 
         let votes_handle = handle.clone();
-        let votes_to_send = nodes.len() * (2 / 3) + 1;
+        let votes_to_send = nodes.len() * 2 / 3 + 1;
         let votes = propose.and_then(move |response| {
             let iter = nodes.into_iter().take(votes_to_send).map(|node| {
                 let vote = response.cfg_hash.to_hex();
@@ -166,12 +182,12 @@ impl ServiceDiscovery {
             stream::futures_unordered(iter).for_each(|response| {
                 response.body().concat2().and_then(|data| {
                     let parsed = serde_json::from_slice::<ApiResponseVotePost>(&data);
-                    future::result(parsed.map_err(|e| io::Error::from(e).into())).and_then(
-                        |vote_info| {
+                    parsed
+                        .map_err(|e| io::Error::from(e).into())
+                        .and_then(|vote_info| {
                             eprintln!("Voted, tx_hash: {:?}.", vote_info.tx_hash);
-                            future::ok(())
-                        },
-                    )
+                            Ok(())
+                        })
                 })
             })
         });
@@ -202,13 +218,12 @@ impl Service for ServiceDiscovery {
 
     fn call(&self, req: Request) -> Self::Future {
         eprintln!("Got request: {:?}", req);
-        let response = match (req.method(), req.path()) {
+        match (req.method(), req.path()) {
             (&Method::Get, "/nodes") => self.get_nodes(),
             (&Method::Post, "/nodes") => self.post_node(req.body()),
             _ => Box::new(future::ok(
                 Response::new().with_status(StatusCode::NotFound),
             )),
-        };
-        response
+        }
     }
 }
