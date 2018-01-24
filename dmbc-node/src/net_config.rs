@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 use std::error::Error;
 use std::net::SocketAddr;
+use std::thread;
 
 use curl::easy::Easy;
 use serde_json;
@@ -12,6 +13,7 @@ use dmbc::config;
 #[derive(Debug, Hash, Serialize, Deserialize, Eq, PartialEq, Copy, Clone)]
 pub struct ValidatorInfo {
     pub public: SocketAddr,
+    pub private: SocketAddr,
     pub peer: SocketAddr,
     pub consensus: PublicKey,
     pub service: PublicKey,
@@ -59,7 +61,10 @@ fn send_node(discovery: &str, info: &ValidatorInfo) -> Result<(), Box<Error>> {
     handle
         .post_fields_copy(node_post.as_bytes())
         .map_err(Box::new)?;
-    handle.perform().map_err(Box::new)?;
+    thread::spawn(move || match handle.perform() {
+        Err(e) => eprintln!("Error in send_node(): {}", e),
+        _ => (),
+    });
 
     Ok(())
 }
