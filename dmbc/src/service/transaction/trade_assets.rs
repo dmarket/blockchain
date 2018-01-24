@@ -14,7 +14,6 @@ use service::transaction::utils;
 
 use super::{SERVICE_ID, TX_TRADE_ASSETS_ID};
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
-use super::schema::wallet::WalletSchema;
 
 encoding_struct! {
     struct TradeOffer {
@@ -92,11 +91,6 @@ impl TxTrade {
             view.rollback();
             return TxStatus::Fail;
         }
-
-        WalletSchema::map(view, |mut schema| {
-            schema.wallets().put(buyer.pub_key(), buyer.clone());
-            schema.wallets().put(seller.pub_key(), seller.clone());
-        });
 
         for (mut creator, fee) in fee.assets_fees() {
             println!("\tCreator {:?} will receive {}", creator.pub_key(), fee);
