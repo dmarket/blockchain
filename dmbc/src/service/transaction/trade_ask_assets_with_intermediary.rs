@@ -9,11 +9,10 @@ use serde_json::Value;
 
 use service::CurrencyService;
 use service::asset::{Asset, TradeAsset};
-use service::transaction::intermediary::Intermediary;
+use service::transaction::utils::{pay, Intermediary};
 use service::transaction::fee::{calculate_fees_for_trade, TxFees};
-use service::wallet::Wallet;
 
-use super::{SERVICE_ID, TX_TRADE_ASK_ASSETS_ID};
+use super::{SERVICE_ID, TX_TRADE_ASK_ASSETS_WITH_INTERMEDIARY_ID};
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
 use super::schema::wallet::WalletSchema;
 
@@ -30,7 +29,7 @@ encoding_struct! {
 message! {
     struct TxTradeAskWithIntermediary {
         const TYPE = SERVICE_ID;
-        const ID = TX_TRADE_ASK_ASSETS_ID;
+        const ID = TX_TRADE_ASK_ASSETS_WITH_INTERMEDIARY_ID;
         const SIZE = 184;
 
         field buyer:                  &PublicKey                     [00 => 32]
@@ -61,26 +60,16 @@ impl TxTradeAskWithIntermediary {
 
         let fee = self.get_fee(view);
 
-        // Fail if not enough coins on seller balance
-        if !seller.is_sufficient_funds(fee.transaction_fee()) {
+        // pay fee for tx execution
+        if !pay(view, &mut seller, &mut platform, fee.transaction_fee()) {
             return TxStatus::Fail;
         }
-
-        // Take coins for executing transaction
-        seller.decrease(fee.transaction_fee());
-        // put fee to platfrom wallet
-        platform.increase(fee.transaction_fee());
-        // store data
-        WalletSchema::map(view, |mut schema| {
-            schema.wallets().put(&seller.pub_key(), seller.clone());
-            schema.wallets().put(&platform.pub_key(), platform.clone());
-        });
 
         // initial point for db rollback, in case if transaction has failed
         view.checkpoint();
 
         // pay commison for the transaction to intermediary
-        if !pay_commision(
+        if !pay(
             view,
             &mut seller,
             &mut intermediary,
@@ -124,12 +113,10 @@ impl TxTradeAskWithIntermediary {
 
         for (mut creator, fee) in fee.assets_fees() {
             println!("\tCreator {:?} will receive {}", creator.pub_key(), fee);
-            seller.decrease(fee);
-            creator.increase(fee);
-            WalletSchema::map(view, |mut schema| {
-                schema.wallets().put(creator.pub_key(), creator.clone());
-                schema.wallets().put(seller.pub_key(), seller.clone());
-            });
+            if !pay(view, &mut seller, &mut creator, fee) {
+                view.rollback();
+                return TxStatus::Fail;
+            }
         }
 
         TxStatus::Success
@@ -180,27 +167,4 @@ impl TradeAskOfferWithIntermediary {
             .iter()
             .fold(0, |total, item| total + item.total_price())
     }
-}
-
-fn pay_commision(
-    view: &mut Fork,
-    sender: &mut Wallet,
-    intermediary: &mut Wallet,
-    commision: u64,
-) -> bool {
-    if !sender.is_sufficient_funds(commision) {
-        return false;
-    }
-
-    sender.decrease(commision);
-    intermediary.increase(commision);
-
-    // store changes
-    WalletSchema::map(view, |mut schema| {
-        schema.wallets().put(sender.pub_key(), sender.clone());
-        schema
-            .wallets()
-            .put(intermediary.pub_key(), intermediary.clone());
-    });
-    true
 }

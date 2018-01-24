@@ -10,6 +10,7 @@ use std::collections::HashMap;
 use service::CurrencyService;
 use service::asset::{Asset, Fees, MetaAsset};
 use service::transaction::fee::{calculate_fees_for_add_assets, TxFees};
+use service::transaction::utils;
 
 use super::{SERVICE_ID, TX_ADD_ASSETS_ID};
 use super::schema::asset::AssetSchema;
@@ -84,37 +85,19 @@ impl TxAddAsset {
 
         let fee = self.get_fee(view);
 
-        // Check if creator has enough coins to execute transaction, fail otherwise
-        if !creator.is_sufficient_funds(fee.transaction_fee()) {
+        // Pay tx fee
+        if !utils::pay(view, &mut creator, &mut platform, fee.transaction_fee()) {
             return TxStatus::Fail;
         }
 
-        // extract fee
-        // remove fee from creator and update creator wallet balance
-        creator.decrease(fee.transaction_fee());
-        // put fee to platfrom wallet
-        platform.increase(fee.transaction_fee());
-        WalletSchema::map(view, |mut schema| {
-            schema.wallets().put(self.pub_key(), creator.clone());
-            schema.wallets().put(&platform.pub_key(), platform.clone());
-        });
-
-        // Now, check if creator has enough coins for asset fees
-        if !creator.is_sufficient_funds(fee.assets_fees_total()) {
-            return TxStatus::Fail;
-        }
         // initial point for db rollback, in case if transaction has failed
         view.checkpoint();
 
-        // extract fee
-        // remove fee from creator and update creator wallet balance
-        creator.decrease(fee.assets_fees_total());
-        // put fee to platfrom wallet
-        platform.increase(fee.assets_fees_total());
-        WalletSchema::map(view, |mut schema| {
-            schema.wallets().put(self.pub_key(), creator.clone());
-            schema.wallets().put(&platform.pub_key(), platform.clone());
-        });
+        // pay fee for assets
+        if !utils::pay(view, &mut creator, &mut platform, fee.assets_fees_total()) {
+            view.rollback();
+            return TxStatus::Fail;
+        }
 
         // `Fail` status can occur due two reasons:
         // 1. `schema.add_assets` will fail if asset id generation has collision

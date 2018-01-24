@@ -5,12 +5,12 @@ use exonum::crypto::{verify, PublicKey, Signature};
 use exonum::messages::Message;
 use exonum::storage::Fork;
 use serde_json::Value;
-use std::cmp;
 
 use service::CurrencyService;
 use service::asset::Asset;
 use service::wallet::Wallet;
 use service::transaction::fee::{calculate_fees_for_exchange, FeeStrategy, TxFees};
+use service::transaction::utils;
 
 use super::{SERVICE_ID, TX_EXCHANGE_ID};
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
@@ -199,59 +199,17 @@ fn move_coins(
     coins_receiver: &mut Wallet,
     coins: u64,
 ) -> bool {
-    // check if participant(s) have enough coins
-    if !sufficient_funds(strategy, recipient, sender, coins) {
-        return false;
-    }
     // move coins from participant(s) to fee receiver
     match *strategy {
-        FeeStrategy::Recipient => {
-            recipient.decrease(coins);
-            coins_receiver.increase(coins);
-        }
-        FeeStrategy::Sender => {
-            sender.decrease(coins);
-            coins_receiver.increase(coins);
-        }
+        FeeStrategy::Recipient => utils::pay(view, recipient, coins_receiver, coins),
+        FeeStrategy::Sender => utils::pay(view, sender, coins_receiver, coins),
         FeeStrategy::RecipientAndSender => {
             let (recipient_half, sender_half) = split_coins(coins);
-            recipient.decrease(recipient_half);
-            sender.decrease(sender_half);
-            coins_receiver.increase(recipient_half);
-            coins_receiver.increase(sender_half);
+            let recipient_ok = utils::pay(view, recipient, coins_receiver, recipient_half);
+            let sender_ok = utils::pay(view, sender, coins_receiver, sender_half);
+
+            sender_ok && recipient_ok
         }
         _ => return false,
-    }
-
-    // store changes
-    WalletSchema::map(view, |mut schema| {
-        schema.wallets().put(recipient.pub_key(), recipient.clone());
-        schema.wallets().put(sender.pub_key(), sender.clone());
-        schema
-            .wallets()
-            .put(coins_receiver.pub_key(), coins_receiver.clone());
-    });
-    true
-}
-
-fn sufficient_funds(
-    strategy: &FeeStrategy,
-    recipient: &Wallet,
-    sender: &Wallet,
-    coins: u64,
-) -> bool {
-    // helper
-    let can_pay_both = |a: u64, b: u64| {
-        let min = cmp::min(a, b);
-        let (a_half, b_half) = split_coins(coins);
-        a_half <= min && b_half <= min
-    };
-
-    // check if participant(s) have enough coins to pay platform
-    match *strategy {
-        FeeStrategy::Recipient => recipient.is_sufficient_funds(coins),
-        FeeStrategy::Sender => sender.is_sufficient_funds(coins),
-        FeeStrategy::RecipientAndSender => can_pay_both(recipient.balance(), sender.balance()),
-        _ => false,
     }
 }

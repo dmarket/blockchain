@@ -13,6 +13,7 @@ use service::schema::asset::AssetSchema;
 use service::schema::transaction_status::{TxStatus, TxStatusSchema};
 use service::schema::wallet::WalletSchema;
 use service::transaction::fee::{calculate_fees_for_del_assets, TxFees};
+use service::transaction::utils;
 
 message! {
     struct TxDelAsset {
@@ -43,19 +44,10 @@ impl TxDelAsset {
 
         let fee = self.get_fee(view);
 
-        // Fail if not enough coins on creators balance
-        if !creator.is_sufficient_funds(fee.amount()) {
+        // pay fee for tx execution
+        if !utils::pay(view, &mut creator, &mut platform, fee.amount()) {
             return TxStatus::Fail;
         }
-
-        // Take coins for executing transaction
-        creator.decrease(fee.amount());
-        // put fee to platfrom wallet
-        platform.increase(fee.amount());
-        WalletSchema::map(view, |mut schema| {
-            schema.wallets().put(self.pub_key(), creator.clone());
-            schema.wallets().put(&platform.pub_key(), platform.clone());
-        });
 
         // Check if asset exists, Fail if not.
         // If sender (pub_key) is not a creator of asset, then Fail.

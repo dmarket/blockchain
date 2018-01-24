@@ -5,12 +5,12 @@ use exonum::crypto::{verify, PublicKey, Signature};
 use exonum::messages::Message;
 use exonum::storage::Fork;
 use serde_json::Value;
-use std::cmp;
 
 use service::CurrencyService;
 use service::asset::Asset;
 use service::wallet::Wallet;
-use service::transaction::intermediary::Intermediary;
+use service::transaction::utils;
+use service::transaction::utils::Intermediary;
 use service::transaction::fee::{calculate_fees_for_exchange, FeeStrategy, TxFees};
 
 use super::{SERVICE_ID, TX_EXCHANGE_WITH_INTERMEDIARY_ID};
@@ -94,7 +94,7 @@ impl TxExchangeWithIntermediary {
         view.checkpoint();
 
         // pay commison for the transaction to intermediary
-        if !pay_commision(
+        if !pay(
             view,
             &fee_strategy,
             &mut recipient,
@@ -201,12 +201,6 @@ impl Transaction for TxExchangeWithIntermediary {
     }
 }
 
-fn split_coins(coins: u64) -> (u64, u64) {
-    let first_half = (coins as f64 / 2.0).ceil() as u64;
-    let second_half = coins - first_half;
-    (first_half, second_half)
-}
-
 fn move_coins(
     view: &mut Fork,
     strategy: &FeeStrategy,
@@ -216,71 +210,22 @@ fn move_coins(
     coins_receiver: &mut Wallet,
     coins: u64,
 ) -> bool {
-    // check if participant(s) have enough coins to pay fee
-    if !sufficient_funds(strategy, recipient, sender, intermediary, coins) {
-        return false;
-    }
     // move coins from participant(s) to fee receiver
     match *strategy {
-        FeeStrategy::Recipient => {
-            recipient.decrease(coins);
-            coins_receiver.increase(coins);
-        }
-        FeeStrategy::Sender => {
-            sender.decrease(coins);
-            coins_receiver.increase(coins);
-        }
+        FeeStrategy::Recipient => utils::pay(view, recipient, coins_receiver, coins),
+        FeeStrategy::Sender => utils::pay(view, sender, coins_receiver, coins),
         FeeStrategy::RecipientAndSender => {
-            let (recipient_half, sender_half) = split_coins(coins);
-            recipient.decrease(recipient_half);
-            sender.decrease(sender_half);
-            coins_receiver.increase(recipient_half);
-            coins_receiver.increase(sender_half);
+            let (recipient_half, sender_half) = utils::split_coins(coins);
+            let recipient_ok = utils::pay(view, recipient, coins_receiver, recipient_half);
+            let sender_ok = utils::pay(view, sender, coins_receiver, sender_half);
+
+            sender_ok && recipient_ok
         }
-        FeeStrategy::Intermediary => {
-            intermediary.decrease(coins);
-            coins_receiver.increase(coins);
-        }
-    }
-
-    // store changes
-    WalletSchema::map(view, |mut schema| {
-        schema.wallets().put(recipient.pub_key(), recipient.clone());
-        schema.wallets().put(sender.pub_key(), sender.clone());
-        schema
-            .wallets()
-            .put(intermediary.pub_key(), intermediary.clone());
-        schema
-            .wallets()
-            .put(coins_receiver.pub_key(), coins_receiver.clone());
-    });
-    true
-}
-
-fn sufficient_funds(
-    strategy: &FeeStrategy,
-    recipient: &Wallet,
-    sender: &Wallet,
-    intermediary: &Wallet,
-    coins: u64,
-) -> bool {
-    // helper
-    let can_pay_both = |a: u64, b: u64| {
-        let min = cmp::min(a, b);
-        let (a_half, b_half) = split_coins(coins);
-        a_half <= min && b_half <= min
-    };
-
-    // check if participant(s) have enough coins to pay platform fee
-    match *strategy {
-        FeeStrategy::Recipient => recipient.is_sufficient_funds(coins),
-        FeeStrategy::Sender => sender.is_sufficient_funds(coins),
-        FeeStrategy::RecipientAndSender => can_pay_both(recipient.balance(), sender.balance()),
-        FeeStrategy::Intermediary => intermediary.is_sufficient_funds(coins),
+        FeeStrategy::Intermediary => utils::pay(view, intermediary, coins_receiver, coins),
     }
 }
 
-fn pay_commision(
+fn pay(
     view: &mut Fork,
     strategy: &FeeStrategy,
     recipient: &mut Wallet,
@@ -288,38 +233,23 @@ fn pay_commision(
     intermediary: &mut Wallet,
     commision: u64,
 ) -> bool {
-    let is_sufficient_funds =
-        sufficient_funds(strategy, recipient, sender, intermediary, commision);
-    if *strategy != FeeStrategy::Intermediary && !is_sufficient_funds {
+    if *strategy != FeeStrategy::Intermediary {
         return false;
     }
 
     match *strategy {
         FeeStrategy::Recipient => {
-            recipient.decrease(commision);
-            intermediary.increase(commision);
+            return utils::pay(view, recipient, intermediary, commision);
         }
         FeeStrategy::Sender => {
-            sender.decrease(commision);
-            intermediary.increase(commision);
+            return utils::pay(view, sender, intermediary, commision);
         }
         FeeStrategy::RecipientAndSender => {
-            let (recipient_half, sender_half) = split_coins(commision);
-            recipient.decrease(recipient_half);
-            sender.decrease(sender_half);
-            intermediary.increase(recipient_half);
-            intermediary.increase(sender_half);
+            let (recipient_half, sender_half) = utils::split_coins(commision);
+            let recipient_ok = utils::pay(view, recipient, intermediary, recipient_half);
+            let sender_ok = utils::pay(view, sender, intermediary, sender_half);
+            return recipient_ok && sender_ok;
         }
-        FeeStrategy::Intermediary => (),
+        FeeStrategy::Intermediary => true,
     }
-
-    // store changes
-    WalletSchema::map(view, |mut schema| {
-        schema.wallets().put(recipient.pub_key(), recipient.clone());
-        schema.wallets().put(sender.pub_key(), sender.clone());
-        schema
-            .wallets()
-            .put(intermediary.pub_key(), intermediary.clone());
-    });
-    true
 }

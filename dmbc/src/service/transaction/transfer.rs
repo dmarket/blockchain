@@ -9,6 +9,7 @@ use serde_json::Value;
 use service::CurrencyService;
 use service::asset::Asset;
 use service::transaction::fee::{calculate_fees_for_transfer, TxFees};
+use service::transaction::utils;
 
 use super::{SERVICE_ID, TX_TRANSFER_ID};
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
@@ -46,20 +47,10 @@ impl TxTransfer {
 
         let fee = self.get_fee(view);
 
-        // Fail if not enough coins on senders balance
-        if !sender.is_sufficient_funds(fee.transaction_fee()) {
+        // pay fee for tx execution
+        if !utils::pay(view, &mut sender, &mut platform, fee.transaction_fee()) {
             return TxStatus::Fail;
         }
-
-        // Take coins for executing transaction
-        sender.decrease(fee.transaction_fee());
-        // put fee to platfrom wallet
-        platform.increase(fee.transaction_fee());
-        // store data
-        WalletSchema::map(view, |mut schema| {
-            schema.wallets().put(self.from(), sender.clone());
-            schema.wallets().put(&platform.pub_key(), platform.clone());
-        });
 
         // initial point for db rollback, in case if transaction has failed
         view.checkpoint();
@@ -67,24 +58,16 @@ impl TxTransfer {
         let send_assets = !self.assets().is_empty();
         if send_assets {
             if sender.is_assets_in_wallet(&self.assets()) {
-                // Check if sender has enough coins to pay fee to creators of assets
-                if !sender.is_sufficient_funds(fee.assets_fees_total()) {
-                    view.rollback();
-                    return TxStatus::Fail;
-                }
-
                 sender.del_assets(&self.assets());
                 receiver.add_assets(&self.assets());
 
                 // send fees to creators of assets
                 for (mut creator, fee) in fee.assets_fees() {
                     println!("Creator {:?} will receive {}", creator.pub_key(), fee);
-                    sender.decrease(fee);
-                    creator.increase(fee);
-                    WalletSchema::map(view, |mut schema| {
-                        schema.wallets().put(creator.pub_key(), creator.clone());
-                        schema.wallets().put(sender.pub_key(), sender.clone());
-                    });
+                    if !utils::pay(view, &mut sender, &mut creator, fee) {
+                        view.rollback();
+                        return TxStatus::Fail;
+                    }
                 }
             } else {
                 view.rollback();
@@ -96,16 +79,13 @@ impl TxTransfer {
         let coins_to_send = self.amount();
         let send_coins = coins_to_send > 0;
         if send_coins {
-            if sender.is_sufficient_funds(coins_to_send) {
-                sender.decrease(coins_to_send);
-                receiver.increase(coins_to_send);
-            } else {
+            if !utils::pay(view, &mut sender, &mut receiver, coins_to_send) {
                 view.rollback();
                 return TxStatus::Fail;
             }
         }
 
-        if send_coins || send_assets {
+        if send_assets {
             WalletSchema::map(view, |mut schema| {
                 schema.wallets().put(self.from(), sender);
                 schema.wallets().put(self.to(), receiver);

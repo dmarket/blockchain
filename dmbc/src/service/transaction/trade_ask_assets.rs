@@ -10,6 +10,7 @@ use serde_json::Value;
 use service::CurrencyService;
 use service::asset::{Asset, TradeAsset};
 use service::transaction::fee::{calculate_fees_for_trade, TxFees};
+use service::transaction::utils;
 
 use super::{SERVICE_ID, TX_TRADE_ASK_ASSETS_ID};
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
@@ -55,20 +56,10 @@ impl TxTradeAsk {
 
         let fee = self.get_fee(view);
 
-        // Fail if not enough coins on seller balance
-        if !seller.is_sufficient_funds(fee.transaction_fee()) {
+        // pay for tx execution
+        if !utils::pay(view, &mut seller, &mut platform, fee.transaction_fee()) {
             return TxStatus::Fail;
         }
-
-        // Take coins for executing transaction
-        seller.decrease(fee.transaction_fee());
-        // put fee to platfrom wallet
-        platform.increase(fee.transaction_fee());
-        // store data
-        WalletSchema::map(view, |mut schema| {
-            schema.wallets().put(&seller.pub_key(), seller.clone());
-            schema.wallets().put(&platform.pub_key(), platform.clone());
-        });
 
         // initial point for db rollback, in case if transaction has failed
         view.checkpoint();
@@ -107,12 +98,10 @@ impl TxTradeAsk {
 
         for (mut creator, fee) in fee.assets_fees() {
             println!("\tCreator {:?} will receive {}", creator.pub_key(), fee);
-            seller.decrease(fee);
-            creator.increase(fee);
-            WalletSchema::map(view, |mut schema| {
-                schema.wallets().put(creator.pub_key(), creator.clone());
-                schema.wallets().put(seller.pub_key(), seller.clone());
-            });
+            if !utils::pay(view, &mut seller, &mut creator, fee) {
+                view.rollback();
+                return TxStatus::Fail;
+            }
         }
 
         TxStatus::Success

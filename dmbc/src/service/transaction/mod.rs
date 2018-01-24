@@ -6,7 +6,7 @@ use super::SERVICE_ID;
 
 pub const TRANSACTION_FEE: u64 = 1000;
 
-pub mod intermediary;
+pub mod utils;
 pub mod fee;
 
 // Create Wallet
@@ -22,25 +22,31 @@ pub mod transfer;
 pub const TX_ADD_ASSETS_ID: u16 = 3;
 pub mod add_assets;
 
-// delete Assets
+// Delete Assets
 pub const TX_DEL_ASSETS_ID: u16 = 4;
 pub mod del_assets;
 
+// Trade Ask/Bid Assets
 pub const TX_TRADE_ASK_ASSETS_ID: u16 = 501;
 pub mod trade_ask_assets;
 
-// Buy Transaction
+// Trade Assets
 pub const TX_TRADE_ASSETS_ID: u16 = 502;
 pub mod trade_assets;
 
-// Trade Transaction
+// Trade Ask/Bid Assets with intermediary
 pub const TX_TRADE_ASK_ASSETS_WITH_INTERMEDIARY_ID: u16 = 503;
 pub mod trade_ask_assets_with_intermediary;
 
-// Buy Transaction
+// Trade Assets with intermediary party
+pub const TX_TRADE_ASSETS_WITH_INTERMEDIARY_ID: u16 = 504;
+pub mod trade_assets_with_intermediary;
+
+// Exchange Assets
 pub const TX_EXCHANGE_ID: u16 = 601;
 pub mod exchange;
 
+// Exchange Assets with intermediary party
 pub const TX_EXCHANGE_WITH_INTERMEDIARY_ID: u16 = 602;
 pub mod exchange_with_intermediary;
 
