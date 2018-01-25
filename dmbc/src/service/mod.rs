@@ -25,7 +25,8 @@ use self::schema::transaction_status::TxSchema;
 use self::schema::wallet::WalletSchema;
 use self::transaction::{TX_ADD_ASSETS_ID, TX_CREATE_WALLET_ID, TX_DEL_ASSETS_ID, TX_EXCHANGE_ID,
                         TX_EXCHANGE_WITH_INTERMEDIARY_ID, TX_MINING_ID, TX_TRADE_ASK_ASSETS_ID,
-                        TX_TRADE_ASSETS_ID, TX_TRANSFER_ID};
+                        TX_TRADE_ASK_ASSETS_WITH_INTERMEDIARY_ID, TX_TRADE_ASSETS_ID,
+                        TX_TRADE_ASSETS_WITH_INTERMEDIARY_ID, TX_TRANSFER_ID};
 use self::transaction::add_assets::TxAddAsset;
 use self::transaction::create_wallet::TxCreateWallet;
 use self::transaction::del_assets::TxDelAsset;
@@ -33,7 +34,9 @@ use self::transaction::exchange::TxExchange;
 use self::transaction::exchange_with_intermediary::TxExchangeWithIntermediary;
 use self::transaction::mining::TxMining;
 use self::transaction::trade_assets::TxTrade;
+use self::transaction::trade_assets_with_intermediary::TxTradeWithIntermediary;
 use self::transaction::trade_ask_assets::TxTradeAsk;
+use self::transaction::trade_ask_assets_with_intermediary::TxTradeAskWithIntermediary;
 use self::transaction::transfer::TxTransfer;
 use self::wallet::Wallet;
 use self::configuration::Configuration;
@@ -42,7 +45,7 @@ use config;
 // Service identifier
 pub const SERVICE_ID: u16 = 2;
 pub const SERVICE_NAME: &str = "cryptocurrency/v1";
-pub const PLATFORM_WALLET: &str =
+pub const PLATFORM_PUB_KEY: &str =
     "36a05e418393fb4b23819753f6e6dd51550ce030d53842c43dd1349857a96a61";
 // Identifier for wallet creation transaction type
 
@@ -54,7 +57,7 @@ impl CurrencyService {
     }
 
     pub fn get_platform_pub_key() -> PublicKey {
-        PublicKey::from_hex(PLATFORM_WALLET).unwrap()
+        PublicKey::from_hex(PLATFORM_PUB_KEY).unwrap()
     }
 }
 
@@ -74,7 +77,13 @@ impl Service for CurrencyService {
             TX_ADD_ASSETS_ID => Box::new(TxAddAsset::from_raw(raw)?),
             TX_DEL_ASSETS_ID => Box::new(TxDelAsset::from_raw(raw)?),
             TX_TRADE_ASSETS_ID => Box::new(TxTrade::from_raw(raw)?),
+            TX_TRADE_ASSETS_WITH_INTERMEDIARY_ID => {
+                Box::new(TxTradeWithIntermediary::from_raw(raw)?)
+            }
             TX_TRADE_ASK_ASSETS_ID => Box::new(TxTradeAsk::from_raw(raw)?),
+            TX_TRADE_ASK_ASSETS_WITH_INTERMEDIARY_ID => {
+                Box::new(TxTradeAskWithIntermediary::from_raw(raw)?)
+            }
             TX_EXCHANGE_ID => Box::new(TxExchange::from_raw(raw)?),
             TX_EXCHANGE_WITH_INTERMEDIARY_ID => {
                 Box::new(TxExchangeWithIntermediary::from_raw(raw)?)

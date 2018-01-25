@@ -19,6 +19,9 @@ use service::transaction::exchange::TxExchange;
 use service::transaction::exchange_with_intermediary::TxExchangeWithIntermediary;
 use service::transaction::mining::TxMining;
 use service::transaction::trade_assets::TxTrade;
+use service::transaction::trade_assets_with_intermediary::TxTradeWithIntermediary;
+use service::transaction::trade_ask_assets::TxTradeAsk;
+use service::transaction::trade_ask_assets_with_intermediary::TxTradeAskWithIntermediary;
 use service::transaction::transfer::TxTransfer;
 
 #[derive(Clone)]
@@ -32,6 +35,9 @@ enum TransactionRequest {
     AddAsset(TxAddAsset),
     DelAsset(TxDelAsset),
     TradeAsset(TxTrade),
+    TradeAssetsWithIntermediary(TxTradeWithIntermediary),
+    TradeAskAssets(TxTradeAsk),
+    TradeAskAssetsWithIntermediary(TxTradeAskWithIntermediary),
     Exchange(TxExchange),
     ExchangeWithIntermediary(TxExchangeWithIntermediary),
     Mining(TxMining),
@@ -45,9 +51,12 @@ impl Into<Box<Transaction>> for TransactionRequest {
             TransactionRequest::AddAsset(trans) => Box::new(trans),
             TransactionRequest::DelAsset(trans) => Box::new(trans),
             TransactionRequest::TradeAsset(trans) => Box::new(trans),
+            TransactionRequest::TradeAssetsWithIntermediary(trans) => Box::new(trans),
+            TransactionRequest::TradeAskAssets(trans) => Box::new(trans),
+            TransactionRequest::TradeAskAssetsWithIntermediary(trans) => Box::new(trans),
             TransactionRequest::Exchange(trans) => Box::new(trans),
-            TransactionRequest::Mining(trans) => Box::new(trans),
             TransactionRequest::ExchangeWithIntermediary(trans) => Box::new(trans),
+            TransactionRequest::Mining(trans) => Box::new(trans),
         }
     }
 }
@@ -89,6 +98,8 @@ impl Api for HashApi {
                 Ok(Some(transaction)) => {
                     let transaction: Box<Transaction> = transaction.into();
                     let raw_ = transaction.raw().clone();
+
+                    // TODO: responces to new Transactions
                     let vec_hash = match transaction.raw().message_type() {
                         TX_EXCHANGE_ID => match TxExchange::from_raw(raw_) {
                             Ok(exchange) => exchange.get_offer_raw(),
