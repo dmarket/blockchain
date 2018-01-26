@@ -93,8 +93,7 @@ impl Api for WalletApi {
                 Ok(res)
             } else {
                 let res = self_
-                    .not_found_response(&serde_json::to_value("Wallets database is empty")
-                        .unwrap());
+                    .not_found_response(&serde_json::to_value("Wallets database is empty").unwrap());
                 let mut res = res.unwrap();
                 res.headers.set(AccessControlAllowOrigin::Any);
                 Ok(res)

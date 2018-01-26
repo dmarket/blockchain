@@ -112,10 +112,8 @@ mod tests {
         assert!(wallet.is_assets_in_wallet(&vec![Asset::new(assetid2, 3)]));
         assert!(!wallet.is_assets_in_wallet(&vec![Asset::new(assetid2, 33)]));
         assert!(!wallet.is_assets_in_wallet(&vec![Asset::new(assetid4, 1)]));
-        assert!(!wallet
-            .is_assets_in_wallet(&vec![Asset::new(assetid1, 1), Asset::new(assetid4, 1)]));
-        assert!(!wallet
-            .is_assets_in_wallet(&vec![Asset::new(assetid1, 1), Asset::new(assetid3, 31)]));
+        assert!(!wallet.is_assets_in_wallet(&vec![Asset::new(assetid1, 1), Asset::new(assetid4, 1)]));
+        assert!(!wallet.is_assets_in_wallet(&vec![Asset::new(assetid1, 1), Asset::new(assetid3, 31)]));
     }
 
     #[test]

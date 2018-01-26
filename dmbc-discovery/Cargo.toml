@@ -1,5 +1,5 @@
 [package]
-name = "service-discovery"
+name = "dmbc-discovery"
 version = "0.1.0"
 authors = ["Mikola Samardak <niksaak@gmail.com>"]
 
