@@ -63,7 +63,10 @@ fn main() {
     };
     eprintln!("Node info: {:?}", &info);
 
-    let peers = match net_config::connect_validator(&info) {
+    let is_validator = config::config().api().is_validator();
+    eprintln!("Connecting {}", if is_validator { "as validator" } else { "as auditor" });
+
+    let peers = match net_config::connect(&info, is_validator) {
         Ok(peers) => {
             eprintln!("Connected as validator, peers: {:?}", &peers);
             peers
@@ -100,7 +103,7 @@ fn main() {
         ..Default::default()
     };
 
-    let peer_addrs = peers.iter().map(|p| p.peer).collect();
+    let peer_addrs = peers.iter().map(|(_, p)| p.peer).collect();
 
     // Complete node configuration
     let node_cfg = NodeConfig {

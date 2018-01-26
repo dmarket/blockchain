@@ -5,6 +5,7 @@ private_address = "127.0.0.1:8001"
 peer_address = "127.0.0.1:2000"
 peers = []
 keys_path = "./var/keys"
+is_validator = true
 
 [db]
 path = "./var/db"

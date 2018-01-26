@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::HashMap;
 use std::error::Error;
 use std::net::SocketAddr;
 use std::thread;
@@ -9,7 +9,10 @@ use exonum::crypto::PublicKey;
 
 use dmbc::config;
 
-// TODO: duplicates structure in service-discovery crate. Generalize this.
+type PKeys = String;
+
+// TODO: duplicates structure in service-discovery crate.
+//       Put this into common module.
 #[derive(Debug, Hash, Serialize, Deserialize, Eq, PartialEq, Copy, Clone)]
 pub struct ValidatorInfo {
     pub public: SocketAddr,
@@ -19,11 +22,19 @@ pub struct ValidatorInfo {
     pub service: PublicKey,
 }
 
-pub fn connect_validator(info: &ValidatorInfo) -> Result<HashSet<ValidatorInfo>, Box<Error>> {
+impl ValidatorInfo {
+    pub fn keys(&self) -> PKeys {
+        String::new() + &self.consensus.to_hex() + &self.service.to_hex()
+    }
+}
+
+pub fn connect(info: &ValidatorInfo, is_validator: bool)
+    -> Result<HashMap<PKeys, ValidatorInfo>, Box<Error>>
+{
     let discovery = config::config().service_discovery().address();
 
     let nodes = receive_nodes(&discovery)?;
-    if nodes.contains(info) {
+    if nodes.contains_key(&info.keys()) || !is_validator {
         return Ok(nodes);
     }
 
@@ -32,7 +43,7 @@ pub fn connect_validator(info: &ValidatorInfo) -> Result<HashSet<ValidatorInfo>,
     Ok(nodes)
 }
 
-fn receive_nodes(discovery: &str) -> Result<HashSet<ValidatorInfo>, Box<Error>> {
+fn receive_nodes(discovery: &str) -> Result<HashMap<PKeys, ValidatorInfo>, Box<Error>> {
     let mut nodes_get = Vec::new();
 
     let mut handle = Easy::new();

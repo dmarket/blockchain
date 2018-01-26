@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::HashMap;
 use std::io;
 use std::net::SocketAddr;
 use std::sync::{Arc, RwLock};
@@ -24,6 +24,8 @@ use tokio_timer::Timer;
 
 const PROPOSE_HEIGHT_INCREMENT: u64 = 25;
 
+type PKeys = String;
+
 #[derive(Debug, Hash, Serialize, Deserialize, Eq, PartialEq, Copy, Clone)]
 pub struct ValidatorInfo {
     public: SocketAddr,
@@ -33,11 +35,17 @@ pub struct ValidatorInfo {
     service: PublicKey,
 }
 
+impl ValidatorInfo {
+    pub fn keys(&self) -> PKeys {
+        String::new() + &self.consensus.to_hex() + &self.service.to_hex()
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct ServiceDiscovery {
     handle: Handle,
     timer: Timer,
-    nodes: Arc<RwLock<HashSet<ValidatorInfo>>>,
+    nodes: Arc<RwLock<HashMap<PKeys, ValidatorInfo>>>,
 }
 
 impl ServiceDiscovery {
@@ -45,7 +53,7 @@ impl ServiceDiscovery {
         ServiceDiscovery {
             handle,
             timer: Timer::default(),
-            nodes: Arc::new(RwLock::new(HashSet::new())),
+            nodes: Arc::new(RwLock::new(HashMap::new())),
         }
     }
 
@@ -72,7 +80,7 @@ impl ServiceDiscovery {
                 Ok(info) => {
                     let mut nodes = nodes.write().unwrap();
                     eprintln!("Received value: {:?}", &info);
-                    nodes.insert(info);
+                    nodes.insert(info.keys(), info);
                     ServiceDiscovery::publish_peer(&handle, timer, nodes.clone(), info);
                     future::ok(Response::new().with_status(StatusCode::Ok))
                 }
@@ -85,11 +93,11 @@ impl ServiceDiscovery {
     fn publish_peer(
         handle: &Handle,
         timer: Timer,
-        nodes: HashSet<ValidatorInfo>,
+        nodes: HashMap<PKeys, ValidatorInfo>,
         new_node: ValidatorInfo,
     ) {
-        let api_node = match nodes.iter().filter(|n| **n != new_node).next() {
-            Some(node) => *node,
+        let api_node = match nodes.iter().filter(|&(k, _)| *k != new_node.keys()).next() {
+            Some((_, &node)) => node,
             None => return,
         };
 
@@ -136,9 +144,9 @@ impl ServiceDiscovery {
         let propose_handle = handle.clone();
         let validators = nodes
             .iter()
-            .map(|node| ValidatorKeys {
-                service_key: node.service,
-                consensus_key: node.consensus,
+            .map(|(_, info)| ValidatorKeys {
+                consensus_key: info.consensus,
+                service_key: info.service,
             })
             .collect();
         let propose_sleep = timer.sleep(Duration::new(5, 0));
@@ -188,9 +196,9 @@ impl ServiceDiscovery {
             .and_then(move |response| {
                 let iter = nodes
                     .into_iter()
-                    .filter(|n| *n != new_node)
+                    .filter(|&(_, info)| info != new_node)
                     .take(votes_to_send)
-                    .map(|node| {
+                    .map(|(_, node)| {
                         let vote = response.cfg_hash.to_hex();
                         let client = Client::new(&votes_handle);
                         let uri = format!(

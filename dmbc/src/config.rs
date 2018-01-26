@@ -25,6 +25,7 @@ pub struct Api {
     keys_path: Option<String>,
     peer_address: Option<String>,
     peers: Option<Vec<String>>,
+    is_validator: Option<bool>,
 }
 
 #[derive(Deserialize)]
@@ -112,6 +113,13 @@ impl Api {
             }
         }
     }
+
+    pub fn is_validator(self) -> bool {
+        match env::var("VALIDATOR") {
+            Ok(value) => value.parse::<bool>().unwrap(),
+            Err(_) => self.is_validator.unwrap_or(true),
+        }
+    }
 }
 
 impl Db {
@@ -175,7 +183,8 @@ impl ServiceDiscovery {
 /// ```
 pub fn read_config() -> Result<Config, Error> {
     let mut content = String::new();
-    let mut f = File::open(Path::new("./etc/config.toml"))?;
+    let path = env::var("CONFIG_PATH").unwrap_or("./etc/config.toml".to_string());
+    let mut f = File::open(Path::new(&path))?;
     let _res = f.read_to_string(&mut content);
     Ok(toml::from_str(content.as_str()).unwrap())
 }
