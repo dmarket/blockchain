@@ -2,7 +2,7 @@
 current_node = "node0"
 address = "127.0.0.1:8000"
 private_address = "127.0.0.1:8001"
-peer_address = "0.0.0.0:2000"
+peer_address = "127.0.0.1:2000"
 peers = []
 keys_path = "./var/keys"
 
