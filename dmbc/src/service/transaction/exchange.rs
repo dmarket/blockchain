@@ -13,8 +13,10 @@ use service::transaction::fee::{calculate_fees_for_exchange, FeeStrategy, TxFees
 
 use service::schema::wallet::WalletSchema;
 
-use super::{SERVICE_ID, TX_EXCHANGE_ID};
+use super::SERVICE_ID;
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
+
+pub const TX_EXCHANGE_ID: u16 = 601;
 
 encoding_struct! {
     struct ExchangeOffer {

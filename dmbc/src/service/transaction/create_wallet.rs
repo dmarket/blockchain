@@ -8,10 +8,13 @@ use serde_json::Value;
 
 use service::transaction::TRANSACTION_FEE;
 
-use super::{INIT_BALANCE, SERVICE_ID, TX_CREATE_WALLET_ID};
+use super::SERVICE_ID;
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
 use super::schema::wallet::WalletSchema;
 use super::wallet::Wallet;
+
+pub const TX_CREATE_WALLET_ID: u16 = 100;
+pub const INIT_BALANCE: u64 = 100_000_000; // 1 DMC = 100_000_000 dimosh
 
 message! {
     struct TxCreateWallet {

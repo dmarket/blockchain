@@ -23,21 +23,20 @@ use self::api::ServiceApi;
 use self::asset::Asset;
 use self::schema::transaction_status::TxSchema;
 use self::schema::wallet::WalletSchema;
-use self::transaction::{TX_ADD_ASSETS_ID, TX_CREATE_WALLET_ID, TX_DEL_ASSETS_ID, TX_EXCHANGE_ID,
-                        TX_EXCHANGE_WITH_INTERMEDIARY_ID, TX_MINING_ID, TX_TRADE_ASK_ASSETS_ID,
-                        TX_TRADE_ASK_ASSETS_WITH_INTERMEDIARY_ID, TX_TRADE_ASSETS_ID,
-                        TX_TRADE_ASSETS_WITH_INTERMEDIARY_ID, TX_TRANSFER_ID};
-use self::transaction::add_assets::TxAddAsset;
-use self::transaction::create_wallet::TxCreateWallet;
-use self::transaction::del_assets::TxDelAsset;
-use self::transaction::exchange::TxExchange;
-use self::transaction::exchange_with_intermediary::TxExchangeWithIntermediary;
-use self::transaction::mining::TxMining;
-use self::transaction::trade_assets::TxTrade;
-use self::transaction::trade_assets_with_intermediary::TxTradeWithIntermediary;
-use self::transaction::trade_ask_assets::TxTradeAsk;
-use self::transaction::trade_ask_assets_with_intermediary::TxTradeAskWithIntermediary;
-use self::transaction::transfer::TxTransfer;
+use self::transaction::add_assets::{TxAddAsset, TX_ADD_ASSETS_ID};
+use self::transaction::create_wallet::{TxCreateWallet, TX_CREATE_WALLET_ID};
+use self::transaction::del_assets::{TxDelAsset, TX_DEL_ASSETS_ID};
+use self::transaction::exchange::{TxExchange, TX_EXCHANGE_ID};
+use self::transaction::exchange_with_intermediary::{TxExchangeWithIntermediary,
+                                                    TX_EXCHANGE_WITH_INTERMEDIARY_ID};
+use self::transaction::mining::{TxMining, TX_MINING_ID};
+use self::transaction::trade_assets::{TxTrade, TX_TRADE_ASSETS_ID};
+use self::transaction::trade_assets_with_intermediary::{TxTradeWithIntermediary,
+                                                        TX_TRADE_ASSETS_WITH_INTERMEDIARY_ID};
+use self::transaction::trade_ask_assets::{TxTradeAsk, TX_TRADE_ASK_ASSETS_ID};
+use self::transaction::trade_ask_assets_with_intermediary::{TxTradeAskWithIntermediary,
+                                                            TX_TRADE_ASK_ASSETS_WITH_INTERMEDIARY_ID};
+use self::transaction::transfer::{TxTransfer, TX_TRANSFER_ID};
 use self::wallet::Wallet;
 use self::configuration::Configuration;
 use config;

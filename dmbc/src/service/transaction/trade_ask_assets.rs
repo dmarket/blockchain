@@ -13,8 +13,10 @@ use service::transaction::fee::{calculate_fees_for_trade, TxFees};
 
 use service::schema::wallet::WalletSchema;
 
-use super::{SERVICE_ID, TX_TRADE_ASK_ASSETS_ID};
+use super::SERVICE_ID;
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
+
+pub const TX_TRADE_ASK_ASSETS_ID: u16 = 501;
 
 encoding_struct! {
     struct TradeAskOffer {

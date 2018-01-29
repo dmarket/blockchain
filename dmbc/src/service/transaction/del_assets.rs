@@ -6,7 +6,7 @@ use exonum::messages::Message;
 use exonum::storage::Fork;
 use serde_json::Value;
 
-use super::{SERVICE_ID, TX_DEL_ASSETS_ID};
+use super::SERVICE_ID;
 use service::CurrencyService;
 use service::asset::Asset;
 use service::schema::transaction_status::{TxStatus, TxStatusSchema};
@@ -14,6 +14,8 @@ use service::transaction::fee::{calculate_fees_for_del_assets, TxFees};
 
 use service::schema::asset::AssetSchema;
 use service::schema::wallet::WalletSchema;
+
+pub const TX_DEL_ASSETS_ID: u16 = 400;
 
 message! {
     struct TxDelAsset {

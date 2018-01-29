@@ -14,8 +14,10 @@ use service::transaction::fee::{calculate_fees_for_add_assets, TxFees};
 use service::schema::asset::AssetSchema;
 use service::schema::wallet::WalletSchema;
 
-use super::{SERVICE_ID, TX_ADD_ASSETS_ID};
+use super::SERVICE_ID;
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
+
+pub const TX_ADD_ASSETS_ID: u16 = 300;
 
 message! {
     struct TxAddAsset {

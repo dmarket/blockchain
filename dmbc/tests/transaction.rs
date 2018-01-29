@@ -146,7 +146,7 @@ fn add_assets_fails() {
 
 #[test]
 fn create_wallet() {
-    use dmbc::service::transaction::INIT_BALANCE;
+    use dmbc::service::transaction::create_wallet::INIT_BALANCE;
 
     let (public_key, secret_key) = crypto::gen_keypair();
     let tx = transaction::Builder::new()

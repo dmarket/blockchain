@@ -12,8 +12,10 @@ use service::transaction::fee::{calculate_fees_for_transfer, TxFees};
 
 use service::schema::wallet::WalletSchema;
 
-use super::{SERVICE_ID, TX_TRANSFER_ID};
+use super::SERVICE_ID;
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
+
+pub const TX_TRANSFER_ID: u16 = 200;
 
 message! {
     struct TxTransfer {

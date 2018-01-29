@@ -11,14 +11,13 @@ use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use router::Router;
 
-use service::transaction::{TX_EXCHANGE_ID, TX_TRADE_ASSETS_ID};
 use service::transaction::add_assets::TxAddAsset;
 use service::transaction::create_wallet::TxCreateWallet;
 use service::transaction::del_assets::TxDelAsset;
-use service::transaction::exchange::TxExchange;
+use service::transaction::exchange::{TxExchange, TX_EXCHANGE_ID};
 use service::transaction::exchange_with_intermediary::TxExchangeWithIntermediary;
 use service::transaction::mining::TxMining;
-use service::transaction::trade_assets::TxTrade;
+use service::transaction::trade_assets::{TxTrade, TX_TRADE_ASSETS_ID};
 use service::transaction::trade_assets_with_intermediary::TxTradeWithIntermediary;
 use service::transaction::trade_ask_assets::TxTradeAsk;
 use service::transaction::trade_ask_assets_with_intermediary::TxTradeAskWithIntermediary;

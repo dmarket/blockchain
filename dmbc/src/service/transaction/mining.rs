@@ -8,9 +8,12 @@ use serde_json::Value;
 
 use service::transaction::TRANSACTION_FEE;
 
-use super::{AMOUNT_MINING_COIN, SERVICE_ID, TX_MINING_ID};
+use super::SERVICE_ID;
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
 use super::schema::wallet::WalletSchema;
+
+pub const TX_MINING_ID: u16 = 700;
+const AMOUNT_MINING_COIN: u64 = 100_000_000_000_000;
 
 message! {
     struct TxMining {
@@ -63,27 +66,21 @@ mod tests {
 
     use service::schema::wallet::WalletSchema;
     use service::wallet::Wallet;
-    use service::transaction::AMOUNT_MINING_COIN;
+    use service::transaction::mining::AMOUNT_MINING_COIN;
     use super::TxMining;
 
     fn get_json() -> String {
         r#"{
-    "body": {
-        "pub_key": "e61b4b9945defd1878d7575ddc50993f6a074cdfcafc47d15cba46860cab0060",
-        "seed": "43"
-    },
-    "network_id": 0,
-    "protocol_version": 0,
-    "service_id": 2,
-    "message_id": 7,
-    "signature": "671540cb1bf737c109e7ba7f90364cafa4064f8e7d54cdc74ae31711061efc2f3116be128a09d642970980f87beb19f948f5148f0cd544ba926c2acd304b6d09"
-    }"#.to_string()
-    }
-
-    #[test]
-    fn test_convert_from_json() {
-        let tx: TxMining = ::serde_json::from_str(&get_json()).unwrap();
-        assert!(tx.verify());
+            "body": {
+                "pub_key": "e61b4b9945defd1878d7575ddc50993f6a074cdfcafc47d15cba46860cab0060",
+                "seed": "43"
+            },
+            "network_id": 0,
+            "protocol_version": 0,
+            "service_id": 2,
+            "message_id": 700,
+            "signature": "671540cb1bf737c109e7ba7f90364cafa4064f8e7d54cdc74ae31711061efc2f3116be128a09d642970980f87beb19f948f5148f0cd544ba926c2acd304b6d09"
+        }"#.to_string()
     }
 
     #[test]
