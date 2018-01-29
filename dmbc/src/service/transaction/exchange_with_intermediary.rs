@@ -10,7 +10,7 @@ use service::CurrencyService;
 use service::asset::Asset;
 use service::wallet::Wallet;
 use service::transaction::intermediary::Intermediary;
-use service::transaction::fee::{calculate_fees_for_exchange, FeeStrategy, TxFees};
+use service::transaction::fee::{FeeStrategy, TxFees};
 use service::schema::wallet::WalletSchema;
 
 use super::SERVICE_ID;
@@ -60,7 +60,7 @@ impl TxExchangeWithIntermediary {
             &self.offer().recipient_assets()[..],
         ].concat();
 
-        calculate_fees_for_exchange(view, exchange_assets)
+        TxFees::for_exchange(view, exchange_assets)
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {

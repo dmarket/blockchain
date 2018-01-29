@@ -9,7 +9,7 @@ use std::collections::HashMap;
 
 use service::CurrencyService;
 use service::asset::{Asset, Fees, MetaAsset};
-use service::transaction::fee::{calculate_fees_for_add_assets, TxFees};
+use service::transaction::fee::TxFees;
 
 use service::schema::asset::AssetSchema;
 use service::schema::wallet::WalletSchema;
@@ -33,7 +33,7 @@ message! {
 
 impl TxAddAsset {
     pub fn get_fee(&self, fork: &mut Fork) -> TxFees {
-        calculate_fees_for_add_assets(fork, self.meta_assets(), self.pub_key())
+        TxFees::for_add_assets(fork, self.meta_assets(), self.pub_key())
     }
 
     fn get_assets_fees_receivers(&self) -> (Vec<Asset>, Vec<Fees>, Vec<PublicKey>) {

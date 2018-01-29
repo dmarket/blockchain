@@ -11,7 +11,7 @@ use service::CurrencyService;
 use service::asset::{Asset, TradeAsset};
 
 use service::transaction::intermediary::Intermediary;
-use service::transaction::fee::{calculate_fees_for_trade, TxFees};
+use service::transaction::fee::TxFees;
 use service::schema::wallet::WalletSchema;
 
 use super::SERVICE_ID;
@@ -46,7 +46,7 @@ message! {
 
 impl TxTradeAskWithIntermediary {
     pub fn get_fee(&self, view: &mut Fork) -> TxFees {
-        calculate_fees_for_trade(view, self.offer().assets())
+        TxFees::for_trade(view, self.offer().assets())
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {

@@ -10,7 +10,7 @@ use super::SERVICE_ID;
 use service::CurrencyService;
 use service::asset::Asset;
 use service::schema::transaction_status::{TxStatus, TxStatusSchema};
-use service::transaction::fee::{calculate_fees_for_del_assets, TxFees};
+use service::transaction::fee::TxFees;
 
 use service::schema::asset::AssetSchema;
 use service::schema::wallet::WalletSchema;
@@ -31,7 +31,7 @@ message! {
 
 impl TxDelAsset {
     pub fn get_fee(&self, fork: &mut Fork) -> TxFees {
-        calculate_fees_for_del_assets(fork, self.assets())
+        TxFees::for_del_assets(fork, self.assets())
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {
