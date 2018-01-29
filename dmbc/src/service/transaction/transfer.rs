@@ -9,7 +9,8 @@ use serde_json::Value;
 use service::CurrencyService;
 use service::asset::Asset;
 use service::transaction::fee::{calculate_fees_for_transfer, TxFees};
-use service::transaction::utils;
+
+use service::schema::wallet::WalletSchema;
 
 use super::{SERVICE_ID, TX_TRANSFER_ID};
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
@@ -35,14 +36,14 @@ impl TxTransfer {
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {
-        let mut platform = utils::get_wallet(view, &CurrencyService::get_platform_pub_key());
-        let mut sender = utils::get_wallet(view, self.from());
-        let mut receiver = utils::get_wallet(view, self.to());
+        let mut platform = WalletSchema::get_wallet(view, &CurrencyService::get_platform_pub_key());
+        let mut sender = WalletSchema::get_wallet(view, self.from());
+        let mut receiver = WalletSchema::get_wallet(view, self.to());
 
         let fee = self.get_fee(view);
 
         // Pay fee for tx execution
-        if !utils::transfer_coins(view, &mut sender, &mut platform, fee.transaction_fee()) {
+        if !WalletSchema::transfer_coins(view, &mut sender, &mut platform, fee.transaction_fee()) {
             return TxStatus::Fail;
         }
 
@@ -50,7 +51,7 @@ impl TxTransfer {
         view.checkpoint();
 
         if !self.assets().is_empty() {
-            if !utils::transfer_assets(view, &mut sender, &mut receiver, &self.assets()) {
+            if !WalletSchema::transfer_assets(view, &mut sender, &mut receiver, &self.assets()) {
                 view.rollback();
                 return TxStatus::Fail;
             }
@@ -58,7 +59,7 @@ impl TxTransfer {
             // send fees to creators of assets
             for (mut creator, fee) in fee.assets_fees() {
                 println!("Creator {:?} will receive {}", creator.pub_key(), fee);
-                if !utils::transfer_coins(view, &mut sender, &mut creator, fee) {
+                if !WalletSchema::transfer_coins(view, &mut sender, &mut creator, fee) {
                     view.rollback();
                     return TxStatus::Fail;
                 }
@@ -68,7 +69,7 @@ impl TxTransfer {
         // check if sender wants to send coins and has enough coins to send, otherwise - Fail.
         let coins_to_send = self.amount();
         if coins_to_send > 0 {
-            if !utils::transfer_coins(view, &mut sender, &mut receiver, coins_to_send) {
+            if !WalletSchema::transfer_coins(view, &mut sender, &mut receiver, coins_to_send) {
                 view.rollback();
                 return TxStatus::Fail;
             }

@@ -83,4 +83,24 @@ impl<'a> AssetSchema<'a> {
     {
         f(AssetSchema(view))
     }
+
+    pub fn store(
+        view: &mut Fork,
+        creator_key: &PublicKey,
+        assets: &Vec<Asset>,
+        fees_list: &Vec<Fees>,
+    ) -> bool {
+        Self::map(view, |mut schema| {
+            schema.add_assets(assets, fees_list, creator_key)
+        })
+    }
+
+    pub fn remove(view: &mut Fork, assets: &Vec<Asset>) -> bool {
+        Self::map(view, |mut schema| schema.del_assets(assets));
+        true
+    }
+
+    pub fn get_asset_info(view: &mut Fork, id: &AssetId) -> Option<AssetInfo> {
+        Self::map(view, |mut assets| assets.info(id))
+    }
 }

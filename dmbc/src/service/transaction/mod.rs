@@ -6,7 +6,6 @@ use super::SERVICE_ID;
 
 pub const TRANSACTION_FEE: u64 = 1000;
 
-pub mod utils;
 pub mod fee;
 pub mod intermediary;
 

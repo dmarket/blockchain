@@ -10,8 +10,9 @@ use serde_json::Value;
 use service::CurrencyService;
 use service::asset::{Asset, TradeAsset};
 use service::transaction::fee::{calculate_fees_for_trade, TxFees};
-use service::transaction::utils;
+
 use service::transaction::intermediary::Intermediary;
+use service::schema::wallet::WalletSchema;
 
 use super::{SERVICE_ID, TX_TRADE_ASSETS_WITH_INTERMEDIARY_ID};
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
@@ -59,15 +60,15 @@ impl TxTradeWithIntermediary {
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {
-        let mut platform = utils::get_wallet(view, &CurrencyService::get_platform_pub_key());
-        let mut buyer = utils::get_wallet(view, self.offer().buyer());
-        let mut seller = utils::get_wallet(view, self.offer().seller());
-        let mut intermediary = utils::get_wallet(view, self.offer().intermediary().wallet());
+        let mut platform = WalletSchema::get_wallet(view, &CurrencyService::get_platform_pub_key());
+        let mut buyer = WalletSchema::get_wallet(view, self.offer().buyer());
+        let mut seller = WalletSchema::get_wallet(view, self.offer().seller());
+        let mut intermediary = WalletSchema::get_wallet(view, self.offer().intermediary().wallet());
 
         let fee = self.get_fee(view);
 
         // Pay fee for tx execution
-        if !utils::transfer_coins(view, &mut seller, &mut platform, fee.transaction_fee()) {
+        if !WalletSchema::transfer_coins(view, &mut seller, &mut platform, fee.transaction_fee()) {
             return TxStatus::Fail;
         }
 
@@ -75,7 +76,7 @@ impl TxTradeWithIntermediary {
         view.checkpoint();
 
         // pay commison for the transaction to intermediary
-        if !utils::transfer_coins(
+        if !WalletSchema::transfer_coins(
             view,
             &mut seller,
             &mut intermediary,
@@ -98,19 +99,19 @@ impl TxTradeWithIntermediary {
         println!("Buyer's balance before transaction : {:?}", buyer);
 
         let offer_price = self.offer().total_price();
-        if !utils::transfer_coins(view, &mut buyer, &mut seller, offer_price) {
+        if !WalletSchema::transfer_coins(view, &mut buyer, &mut seller, offer_price) {
             view.rollback();
             return TxStatus::Fail;
         }
 
-        if !utils::transfer_assets(view, &mut seller, &mut buyer, &assets) {
+        if !WalletSchema::transfer_assets(view, &mut seller, &mut buyer, &assets) {
             view.rollback();
             return TxStatus::Fail;
         }
 
         for (mut creator, fee) in fee.assets_fees() {
             println!("\tCreator {:?} will receive {}", creator.pub_key(), fee);
-            if !utils::transfer_coins(view, &mut seller, &mut creator, fee) {
+            if !WalletSchema::transfer_coins(view, &mut seller, &mut creator, fee) {
                 view.rollback();
                 return TxStatus::Fail;
             }

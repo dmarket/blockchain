@@ -11,7 +11,9 @@ use service::CurrencyService;
 use service::asset::Asset;
 use service::schema::transaction_status::{TxStatus, TxStatusSchema};
 use service::transaction::fee::{calculate_fees_for_del_assets, TxFees};
-use service::transaction::utils;
+
+use service::schema::asset::AssetSchema;
+use service::schema::wallet::WalletSchema;
 
 message! {
     struct TxDelAsset {
@@ -35,13 +37,13 @@ impl TxDelAsset {
         // all wallets for this asset id is equal to the amonut stored in the
         // AssetInfo associated with this asset id.
 
-        let mut platform = utils::get_wallet(view, &CurrencyService::get_platform_pub_key());
-        let mut creator = utils::get_wallet(view, self.pub_key());
+        let mut platform = WalletSchema::get_wallet(view, &CurrencyService::get_platform_pub_key());
+        let mut creator = WalletSchema::get_wallet(view, self.pub_key());
 
         let fee = self.get_fee(view);
 
         // Pay fee for tx execution
-        if !utils::transfer_coins(view, &mut creator, &mut platform, fee.amount()) {
+        if !WalletSchema::transfer_coins(view, &mut creator, &mut platform, fee.amount()) {
             return TxStatus::Fail;
         }
 
@@ -49,7 +51,7 @@ impl TxDelAsset {
         // If sender (pub_key) is not a creator of asset, then Fail.
         // If amount of assets to delete is bigger than amount of assets are stored, then Fail.
         for asset in self.assets() {
-            match utils::get_asset_info(view, &asset.id()) {
+            match AssetSchema::get_asset_info(view, &asset.id()) {
                 Some(ref info) => {
                     if info.creator() != self.pub_key() || asset.amount() > info.amount() {
                         return TxStatus::Fail;
@@ -60,14 +62,14 @@ impl TxDelAsset {
         }
 
         // if there are no assets to delete, Fail
-        if !utils::delete_assets_from_wallet(view, &mut creator, &self.assets()) {
+        if !WalletSchema::delete_assets(view, &mut creator, &self.assets()) {
             return TxStatus::Fail;
         }
 
         println!("Asset {:?}", self.assets());
         println!("Wallet after delete assets: {:?}", creator);
 
-        utils::remove_assets(view, &self.assets());
+        AssetSchema::remove(view, &self.assets());
         TxStatus::Success
     }
 }

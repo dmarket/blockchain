@@ -10,7 +10,9 @@ use std::collections::HashMap;
 use service::CurrencyService;
 use service::asset::{Asset, Fees, MetaAsset};
 use service::transaction::fee::{calculate_fees_for_add_assets, TxFees};
-use service::transaction::utils;
+
+use service::schema::asset::AssetSchema;
+use service::schema::wallet::WalletSchema;
 
 use super::{SERVICE_ID, TX_ADD_ASSETS_ID};
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
@@ -76,13 +78,13 @@ impl TxAddAsset {
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {
-        let mut platform = utils::get_wallet(view, &CurrencyService::get_platform_pub_key());
-        let mut creator = utils::get_wallet(view, self.pub_key());
+        let mut platform = WalletSchema::get_wallet(view, &CurrencyService::get_platform_pub_key());
+        let mut creator = WalletSchema::get_wallet(view, self.pub_key());
 
         let fee = self.get_fee(view);
 
         // Pay fee for tx execution
-        if !utils::transfer_coins(view, &mut creator, &mut platform, fee.transaction_fee()) {
+        if !WalletSchema::transfer_coins(view, &mut creator, &mut platform, fee.transaction_fee()) {
             return TxStatus::Fail;
         }
 
@@ -90,7 +92,8 @@ impl TxAddAsset {
         view.checkpoint();
 
         // pay fee for assets
-        if !utils::transfer_coins(view, &mut creator, &mut platform, fee.assets_fees_total()) {
+        if !WalletSchema::transfer_coins(view, &mut creator, &mut platform, fee.assets_fees_total())
+        {
             view.rollback();
             return TxStatus::Fail;
         }
@@ -102,15 +105,15 @@ impl TxAddAsset {
 
         // store new assets in asset schema
         let (assets, fees_list, receivers) = self.get_assets_fees_receivers();
-        if !utils::store_assets(view, self.pub_key(), &assets, &fees_list) {
+        if !AssetSchema::store(view, self.pub_key(), &assets, &fees_list) {
             view.rollback();
             return TxStatus::Fail;
         }
 
         // send assets to receivers
         for (receiver_key, asset) in receivers.iter().zip(assets) {
-            let mut receiver = utils::get_wallet(view, receiver_key);
-            if !utils::add_assets_to_wallet(view, &mut receiver, &[asset]) {
+            let mut receiver = WalletSchema::get_wallet(view, receiver_key);
+            if !WalletSchema::add_assets(view, &mut receiver, &[asset]) {
                 view.rollback();
                 return TxStatus::Fail;
             }

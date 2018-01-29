@@ -9,9 +9,9 @@ use serde_json::Value;
 use service::CurrencyService;
 use service::asset::Asset;
 use service::wallet::Wallet;
-use service::transaction::utils;
 use service::transaction::intermediary::Intermediary;
 use service::transaction::fee::{calculate_fees_for_exchange, FeeStrategy, TxFees};
+use service::schema::wallet::WalletSchema;
 
 use super::{SERVICE_ID, TX_EXCHANGE_WITH_INTERMEDIARY_ID};
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
@@ -62,10 +62,10 @@ impl TxExchangeWithIntermediary {
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {
-        let mut platform = utils::get_wallet(view, &CurrencyService::get_platform_pub_key());
-        let mut sender = utils::get_wallet(view, self.offer().sender());
-        let mut recipient = utils::get_wallet(view, self.offer().recipient());
-        let mut intermediary = utils::get_wallet(view, self.offer().intermediary().wallet());
+        let mut platform = WalletSchema::get_wallet(view, &CurrencyService::get_platform_pub_key());
+        let mut sender = WalletSchema::get_wallet(view, self.offer().sender());
+        let mut recipient = WalletSchema::get_wallet(view, self.offer().recipient());
+        let mut intermediary = WalletSchema::get_wallet(view, self.offer().intermediary().wallet());
 
         let fee_strategy = FeeStrategy::from_u8(self.offer().fee_strategy()).unwrap();
         let fee = self.get_fee(view);
@@ -120,7 +120,7 @@ impl TxExchangeWithIntermediary {
             }
         }
 
-        if !utils::transfer_coins(
+        if !WalletSchema::transfer_coins(
             view,
             &mut sender,
             &mut recipient,
@@ -130,7 +130,7 @@ impl TxExchangeWithIntermediary {
             return TxStatus::Fail;
         }
 
-        if !utils::exchange_assets(
+        if !WalletSchema::exchange_assets(
             view,
             &mut sender,
             &mut recipient,
@@ -189,6 +189,12 @@ impl Transaction for TxExchangeWithIntermediary {
     }
 }
 
+fn split_coins(coins: u64) -> (u64, u64) {
+    let first_half = (coins as f64 / 2.0).ceil() as u64;
+    let second_half = coins - first_half;
+    (first_half, second_half)
+}
+
 fn move_coins(
     view: &mut Fork,
     strategy: &FeeStrategy,
@@ -200,18 +206,20 @@ fn move_coins(
 ) -> bool {
     // move coins from participant(s) to fee receiver
     match *strategy {
-        FeeStrategy::Recipient => utils::transfer_coins(view, recipient, coins_receiver, coins),
-        FeeStrategy::Sender => utils::transfer_coins(view, sender, coins_receiver, coins),
+        FeeStrategy::Recipient => {
+            WalletSchema::transfer_coins(view, recipient, coins_receiver, coins)
+        }
+        FeeStrategy::Sender => WalletSchema::transfer_coins(view, sender, coins_receiver, coins),
         FeeStrategy::RecipientAndSender => {
-            let (recipient_half, sender_half) = utils::split_coins(coins);
+            let (recipient_half, sender_half) = split_coins(coins);
             let recipient_ok =
-                utils::transfer_coins(view, recipient, coins_receiver, recipient_half);
-            let sender_ok = utils::transfer_coins(view, sender, coins_receiver, sender_half);
+                WalletSchema::transfer_coins(view, recipient, coins_receiver, recipient_half);
+            let sender_ok = WalletSchema::transfer_coins(view, sender, coins_receiver, sender_half);
 
             sender_ok && recipient_ok
         }
         FeeStrategy::Intermediary => {
-            utils::transfer_coins(view, intermediary, coins_receiver, coins)
+            WalletSchema::transfer_coins(view, intermediary, coins_receiver, coins)
         }
     }
 }
@@ -230,15 +238,16 @@ fn pay_commision(
 
     match *strategy {
         FeeStrategy::Recipient => {
-            return utils::transfer_coins(view, recipient, intermediary, commision);
+            return WalletSchema::transfer_coins(view, recipient, intermediary, commision);
         }
         FeeStrategy::Sender => {
-            return utils::transfer_coins(view, sender, intermediary, commision);
+            return WalletSchema::transfer_coins(view, sender, intermediary, commision);
         }
         FeeStrategy::RecipientAndSender => {
-            let (recipient_half, sender_half) = utils::split_coins(commision);
-            let recipient_ok = utils::transfer_coins(view, recipient, intermediary, recipient_half);
-            let sender_ok = utils::transfer_coins(view, sender, intermediary, sender_half);
+            let (recipient_half, sender_half) = split_coins(commision);
+            let recipient_ok =
+                WalletSchema::transfer_coins(view, recipient, intermediary, recipient_half);
+            let sender_ok = WalletSchema::transfer_coins(view, sender, intermediary, sender_half);
             return recipient_ok && sender_ok;
         }
         FeeStrategy::Intermediary => true,
