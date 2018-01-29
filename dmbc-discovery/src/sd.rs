@@ -259,13 +259,13 @@ impl ServiceDiscovery {
 
     fn save_peers(peers: &HashMap<PKeys, ValidatorInfo>) -> io::Result<()> {
         // TODO: make this configurable.
-        let mut file = File::create("./etc/discovery-peers.toml")?;
+        let mut file = File::create("./var/discovery/peers.toml")?;
         let ser = toml::to_string_pretty(peers).unwrap();
         file.write(ser.as_bytes()).map(|_| ())
     }
 
     fn load_peers() -> Result<HashMap<PKeys, ValidatorInfo>, Box<Error>> {
-        let mut file = File::open("./etc/discovery-peers.toml")?;
+        let mut file = File::open("./var/discovery/peers.toml")?;
         let mut data = Vec::new();
         file.read_to_end(&mut data).map_err(Box::new)?;
         toml::from_slice(&data).map_err(|e| e.into())
