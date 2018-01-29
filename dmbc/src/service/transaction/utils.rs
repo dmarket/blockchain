@@ -7,15 +7,6 @@ use service::wallet::Wallet;
 use service::schema::asset::AssetSchema;
 use service::schema::wallet::WalletSchema;
 
-encoding_struct! {
-    struct Intermediary {
-        const SIZE = 40;
-
-        field wallet:       &PublicKey [0 => 32]
-        field commision:    u64        [32 => 40]
-    }
-}
-
 pub fn get_wallet(view: &mut Fork, pub_key: &PublicKey) -> Wallet {
     WalletSchema::map(view, |mut schema| schema.wallet(pub_key))
 }

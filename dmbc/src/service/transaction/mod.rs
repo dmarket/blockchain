@@ -8,6 +8,7 @@ pub const TRANSACTION_FEE: u64 = 1000;
 
 pub mod utils;
 pub mod fee;
+pub mod intermediary;
 
 // Create Wallet
 pub const TX_CREATE_WALLET_ID: u16 = 1;

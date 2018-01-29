@@ -31,6 +31,9 @@ impl<'a> AssetSchema<'a> {
                 true
             }
             Some(info) => {
+                // if the creator wants to add N items of asset additionaly,
+                // then fees data should be identical to what is
+                // stored on the blockchain allready
                 if info.creator() != creator || info.fees() != fees {
                     return false;
                 }

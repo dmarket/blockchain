@@ -11,7 +11,7 @@ use service::CurrencyService;
 use service::asset::{Asset, TradeAsset};
 use service::transaction::fee::{calculate_fees_for_trade, TxFees};
 use service::transaction::utils;
-use service::transaction::utils::Intermediary;
+use service::transaction::intermediary::Intermediary;
 
 use super::{SERVICE_ID, TX_TRADE_ASSETS_WITH_INTERMEDIARY_ID};
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};

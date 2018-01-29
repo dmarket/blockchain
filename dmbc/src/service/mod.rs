@@ -45,7 +45,7 @@ use config;
 // Service identifier
 pub const SERVICE_ID: u16 = 2;
 pub const SERVICE_NAME: &str = "cryptocurrency/v1";
-pub const PLATFORM_PUB_KEY: &str =
+pub const GENESIS_WALLET_PUB_KEY: &str =
     "36a05e418393fb4b23819753f6e6dd51550ce030d53842c43dd1349857a96a61";
 // Identifier for wallet creation transaction type
 
@@ -57,7 +57,7 @@ impl CurrencyService {
     }
 
     pub fn get_platform_pub_key() -> PublicKey {
-        PublicKey::from_hex(PLATFORM_PUB_KEY).unwrap()
+        PublicKey::from_hex(GENESIS_WALLET_PUB_KEY).unwrap()
     }
 }
 

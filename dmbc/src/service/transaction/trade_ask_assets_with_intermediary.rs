@@ -10,7 +10,7 @@ use serde_json::Value;
 use service::CurrencyService;
 use service::asset::{Asset, TradeAsset};
 use service::transaction::utils;
-use service::transaction::utils::Intermediary;
+use service::transaction::intermediary::Intermediary;
 use service::transaction::fee::{calculate_fees_for_trade, TxFees};
 
 use super::{SERVICE_ID, TX_TRADE_ASK_ASSETS_WITH_INTERMEDIARY_ID};

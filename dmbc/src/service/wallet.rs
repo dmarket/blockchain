@@ -5,7 +5,7 @@ use exonum::encoding::Field;
 use service::asset::{Asset, AssetId};
 
 encoding_struct! {
-    #[derive(Eq, PartialOrd, Ord)]
+    #[derive(Eq, PartialOrd, Ord, Default)]
     struct Wallet {
         const SIZE = 48;
 

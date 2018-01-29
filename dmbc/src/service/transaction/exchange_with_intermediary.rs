@@ -10,7 +10,7 @@ use service::CurrencyService;
 use service::asset::Asset;
 use service::wallet::Wallet;
 use service::transaction::utils;
-use service::transaction::utils::Intermediary;
+use service::transaction::intermediary::Intermediary;
 use service::transaction::fee::{calculate_fees_for_exchange, FeeStrategy, TxFees};
 
 use super::{SERVICE_ID, TX_EXCHANGE_WITH_INTERMEDIARY_ID};
