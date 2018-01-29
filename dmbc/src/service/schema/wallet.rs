@@ -32,17 +32,17 @@ impl<'a> WalletSchema<'a> {
         f(WalletSchema(view))
     }
 
-    pub fn add_assets(view: &mut Fork, wallet: &mut Wallet, assets: &[Asset]) -> bool {
+    pub fn add_assets(view: &mut Fork, wallet: &mut Wallet, assets: &[Asset]) -> Result<(), ()> {
         wallet.add_assets(assets);
         Self::map(view, |mut schema| {
             schema.wallets().put(wallet.pub_key(), wallet.clone())
         });
-        true
+        Ok(())
     }
 
-    pub fn delete_assets(view: &mut Fork, wallet: &mut Wallet, assets: &[Asset]) -> bool {
+    pub fn delete_assets(view: &mut Fork, wallet: &mut Wallet, assets: &[Asset]) -> Result<(), ()> {
         if !wallet.del_assets(assets) {
-            return false;
+            return Err(());
         }
 
         // Remove wallet from db if it is empty completely, otherwise update db with changed wallet
@@ -50,7 +50,7 @@ impl<'a> WalletSchema<'a> {
             true => schema.wallets().remove(wallet.pub_key()),
             false => schema.wallets().put(wallet.pub_key(), wallet.clone()),
         });
-        true
+        Ok(())
     }
 
     pub fn transfer_coins(
@@ -58,9 +58,9 @@ impl<'a> WalletSchema<'a> {
         sender: &mut Wallet,
         receiver: &mut Wallet,
         coins: u64,
-    ) -> bool {
+    ) -> Result<(), ()> {
         if !sender.is_sufficient_funds(coins) {
-            return false;
+            return Err(());
         }
 
         sender.decrease(coins);
@@ -71,7 +71,7 @@ impl<'a> WalletSchema<'a> {
             schema.wallets().put(sender.pub_key(), sender.clone());
             schema.wallets().put(receiver.pub_key(), receiver.clone());
         });
-        true
+        Ok(())
     }
 
     pub fn transfer_assets(
@@ -79,9 +79,9 @@ impl<'a> WalletSchema<'a> {
         sender: &mut Wallet,
         receiver: &mut Wallet,
         assets: &[Asset],
-    ) -> bool {
+    ) -> Result<(), ()> {
         if !sender.is_assets_in_wallet(&assets) {
-            return false;
+            return Err(());
         }
 
         sender.del_assets(&assets);
@@ -92,7 +92,7 @@ impl<'a> WalletSchema<'a> {
             schema.wallets().put(sender.pub_key(), sender.clone());
             schema.wallets().put(receiver.pub_key(), receiver.clone());
         });
-        true
+        Ok(())
     }
 
     pub fn exchange_assets(
@@ -101,9 +101,9 @@ impl<'a> WalletSchema<'a> {
         part_b: &mut Wallet,
         assets_a: &[Asset],
         assets_b: &[Asset],
-    ) -> bool {
+    ) -> Result<(), ()> {
         if !part_a.is_assets_in_wallet(&assets_a) || !part_b.is_assets_in_wallet(&assets_b) {
-            return false;
+            return Err(());
         }
 
         part_a.del_assets(&assets_a);
@@ -117,7 +117,7 @@ impl<'a> WalletSchema<'a> {
             schema.wallets().put(part_a.pub_key(), part_a.clone());
             schema.wallets().put(part_b.pub_key(), part_b.clone());
         });
-        true
+        Ok(())
     }
 
     pub fn get_wallet(view: &mut Fork, pub_key: &PublicKey) -> Wallet {
@@ -158,18 +158,8 @@ mod tests {
             s.wallets().put(&recipient.pub_key(), recipient.clone());
         });
 
-        assert!(!WalletSchema::transfer_coins(
-            fork,
-            &mut sender,
-            &mut recipient,
-            200
-        ));
-        assert!(WalletSchema::transfer_coins(
-            fork,
-            &mut sender,
-            &mut recipient,
-            100
-        ));
+        assert!(WalletSchema::transfer_coins(fork, &mut sender, &mut recipient, 200).is_err());
+        assert!(WalletSchema::transfer_coins(fork, &mut sender, &mut recipient, 100).is_ok());
 
         let (sender, recipient) = WalletSchema::map(fork, |mut s| {
             (s.wallet(&sender_public), s.wallet(&recipient_public))
@@ -207,19 +197,19 @@ mod tests {
             s.wallets().put(&recipient.pub_key(), recipient.clone());
         });
 
-        assert!(!WalletSchema::transfer_assets(
-            fork,
-            &mut sender,
-            &mut recipient,
-            &[absent_asset]
-        ));
+        assert!(
+            WalletSchema::transfer_assets(fork, &mut sender, &mut recipient, &[absent_asset])
+                .is_err()
+        );
 
-        assert!(WalletSchema::transfer_assets(
-            fork,
-            &mut sender,
-            &mut recipient,
-            &[sender_asset.clone()]
-        ));
+        assert!(
+            WalletSchema::transfer_assets(
+                fork,
+                &mut sender,
+                &mut recipient,
+                &[sender_asset.clone()]
+            ).is_ok()
+        );
 
         let (sender, recipient) = WalletSchema::map(fork, |mut s| {
             (s.wallet(&sender_public), s.wallet(&recipient_public))
@@ -260,13 +250,15 @@ mod tests {
             s.wallets().put(&recipient.pub_key(), recipient.clone());
         });
 
-        assert!(WalletSchema::exchange_assets(
-            fork,
-            &mut sender,
-            &mut recipient,
-            &[sender_asset.clone()],
-            &[recipient_asset.clone()]
-        ));
+        assert!(
+            WalletSchema::exchange_assets(
+                fork,
+                &mut sender,
+                &mut recipient,
+                &[sender_asset.clone()],
+                &[recipient_asset.clone()]
+            ).is_ok()
+        );
 
         let (sender, recipient) = WalletSchema::map(fork, |mut s| {
             (s.wallet(&sender_public), s.wallet(&recipient_public))

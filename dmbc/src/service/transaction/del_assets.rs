@@ -43,7 +43,7 @@ impl TxDelAsset {
         let fee = self.get_fee(view);
 
         // Pay fee for tx execution
-        if !WalletSchema::transfer_coins(view, &mut creator, &mut platform, fee.amount()) {
+        if WalletSchema::transfer_coins(view, &mut creator, &mut platform, fee.amount()).is_err() {
             return TxStatus::Fail;
         }
 
@@ -62,14 +62,16 @@ impl TxDelAsset {
         }
 
         // if there are no assets to delete, Fail
-        if !WalletSchema::delete_assets(view, &mut creator, &self.assets()) {
+        if WalletSchema::delete_assets(view, &mut creator, &self.assets()).is_err() {
             return TxStatus::Fail;
         }
 
         println!("Asset {:?}", self.assets());
         println!("Wallet after delete assets: {:?}", creator);
 
-        AssetSchema::remove(view, &self.assets());
+        if AssetSchema::remove(view, &self.assets()).is_err() {
+            return TxStatus::Fail;
+        }
         TxStatus::Success
     }
 }

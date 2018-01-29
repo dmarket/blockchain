@@ -71,7 +71,7 @@ impl TxExchangeWithIntermediary {
         let fee = self.get_fee(view);
 
         // Pay fee for tx execution
-        if !move_coins(
+        if move_coins(
             view,
             &fee_strategy,
             &mut recipient,
@@ -79,7 +79,8 @@ impl TxExchangeWithIntermediary {
             &mut intermediary,
             &mut platform,
             fee.transaction_fee(),
-        ) {
+        ).is_err()
+        {
             return TxStatus::Fail;
         }
 
@@ -87,14 +88,15 @@ impl TxExchangeWithIntermediary {
         view.checkpoint();
 
         // pay commison for the transaction to intermediary
-        if !pay_commision(
+        if pay_commision(
             view,
             &fee_strategy,
             &mut recipient,
             &mut sender,
             &mut intermediary,
             self.offer().intermediary().commision(),
-        ) {
+        ).is_err()
+        {
             view.rollback();
             return TxStatus::Fail;
         }
@@ -106,7 +108,7 @@ impl TxExchangeWithIntermediary {
         // send fee to creators of assets
         for (mut creator, fee) in fee.assets_fees() {
             println!("\tCreator {:?} will receive {}", creator.pub_key(), fee);
-            if !move_coins(
+            if move_coins(
                 view,
                 &fee_strategy,
                 &mut recipient,
@@ -114,29 +116,32 @@ impl TxExchangeWithIntermediary {
                 &mut intermediary,
                 &mut creator,
                 fee,
-            ) {
+            ).is_err()
+            {
                 view.rollback();
                 return TxStatus::Fail;
             }
         }
 
-        if !WalletSchema::transfer_coins(
+        if WalletSchema::transfer_coins(
             view,
             &mut sender,
             &mut recipient,
             self.offer().sender_value(),
-        ) {
+        ).is_err()
+        {
             view.rollback();
             return TxStatus::Fail;
         }
 
-        if !WalletSchema::exchange_assets(
+        if WalletSchema::exchange_assets(
             view,
             &mut sender,
             &mut recipient,
             &self.offer().sender_assets(),
             &self.offer().recipient_assets(),
-        ) {
+        ).is_err()
+        {
             view.rollback();
             return TxStatus::Fail;
         }
@@ -203,7 +208,7 @@ fn move_coins(
     intermediary: &mut Wallet,
     coins_receiver: &mut Wallet,
     coins: u64,
-) -> bool {
+) -> Result<(), ()> {
     // move coins from participant(s) to fee receiver
     match *strategy {
         FeeStrategy::Recipient => {
@@ -212,11 +217,16 @@ fn move_coins(
         FeeStrategy::Sender => WalletSchema::transfer_coins(view, sender, coins_receiver, coins),
         FeeStrategy::RecipientAndSender => {
             let (recipient_half, sender_half) = split_coins(coins);
-            let recipient_ok =
+            let recipient_result =
                 WalletSchema::transfer_coins(view, recipient, coins_receiver, recipient_half);
-            let sender_ok = WalletSchema::transfer_coins(view, sender, coins_receiver, sender_half);
+            let sender_result =
+                WalletSchema::transfer_coins(view, sender, coins_receiver, sender_half);
 
-            sender_ok && recipient_ok
+            if recipient_result.is_ok() && sender_result.is_ok() {
+                Ok(())
+            } else {
+                Err(())
+            }
         }
         FeeStrategy::Intermediary => {
             WalletSchema::transfer_coins(view, intermediary, coins_receiver, coins)
@@ -231,9 +241,9 @@ fn pay_commision(
     sender: &mut Wallet,
     intermediary: &mut Wallet,
     commision: u64,
-) -> bool {
+) -> Result<(), ()> {
     if *strategy != FeeStrategy::Intermediary {
-        return false;
+        return Err(());
     }
 
     match *strategy {
@@ -245,11 +255,16 @@ fn pay_commision(
         }
         FeeStrategy::RecipientAndSender => {
             let (recipient_half, sender_half) = split_coins(commision);
-            let recipient_ok =
+            let recipient_result =
                 WalletSchema::transfer_coins(view, recipient, intermediary, recipient_half);
-            let sender_ok = WalletSchema::transfer_coins(view, sender, intermediary, sender_half);
-            return recipient_ok && sender_ok;
+            let sender_result =
+                WalletSchema::transfer_coins(view, sender, intermediary, sender_half);
+            if recipient_result.is_ok() && sender_result.is_ok() {
+                Ok(())
+            } else {
+                Err(())
+            }
         }
-        FeeStrategy::Intermediary => true,
+        FeeStrategy::Intermediary => Ok(()),
     }
 }

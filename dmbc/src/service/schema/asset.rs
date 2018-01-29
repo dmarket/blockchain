@@ -89,15 +89,18 @@ impl<'a> AssetSchema<'a> {
         creator_key: &PublicKey,
         assets: &Vec<Asset>,
         fees_list: &Vec<Fees>,
-    ) -> bool {
-        Self::map(view, |mut schema| {
+    ) -> Result<(), ()> {
+        match Self::map(view, |mut schema| {
             schema.add_assets(assets, fees_list, creator_key)
-        })
+        }) {
+            true => Ok(()),
+            false => Err(()),
+        }
     }
 
-    pub fn remove(view: &mut Fork, assets: &Vec<Asset>) -> bool {
+    pub fn remove(view: &mut Fork, assets: &Vec<Asset>) -> Result<(), ()> {
         Self::map(view, |mut schema| schema.del_assets(assets));
-        true
+        Ok(())
     }
 
     pub fn get_asset_info(view: &mut Fork, id: &AssetId) -> Option<AssetInfo> {

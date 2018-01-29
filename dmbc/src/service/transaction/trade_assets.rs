@@ -63,7 +63,9 @@ impl TxTrade {
         let fee = self.get_fee(view);
 
         // Pay fee for tx execution
-        if !WalletSchema::transfer_coins(view, &mut seller, &mut platform, fee.transaction_fee()) {
+        if WalletSchema::transfer_coins(view, &mut seller, &mut platform, fee.transaction_fee())
+            .is_err()
+        {
             return TxStatus::Fail;
         }
 
@@ -83,19 +85,19 @@ impl TxTrade {
         println!("Buyer's balance before transaction : {:?}", buyer);
 
         let offer_price = self.offer().total_price();
-        if !WalletSchema::transfer_coins(view, &mut buyer, &mut seller, offer_price) {
+        if WalletSchema::transfer_coins(view, &mut buyer, &mut seller, offer_price).is_err() {
             view.rollback();
             return TxStatus::Fail;
         }
 
-        if !WalletSchema::transfer_assets(view, &mut seller, &mut buyer, &assets) {
+        if WalletSchema::transfer_assets(view, &mut seller, &mut buyer, &assets).is_err() {
             view.rollback();
             return TxStatus::Fail;
         }
 
         for (mut creator, fee) in fee.assets_fees() {
             println!("\tCreator {:?} will receive {}", creator.pub_key(), fee);
-            if !WalletSchema::transfer_coins(view, &mut seller, &mut creator, fee) {
+            if WalletSchema::transfer_coins(view, &mut seller, &mut creator, fee).is_err() {
                 view.rollback();
                 return TxStatus::Fail;
             }

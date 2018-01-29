@@ -43,7 +43,9 @@ impl TxTransfer {
         let fee = self.get_fee(view);
 
         // Pay fee for tx execution
-        if !WalletSchema::transfer_coins(view, &mut sender, &mut platform, fee.transaction_fee()) {
+        if WalletSchema::transfer_coins(view, &mut sender, &mut platform, fee.transaction_fee())
+            .is_err()
+        {
             return TxStatus::Fail;
         }
 
@@ -51,7 +53,9 @@ impl TxTransfer {
         view.checkpoint();
 
         if !self.assets().is_empty() {
-            if !WalletSchema::transfer_assets(view, &mut sender, &mut receiver, &self.assets()) {
+            if WalletSchema::transfer_assets(view, &mut sender, &mut receiver, &self.assets())
+                .is_err()
+            {
                 view.rollback();
                 return TxStatus::Fail;
             }
@@ -59,7 +63,7 @@ impl TxTransfer {
             // send fees to creators of assets
             for (mut creator, fee) in fee.assets_fees() {
                 println!("Creator {:?} will receive {}", creator.pub_key(), fee);
-                if !WalletSchema::transfer_coins(view, &mut sender, &mut creator, fee) {
+                if WalletSchema::transfer_coins(view, &mut sender, &mut creator, fee).is_err() {
                     view.rollback();
                     return TxStatus::Fail;
                 }
@@ -69,7 +73,9 @@ impl TxTransfer {
         // check if sender wants to send coins and has enough coins to send, otherwise - Fail.
         let coins_to_send = self.amount();
         if coins_to_send > 0 {
-            if !WalletSchema::transfer_coins(view, &mut sender, &mut receiver, coins_to_send) {
+            if WalletSchema::transfer_coins(view, &mut sender, &mut receiver, coins_to_send)
+                .is_err()
+            {
                 view.rollback();
                 return TxStatus::Fail;
             }

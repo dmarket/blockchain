@@ -84,7 +84,9 @@ impl TxAddAsset {
         let fee = self.get_fee(view);
 
         // Pay fee for tx execution
-        if !WalletSchema::transfer_coins(view, &mut creator, &mut platform, fee.transaction_fee()) {
+        if WalletSchema::transfer_coins(view, &mut creator, &mut platform, fee.transaction_fee())
+            .is_err()
+        {
             return TxStatus::Fail;
         }
 
@@ -92,7 +94,8 @@ impl TxAddAsset {
         view.checkpoint();
 
         // pay fee for assets
-        if !WalletSchema::transfer_coins(view, &mut creator, &mut platform, fee.assets_fees_total())
+        if WalletSchema::transfer_coins(view, &mut creator, &mut platform, fee.assets_fees_total())
+            .is_err()
         {
             view.rollback();
             return TxStatus::Fail;
@@ -105,7 +108,7 @@ impl TxAddAsset {
 
         // store new assets in asset schema
         let (assets, fees_list, receivers) = self.get_assets_fees_receivers();
-        if !AssetSchema::store(view, self.pub_key(), &assets, &fees_list) {
+        if AssetSchema::store(view, self.pub_key(), &assets, &fees_list).is_err() {
             view.rollback();
             return TxStatus::Fail;
         }
@@ -113,7 +116,7 @@ impl TxAddAsset {
         // send assets to receivers
         for (receiver_key, asset) in receivers.iter().zip(assets) {
             let mut receiver = WalletSchema::get_wallet(view, receiver_key);
-            if !WalletSchema::add_assets(view, &mut receiver, &[asset]) {
+            if WalletSchema::add_assets(view, &mut receiver, &[asset]).is_err() {
                 view.rollback();
                 return TxStatus::Fail;
             }
