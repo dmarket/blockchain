@@ -64,7 +64,6 @@ pub fn calculate_fees_for_trade(view: &mut Fork, assets: Vec<TradeAsset>) -> TxF
 
     for asset in assets {
         if let Some(info) = utils::get_asset_info(view, &asset.id()) {
-            // if let Some(info) = AssetSchema::map(view, |mut schema| schema.info(&asset.id())) {
             let trade_fee = info.fees().trade();
             let fee = trade_fee.tax() + fee_ratio(asset.total_price(), trade_fee.ratio());
 
