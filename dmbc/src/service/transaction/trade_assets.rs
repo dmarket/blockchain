@@ -58,7 +58,8 @@ impl TxTrade {
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {
-        let mut platform = WalletSchema::get_wallet(view, &CurrencyService::get_platform_pub_key());
+        let mut platform =
+            WalletSchema::get_wallet(view, &CurrencyService::genesis_wallet_pub_key());
         let mut buyer = WalletSchema::get_wallet(view, self.offer().buyer());
         let mut seller = WalletSchema::get_wallet(view, self.offer().seller());
 

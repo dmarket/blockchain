@@ -80,7 +80,8 @@ impl TxAddAsset {
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {
-        let mut platform = WalletSchema::get_wallet(view, &CurrencyService::get_platform_pub_key());
+        let mut platform =
+            WalletSchema::get_wallet(view, &CurrencyService::genesis_wallet_pub_key());
         let mut creator = WalletSchema::get_wallet(view, self.pub_key());
 
         let fee = self.get_fee(view);

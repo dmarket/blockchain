@@ -55,7 +55,7 @@ impl CurrencyService {
         CurrencyService {}
     }
 
-    pub fn get_platform_pub_key() -> PublicKey {
+    pub fn genesis_wallet_pub_key() -> PublicKey {
         PublicKey::from_hex(GENESIS_WALLET_PUB_KEY).unwrap()
     }
 }
@@ -123,11 +123,11 @@ impl Service for CurrencyService {
     }
 
     fn initialize(&self, fork: &mut Fork) -> serde_json::Value {
-        let basic_wallet = Self::get_platform_pub_key();
+        let genesis_wallet = Self::genesis_wallet_pub_key();
         let assets: Vec<Asset> = vec![];
-        let wallet = Wallet::new(&basic_wallet, 13_700_000_000_000_000, assets);
+        let wallet = Wallet::new(&genesis_wallet, 13_700_000_000_000_000, assets);
         println!("Create platform wallet: {:?}", wallet);
-        WalletSchema::map(fork, |mut db| db.wallets().put(&basic_wallet, wallet));
+        WalletSchema::map(fork, |mut db| db.wallets().put(&genesis_wallet, wallet));
 
         serde_json::to_value(Configuration::default()).unwrap()
     }

@@ -61,7 +61,8 @@ impl TxExchange {
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {
-        let mut platform = WalletSchema::get_wallet(view, &CurrencyService::get_platform_pub_key());
+        let mut platform =
+            WalletSchema::get_wallet(view, &CurrencyService::genesis_wallet_pub_key());
         let mut sender = WalletSchema::get_wallet(view, self.offer().sender());
         let mut recipient = WalletSchema::get_wallet(view, self.offer().recipient());
 
