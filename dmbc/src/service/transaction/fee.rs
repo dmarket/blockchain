@@ -3,11 +3,10 @@ use exonum::crypto::PublicKey;
 
 use std::collections::BTreeMap;
 
+use service::transaction::utils;
 use service::wallet::Wallet;
 use service::asset::{Asset, MetaAsset, TradeAsset};
 use service::configuration::Configuration;
-use service::schema::asset::AssetSchema;
-use service::schema::wallet::WalletSchema;
 
 #[derive(PartialEq)]
 pub enum FeeStrategy {
@@ -64,11 +63,12 @@ pub fn calculate_fees_for_trade(view: &mut Fork, assets: Vec<TradeAsset>) -> TxF
     let fee_ratio = |price: u64, ratio: u64| (price as f64 / ratio as f64).round() as u64;
 
     for asset in assets {
-        if let Some(info) = AssetSchema::map(view, |mut schema| schema.info(&asset.id())) {
+        if let Some(info) = utils::get_asset_info(view, &asset.id()) {
+            // if let Some(info) = AssetSchema::map(view, |mut schema| schema.info(&asset.id())) {
             let trade_fee = info.fees().trade();
             let fee = trade_fee.tax() + fee_ratio(asset.total_price(), trade_fee.ratio());
 
-            let creator = WalletSchema::map(view, |mut schema| schema.wallet(info.creator()));
+            let creator = utils::get_wallet(view, info.creator());
             *assets_fees.entry(creator).or_insert(0) += fee;
         }
     }
@@ -82,11 +82,11 @@ pub fn calculate_fees_for_exchange(view: &mut Fork, assets: Vec<Asset>) -> TxFee
 
     let fee_ratio = |count: u32, coef: u64| (count as f64 / coef as f64).round() as u64;
     for asset in assets {
-        if let Some(info) = AssetSchema::map(view, |mut schema| schema.info(&asset.id())) {
+        if let Some(info) = utils::get_asset_info(view, &asset.id()) {
             let exchange_fee = info.fees().exchange();
             let fee = exchange_fee.tax() + fee_ratio(asset.amount(), exchange_fee.ratio());
 
-            let creator = WalletSchema::map(view, |mut schema| schema.wallet(info.creator()));
+            let creator = utils::get_wallet(view, info.creator());
             *assets_fees.entry(creator).or_insert(0) += fee;
         }
     }
@@ -98,10 +98,10 @@ pub fn calculate_fees_for_exchange(view: &mut Fork, assets: Vec<Asset>) -> TxFee
 pub fn calculate_fees_for_transfer(view: &mut Fork, assets: Vec<Asset>) -> TxFees {
     let mut assets_fees = BTreeMap::new();
     for asset in assets {
-        if let Some(info) = AssetSchema::map(view, |mut schema| schema.info(&asset.id())) {
+        if let Some(info) = utils::get_asset_info(view, &asset.id()) {
             let fee = info.fees().transfer().tax();
 
-            let creator = WalletSchema::map(view, |mut schema| schema.wallet(info.creator()));
+            let creator = utils::get_wallet(view, info.creator());
             *assets_fees.entry(creator).or_insert(0) += fee;
         }
     }
@@ -117,7 +117,7 @@ pub fn calculate_fees_for_add_assets(
 ) -> TxFees {
     let mut assets_fees = BTreeMap::new();
     let configuration = Configuration::extract(view);
-    let creator = WalletSchema::map(view, |mut schema| schema.wallet(creator_key));
+    let creator = utils::get_wallet(view, creator_key);
 
     let count = assets
         .iter()
