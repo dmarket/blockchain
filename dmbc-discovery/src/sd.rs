@@ -1,5 +1,8 @@
 use std::collections::HashMap;
+use std::error::Error;
 use std::io;
+use std::io::{Read, Write};
+use std::fs::File;
 use std::net::SocketAddr;
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
@@ -21,6 +24,7 @@ use hyper::server::Service;
 use hyper::client::Client;
 use tokio_core::reactor::Handle;
 use tokio_timer::Timer;
+use toml;
 
 const PROPOSE_HEIGHT_INCREMENT: u64 = 25;
 
@@ -50,10 +54,11 @@ pub struct ServiceDiscovery {
 
 impl ServiceDiscovery {
     pub fn new(handle: Handle) -> Self {
+        let nodes = ServiceDiscovery::load_peers().unwrap_or_default();
         ServiceDiscovery {
             handle,
             timer: Timer::default(),
-            nodes: Arc::new(RwLock::new(HashMap::new())),
+            nodes: Arc::new(RwLock::new(nodes)),
         }
     }
 
@@ -82,6 +87,9 @@ impl ServiceDiscovery {
                     eprintln!("Received value: {:?}", &info);
                     nodes.insert(info.keys(), info);
                     ServiceDiscovery::publish_peer(&handle, timer, nodes.clone(), info);
+                    if let Err(e) = ServiceDiscovery::save_peers(&nodes) {
+                        eprintln!("Error when saving peers: {}", e);
+                    }
                     future::ok(Response::new().with_status(StatusCode::Ok))
                 }
                 Err(e) => future::err(io::Error::from(e).into()),
@@ -248,6 +256,20 @@ impl ServiceDiscovery {
         };
         serde_json::to_string(&config).unwrap()
     }
+
+    fn save_peers(peers: &HashMap<PKeys, ValidatorInfo>) -> io::Result<()> {
+        // TODO: make this configurable.
+        let mut file = File::create("./etc/discovery-peers.toml")?;
+        let ser = toml::to_string_pretty(peers).unwrap();
+        file.write(ser.as_bytes()).map(|_| ())
+    }
+
+    fn load_peers() -> Result<HashMap<PKeys, ValidatorInfo>, Box<Error>> {
+        let mut file = File::open("./etc/discovery-peers.toml")?;
+        let mut data = Vec::new();
+        file.read_to_end(&mut data).map_err(Box::new)?;
+        toml::from_slice(&data).map_err(|e| e.into())
+    }
 }
 
 impl Service for ServiceDiscovery {
@@ -267,3 +289,4 @@ impl Service for ServiceDiscovery {
         }
     }
 }
+

@@ -14,6 +14,8 @@ extern crate serde_json;
 extern crate exonum;
 extern crate exonum_configuration;
 
+extern crate toml;
+
 mod sd;
 
 use futures::future;
