@@ -88,10 +88,6 @@ impl Wallet {
     pub fn is_empty(&self) -> bool {
         self.balance() == 0 && self.assets().is_empty()
     }
-
-    pub fn is_sufficient_funds(&self, coins: u64) -> bool {
-        self.balance() >= coins
-    }
 }
 
 #[cfg(test)]

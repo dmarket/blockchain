@@ -59,7 +59,7 @@ impl<'a> WalletSchema<'a> {
         receiver: &mut Wallet,
         coins: u64,
     ) -> Result<(), ()> {
-        if !sender.is_sufficient_funds(coins) {
+        if sender.balance() < coins {
             return Err(());
         }
 
