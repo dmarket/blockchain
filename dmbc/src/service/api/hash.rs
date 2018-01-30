@@ -15,12 +15,15 @@ use service::transaction::add_assets::TxAddAsset;
 use service::transaction::create_wallet::TxCreateWallet;
 use service::transaction::del_assets::TxDelAsset;
 use service::transaction::exchange::{TxExchange, TX_EXCHANGE_ID};
-use service::transaction::exchange_with_intermediary::TxExchangeWithIntermediary;
+use service::transaction::exchange_with_intermediary::{TxExchangeWithIntermediary,
+                                                       TX_EXCHANGE_WITH_INTERMEDIARY_ID};
 use service::transaction::mining::TxMining;
 use service::transaction::trade_assets::{TxTrade, TX_TRADE_ASSETS_ID};
-use service::transaction::trade_assets_with_intermediary::TxTradeWithIntermediary;
-use service::transaction::trade_ask_assets::TxTradeAsk;
-use service::transaction::trade_ask_assets_with_intermediary::TxTradeAskWithIntermediary;
+use service::transaction::trade_assets_with_intermediary::{TxTradeWithIntermediary,
+                                                           TX_TRADE_ASSETS_WITH_INTERMEDIARY_ID};
+use service::transaction::trade_ask_assets::{TxTradeAsk, TX_TRADE_ASK_ASSETS_ID};
+use service::transaction::trade_ask_assets_with_intermediary::{TxTradeAskWithIntermediary,
+                                                               TX_TRADE_ASK_ASSETS_WITH_INTERMEDIARY_ID};
 use service::transaction::transfer::TxTransfer;
 
 #[derive(Clone)]
@@ -104,10 +107,32 @@ impl Api for HashApi {
                             Ok(exchange) => exchange.get_offer_raw(),
                             Err(_) => vec![],
                         },
+                        TX_EXCHANGE_WITH_INTERMEDIARY_ID => {
+                            match TxExchangeWithIntermediary::from_raw(raw_) {
+                                Ok(exchange) => exchange.get_offer_raw(),
+                                Err(_) => vec![],
+                            }
+                        }
                         TX_TRADE_ASSETS_ID => match TxTrade::from_raw(raw_) {
                             Ok(trade) => trade.get_offer_raw(),
                             Err(_) => vec![],
                         },
+                        TX_TRADE_ASSETS_WITH_INTERMEDIARY_ID => {
+                            match TxTradeWithIntermediary::from_raw(raw_) {
+                                Ok(trade) => trade.get_offer_raw(),
+                                Err(_) => vec![],
+                            }
+                        }
+                        TX_TRADE_ASK_ASSETS_ID => match TxTradeAsk::from_raw(raw_) {
+                            Ok(trade) => trade.get_offer_raw(),
+                            Err(_) => vec![],
+                        },
+                        TX_TRADE_ASK_ASSETS_WITH_INTERMEDIARY_ID => {
+                            match TxTradeAskWithIntermediary::from_raw(raw_) {
+                                Ok(trade) => trade.get_offer_raw(),
+                                Err(_) => vec![],
+                            }
+                        }
                         _ => vec![],
                     };
                     let hash = HashApi::hex_string(vec_hash);

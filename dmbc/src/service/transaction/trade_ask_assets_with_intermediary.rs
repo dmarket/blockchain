@@ -45,6 +45,10 @@ message! {
 }
 
 impl TxTradeAskWithIntermediary {
+    pub fn get_offer_raw(&self) -> Vec<u8> {
+        self.offer().raw
+    }
+
     pub fn get_fee(&self, view: &mut Fork) -> TxFees {
         TxFees::for_trade(view, self.offer().assets())
     }
