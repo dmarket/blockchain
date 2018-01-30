@@ -1,5 +1,3 @@
-#![feature(type_ascription)]
-
 extern crate futures;
 extern crate hyper;
 extern crate tokio_core;
@@ -16,6 +14,7 @@ extern crate exonum_configuration;
 
 extern crate toml;
 
+mod config;
 mod sd;
 
 use futures::future;
@@ -25,7 +24,7 @@ use hyper::server::Http;
 use sd::ServiceDiscovery;
 
 fn main() {
-    let addr = "127.0.0.1:3000".parse().unwrap();
+    let addr = config::get().listen_address().parse().unwrap();
     let mut core = tokio_core::reactor::Core::new().unwrap();
     let server = core.handle();
     let client = core.handle();

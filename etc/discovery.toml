@@ -1,0 +1,2 @@
+listen_address = "0.0.0.0:3000"
+peers_path = "./var/discovery/peers.toml"

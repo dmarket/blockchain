@@ -26,6 +26,8 @@ use tokio_core::reactor::Handle;
 use tokio_timer::Timer;
 use toml;
 
+use config;
+
 const PROPOSE_HEIGHT_INCREMENT: u64 = 25;
 
 type PKeys = String;
@@ -259,13 +261,15 @@ impl ServiceDiscovery {
 
     fn save_peers(peers: &HashMap<PKeys, ValidatorInfo>) -> io::Result<()> {
         // TODO: make this configurable.
-        let mut file = File::create("./var/discovery/peers.toml")?;
+        let path = config::get().peers_path();
+        let mut file = File::create(path)?;
         let ser = toml::to_string_pretty(peers).unwrap();
         file.write(ser.as_bytes()).map(|_| ())
     }
 
     fn load_peers() -> Result<HashMap<PKeys, ValidatorInfo>, Box<Error>> {
-        let mut file = File::open("./var/discovery/peers.toml")?;
+        let path = config::get().peers_path();
+        let mut file = File::open(path)?;
         let mut data = Vec::new();
         file.read_to_end(&mut data).map_err(Box::new)?;
         toml::from_slice(&data).map_err(|e| e.into())
