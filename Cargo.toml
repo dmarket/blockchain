@@ -1,4 +1,4 @@
 [workspace]
-members = ["dmbc", "dmbc-node", "dmbc-fuzzer"]
-default-members = ["dmbc", "dmbc-node"]
+members = ["dmbc", "dmbc-node", "dmbc-fuzzer", "dmbc-discovery"]
+default-members = ["dmbc", "dmbc-node", "dmbc-discovery"]
 

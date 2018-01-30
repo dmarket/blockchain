@@ -112,6 +112,7 @@ impl Service for CurrencyService {
         let service_tx_schema = TxSchema::new(ctx.snapshot());
         let las_block = schema.last_block();
         let list = schema.block_txs(las_block.height());
+        println!("Block #{}.", las_block.height());
         for hash in list.iter() {
             let tx_hash = hash.to_hex();
             let status = service_tx_schema.get_status(&hash);

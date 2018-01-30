@@ -1,10 +1,11 @@
 [api]
 current_node = "node0"
-address = "0.0.0.0:8000"
-private_address = "0.0.0.0:8001"
-peer_address = "0.0.0.0:2000"
+address = "127.0.0.1:8000"
+private_address = "127.0.0.1:8001"
+peer_address = "127.0.0.1:2000"
 peers = []
 keys_path = "./var/keys"
+is_validator = true
 
 [db]
 path = "./var/db"
@@ -13,3 +14,6 @@ path = "./var/db"
 enabled = true
 addresses = ["nats://vRJY4vOIoNSsG72F:UCF0IsKwMlYON4g7@35.197.200.238:4222"]
 queuename = "transaction.commit"
+
+[service_discovery]
+address = "127.0.0.1:3000/nodes"

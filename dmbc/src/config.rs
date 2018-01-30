@@ -14,6 +14,7 @@ pub struct Config {
     api: Api,
     db: Db,
     nats: Nats,
+    service_discovery: ServiceDiscovery,
 }
 
 #[derive(Deserialize)]
@@ -24,6 +25,7 @@ pub struct Api {
     keys_path: Option<String>,
     peer_address: Option<String>,
     peers: Option<Vec<String>>,
+    is_validator: Option<bool>,
 }
 
 #[derive(Deserialize)]
@@ -38,6 +40,11 @@ pub struct Nats {
     queuename: Option<String>,
 }
 
+#[derive(Deserialize)]
+pub struct ServiceDiscovery {
+    address: Option<String>,
+}
+
 impl Config {
     pub fn api(self) -> Api {
         self.api
@@ -47,6 +54,9 @@ impl Config {
     }
     pub fn nats(self) -> Nats {
         self.nats
+    }
+    pub fn service_discovery(self) -> ServiceDiscovery {
+        self.service_discovery
     }
 }
 
@@ -103,6 +113,13 @@ impl Api {
             }
         }
     }
+
+    pub fn is_validator(self) -> bool {
+        match env::var("VALIDATOR") {
+            Ok(value) => value.parse::<bool>().unwrap(),
+            Err(_) => self.is_validator.unwrap_or(true),
+        }
+    }
 }
 
 impl Db {
@@ -146,6 +163,15 @@ impl Nats {
     }
 }
 
+impl ServiceDiscovery {
+    pub fn address(self) -> String {
+        match env::var("SD_ADDRESS") {
+            Ok(address) => address,
+            Err(_) => self.address.unwrap(),
+        }
+    }
+}
+
 ///
 /// Load configuration
 ///
@@ -157,7 +183,8 @@ impl Nats {
 /// ```
 pub fn read_config() -> Result<Config, Error> {
     let mut content = String::new();
-    let mut f = File::open(Path::new("./etc/config.toml"))?;
+    let path = env::var("CONFIG_PATH").unwrap_or("./etc/config.toml".to_string());
+    let mut f = File::open(Path::new(&path))?;
     let _res = f.read_to_string(&mut content);
     Ok(toml::from_str(content.as_str()).unwrap())
 }

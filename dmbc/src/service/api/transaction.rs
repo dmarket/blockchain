@@ -107,8 +107,7 @@ impl Api for TransactionApi {
                 Ok(res)
             } else {
                 let res = self_
-                    .not_found_response(&serde_json::to_value("Transaction hash not found")
-                        .unwrap());
+                    .not_found_response(&serde_json::to_value("Transaction hash not found").unwrap());
                 let mut res = res.unwrap();
                 res.headers.set(AccessControlAllowOrigin::Any);
                 Ok(res)

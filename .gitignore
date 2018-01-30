@@ -16,6 +16,8 @@ Cargo.lock
 
 /var/keys/test.json
 #!/var/keys/.gitkeep
+/var/discovery/
+#!/var/discovery/.gitkeep
 
 # Fuzzer
 /fuzz-data.toml
