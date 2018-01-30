@@ -28,9 +28,10 @@ impl ValidatorInfo {
     }
 }
 
-pub fn connect(info: &ValidatorInfo, is_validator: bool)
-    -> Result<HashMap<PKeys, ValidatorInfo>, Box<Error>>
-{
+pub fn connect(
+    info: &ValidatorInfo,
+    is_validator: bool,
+) -> Result<HashMap<PKeys, ValidatorInfo>, Box<Error>> {
     let discovery = config::config().service_discovery().address();
 
     let nodes = receive_nodes(&discovery)?;

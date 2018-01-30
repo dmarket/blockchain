@@ -64,7 +64,14 @@ fn main() {
     eprintln!("Node info: {:?}", &info);
 
     let is_validator = config::config().api().is_validator();
-    eprintln!("Connecting {}", if is_validator { "as validator" } else { "as auditor" });
+    eprintln!(
+        "Connecting {}",
+        if is_validator {
+            "as validator"
+        } else {
+            "as auditor"
+        }
+    );
 
     let peers = match net_config::connect(&info, is_validator) {
         Ok(peers) => {

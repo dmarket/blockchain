@@ -33,8 +33,7 @@ pub fn get() -> &'static Config {
     }
 
     fn read_file_config() -> Config {
-        let path = env::var("DISCOVERY_CONFIG_PATH")
-            .unwrap_or("./etc/discovery.toml".to_string());
+        let path = env::var("DISCOVERY_CONFIG_PATH").unwrap_or("./etc/discovery.toml".to_string());
         let mut file = File::open(path).unwrap();
         let mut buf = Vec::new();
 
@@ -46,14 +45,18 @@ pub fn get() -> &'static Config {
         let config = {
             let cfg = read_env_config();
             match &cfg {
-                &Config { listen_address: Some(_), peers_path: Some(_) } => {
-                    cfg
-                }
+                &Config {
+                    listen_address: Some(_),
+                    peers_path: Some(_),
+                } => cfg,
                 _ => {
                     let file_cfg = read_file_config();
                     let listen_address = cfg.listen_address.or(file_cfg.listen_address);
                     let peers_path = cfg.peers_path.or(file_cfg.peers_path);
-                    Config { listen_address, peers_path }
+                    Config {
+                        listen_address,
+                        peers_path,
+                    }
                 }
             }
         };
@@ -67,8 +70,5 @@ pub fn get() -> &'static Config {
     });
 
     // Immutably referencing static data is safe.
-    unsafe {
-        &*CONFIG
-    }
+    unsafe { &*CONFIG }
 }
-
