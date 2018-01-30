@@ -101,7 +101,6 @@ impl Api for HashApi {
                     let transaction: Box<Transaction> = transaction.into();
                     let raw_ = transaction.raw().clone();
 
-                    // TODO: responces to new Transactions
                     let vec_hash = match transaction.raw().message_type() {
                         TX_EXCHANGE_ID => match TxExchange::from_raw(raw_) {
                             Ok(exchange) => exchange.get_offer_raw(),
