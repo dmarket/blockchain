@@ -16,39 +16,32 @@ use service::schema::wallet::WalletSchema;
 use super::SERVICE_ID;
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
 
-pub const TX_TRADE_ASSETS_ID: u16 = 502;
+pub const TX_TRADE_ASK_ASSETS_ID: u16 = 501;
 
 encoding_struct! {
-    struct TradeOffer {
-        const SIZE = 72;
+    struct TradeAskOffer {
+        const SIZE = 40;
 
-        field buyer: &PublicKey         [00 => 32]
-        field seller: &PublicKey        [32 => 64]
-        field assets: Vec<TradeAsset>   [64 => 72]
+        field seller: &PublicKey        [00 => 32]
+        field assets: Vec<TradeAsset>   [32 => 40]
     }
 }
 
 message! {
-    struct TxTrade {
+    struct TxTradeAsk {
         const TYPE = SERVICE_ID;
-        const ID = TX_TRADE_ASSETS_ID;
-        const SIZE = 80;
+        const ID = TX_TRADE_ASK_ASSETS_ID;
+        const SIZE = 120;
 
-        field offer:              TradeOffer    [00 => 8]
-        field seed:               u64           [8 => 16]
-        field seller_signature:   &Signature    [16 => 80]
+        field buyer:              &PublicKey    [00 => 32]
+        field offer:              TradeAskOffer [32 => 40]
+        field seed:               u64           [40 => 48]
+        field seller_signature:   &Signature    [48 => 112]
+        field data_info:          &str          [112 => 120]
     }
 }
 
-impl TradeOffer {
-    pub fn total_price(&self) -> u64 {
-        self.assets()
-            .iter()
-            .fold(0, |total, item| total + item.total_price())
-    }
-}
-
-impl TxTrade {
+impl TxTradeAsk {
     pub fn get_offer_raw(&self) -> Vec<u8> {
         self.offer().raw
     }
@@ -60,7 +53,7 @@ impl TxTrade {
     fn process(&self, view: &mut Fork) -> TxStatus {
         let mut platform =
             WalletSchema::get_wallet(view, &CurrencyService::genesis_wallet_pub_key());
-        let mut buyer = WalletSchema::get_wallet(view, self.offer().buyer());
+        let mut buyer = WalletSchema::get_wallet(view, self.buyer());
         let mut seller = WalletSchema::get_wallet(view, self.offer().seller());
 
         let fee = self.get_fee(view);
@@ -83,7 +76,7 @@ impl TxTrade {
             .collect::<Vec<Asset>>();
         println!("Buyer {:?} => Seller {:?}", buyer, seller);
 
-        println!("--   Trade transaction   --");
+        println!("--   Ask/Bid transaction   --");
         println!("Seller's balance before transaction : {:?}", seller);
         println!("Buyer's balance before transaction : {:?}", buyer);
 
@@ -110,23 +103,20 @@ impl TxTrade {
     }
 }
 
-impl Transaction for TxTrade {
+impl Transaction for TxTradeAsk {
     fn verify(&self) -> bool {
         if cfg!(fuzzing) {
             return false;
         }
-
-        let keys_ok = *self.offer().buyer() != *self.offer().seller();
+        let keys_ok = *self.buyer() != *self.offer().seller();
         let verify_seller_ok = crypto::verify(
             self.seller_signature(),
             &self.offer().raw,
             self.offer().seller(),
         );
+        let verify_buyer_ok = self.verify_signature(self.buyer());
 
-        // not sure if this is ok
-        let verify_buyer_ok = self.verify_signature(self.offer().buyer());
-
-        keys_ok && verify_buyer_ok && verify_seller_ok
+        keys_ok && verify_seller_ok && verify_buyer_ok
     }
 
     fn execute(&self, view: &mut Fork) {
@@ -140,5 +130,13 @@ impl Transaction for TxTrade {
         json!({
             "transaction_data": self,
         })
+    }
+}
+
+impl TradeAskOffer {
+    pub fn total_price(&self) -> u64 {
+        self.assets()
+            .iter()
+            .fold(0, |total, item| total + item.total_price())
     }
 }

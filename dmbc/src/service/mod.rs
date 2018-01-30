@@ -23,15 +23,20 @@ use self::api::ServiceApi;
 use self::asset::Asset;
 use self::schema::transaction_status::TxSchema;
 use self::schema::wallet::WalletSchema;
-use self::transaction::{TX_ADD_ASSETS_ID, TX_CREATE_WALLET_ID, TX_DEL_ASSETS_ID, TX_EXCHANGE_ID,
-                        TX_MINING_ID, TX_TRADE_ASSETS_ID, TX_TRANSFER_ID};
-use self::transaction::add_assets::TxAddAsset;
-use self::transaction::create_wallet::TxCreateWallet;
-use self::transaction::del_assets::TxDelAsset;
-use self::transaction::exchange::TxExchange;
-use self::transaction::mining::TxMining;
-use self::transaction::trade_assets::TxTrade;
-use self::transaction::transfer::TxTransfer;
+use self::transaction::add_assets::{TxAddAsset, TX_ADD_ASSETS_ID};
+use self::transaction::create_wallet::{TxCreateWallet, TX_CREATE_WALLET_ID};
+use self::transaction::del_assets::{TxDelAsset, TX_DEL_ASSETS_ID};
+use self::transaction::exchange::{TxExchange, TX_EXCHANGE_ID};
+use self::transaction::exchange_with_intermediary::{TxExchangeWithIntermediary,
+                                                    TX_EXCHANGE_WITH_INTERMEDIARY_ID};
+use self::transaction::mining::{TxMining, TX_MINING_ID};
+use self::transaction::trade_assets::{TxTrade, TX_TRADE_ASSETS_ID};
+use self::transaction::trade_assets_with_intermediary::{TxTradeWithIntermediary,
+                                                        TX_TRADE_ASSETS_WITH_INTERMEDIARY_ID};
+use self::transaction::trade_ask_assets::{TxTradeAsk, TX_TRADE_ASK_ASSETS_ID};
+use self::transaction::trade_ask_assets_with_intermediary::{TxTradeAskWithIntermediary,
+                                                            TX_TRADE_ASK_ASSETS_WITH_INTERMEDIARY_ID};
+use self::transaction::transfer::{TxTransfer, TX_TRANSFER_ID};
 use self::wallet::Wallet;
 use self::configuration::Configuration;
 use config;
@@ -39,9 +44,21 @@ use config;
 // Service identifier
 pub const SERVICE_ID: u16 = 2;
 pub const SERVICE_NAME: &str = "cryptocurrency/v1";
+pub const GENESIS_WALLET_PUB_KEY: &str =
+    "36a05e418393fb4b23819753f6e6dd51550ce030d53842c43dd1349857a96a61";
 // Identifier for wallet creation transaction type
 
 pub struct CurrencyService;
+
+impl CurrencyService {
+    pub fn new() -> Self {
+        CurrencyService {}
+    }
+
+    pub fn genesis_wallet_pub_key() -> PublicKey {
+        PublicKey::from_hex(GENESIS_WALLET_PUB_KEY).unwrap()
+    }
+}
 
 impl Service for CurrencyService {
     fn service_name(&self) -> &'static str {
@@ -59,7 +76,17 @@ impl Service for CurrencyService {
             TX_ADD_ASSETS_ID => Box::new(TxAddAsset::from_raw(raw)?),
             TX_DEL_ASSETS_ID => Box::new(TxDelAsset::from_raw(raw)?),
             TX_TRADE_ASSETS_ID => Box::new(TxTrade::from_raw(raw)?),
+            TX_TRADE_ASSETS_WITH_INTERMEDIARY_ID => {
+                Box::new(TxTradeWithIntermediary::from_raw(raw)?)
+            }
+            TX_TRADE_ASK_ASSETS_ID => Box::new(TxTradeAsk::from_raw(raw)?),
+            TX_TRADE_ASK_ASSETS_WITH_INTERMEDIARY_ID => {
+                Box::new(TxTradeAskWithIntermediary::from_raw(raw)?)
+            }
             TX_EXCHANGE_ID => Box::new(TxExchange::from_raw(raw)?),
+            TX_EXCHANGE_WITH_INTERMEDIARY_ID => {
+                Box::new(TxExchangeWithIntermediary::from_raw(raw)?)
+            }
             TX_MINING_ID => Box::new(TxMining::from_raw(raw)?),
             _ => {
                 return Err(encoding::Error::IncorrectMessageType {
@@ -96,13 +123,11 @@ impl Service for CurrencyService {
     }
 
     fn initialize(&self, fork: &mut Fork) -> serde_json::Value {
-        let basic_wallet = PublicKey::from_hex(
-            "36a05e418393fb4b23819753f6e6dd51550ce030d53842c43dd1349857a96a61",
-        ).unwrap();
+        let genesis_wallet = Self::genesis_wallet_pub_key();
         let assets: Vec<Asset> = vec![];
-        let wallet = Wallet::new(&basic_wallet, 13_700_000_000_000_000, assets);
-        println!("Create the wallet: {:?}", wallet);
-        WalletSchema::map(fork, |mut db| db.wallets().put(&basic_wallet, wallet));
+        let wallet = Wallet::new(&genesis_wallet, 13_700_000_000_000_000, assets);
+        println!("Create platform wallet: {:?}", wallet);
+        WalletSchema::map(fork, |mut db| db.wallets().put(&genesis_wallet, wallet));
 
         serde_json::to_value(Configuration::default()).unwrap()
     }

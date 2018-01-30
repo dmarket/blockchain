@@ -6,12 +6,16 @@ use exonum::messages::Message;
 use exonum::storage::Fork;
 use serde_json::Value;
 
-use super::{SERVICE_ID, TX_DEL_ASSETS_ID};
+use super::SERVICE_ID;
+use service::CurrencyService;
 use service::asset::Asset;
-use service::schema::asset::AssetSchema;
 use service::schema::transaction_status::{TxStatus, TxStatusSchema};
+use service::transaction::fee::TxFees;
+
+use service::schema::asset::AssetSchema;
 use service::schema::wallet::WalletSchema;
-use service::configuration::Configuration;
+
+pub const TX_DEL_ASSETS_ID: u16 = 400;
 
 message! {
     struct TxDelAsset {
@@ -26,8 +30,8 @@ message! {
 }
 
 impl TxDelAsset {
-    pub fn get_fee(&self, fork: &Fork) -> u64 {
-        Configuration::extract(fork).fees().del_asset()
+    pub fn get_fee(&self, fork: &mut Fork) -> TxFees {
+        TxFees::for_del_assets(fork, self.assets())
     }
 
     fn process(&self, view: &mut Fork) -> TxStatus {
@@ -35,10 +39,24 @@ impl TxDelAsset {
         // all wallets for this asset id is equal to the amonut stored in the
         // AssetInfo associated with this asset id.
 
-        for a in self.assets() {
-            match AssetSchema::map(view, |mut assets| assets.info(&a.id())) {
+        let mut platform =
+            WalletSchema::get_wallet(view, &CurrencyService::genesis_wallet_pub_key());
+        let mut creator = WalletSchema::get_wallet(view, self.pub_key());
+
+        let fee = self.get_fee(view);
+
+        // Pay fee for tx execution
+        if WalletSchema::transfer_coins(view, &mut creator, &mut platform, fee.amount()).is_err() {
+            return TxStatus::Fail;
+        }
+
+        // Check if asset exists, Fail if not.
+        // If sender (pub_key) is not a creator of asset, then Fail.
+        // If amount of assets to delete is bigger than amount of assets are stored, then Fail.
+        for asset in self.assets() {
+            match AssetSchema::get_asset_info(view, &asset.id()) {
                 Some(ref info) => {
-                    if info.creator() != self.pub_key() || a.amount() > info.amount() {
+                    if info.creator() != self.pub_key() || asset.amount() > info.amount() {
                         return TxStatus::Fail;
                     }
                 }
@@ -46,22 +64,17 @@ impl TxDelAsset {
             }
         }
 
-        let fee = self.get_fee(view);
-        match WalletSchema::map(view, |mut schema| schema.wallet(self.pub_key())) {
-            Some(mut creator) => {
-                if creator.balance() >= fee && creator.del_assets(&self.assets()) {
-                    creator.decrease(fee);
-                    println!("Asset {:?}", self.assets());
-                    println!("Wallet after delete assets: {:?}", creator);
-                    WalletSchema::map(view, |mut schema| {
-                        schema.wallets().put(self.pub_key(), creator)
-                    });
-                }
-            }
-            _ => return TxStatus::Fail,
+        // if there are no assets to delete, Fail
+        if WalletSchema::delete_assets(view, &mut creator, &self.assets()).is_err() {
+            return TxStatus::Fail;
         }
 
-        AssetSchema::map(view, |mut schema| schema.del_assets(&self.assets()));
+        println!("Asset {:?}", self.assets());
+        println!("Wallet after delete assets: {:?}", creator);
+
+        if AssetSchema::remove(view, &self.assets()).is_err() {
+            return TxStatus::Fail;
+        }
         TxStatus::Success
     }
 }

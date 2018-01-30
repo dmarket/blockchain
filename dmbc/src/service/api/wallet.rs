@@ -26,7 +26,7 @@ pub struct WalletApi {
 }
 /// Shortcut to get data on wallets.
 impl WalletApi {
-    fn get_wallet(&self, pub_key: &PublicKey) -> Option<Wallet> {
+    fn get_wallet(&self, pub_key: &PublicKey) -> Wallet {
         let mut view = self.blockchain.fork();
         WalletSchema::map(&mut view, |mut schema| schema.wallet(pub_key))
     }
@@ -44,11 +44,9 @@ impl WalletApi {
         })
     }
 
-    fn get_assets(&self, pub_key: &PublicKey) -> Option<Vec<Asset>> {
-        match self.get_wallet(pub_key) {
-            Some(wallet) => Some(wallet.assets()),
-            None => None,
-        }
+    fn get_assets(&self, pub_key: &PublicKey) -> Vec<Asset> {
+        let wallet = self.get_wallet(pub_key);
+        wallet.assets()
     }
 }
 
@@ -60,18 +58,11 @@ impl Api for WalletApi {
             let path = req.url.path();
             let wallet_key = path.last().unwrap();
             let public_key = PublicKey::from_hex(wallet_key).map_err(ApiError::FromHex)?;
-            if let Some(wallet) = self_.get_wallet(&public_key) {
-                let res = self_.ok_response(&serde_json::to_value(wallet).unwrap());
-                let mut res = res.unwrap();
-                res.headers.set(AccessControlAllowOrigin::Any);
-                Ok(res)
-            } else {
-                let res =
-                    self_.not_found_response(&serde_json::to_value("Wallet not found").unwrap());
-                let mut res = res.unwrap();
-                res.headers.set(AccessControlAllowOrigin::Any);
-                Ok(res)
-            }
+            let wallet = self_.get_wallet(&public_key);
+            let res = self_.ok_response(&serde_json::to_value(wallet).unwrap());
+            let mut res = res.unwrap();
+            res.headers.set(AccessControlAllowOrigin::Any);
+            Ok(res)
         };
 
         // Gets status of all wallets.
@@ -112,27 +103,20 @@ impl Api for WalletApi {
                     .unwrap();
                 public_key = PublicKey::from_hex(wallet_key).map_err(ApiError::FromHex)?;
             }
-            if let Some(assets) = self_.get_assets(&public_key) {
-                // apply pagination parameters if they exist
-                let assets_to_send = ServiceApi::apply_pagination(req, &assets);
-                let assets_list = serde_json::to_value(&assets_to_send).unwrap();
-                let response_body = json!({
-                    "total": assets.len(),
-                    "count": assets_to_send.len(),
-                    "assets": assets_list,
-                });
+            let assets = self_.get_assets(&public_key);
+            // apply pagination parameters if they exist
+            let assets_to_send = ServiceApi::apply_pagination(req, &assets);
+            let assets_list = serde_json::to_value(&assets_to_send).unwrap();
+            let response_body = json!({
+                "total": assets.len(),
+                "count": assets_to_send.len(),
+                "assets": assets_list,
+            });
 
-                let res = self_.ok_response(&serde_json::to_value(response_body).unwrap());
-                let mut res = res.unwrap();
-                res.headers.set(AccessControlAllowOrigin::Any);
-                Ok(res)
-            } else {
-                let res =
-                    self_.not_found_response(&serde_json::to_value("Wallet not found").unwrap());
-                let mut res = res.unwrap();
-                res.headers.set(AccessControlAllowOrigin::Any);
-                Ok(res)
-            }
+            let res = self_.ok_response(&serde_json::to_value(response_body).unwrap());
+            let mut res = res.unwrap();
+            res.headers.set(AccessControlAllowOrigin::Any);
+            Ok(res)
         };
 
         router.get("/wallets", wallets_info, "wallets_info");

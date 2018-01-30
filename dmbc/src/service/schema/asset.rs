@@ -31,7 +31,10 @@ impl<'a> AssetSchema<'a> {
                 true
             }
             Some(info) => {
-                if info.creator() != creator {
+                // if the creator wants to add N items of asset additionaly,
+                // then fees data should be identical to what is
+                // stored on the blockchain allready
+                if info.creator() != creator || info.fees() != fees {
                     return false;
                 }
                 let info = AssetInfo::new(creator, info.amount() + amount, fees);
@@ -79,5 +82,28 @@ impl<'a> AssetSchema<'a> {
         T: 'a,
     {
         f(AssetSchema(view))
+    }
+
+    pub fn store(
+        view: &mut Fork,
+        creator_key: &PublicKey,
+        assets: &Vec<Asset>,
+        fees_list: &Vec<Fees>,
+    ) -> Result<(), ()> {
+        match Self::map(view, |mut schema| {
+            schema.add_assets(assets, fees_list, creator_key)
+        }) {
+            true => Ok(()),
+            false => Err(()),
+        }
+    }
+
+    pub fn remove(view: &mut Fork, assets: &Vec<Asset>) -> Result<(), ()> {
+        Self::map(view, |mut schema| schema.del_assets(assets));
+        Ok(())
+    }
+
+    pub fn get_asset_info(view: &mut Fork, id: &AssetId) -> Option<AssetInfo> {
+        Self::map(view, |mut assets| assets.info(id))
     }
 }

@@ -7,13 +7,17 @@ use exonum::storage::Fork;
 use serde_json::Value;
 use std::collections::HashMap;
 
+use service::CurrencyService;
 use service::asset::{Asset, Fees, MetaAsset};
-use service::configuration::Configuration;
+use service::transaction::fee::TxFees;
 
-use super::{SERVICE_ID, TX_ADD_ASSETS_ID};
-use super::schema::asset::AssetSchema;
+use service::schema::asset::AssetSchema;
+use service::schema::wallet::WalletSchema;
+
+use super::SERVICE_ID;
 use super::schema::transaction_status::{TxStatus, TxStatusSchema};
-use super::schema::wallet::WalletSchema;
+
+pub const TX_ADD_ASSETS_ID: u16 = 300;
 
 message! {
     struct TxAddAsset {
@@ -28,13 +32,8 @@ message! {
 }
 
 impl TxAddAsset {
-    pub fn get_fee(&self, fork: &Fork) -> u64 {
-        let configuration = Configuration::extract(fork);
-        let count = self.meta_assets()
-            .iter()
-            .fold(0, |acc, asset| acc + asset.amount() as u64);
-
-        configuration.fees().add_asset() + configuration.fees().per_add_asset() * count
+    pub fn get_fee(&self, fork: &mut Fork) -> TxFees {
+        TxFees::for_add_assets(fork, self.meta_assets(), self.pub_key())
     }
 
     fn get_assets_fees_receivers(&self) -> (Vec<Asset>, Vec<Fees>, Vec<PublicKey>) {
@@ -79,6 +78,55 @@ impl TxAddAsset {
 
         meta_asset_to_asset
     }
+
+    fn process(&self, view: &mut Fork) -> TxStatus {
+        let mut platform =
+            WalletSchema::get_wallet(view, &CurrencyService::genesis_wallet_pub_key());
+        let mut creator = WalletSchema::get_wallet(view, self.pub_key());
+
+        let fee = self.get_fee(view);
+
+        // Pay fee for tx execution
+        if WalletSchema::transfer_coins(view, &mut creator, &mut platform, fee.transaction_fee())
+            .is_err()
+        {
+            return TxStatus::Fail;
+        }
+
+        // initial point for db rollback, in case if transaction has failed
+        view.checkpoint();
+
+        // pay fee for assets
+        if WalletSchema::transfer_coins(view, &mut creator, &mut platform, fee.assets_fees_total())
+            .is_err()
+        {
+            view.rollback();
+            return TxStatus::Fail;
+        }
+
+        // `Fail` status can occur due two reasons:
+        // 1. `schema.add_assets` will fail if asset id generation has collision
+        // 2. Asset exists and AssetId is the same but new fees are different for existing asset
+        // rollback changes if adding procedure has failed
+
+        // store new assets in asset schema
+        let (assets, fees_list, receivers) = self.get_assets_fees_receivers();
+        if AssetSchema::store(view, self.pub_key(), &assets, &fees_list).is_err() {
+            view.rollback();
+            return TxStatus::Fail;
+        }
+
+        // send assets to receivers
+        for (receiver_key, asset) in receivers.iter().zip(assets) {
+            let mut receiver = WalletSchema::get_wallet(view, receiver_key);
+            if WalletSchema::add_assets(view, &mut receiver, &[asset]).is_err() {
+                view.rollback();
+                return TxStatus::Fail;
+            }
+        }
+
+        TxStatus::Success
+    }
 }
 
 impl Transaction for TxAddAsset {
@@ -100,69 +148,7 @@ impl Transaction for TxAddAsset {
     }
 
     fn execute(&self, view: &mut Fork) {
-        let mut tx_status = TxStatus::Fail;
-        let creator = WalletSchema::map(view, |mut schema| schema.wallet(self.pub_key()));
-
-        if let Some(mut creator) = creator {
-            let fee = self.get_fee(view);
-
-            if creator.balance() >= fee {
-                // remove fee from creator and update creator wallet balance
-                // TODO: send fee to `blockchain platform`
-                creator.decrease(fee);
-                WalletSchema::map(view, |mut schema| {
-                    schema.wallets().put(self.pub_key(), creator.clone())
-                });
-
-                // initial point for db rollback, in case if transaction has failed
-                view.checkpoint();
-
-                // store new assets in asset schema
-                let (assets, fees_list, receivers) = self.get_assets_fees_receivers();
-                let is_assets_added = AssetSchema::map(view, |mut schema| {
-                    schema.add_assets(&assets, &fees_list, self.pub_key())
-                });
-
-                if is_assets_added {
-                    tx_status = TxStatus::Success;
-
-                    // send assets to receivers
-                    for (receiver_key, asset) in receivers.iter().zip(assets) {
-                        if let Some(mut receiver) =
-                            WalletSchema::map(view, |mut schema| schema.wallet(receiver_key))
-                        {
-                            receiver.add_assets(&[asset]);
-
-                            WalletSchema::map(view, |mut schema| {
-                                schema.wallets().put(receiver_key, receiver)
-                            });
-                        } else {
-                            tx_status = TxStatus::Fail;
-                            break;
-                        }
-                    }
-                } else {
-                    tx_status = TxStatus::Fail;
-                }
-
-                // `Fail` status can occur due two reasons:
-                // 1. `schema.add_assets` will fail if asset id generation has collision
-                // 2. any from receivers wallet does not exist
-                // rollback changes if adding procedure has failed
-                if tx_status == TxStatus::Fail {
-                    println!("Unable to add assets {:?}", self.meta_assets());
-                    view.rollback();
-                }
-
-                println!("Wallet after mining asset: {:?}", creator);
-            } else {
-                // if creator.balance() >= fee
-                println!(
-                    "Insuficient funds at {:?} wallet, required {}",
-                    creator, fee
-                );
-            }
-        }
+        let tx_status = self.process(view);
 
         TxStatusSchema::map(view, |mut schema| {
             schema.set_status(&self.hash(), tx_status)
