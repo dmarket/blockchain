@@ -369,14 +369,13 @@ impl TxExchangeBuilder {
             offer,
             self.seed,
             &signature,
-            &self.data_info.unwrap(),
+            &self.data_info.unwrap_or_default(),
             &self.meta.secret_key,
         )
     }
 
     fn verify(&self) {
         assert!(self.recipient.is_some());
-        assert!(self.data_info.is_some());
         assert!(FeeStrategy::from_u8(self.fee_strategy).is_some());
     }
 }
@@ -516,7 +515,7 @@ impl TxExchangeWithIntermediaryBuilder {
             self.seed,
             &signature,
             &intermediary_signature,
-            &self.data_info.unwrap(),
+            &self.data_info.unwrap_or_default(),
             &self.meta.secret_key,
         )
     }
@@ -525,7 +524,6 @@ impl TxExchangeWithIntermediaryBuilder {
         assert!(self.recipient.is_some());
         assert!(self.intermediary_public_key.is_some());
         assert!(self.intermediary_secret_key.is_some());
-        assert!(self.data_info.is_some());
     }
 }
 
@@ -695,14 +693,13 @@ impl TxTradeWithIntermediaryBuilder {
             self.seed,
             &signature,
             &intermediary_signature,
-            &self.data_info.unwrap(),
+            &self.data_info.unwrap_or_default(),
             &self.meta.secret_key,
         )
     }
 
     fn verify(&self) {
         assert!(self.buyer.is_some());
-        assert!(self.data_info.is_some());
         assert!(self.intermediary_public_key.is_some());
         assert!(self.intermediary_secret_key.is_some());
     }
@@ -766,14 +763,13 @@ impl TxTradeAskBuilder {
             offer,
             self.seed,
             &signature,
-            &self.data_info.unwrap(),
+            &self.data_info.unwrap_or_default(),
             &self.meta.secret_key,
         )
     }
 
     fn verify(&self) {
         assert!(self.buyer.is_some());
-        assert!(self.data_info.is_some());
     }
 }
 
@@ -866,14 +862,13 @@ impl TxTradeAskWithIntermediaryBuilder {
             self.seed,
             &signature,
             &intermediary_signature,
-            &self.data_info.unwrap(),
+            &self.data_info.unwrap_or_default(),
             &self.meta.secret_key,
         )
     }
 
     fn verify(&self) {
         assert!(self.buyer.is_some());
-        assert!(self.data_info.is_some());
         assert!(self.intermediary_public_key.is_some());
         assert!(self.intermediary_secret_key.is_some());
     }
@@ -941,7 +936,7 @@ impl TxTransferBuilder {
             self.amount,
             self.assets,
             self.seed,
-            &self.data_info.unwrap(),
+            &self.data_info.unwrap_or_default(),
             &self.meta.secret_key,
         )
     }
