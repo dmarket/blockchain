@@ -53,6 +53,7 @@ impl TxTransfer {
         }
 
         // initial point for db rollback, in case if transaction has failed
+        view.commit();
         view.checkpoint();
 
         if !self.assets().is_empty() {

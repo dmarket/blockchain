@@ -94,6 +94,7 @@ impl TxAddAsset {
         }
 
         // initial point for db rollback, in case if transaction has failed
+        view.commit();
         view.checkpoint();
 
         // pay fee for assets
