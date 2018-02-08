@@ -83,6 +83,7 @@ impl TxExchange {
         }
 
         // initial point for db rollback, in case if transaction has failed
+        view.commit();
         view.checkpoint();
 
         println!("--   Exchange transaction   --");

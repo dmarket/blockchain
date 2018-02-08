@@ -72,6 +72,7 @@ fn add_assets() {
         s.wallets().put(&receiver_key, receiver_wallet);
     });
 
+    fork.checkpoint();
     tx.execute(fork);
 
     let existing_info = AssetSchema::map(fork, |mut s| s.info(&existing_id).unwrap());
@@ -131,7 +132,7 @@ fn add_assets_fails() {
     AssetSchema::map(fork, |mut s| {
         s.add_asset(&id, &public_key, 1, fees.clone());
     });
-
+    fork.checkpoint();
     tx.execute(fork);
 
     let wallet = WalletSchema::map(fork, |mut s| s.wallet(tx.pub_key()));
@@ -364,6 +365,7 @@ fn exchange() {
         s.wallets().put(&recipient_public, recipient);
     });
 
+    fork.checkpoint();
     tx.execute(fork);
 
     WalletSchema::map(fork, |mut s| {
@@ -540,6 +542,7 @@ fn transfer() {
         s.wallets().put(&recipient_public, recipient);
     });
 
+    fork.checkpoint();
     tx.execute(fork);
 
     let tx_status = TxStatusSchema::map(fork, |mut s| s.get_status(&tx.hash())).unwrap();
