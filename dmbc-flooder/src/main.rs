@@ -249,14 +249,13 @@ impl Flooder {
 }
 
 fn serialize<S: Serialize>(tx: S) -> String {
-    serde_json::to_string_pretty(&tx).unwrap()
-    //serde_json::to_string(&tx).unwrap()
+    serde_json::to_string(&tx).unwrap()
 }
 
 fn main() {
     let mut flooder = Flooder::new();
     let uri = "http://127.0.0.1:8000/api/services/cryptocurrency/v1/transactions";
-    const TX_PACK_SIZE: usize = 32;
+    const TX_PACK_SIZE: usize = 64;
 
     let poll = Poll::new().unwrap();
     let mut httpc = Httpc::new(TX_PACK_SIZE);
@@ -279,18 +278,20 @@ fn main() {
                 .call(&mut httpc, &poll);
 
             match call {
-                Ok(call) => {
+                Ok(mut call) => {
+                    httpc.call_send(&poll, &mut call, None);
                     calls.insert(call.get_ref(), call);
                 },
                 Err(mio_httpc::Error::Io(error)) => {
-                    // Errno value for too many open files.
-                    // TODO: ensured to have this value on Linux, check other platforms.
+                    // Errno values for the 'too many open files' condition.
+                    // TODO: these are values from linux, other platforms can
+                    //       differ. Check this.
+                    const ENFILE: i32 = 23;
                     const EMFILE: i32 = 24;
 
-                    if let Some(EMFILE) = error.raw_os_error() {
-                        break;
-                    } else {
-                        panic!("{}", error);
+                    match error.raw_os_error() {
+                        Some(EMFILE) | Some(ENFILE) => break,
+                        _ => panic!("{}", error),
                     }
                 },
                 Err(error) => {
@@ -299,11 +300,7 @@ fn main() {
             }
         }
 
-        println!("1");
-
         poll.poll(&mut events, Some(Duration::from_millis(1))).unwrap();
-
-        println!("2");
 
         for event in events.iter() {
             let cref = match httpc.event(&event) {
@@ -336,8 +333,6 @@ fn main() {
         }
 
         flooder.op_state.advance();
-
-        println!("Sent!");
     }
 }
 
