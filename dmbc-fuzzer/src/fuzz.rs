@@ -22,18 +22,18 @@ use exonum::crypto::SecretKey;
 use exonum::messages::{MessageBuffer, RawMessage};
 use exonum_testkit::TestKitBuilder;
 
-use dmbc::service::CurrencyService;
-use dmbc::service::builders::transaction;
-use dmbc::service::builders::fee;
-use dmbc::service::transaction::{TX_ADD_ASSETS_ID, TX_CREATE_WALLET_ID, TX_DEL_ASSETS_ID,
+use dmbc::currency::CurrencyService;
+use dmbc::currency::builders::transaction;
+use dmbc::currency::builders::fee;
+use dmbc::currency::transaction::{TX_ADD_ASSETS_ID, TX_CREATE_WALLET_ID, TX_DEL_ASSETS_ID,
                                  TX_EXCHANGE_ID, TX_MINING_ID, TX_TRADE_ASSETS_ID, TX_TRANSFER_ID};
-use dmbc::service::transaction::add_assets::TxAddAsset;
-use dmbc::service::transaction::create_wallet::TxCreateWallet;
-use dmbc::service::transaction::del_assets::TxDelAsset;
-use dmbc::service::transaction::exchange::TxExchange;
-use dmbc::service::transaction::mining::TxMining;
-use dmbc::service::transaction::trade_assets::TxTrade;
-use dmbc::service::transaction::transfer::TxTransfer;
+use dmbc::currency::transaction::add_assets::TxAddAsset;
+use dmbc::currency::transaction::create_wallet::TxCreateWallet;
+use dmbc::currency::transaction::del_assets::TxDelAsset;
+use dmbc::currency::transaction::exchange::TxExchange;
+use dmbc::currency::transaction::mining::TxMining;
+use dmbc::currency::transaction::trade_assets::TxTrade;
+use dmbc::currency::transaction::transfer::TxTransfer;
 
 use fuzz_data::FuzzData;
 

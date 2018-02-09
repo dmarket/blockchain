@@ -16,8 +16,8 @@ use std::io::{ErrorKind, Read, Write};
 use exonum::crypto;
 use exonum::crypto::SecretKey;
 use exonum::storage::StorageValue;
-use dmbc::service::builders::transaction;
-use dmbc::service::builders::fee;
+use dmbc::currency::builders::transaction;
+use dmbc::currency::builders::fee;
 
 use fuzz_data::FuzzData;
 

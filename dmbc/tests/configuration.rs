@@ -5,8 +5,8 @@ extern crate exonum_testkit;
 use exonum::helpers::{Height, ValidatorId};
 use exonum_testkit::TestKitBuilder;
 
-use dmbc::service;
-use dmbc::service::configuration::{Configuration, TransactionFees};
+use dmbc::currency;
+use dmbc::currency::configuration::{Configuration, TransactionFees};
 
 #[test]
 #[should_panic]

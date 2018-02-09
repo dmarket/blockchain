@@ -8,14 +8,14 @@ use exonum::messages::Message;
 use exonum::storage::{Database, MemoryDB};
 use exonum_testkit::TestKitBuilder;
 
-use dmbc::service::CurrencyService;
-use dmbc::service::asset::{Asset, AssetId, AssetInfo};
-use dmbc::service::builders::fee;
-use dmbc::service::builders::transaction;
-use dmbc::service::builders::wallet;
-use dmbc::service::schema::asset::AssetSchema;
-use dmbc::service::schema::transaction_status::{TxStatus, TxStatusSchema};
-use dmbc::service::schema::wallet::WalletSchema;
+use dmbc::currency::CurrencyService;
+use dmbc::currency::asset::{Asset, AssetId, AssetInfo};
+use dmbc::currency::builders::fee;
+use dmbc::currency::builders::transaction;
+use dmbc::currency::builders::wallet;
+use dmbc::currency::schema::asset::AssetSchema;
+use dmbc::currency::schema::transaction_status::{TxStatus, TxStatusSchema};
+use dmbc::currency::schema::wallet::WalletSchema;
 
 #[test]
 fn add_assets() {
@@ -147,7 +147,7 @@ fn add_assets_fails() {
 
 #[test]
 fn create_wallet() {
-    use dmbc::service::transaction::create_wallet::INIT_BALANCE;
+    use dmbc::currency::transaction::create_wallet::INIT_BALANCE;
 
     let (public_key, secret_key) = crypto::gen_keypair();
     let tx = transaction::Builder::new()

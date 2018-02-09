@@ -19,4 +19,4 @@ extern crate uuid;
 
 pub mod config;
 pub mod keys;
-pub mod service;
+pub mod currency;
