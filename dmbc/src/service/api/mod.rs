@@ -96,7 +96,7 @@ impl Api for ServiceApi {
         api.wire(router);
 
         let send_option = move |_request: &mut Request| -> IronResult<Response> {
-            let mut resp = Response::with((StatusCode::Ok));
+            let mut resp = Response::with(StatusCode::Ok);
             ServiceApi::add_option_headers(&mut resp.headers);
             Ok(resp)
         };
