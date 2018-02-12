@@ -110,7 +110,7 @@ impl Flooder {
             }
 
             OpState::DelAssets => {
-                let wallet = self.rng.choose(&self.wallets).unwrap().clone();
+                let wallet = self.pick_wallet();
                 let asset = self.split_asset();
                 let tx = transaction::Builder::new()
                     .keypair(wallet.0, wallet.1)
