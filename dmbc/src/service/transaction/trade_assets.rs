@@ -73,6 +73,7 @@ impl TxTrade {
         }
 
         // initial point for db rollback, in case if transaction has failed
+        view.commit();
         view.checkpoint();
 
         // convert trade assets to assets stored on the blockchain

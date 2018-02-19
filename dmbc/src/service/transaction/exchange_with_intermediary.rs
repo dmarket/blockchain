@@ -88,7 +88,9 @@ impl TxExchangeWithIntermediary {
         }
 
         // initial point for db rollback, in case if transaction has failed
-        view.checkpoint();
+
+//        view.commit();
+//        view.checkpoint();
 
         // pay commison for the transaction to intermediary
         if pay_commision(
@@ -97,10 +99,10 @@ impl TxExchangeWithIntermediary {
             &mut recipient,
             &mut sender,
             &mut intermediary,
-            self.offer().intermediary().commision(),
+            self.offer().intermediary().commission(),
         ).is_err()
         {
-            view.rollback();
+//            view.rollback();
             return TxStatus::Fail;
         }
 
@@ -121,7 +123,7 @@ impl TxExchangeWithIntermediary {
                 fee,
             ).is_err()
             {
-                view.rollback();
+//                view.rollback();
                 return TxStatus::Fail;
             }
         }
@@ -133,7 +135,7 @@ impl TxExchangeWithIntermediary {
             self.offer().sender_value(),
         ).is_err()
         {
-            view.rollback();
+//            view.rollback();
             return TxStatus::Fail;
         }
 
@@ -145,7 +147,7 @@ impl TxExchangeWithIntermediary {
             &self.offer().recipient_assets(),
         ).is_err()
         {
-            view.rollback();
+//            view.rollback();
             return TxStatus::Fail;
         }
 

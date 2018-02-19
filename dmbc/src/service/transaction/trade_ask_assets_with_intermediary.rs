@@ -70,6 +70,7 @@ impl TxTradeAskWithIntermediary {
         }
 
         // initial point for db rollback, in case if transaction has failed
+        view.commit();
         view.checkpoint();
 
         // pay commison for the transaction to intermediary
@@ -77,7 +78,7 @@ impl TxTradeAskWithIntermediary {
             view,
             &mut seller,
             &mut intermediary,
-            self.offer().intermediary().commision(),
+            self.offer().intermediary().commission(),
         ).is_err()
         {
             view.rollback();
