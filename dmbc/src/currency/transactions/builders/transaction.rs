@@ -170,7 +170,7 @@ impl TxAddAssetBuilder {
         }
     }
 
-    pub fn add_asset(self, name: &str, count: u32, fees: Fees) -> Self {
+    pub fn add_asset(self, name: &str, count: u64, fees: Fees) -> Self {
         let asset = MetaAsset::new(&self.meta.public_key, name, count, fees);
         self.add_asset_value(asset)
     }
@@ -184,7 +184,7 @@ impl TxAddAssetBuilder {
         self,
         receiver: PublicKey,
         name: &str,
-        count: u32,
+        count: u64,
         fees: Fees,
     ) -> Self {
         let asset = MetaAsset::new(&receiver, name, count, fees);
@@ -240,7 +240,7 @@ impl TxDelAssetBuilder {
         }
     }
 
-    pub fn add_asset(self, name: &str, count: u32) -> Self {
+    pub fn add_asset(self, name: &str, count: u64) -> Self {
         let asset = Asset::from_parts(name, count, &self.meta.public_key);
         self.add_asset_value(asset)
     }
@@ -302,7 +302,7 @@ impl TxExchangeBuilder {
         }
     }
 
-    pub fn sender_add_asset(self, name: &str, count: u32) -> Self {
+    pub fn sender_add_asset(self, name: &str, count: u64) -> Self {
         let asset = Asset::from_parts(name, count, &self.meta.public_key);
         self.sender_add_asset_value(asset)
     }
@@ -326,7 +326,7 @@ impl TxExchangeBuilder {
         }
     }
 
-    pub fn recipient_add_asset(self, name: &str, count: u32) -> Self {
+    pub fn recipient_add_asset(self, name: &str, count: u64) -> Self {
         let asset = Asset::from_parts(name, count, &self.recipient.unwrap());
         self.recipient_add_asset_value(asset)
     }
@@ -424,7 +424,7 @@ impl TxExchangeWithIntermediaryBuilder {
         }
     }
 
-    pub fn sender_add_asset(self, name: &str, count: u32) -> Self {
+    pub fn sender_add_asset(self, name: &str, count: u64) -> Self {
         let asset = Asset::from_parts(name, count, &self.meta.public_key);
         self.sender_add_asset_value(asset)
     }
@@ -463,7 +463,7 @@ impl TxExchangeWithIntermediaryBuilder {
         }
     }
 
-    pub fn recipient_add_asset(self, name: &str, count: u32) -> Self {
+    pub fn recipient_add_asset(self, name: &str, count: u64) -> Self {
         let asset = Asset::from_parts(name, count, &self.recipient.unwrap());
         self.recipient_add_asset_value(asset)
     }
@@ -575,7 +575,7 @@ impl TxTradeBuilder {
         }
     }
 
-    pub fn add_asset(self, name: &str, count: u32, price: u64) -> Self {
+    pub fn add_asset(self, name: &str, count: u64, price: u64) -> Self {
         let asset = Asset::from_parts(name, count, &self.meta.public_key);
         let trade = asset.into_trade_asset(price);
         self.add_asset_value(trade)
@@ -651,7 +651,7 @@ impl TxTradeWithIntermediaryBuilder {
         }
     }
 
-    pub fn add_asset(self, name: &str, count: u32, price: u64) -> Self {
+    pub fn add_asset(self, name: &str, count: u64, price: u64) -> Self {
         let asset = Asset::from_parts(name, count, &self.meta.public_key);
         let trade = asset.into_trade_asset(price);
         self.add_asset_value(trade)
@@ -734,7 +734,7 @@ impl TxTradeAskBuilder {
         }
     }
 
-    pub fn add_asset(self, name: &str, count: u32, price: u64) -> Self {
+    pub fn add_asset(self, name: &str, count: u64, price: u64) -> Self {
         let asset = Asset::from_parts(name, count, &self.meta.public_key);
         let trade = asset.into_trade_asset(price);
         self.add_asset_value(trade)
@@ -825,7 +825,7 @@ impl TxTradeAskWithIntermediaryBuilder {
         }
     }
 
-    pub fn add_asset(self, name: &str, count: u32, price: u64) -> Self {
+    pub fn add_asset(self, name: &str, count: u64, price: u64) -> Self {
         let asset = Asset::from_parts(name, count, &self.meta.public_key);
         let trade = asset.into_trade_asset(price);
         self.add_asset_value(trade)
@@ -911,7 +911,7 @@ impl TxTransferBuilder {
         TxTransferBuilder { amount, ..self }
     }
 
-    pub fn add_asset(self, name: &str, count: u32) -> Self {
+    pub fn add_asset(self, name: &str, count: u64) -> Self {
         let asset = Asset::from_parts(name, count, &self.meta.public_key);
         self.add_asset_value(asset)
     }

@@ -14,14 +14,13 @@ use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use router::Router;
 
-use currency::schema::transaction_status::{TxStatus, TxStatusSchema};
-use currency::transaction::add_assets::TxAddAsset;
-use currency::transaction::create_wallet::TxCreateWallet;
-use currency::transaction::del_assets::TxDelAsset;
-use currency::transaction::exchange::TxExchange;
-use currency::transaction::mining::TxMining;
-use currency::transaction::trade_assets::TxTrade;
-use currency::transaction::transfer::TxTransfer;
+use currency::status;
+use currency::transactions::{
+    AddAssets, CreateWallet, DeleteAssets, Exchange, ExchangeIntermediary,
+    Mining, Trade, TradeIntermediary, TradeAsk, TradeAskIntermediary, Transfer,
+};
+
+use currency::transactions::Error;
 
 #[derive(Clone)]
 pub struct TransactionApi {
@@ -32,13 +31,17 @@ pub struct TransactionApi {
 #[serde(untagged)]
 #[derive(Clone, Serialize, Deserialize)]
 enum TransactionRequest {
-    CreateWallet(TxCreateWallet),
-    Transfer(TxTransfer),
-    AddAsset(TxAddAsset),
-    DelAsset(TxDelAsset),
-    TradeAsset(TxTrade),
-    Exchange(TxExchange),
-    Mining(TxMining),
+    CreateWallet(CreateWallet),
+    Transfer(Transfer),
+    AddAssets(AddAssets),
+    DeleteAssets(DeleteAssets),
+    Trade(Trade),
+    TradeAsk(TradeAsk),
+    TradeIntermediary(TradeIntermediary),
+    TradeAskIntermediary(TradeAskIntermediary),
+    Exchange(Exchange),
+    ExchangeIntermediary(ExchangeIntermediary),
+    Mining(Mining),
 }
 
 impl Into<Box<Transaction>> for TransactionRequest {
@@ -46,10 +49,14 @@ impl Into<Box<Transaction>> for TransactionRequest {
         match self {
             TransactionRequest::CreateWallet(trans) => Box::new(trans),
             TransactionRequest::Transfer(trans) => Box::new(trans),
-            TransactionRequest::AddAsset(trans) => Box::new(trans),
-            TransactionRequest::DelAsset(trans) => Box::new(trans),
-            TransactionRequest::TradeAsset(trans) => Box::new(trans),
+            TransactionRequest::AddAssets(trans) => Box::new(trans),
+            TransactionRequest::DeleteAssets(trans) => Box::new(trans),
+            TransactionRequest::Trade(trans) => Box::new(trans),
+            TransactionRequest::TradeAsk(trans) => Box::new(trans),
+            TransactionRequest::TradeIntermediary(trans) => Box::new(trans),
+            TransactionRequest::TradeAskIntermediary(trans) => Box::new(trans),
             TransactionRequest::Exchange(trans) => Box::new(trans),
+            TransactionRequest::ExchangeIntermediary(trans) => Box::new(trans),
             TransactionRequest::Mining(trans) => Box::new(trans),
         }
     }
@@ -63,9 +70,9 @@ struct TransactionResponse {
 }
 
 impl TransactionApi {
-    fn get_status(&self, tx_hash: &Hash) -> Option<TxStatus> {
-        let mut view = self.blockchain.fork();
-        TxStatusSchema::map(&mut view, |mut schema| schema.get_status(tx_hash))
+    fn get_status(&self, tx_hash: &Hash) -> Option<Result<(), Error>> {
+        let mut view = &mut self.blockchain.fork();
+        status::Schema(view).fetch(tx_hash)
     }
 }
 
@@ -118,3 +125,4 @@ impl Api for TransactionApi {
         router.get("/transactions/:hash", get_status, "get_transaction_status");
     }
 }
+

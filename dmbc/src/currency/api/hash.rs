@@ -11,20 +11,12 @@ use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use router::Router;
 
-use currency::transaction::add_assets::TxAddAsset;
-use currency::transaction::create_wallet::TxCreateWallet;
-use currency::transaction::del_assets::TxDelAsset;
-use currency::transaction::exchange::{TxExchange, TX_EXCHANGE_ID};
-use currency::transaction::exchange_with_intermediary::{TxExchangeWithIntermediary,
-                                                       TX_EXCHANGE_WITH_INTERMEDIARY_ID};
-use currency::transaction::mining::TxMining;
-use currency::transaction::trade_assets::{TxTrade, TX_TRADE_ASSETS_ID};
-use currency::transaction::trade_assets_with_intermediary::{TxTradeWithIntermediary,
-                                                           TX_TRADE_ASSETS_WITH_INTERMEDIARY_ID};
-use currency::transaction::trade_ask_assets::{TxTradeAsk, TX_TRADE_ASK_ASSETS_ID};
-use currency::transaction::trade_ask_assets_with_intermediary::{TxTradeAskWithIntermediary,
-                                                               TX_TRADE_ASK_ASSETS_WITH_INTERMEDIARY_ID};
-use currency::transaction::transfer::TxTransfer;
+use currency::transactions::{
+    EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID, TRADE_ID, TRADE_INTERMEDIARY_ID,
+    TRADE_ASK_ID, TRADE_ASK_INTERMEDIARY_ID,
+    AddAssets, CreateWallet, DeleteAssets, Exchange, ExchangeIntermediary,
+    Mining, Trade, TradeIntermediary, TradeAsk, TradeAskIntermediary, Transfer,
+};
 
 #[derive(Clone)]
 pub struct HashApi {}
@@ -32,17 +24,17 @@ pub struct HashApi {}
 #[serde(untagged)]
 #[derive(Clone, Serialize, Deserialize)]
 enum TransactionRequest {
-    CreateWallet(TxCreateWallet),
-    Transfer(TxTransfer),
-    AddAsset(TxAddAsset),
-    DelAsset(TxDelAsset),
-    TradeAsset(TxTrade),
-    TradeAssetsWithIntermediary(TxTradeWithIntermediary),
-    TradeAskAssets(TxTradeAsk),
-    TradeAskAssetsWithIntermediary(TxTradeAskWithIntermediary),
-    Exchange(TxExchange),
-    ExchangeWithIntermediary(TxExchangeWithIntermediary),
-    Mining(TxMining),
+    CreateWallet(CreateWallet),
+    Transfer(Transfer),
+    AddAssets(AddAssets),
+    DeleteAssets(DeleteAssets),
+    Trade(Trade),
+    TradeIntermediary(TradeIntermediary),
+    TradeAsk(TradeAsk),
+    TradeAskIntermediary(TradeAskIntermediary),
+    Exchange(Exchange),
+    ExchangeIntermediary(ExchangeIntermediary),
+    Mining(Mining),
 }
 
 impl Into<Box<Transaction>> for TransactionRequest {
@@ -50,14 +42,14 @@ impl Into<Box<Transaction>> for TransactionRequest {
         match self {
             TransactionRequest::CreateWallet(trans) => Box::new(trans),
             TransactionRequest::Transfer(trans) => Box::new(trans),
-            TransactionRequest::AddAsset(trans) => Box::new(trans),
-            TransactionRequest::DelAsset(trans) => Box::new(trans),
-            TransactionRequest::TradeAsset(trans) => Box::new(trans),
-            TransactionRequest::TradeAssetsWithIntermediary(trans) => Box::new(trans),
-            TransactionRequest::TradeAskAssets(trans) => Box::new(trans),
-            TransactionRequest::TradeAskAssetsWithIntermediary(trans) => Box::new(trans),
+            TransactionRequest::AddAssets(trans) => Box::new(trans),
+            TransactionRequest::DeleteAssets(trans) => Box::new(trans),
+            TransactionRequest::Trade(trans) => Box::new(trans),
+            TransactionRequest::TradeIntermediary(trans) => Box::new(trans),
+            TransactionRequest::TradeAsk(trans) => Box::new(trans),
+            TransactionRequest::TradeAskIntermediary(trans) => Box::new(trans),
             TransactionRequest::Exchange(trans) => Box::new(trans),
-            TransactionRequest::ExchangeWithIntermediary(trans) => Box::new(trans),
+            TransactionRequest::ExchangeIntermediary(trans) => Box::new(trans),
             TransactionRequest::Mining(trans) => Box::new(trans),
         }
     }
@@ -102,33 +94,33 @@ impl Api for HashApi {
                     let raw_ = transaction.raw().clone();
 
                     let vec_hash = match transaction.raw().message_type() {
-                        TX_EXCHANGE_ID => match TxExchange::from_raw(raw_) {
-                            Ok(exchange) => exchange.get_offer_raw(),
+                        EXCHANGE_ID => match Exchange::from_raw(raw_) {
+                            Ok(exchange) => exchange.offer_raw(),
                             Err(_) => vec![],
                         },
-                        TX_EXCHANGE_WITH_INTERMEDIARY_ID => {
-                            match TxExchangeWithIntermediary::from_raw(raw_) {
-                                Ok(exchange) => exchange.get_offer_raw(),
+                        EXCHANGE_INTERMEDIARY_ID => {
+                            match ExchangeIntermediary::from_raw(raw_) {
+                                Ok(exchange) => exchange.offer_raw(),
                                 Err(_) => vec![],
                             }
                         }
-                        TX_TRADE_ASSETS_ID => match TxTrade::from_raw(raw_) {
-                            Ok(trade) => trade.get_offer_raw(),
+                        TRADE_ID => match Trade::from_raw(raw_) {
+                            Ok(trade) => trade.offer_raw(),
                             Err(_) => vec![],
                         },
-                        TX_TRADE_ASSETS_WITH_INTERMEDIARY_ID => {
-                            match TxTradeWithIntermediary::from_raw(raw_) {
-                                Ok(trade) => trade.get_offer_raw(),
+                        TRADE_INTERMEDIARY_ID => {
+                            match TradeIntermediary::from_raw(raw_) {
+                                Ok(trade) => trade.offer_raw(),
                                 Err(_) => vec![],
                             }
                         }
-                        TX_TRADE_ASK_ASSETS_ID => match TxTradeAsk::from_raw(raw_) {
-                            Ok(trade) => trade.get_offer_raw(),
+                        TRADE_ASK_ID => match TradeAsk::from_raw(raw_) {
+                            Ok(trade) => trade.offer_raw(),
                             Err(_) => vec![],
                         },
-                        TX_TRADE_ASK_ASSETS_WITH_INTERMEDIARY_ID => {
-                            match TxTradeAskWithIntermediary::from_raw(raw_) {
-                                Ok(trade) => trade.get_offer_raw(),
+                        TRADE_ASK_INTERMEDIARY_ID => {
+                            match TradeAskIntermediary::from_raw(raw_) {
+                                Ok(trade) => trade.offer_raw(),
                                 Err(_) => vec![],
                             }
                         }

@@ -5,7 +5,7 @@ use currency::wallet::Wallet;
 
 pub struct Builder {
     data: Option<String>,
-    amount: u32,
+    amount: u64,
     creator: Option<PublicKey>,
 }
 
@@ -25,7 +25,7 @@ impl Builder {
         }
     }
 
-    pub fn amount(self, amount: u32) -> Self {
+    pub fn amount(self, amount: u64) -> Self {
         Builder { amount, ..self }
     }
 

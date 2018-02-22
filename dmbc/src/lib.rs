@@ -16,6 +16,8 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate unicase;
 extern crate uuid;
+#[macro_use]
+extern crate log;
 
 pub mod config;
 pub mod keys;

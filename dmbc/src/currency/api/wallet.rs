@@ -15,38 +15,32 @@ use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use router::Router;
 
-use currency::ServiceApi;
-use currency::asset::Asset;
-use currency::schema::wallet::WalletSchema;
+use currency::api::ServiceApi;
+use currency::asset::AssetBundle;
+use currency::wallet;
 use currency::wallet::Wallet;
 
 #[derive(Clone)]
 pub struct WalletApi {
     pub blockchain: Blockchain,
 }
-/// Shortcut to get data on wallets.
+
 impl WalletApi {
-    fn get_wallet(&self, pub_key: &PublicKey) -> Wallet {
+    fn get_wallet(&self, pub_key: &PublicKey) -> Option<Wallet> {
         let mut view = self.blockchain.fork();
-        WalletSchema::map(&mut view, |mut schema| schema.wallet(pub_key))
+        wallet::Schema(view).fetch(pub_key)
     }
 
-    fn get_wallets(&self) -> Option<Vec<Wallet>> {
+    fn get_wallets(&self) -> Vec<Wallet> {
         let mut view = self.blockchain.fork();
-        WalletSchema::map(&mut view, |mut schema| {
-            let idx = schema.wallets();
-            let wallets: Vec<Wallet> = idx.values().collect();
-            if wallets.is_empty() {
-                None
-            } else {
-                Some(wallets)
-            }
-        })
+        wallet::Schema(view).index().values().collect()
     }
 
-    fn get_assets(&self, pub_key: &PublicKey) -> Vec<Asset> {
-        let wallet = self.get_wallet(pub_key);
-        wallet.assets()
+    fn get_assets(&self, pub_key: &PublicKey) -> Vec<AssetBundle> {
+        match self.get_wallet(pub_key) {
+            Some(wallet) => wallet.assets(),
+            None => Vec::new(),
+        }
     }
 }
 
@@ -68,40 +62,32 @@ impl Api for WalletApi {
         // Gets status of all wallets.
         let self_ = self.clone();
         let wallets_info = move |req: &mut Request| -> IronResult<Response> {
-            if let Some(wallets) = self_.get_wallets() {
-                // apply pagination parameters if they exist
-                let wallets_to_send = ServiceApi::apply_pagination(req, &wallets);
-                let wallet_list = serde_json::to_value(&wallets_to_send).unwrap();
-                let response_body = json!({
-                    "total": wallets.len(),
-                    "count": wallets_to_send.len(),
-                    "wallets": wallet_list,
-                });
+            let wallets = self_.get_wallets();
+            // apply pagination parameters if they exist
+            let wallets_to_send = ServiceApi::apply_pagination(req, &wallets);
+            let wallet_list = serde_json::to_value(&wallets_to_send).unwrap();
+            let response_body = json!({
+                "total": wallets.len(),
+                "count": wallets_to_send.len(),
+                "wallets": wallet_list,
+            });
 
-                let res = self_.ok_response(&serde_json::to_value(response_body).unwrap());
-                let mut res = res.unwrap();
-                res.headers.set(AccessControlAllowOrigin::Any);
-                Ok(res)
-            } else {
-                let res = self_
-                    .not_found_response(&serde_json::to_value("Wallets database is empty").unwrap());
-                let mut res = res.unwrap();
-                res.headers.set(AccessControlAllowOrigin::Any);
-                Ok(res)
-            }
+            let res = self_.ok_response(&serde_json::to_value(response_body).unwrap());
+            let mut res = res.unwrap();
+            res.headers.set(AccessControlAllowOrigin::Any);
+            Ok(res)
         };
 
         let self_ = self.clone();
         let wallet_assets_info = move |req: &mut Request| -> IronResult<Response> {
-            let public_key: PublicKey;
-            {
+            let public_key = {
                 let wallet_key = req.extensions
                     .get::<Router>()
                     .unwrap()
                     .find("pub_key")
                     .unwrap();
-                public_key = PublicKey::from_hex(wallet_key).map_err(ApiError::FromHex)?;
-            }
+                PublicKey::from_hex(wallet_key).map_err(ApiError::FromHex)?
+            };
             let assets = self_.get_assets(&public_key);
             // apply pagination parameters if they exist
             let assets_to_send = ServiceApi::apply_pagination(req, &assets);
