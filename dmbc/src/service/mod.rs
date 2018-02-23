@@ -18,6 +18,9 @@ use exonum::storage::Fork;
 use iron::Handler;
 use router::Router;
 use serde_json;
+use std::cell::Cell;
+use chrono::prelude::*;
+use std::time::SystemTime;
 
 use self::api::ServiceApi;
 use self::asset::Asset;
@@ -48,11 +51,17 @@ pub const GENESIS_WALLET_PUB_KEY: &str =
     "36a05e418393fb4b23819753f6e6dd51550ce030d53842c43dd1349857a96a61";
 // Identifier for wallet creation transaction type
 
-pub struct CurrencyService;
+pub struct CurrencyService {
+    last_block_time: Cell<SystemTime>,
+}
+unsafe impl Sync for CurrencyService{}
 
 impl CurrencyService {
     pub fn new() -> Self {
-        CurrencyService {}
+        let start = SystemTime::now();
+        CurrencyService {
+            last_block_time: Cell::new(start)
+        }
     }
 
     pub fn genesis_wallet_pub_key() -> PublicKey {
@@ -110,9 +119,22 @@ impl Service for CurrencyService {
     fn handle_commit(&self, ctx: &ServiceContext) {
         let schema = Schema::new(ctx.snapshot());
         let service_tx_schema = TxSchema::new(ctx.snapshot());
-        let las_block = schema.last_block();
-        let list = schema.block_txs(las_block.height());
-        println!("Block #{}.", las_block.height());
+        let last_block = schema.last_block();
+        let list = schema.block_txs(last_block.height());
+        let start = self.last_block_time.get();
+        let current = SystemTime::now();
+        let difference = current.duration_since(start)
+            .expect("SystemTime::duration_since failed");
+        let now = Local::now();
+        println!(
+            "[{}  ({}.{})] Block {}: count tx:{}",
+            now.format("%Y-%m-%d %H:%I:%S"),
+            difference.as_secs(),
+            difference.subsec_nanos(),
+            last_block.height(),
+            last_block.tx_count()
+        );
+        self.last_block_time.set(current);
         for hash in list.iter() {
             let tx_hash = hash.to_hex();
             let status = service_tx_schema.get_status(&hash);

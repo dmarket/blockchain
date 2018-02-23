@@ -138,7 +138,7 @@ fn main() {
     // Initialize services
     let services: Vec<Box<Service>> = vec![
         Box::new(ConfigurationService::new()),
-        Box::new(CurrencyService),
+        Box::new(CurrencyService::new()),
     ];
 
     eprintln!("Launching node. What can possibly go wrong?");
