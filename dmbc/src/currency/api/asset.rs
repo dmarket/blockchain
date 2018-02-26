@@ -22,7 +22,7 @@ pub struct AssetApi {
 /// Shortcut to get data on wallets.
 impl AssetApi {
     fn get_owner_for_asset(&self, asset_id: &AssetId) -> Option<AssetInfo> {
-        let mut view = self.blockchain.fork();
+        let view = self.blockchain.fork();
         asset::Schema(view).fetch(asset_id)
     }
 }

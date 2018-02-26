@@ -71,7 +71,7 @@ struct TransactionResponse {
 
 impl TransactionApi {
     fn get_status(&self, tx_hash: &Hash) -> Option<Result<(), Error>> {
-        let mut view = &mut self.blockchain.fork();
+        let view = &mut self.blockchain.fork();
         status::Schema(view).fetch(tx_hash)
     }
 }

@@ -36,16 +36,16 @@ impl AddAssets {
         let genesis_pub = Service::genesis_wallet();
         let creator_pub = self.pub_key();
 
-        let mut genesis = wallet::Schema(view).fetch(&genesis_pub).unwrap();
-        let mut creator = wallet::Schema(view).fetch(&creator_pub)
+        let mut genesis = wallet::Schema(&*view).fetch(&genesis_pub).unwrap();
+        let mut creator = wallet::Schema(&*view).fetch(&creator_pub)
             .ok_or(Error::InsufficientFunds)?;
 
         let fees = self.fees(view);
 
         wallet::move_coins(&mut creator, &mut genesis, fees.for_transaction())?;
 
-        wallet::Schema(view).store(&genesis_pub, genesis);
-        wallet::Schema(view).store(&creator_pub, creator);
+        wallet::Schema(&mut*view).store(&genesis_pub, genesis.clone());
+        wallet::Schema(&mut*view).store(&creator_pub, creator.clone());
 
         wallet::move_coins(&mut creator, &mut genesis, fees.for_assets_total())?;
 
@@ -59,16 +59,16 @@ impl AddAssets {
                 .or_insert(Vec::new())
                 .push(asset);
 
-            asset::Schema(view).store(&id, info);
+            asset::Schema(&mut*view).store(&id, info);
         }
 
         for (key, assets) in recipients  {
-            let recipient = wallet::Schema(view).fetch(&key)
+            let mut recipient = wallet::Schema(&mut*view).fetch(&key)
                 .unwrap_or_else(|| Wallet::new_empty(&key));
 
             recipient.push_assets(assets);
 
-            wallet::Schema(view).store(&key, recipient);
+            wallet::Schema(&mut*view).store(&key, recipient);
         }
 
         Ok(())
@@ -78,7 +78,7 @@ impl AddAssets {
         self.meta_assets().into_iter()
             .map(|meta| {
                 let id = AssetId::from_data(meta.data(), &meta.receiver());
-                let state = asset::Schema(view).fetch(&id);
+                let state = asset::Schema(&mut*view).fetch(&id);
 
                 let key = self.pub_key();
                 let info = state.map_or_else(

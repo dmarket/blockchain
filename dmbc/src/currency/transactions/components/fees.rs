@@ -70,14 +70,16 @@ impl Fees {
         Ok(fees)
     }
 
-    pub fn new_trade<S, I>(view: S, assets: I) -> Result<Fees, Error>
+    pub fn new_trade<'a, S, I>(view: S, assets: I) -> Result<Fees, Error>
     where
         S: AsRef<Snapshot>,
-        I: IntoIterator<Item=TradeAsset>,
+        I: IntoIterator<Item=&'a TradeAsset>,
+        <I as IntoIterator>::IntoIter: Clone,
     {
         let view = view.as_ref();
-        let assets_price : u64 = assets.into_iter().map(|ta| ta.total_price()).sum();
-        let for_assets = assets.into_iter()
+        let assets = assets.into_iter();
+        let assets_price : u64 = assets.clone().map(|ta| ta.total_price()).sum();
+        let for_assets = assets
             .map(|ta| {
                 let info = asset::Schema(view).fetch(&ta.id())
                     .ok_or_else(|| Error::AssetNotFound)?;

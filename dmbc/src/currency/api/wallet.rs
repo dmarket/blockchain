@@ -27,13 +27,15 @@ pub struct WalletApi {
 
 impl WalletApi {
     fn get_wallet(&self, pub_key: &PublicKey) -> Option<Wallet> {
-        let mut view = self.blockchain.fork();
+        let view = &mut self.blockchain.fork();
         wallet::Schema(view).fetch(pub_key)
     }
 
     fn get_wallets(&self) -> Vec<Wallet> {
-        let mut view = self.blockchain.fork();
-        wallet::Schema(view).index().values().collect()
+        let view = &mut self.blockchain.fork();
+        let index = wallet::Schema(view).index();
+        let wallets = index.values().collect();
+        wallets
     }
 
     fn get_assets(&self, pub_key: &PublicKey) -> Vec<AssetBundle> {

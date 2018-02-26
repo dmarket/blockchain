@@ -84,7 +84,8 @@ impl blockchain::Service for Service {
 
         info!("Block #{}.", last_block.height());
 
-        for hash in schema.block_txs(last_block.height()).iter() {
+        let txs = schema.block_txs(last_block.height());
+        for hash in txs.iter() {
             let status = status::Schema(ctx.snapshot()).fetch(&hash);
             let msg = json!({"tx_hash": status}).to_string();
             let queuename = config::config().nats().queuename();
@@ -101,3 +102,4 @@ impl blockchain::Service for Service {
         serde_json::to_value(Configuration::default()).unwrap()
     }
 }
+

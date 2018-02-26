@@ -15,7 +15,7 @@ where
     }
 
     /// Fetch state for the specified wallet from the snapshot.
-    pub fn fetch(&self, pub_key: &PublicKey) -> Option<Wallet> {
+    pub fn fetch(&self, _pub_key: &PublicKey) -> Option<Wallet> {
         unimplemented!()
     }
 }
@@ -26,7 +26,7 @@ impl<'a> Schema<&'a mut Fork> {
     }
 
     /// Store the new state for a wallet in the database.
-    pub fn store(&mut self, pub_key: &PublicKey, wallet: Wallet) {
+    pub fn store(&mut self, _pub_key: &PublicKey, _wallet: Wallet) {
         unimplemented!()
     }
 
