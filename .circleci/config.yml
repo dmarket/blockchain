@@ -20,7 +20,7 @@ jobs:
       - run:
           name: Build project
           command: |
-            cargo build -p dmbc-node
+            cargo build -vv -p dmbc-node
 
       - save_cache:
           key: suntechsoft-dmarket-blockchain-{{ .Branch }}-{{ checksum "Cargo.toml" }}
