@@ -1,12 +1,25 @@
 use std::error;
 use std::fmt;
 
+#[repr(u8)]
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub enum Error {
-    AssetNotFound,
-    TransactionNotFound,
-    InvalidAssetInfo,
-    InsufficientFunds,
+    AssetNotFound = 1,
+    TransactionNotFound = 2,
+    InvalidAssetInfo = 3,
+    InsufficientFunds = 4,
+}
+
+impl Error {
+    pub fn try_from(value: u8) -> Option<Self> {
+        match value {
+            1 => Some(Error::AssetNotFound),
+            2 => Some(Error::TransactionNotFound),
+            3 => Some(Error::InvalidAssetInfo),
+            4 => Some(Error::InsufficientFunds),
+            _ => None,
+        }
+    }
 }
 
 impl error::Error for Error {
