@@ -10,7 +10,6 @@ use currency::{SERVICE_ID, Service};
 use currency::asset;
 use currency::asset::{AssetId, MetaAsset, AssetBundle, AssetInfo};
 use currency::wallet;
-use currency::wallet::Wallet;
 use currency::status;
 use currency::transactions::Error;
 use currency::transactions::components::Fees;
@@ -36,9 +35,8 @@ impl AddAssets {
         let genesis_pub = Service::genesis_wallet();
         let creator_pub = self.pub_key();
 
-        let mut genesis = wallet::Schema(&*view).fetch(&genesis_pub).unwrap();
-        let mut creator = wallet::Schema(&*view).fetch(&creator_pub)
-            .ok_or(Error::InsufficientFunds)?;
+        let mut genesis = wallet::Schema(&*view).fetch(&genesis_pub);
+        let mut creator = wallet::Schema(&*view).fetch(&creator_pub);
 
         let fees = self.fees(view);
 
@@ -48,6 +46,9 @@ impl AddAssets {
         wallet::Schema(&mut*view).store(&creator_pub, creator.clone());
 
         wallet::move_coins(&mut creator, &mut genesis, fees.for_assets_total())?;
+
+        wallet::Schema(&mut*view).store(&genesis_pub, genesis);
+        wallet::Schema(&mut*view).store(&creator_pub, creator);
 
         let assets = self.extract_assets(view)?;
 
@@ -63,8 +64,7 @@ impl AddAssets {
         }
 
         for (key, assets) in recipients  {
-            let mut recipient = wallet::Schema(&mut*view).fetch(&key)
-                .unwrap_or_else(|| Wallet::new_empty(&key));
+            let mut recipient = wallet::Schema(&*view).fetch(&key);
 
             recipient.push_assets(assets);
 
