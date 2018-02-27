@@ -22,7 +22,7 @@ use exonum::crypto::SecretKey;
 use exonum::messages::{MessageBuffer, RawMessage};
 use exonum_testkit::TestKitBuilder;
 
-use dmbc::currency::CurrencyService;
+use dmbc::currency::Service;
 use dmbc::currency::builders::transaction;
 use dmbc::currency::builders::fee;
 use dmbc::currency::transaction::{TX_ADD_ASSETS_ID, TX_CREATE_WALLET_ID, TX_DEL_ASSETS_ID,
@@ -49,7 +49,7 @@ fn main() {
 
         let mut testkit = TestKitBuilder::validator()
             .with_validators(1)
-            .with_service(CurrencyService)
+            .with_service(Service)
             .create();
 
         testkit.create_block();
