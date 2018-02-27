@@ -1,0 +1,15 @@
+[package]
+name = "dmbc-flooder"
+version = "0.1.0"
+authors = ["Mikola Samardak <niksaak@gmail.com>"]
+
+[dependencies]
+dmbc = { path = "../dmbc" }
+rand = "*"
+exonum = "0.4"
+mio = "*"
+mio_httpc = { version = "*", features = ["native"] }
+serde = "*"
+serde_json = "*"
+fnv = "*"
+nix = "*"
