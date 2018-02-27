@@ -13,7 +13,7 @@ encoding_struct! {
 }
 
 impl AssetBundle {
-    pub fn from_data_and_amount(data: &str, amount: u64, pub_key: &PublicKey) -> AssetBundle {
+    pub fn from_data(data: &str, amount: u64, pub_key: &PublicKey) -> AssetBundle {
         let id = AssetId::from_data(data, pub_key);
         AssetBundle::new(id, amount)
     }

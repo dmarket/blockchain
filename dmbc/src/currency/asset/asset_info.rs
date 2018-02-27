@@ -5,11 +5,11 @@ use currency::transactions::Error;
 
 encoding_struct! {
     struct AssetInfo {
-        const SIZE = 44;
+        const SIZE = 48;
 
         field creator: &PublicKey [0  => 32]
-        field amount:  u64        [32 => 36]
-        field fees:    Fees       [36 => 44]
+        field amount:  u64        [32 => 40]
+        field fees:    Fees       [40 => 48]
     }
 }
 

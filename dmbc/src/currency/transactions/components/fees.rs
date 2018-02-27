@@ -18,7 +18,7 @@ pub enum FeeStrategy {
 }
 
 impl FeeStrategy {
-    fn try_from(value: u8) -> Option<Self> {
+    pub fn try_from(value: u8) -> Option<Self> {
         match value {
             1 => Some(FeeStrategy::Recipient),
             2 => Some(FeeStrategy::Sender),

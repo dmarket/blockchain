@@ -6,12 +6,12 @@ pub const ASSET_DATA_MAX_LENGTH: usize = 10 * 1024;
 
 encoding_struct! {
     struct MetaAsset {
-        const SIZE = 52;
+        const SIZE = 56;
 
         field receiver:  &PublicKey [0  => 32]
         field data:      &str       [32 => 40]
-        field amount:    u64        [40 => 44]
-        field fees:      Fees       [44 => 52]
+        field amount:    u64        [40 => 48]
+        field fees:      Fees       [48 => 56]
     }
 }
 
