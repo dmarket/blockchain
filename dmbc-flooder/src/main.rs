@@ -43,11 +43,6 @@ impl OpState {
     fn next(self) -> OpState {
         use OpState::*;
         match self {
-            AddAssets => CreateWallet,
-            CreateWallet => AddAssets,
-            _ => AddAssets,
-        }
-        match self {
             CreateWallet => AddAssets,
             AddAssets => DelAssets,
             DelAssets => Exchange,
