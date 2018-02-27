@@ -26,7 +26,7 @@ pub struct WalletApi {
 }
 
 impl WalletApi {
-    fn get_wallet(&self, pub_key: &PublicKey) -> Option<Wallet> {
+    fn get_wallet(&self, pub_key: &PublicKey) -> Wallet {
         let view = &mut self.blockchain.fork();
         wallet::Schema(view).fetch(pub_key)
     }
@@ -39,10 +39,7 @@ impl WalletApi {
     }
 
     fn get_assets(&self, pub_key: &PublicKey) -> Vec<AssetBundle> {
-        match self.get_wallet(pub_key) {
-            Some(wallet) => wallet.assets(),
-            None => Vec::new(),
-        }
+        self.get_wallet(pub_key).assets()
     }
 }
 
@@ -115,3 +112,4 @@ impl Api for WalletApi {
         );
     }
 }
+
