@@ -5,7 +5,7 @@ use exonum::storage::Snapshot;
 
 use currency::asset;
 use currency::asset::{AssetBundle, TradeAsset, MetaAsset};
-use currency::transactions::{Error};
+use currency::error::Error;
 use currency::configuration::Configuration;
 
 #[repr(u8)]

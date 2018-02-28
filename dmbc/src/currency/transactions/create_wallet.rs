@@ -5,7 +5,7 @@ use exonum::messages::Message;
 use serde_json;
 
 use currency::SERVICE_ID;
-use currency::transactions::Error;
+use currency::error::Error;
 use currency::wallet;
 use currency::wallet::Wallet;
 use currency::status;

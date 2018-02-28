@@ -13,8 +13,6 @@ mod trade_ask;
 mod trade_ask_intermediary;
 mod transfer;
 
-pub use currency::transactions::components::Error;
-
 pub use currency::transactions::add_assets::{AddAssets, ADD_ASSETS_ID};
 pub use currency::transactions::create_wallet::{CreateWallet, CREATE_WALLET_ID};
 pub use currency::transactions::delete_assets::{DeleteAssets, DELETE_ASSETS_ID};

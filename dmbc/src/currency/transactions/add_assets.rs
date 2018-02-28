@@ -11,7 +11,7 @@ use currency::asset;
 use currency::asset::{AssetId, MetaAsset, AssetBundle, AssetInfo};
 use currency::wallet;
 use currency::status;
-use currency::transactions::Error;
+use currency::error::Error;
 use currency::transactions::components::Fees;
 
 pub const ADD_ASSETS_ID: u16 = 300;

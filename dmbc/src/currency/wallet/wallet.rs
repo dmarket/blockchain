@@ -2,7 +2,7 @@ use exonum::crypto::PublicKey;
 use exonum::encoding::Field;
 
 use currency::asset::AssetBundle;
-use currency::transactions::Error;
+use currency::error::Error;
 
 encoding_struct! {
     #[derive(Eq, PartialOrd, Ord)]

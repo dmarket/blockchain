@@ -1,7 +1,7 @@
 use exonum::crypto::PublicKey;
 
 use currency::asset::Fees;
-use currency::transactions::Error;
+use currency::error::Error;
 
 encoding_struct! {
     struct AssetInfo {

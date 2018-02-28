@@ -20,7 +20,7 @@ use currency::transactions::{
     Mining, Trade, TradeIntermediary, TradeAsk, TradeAskIntermediary, Transfer,
 };
 
-use currency::transactions::Error;
+use currency::error::Error;
 
 #[derive(Clone)]
 pub struct TransactionApi {

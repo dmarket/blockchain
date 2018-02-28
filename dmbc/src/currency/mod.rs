@@ -1,6 +1,7 @@
 pub mod api;
 pub mod asset;
 pub mod configuration;
+pub mod error;
 pub mod status;
 pub mod transactions;
 pub mod wallet;
