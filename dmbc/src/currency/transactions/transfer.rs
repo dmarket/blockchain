@@ -1,10 +1,13 @@
 use exonum::crypto::PublicKey;
 use exonum::blockchain::Transaction;
 use exonum::storage::Fork;
+use exonum::messages::Message;
 use serde_json;
 
 use currency::SERVICE_ID;
 use currency::assets::AssetBundle;
+use currency::error::Error;
+use currency::status;
 
 pub const TRANSFER_ID: u16 = 200;
 
@@ -23,17 +26,29 @@ message! {
     }
 }
 
+impl Transfer {
+    fn process(&self, view: &mut Fork) -> Result<(), Error> {
+        Err(Error::NotImplemented)
+    }
+}
+
 impl Transaction for Transfer {
     fn verify(&self) -> bool {
-        unimplemented!()
+        // TODO
+        if cfg!(fuzzing) {
+            return true;
+        }
+
+        false
     }
 
     fn execute(&self, view: &mut Fork) {
-        let _ = view;
-        unimplemented!()
+        // TODO
+        let result = self.process(view);
+        status::Schema(view).store(self.hash(), result);
     }
 
     fn info(&self) -> serde_json::Value {
-        unimplemented!()
+        json!({})
     }
 }

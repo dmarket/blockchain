@@ -1,9 +1,12 @@
 use exonum::crypto::PublicKey;
 use exonum::blockchain::Transaction;
 use exonum::storage::Fork;
+use exonum::messages::Message;
 use serde_json;
 
 use currency::SERVICE_ID;
+use currency::error::Error;
+use currency::status;
 
 pub const MINING_ID: u16 = 700;
 
@@ -18,17 +21,29 @@ message! {
     }
 }
 
+impl Mining {
+    fn process(&self, view: &mut Fork) -> Result<(), Error> {
+        Err(Error::NotImplemented)
+    }
+}
+
 impl Transaction for Mining {
     fn verify(&self) -> bool {
-        unimplemented!()
+        // TODO
+        if cfg!(fuzzing) {
+            return true;
+        }
+
+        self.verify_signature(self.pub_key())
     }
 
     fn execute(&self, view: &mut Fork) {
-        let _ = view;
-        unimplemented!()
+        // TODO
+        let result = self.process(view);
+        status::Schema(view).store(self.hash(), result);
     }
 
     fn info(&self) -> serde_json::Value {
-        unimplemented!()
+        json!({})
     }
 }

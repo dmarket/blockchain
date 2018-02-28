@@ -8,6 +8,7 @@ pub enum Error {
     TransactionNotFound = 2,
     InvalidAssetInfo = 3,
     InsufficientFunds = 4,
+    NotImplemented = 5,
 }
 
 impl Error {
@@ -29,6 +30,7 @@ impl error::Error for Error {
             &Error::TransactionNotFound => "transaction not found",
             &Error::InvalidAssetInfo => "invalid asset info",
             &Error::InsufficientFunds => "insufficient funds",
+            &Error::NotImplemented => "not implemented",
         }
     }
 }
