@@ -99,7 +99,6 @@ fn setup() -> Result<(), Box<Error>> {
                 .sender_value(1000)
                 .recipient(data.bob)
                 .recipient_add_asset("bob_asset", 10)
-                .recipient_value(1000)
                 .fee_strategy(1)
                 .seed(83)
                 .build()

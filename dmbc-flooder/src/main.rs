@@ -19,7 +19,7 @@ use serde::Serialize;
 
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::transactions::builders::fee;
-use dmbc::currency::asset::{MetaAsset, AssetBundle, AssetId, TradeAsset};
+use dmbc::currency::assets::{MetaAsset, AssetBundle, AssetId, TradeAsset};
 
 type Wallet = (PublicKey, SecretKey);
 
