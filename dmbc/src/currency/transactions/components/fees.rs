@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use exonum::crypto::PublicKey;
 use exonum::storage::Snapshot;
 
-use currency::asset;
-use currency::asset::{AssetBundle, TradeAsset, MetaAsset};
+use currency::assets;
+use currency::assets::{AssetBundle, TradeAsset, MetaAsset};
 use currency::error::Error;
 use currency::configuration::Configuration;
 
@@ -81,7 +81,7 @@ impl Fees {
         let assets_price : u64 = assets.clone().map(|ta| ta.total_price()).sum();
         let for_assets = assets
             .map(|ta| {
-                let info = asset::Schema(view).fetch(&ta.id())
+                let info = assets::Schema(view).fetch(&ta.id())
                     .ok_or_else(|| Error::AssetNotFound)?;
 
                 let fee = info.fees().trade().for_price(assets_price);
@@ -108,7 +108,7 @@ impl Fees {
         let view = view.as_ref();
         let for_assets = assets.into_iter()
             .map(|asset| {
-                let info = asset::Schema(view).fetch(&asset.id())
+                let info = assets::Schema(view).fetch(&asset.id())
                     .ok_or_else(|| Error::AssetNotFound)?;
 
                 let fee = info.fees().exchange().tax();
@@ -135,7 +135,7 @@ impl Fees {
         let view = view.as_ref();
         let for_assets = assets.into_iter()
             .map(|asset| {
-                let info = asset::Schema(view).fetch(&asset.id())
+                let info = assets::Schema(view).fetch(&asset.id())
                     .ok_or_else(|| Error::AssetNotFound)?;
 
                 let fee = info.fees().transfer().tax();

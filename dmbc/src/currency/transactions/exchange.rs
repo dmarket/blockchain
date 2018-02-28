@@ -3,7 +3,7 @@ use exonum::blockchain::Transaction;
 use exonum::storage::Fork;
 use serde_json;
 
-use currency::asset::AssetBundle;
+use currency::assets::AssetBundle;
 use currency::SERVICE_ID;
 
 pub const EXCHANGE_ID: u16 = 601;

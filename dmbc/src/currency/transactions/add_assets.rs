@@ -7,8 +7,8 @@ use exonum::messages::Message;
 use serde_json;
 
 use currency::{SERVICE_ID, Service};
-use currency::asset;
-use currency::asset::{AssetId, MetaAsset, AssetBundle, AssetInfo};
+use currency::assets;
+use currency::assets::{AssetId, MetaAsset, AssetBundle, AssetInfo};
 use currency::wallet;
 use currency::status;
 use currency::error::Error;
@@ -60,7 +60,7 @@ impl AddAssets {
                 .or_insert(Vec::new())
                 .push(asset);
 
-            asset::Schema(&mut*view).store(&id, info);
+            assets::Schema(&mut*view).store(&id, info);
         }
 
         for (key, assets) in recipients  {
@@ -78,7 +78,7 @@ impl AddAssets {
         self.meta_assets().into_iter()
             .map(|meta| {
                 let id = AssetId::from_data(meta.data(), &meta.receiver());
-                let state = asset::Schema(&mut*view).fetch(&id);
+                let state = assets::Schema(&mut*view).fetch(&id);
 
                 let key = self.pub_key();
                 let info = state.map_or_else(

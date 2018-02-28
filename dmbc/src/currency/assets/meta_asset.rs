@@ -1,6 +1,6 @@
 use exonum::crypto::PublicKey;
 
-use currency::asset::{AssetId, Fees, AssetInfo, AssetBundle};
+use currency::assets::{AssetId, Fees, AssetInfo, AssetBundle};
 
 pub const ASSET_DATA_MAX_LENGTH: usize = 10 * 1024;
 

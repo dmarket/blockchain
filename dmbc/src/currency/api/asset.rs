@@ -11,8 +11,8 @@ use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use router::Router;
 
-use currency::asset;
-use currency::asset::{AssetId, AssetInfo};
+use currency::assets;
+use currency::assets::{AssetId, AssetInfo};
 
 #[derive(Clone)]
 pub struct AssetApi {
@@ -23,7 +23,7 @@ pub struct AssetApi {
 impl AssetApi {
     fn get_owner_for_asset(&self, asset_id: &AssetId) -> Option<AssetInfo> {
         let view = self.blockchain.fork();
-        asset::Schema(view).fetch(asset_id)
+        assets::Schema(view).fetch(asset_id)
     }
 }
 

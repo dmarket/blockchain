@@ -3,7 +3,7 @@ use exonum::crypto::{PublicKey, SecretKey};
 use exonum::storage::StorageValue;
 
 use currency;
-use currency::asset::{AssetBundle, Fees, MetaAsset, TradeAsset, AssetId};
+use currency::assets::{AssetBundle, Fees, MetaAsset, TradeAsset, AssetId};
 use currency::transactions::add_assets::AddAssets;
 use currency::transactions::create_wallet::CreateWallet;
 use currency::transactions::delete_assets::DeleteAssets;

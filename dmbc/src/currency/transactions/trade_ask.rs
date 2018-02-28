@@ -4,7 +4,7 @@ use exonum::storage::Fork;
 use serde_json;
 
 use currency::SERVICE_ID;
-use currency::asset::TradeAsset;
+use currency::assets::TradeAsset;
 
 pub const TRADE_ASK_ID: u16 = 501;
 

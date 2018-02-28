@@ -4,7 +4,7 @@ use exonum::storage::Fork;
 use serde_json;
 
 use currency::SERVICE_ID;
-use currency::asset::AssetBundle;
+use currency::assets::AssetBundle;
 use currency::transactions::components::Intermediary;
 
 pub const EXCHANGE_INTERMEDIARY_ID: u16 = 602;

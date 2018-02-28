@@ -1,4 +1,4 @@
-use currency::asset::{AssetBundle, AssetId};
+use currency::assets::{AssetBundle, AssetId};
 
 encoding_struct! {
     struct TradeAsset {

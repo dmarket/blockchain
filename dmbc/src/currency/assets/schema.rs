@@ -1,7 +1,7 @@
 use exonum::storage::{Fork, Snapshot, MapIndex};
 
 use currency::SERVICE_NAME;
-use currency::asset::{AssetId, AssetInfo};
+use currency::assets::{AssetId, AssetInfo};
 
 /// Schema for accessing global asset information.
 pub struct Schema<S>(pub S) where S: AsRef<Snapshot>;

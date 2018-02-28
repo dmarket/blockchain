@@ -16,7 +16,7 @@ use iron::prelude::*;
 use router::Router;
 
 use currency::api::ServiceApi;
-use currency::asset::AssetBundle;
+use currency::assets::AssetBundle;
 use currency::wallet;
 use currency::wallet::Wallet;
 

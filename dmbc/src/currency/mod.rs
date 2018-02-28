@@ -1,5 +1,5 @@
 pub mod api;
-pub mod asset;
+pub mod assets;
 pub mod configuration;
 pub mod error;
 pub mod status;

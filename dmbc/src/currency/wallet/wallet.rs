@@ -1,7 +1,7 @@
 use exonum::crypto::PublicKey;
 use exonum::encoding::Field;
 
-use currency::asset::AssetBundle;
+use currency::assets::AssetBundle;
 use currency::error::Error;
 
 encoding_struct! {

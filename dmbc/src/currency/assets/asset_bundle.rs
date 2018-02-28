@@ -1,7 +1,7 @@
 use exonum::crypto::PublicKey;
 
-use currency::asset::AssetId;
-use currency::asset::TradeAsset;
+use currency::assets::AssetId;
+use currency::assets::TradeAsset;
 
 encoding_struct! {
     struct AssetBundle {

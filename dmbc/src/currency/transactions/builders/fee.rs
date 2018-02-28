@@ -1,4 +1,4 @@
-use currency::asset::{Fee, Fees};
+use currency::assets::{Fee, Fees};
 
 pub struct Builder {
     trade: Option<Fee>,

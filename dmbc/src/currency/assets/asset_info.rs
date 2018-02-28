@@ -1,6 +1,6 @@
 use exonum::crypto::PublicKey;
 
-use currency::asset::Fees;
+use currency::assets::Fees;
 use currency::error::Error;
 
 encoding_struct! {

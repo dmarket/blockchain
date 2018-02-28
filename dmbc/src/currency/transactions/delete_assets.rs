@@ -4,7 +4,7 @@ use exonum::storage::Fork;
 use serde_json;
 
 use currency::SERVICE_ID;
-use currency::asset::AssetBundle;
+use currency::assets::AssetBundle;
 
 pub const DELETE_ASSETS_ID: u16 = 400;
 
