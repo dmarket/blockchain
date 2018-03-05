@@ -40,12 +40,12 @@ impl AddAssets {
 
         let fees = self.fees(view);
 
-        wallet::move_coins(&mut creator, &mut genesis, fees.for_transaction())?;
+        wallet::move_coins(&mut creator, &mut genesis, fees.to_genesis)?;
 
         wallet::Schema(&mut*view).store(&genesis_pub, genesis.clone());
         wallet::Schema(&mut*view).store(&creator_pub, creator.clone());
 
-        wallet::move_coins(&mut creator, &mut genesis, fees.for_assets_total())?;
+        wallet::move_coins(&mut creator, &mut genesis, fees.to_third_party_total())?;
 
         wallet::Schema(&mut*view).store(&genesis_pub, genesis);
         wallet::Schema(&mut*view).store(&creator_pub, creator);
