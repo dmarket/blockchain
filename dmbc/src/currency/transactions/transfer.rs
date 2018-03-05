@@ -28,6 +28,8 @@ message! {
 
 impl Transfer {
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
+        // TODO
+        let _ = view;
         Err(Error::NotImplemented)
     }
 }

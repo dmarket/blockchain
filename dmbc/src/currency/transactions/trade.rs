@@ -39,6 +39,8 @@ impl Trade {
     }
 
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
+        // TODO
+        let _ = view;
         Err(Error::NotImplemented)
     }
 }
@@ -54,7 +56,6 @@ impl Transaction for Trade {
     }
 
     fn execute(&self, view: &mut Fork) {
-        // TODO
         let result = self.process(view);
         status::Schema(view).store(self.hash(), result);
     }

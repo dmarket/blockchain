@@ -5,7 +5,7 @@ encoding_struct! {
         const SIZE = 40;
 
         field wallet:    &PublicKey [0  => 32]
-        field commision: u64        [32 => 40]
+        field commission: u64       [32 => 40]
     }
 }
 
