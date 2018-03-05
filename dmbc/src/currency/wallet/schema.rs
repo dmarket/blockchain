@@ -18,9 +18,7 @@ where
 
     /// Fetch state for the specified wallet from the snapshot.
     pub fn fetch(self, pub_key: &PublicKey) -> Wallet {
-        self.index().get(pub_key).unwrap_or_else(|| {
-            Wallet::new_empty(pub_key)
-        })
+        self.index().get(pub_key).unwrap_or_else(|| Wallet::new_empty())
     }
 }
 

@@ -97,7 +97,7 @@ impl blockchain::Service for Service {
 
     fn initialize(&self, fork: &mut Fork) -> serde_json::Value {
         let genesis_wallet = Service::genesis_wallet();
-        let wallet = Wallet::new(&genesis_wallet, 137_000_000_00000000, Vec::new());
+        let wallet = Wallet::new(137_000_000_00000000, Vec::new());
         wallet::Schema(fork).store(&genesis_wallet, wallet);
 
         serde_json::to_value(Configuration::default()).unwrap()
