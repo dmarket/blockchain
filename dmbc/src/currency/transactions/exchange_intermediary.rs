@@ -103,18 +103,31 @@ impl ExchangeIntermediary {
 
         wallet::Schema(&mut*view).store(&Service::genesis_wallet(), genesis);
 
-        // Process third party fees and the transaction itself.
         // Operations bellow must either all succeed, or return an error without
         // saving anything to the database.
 
-        let updated_wallets = match fee_strategy {
+        // Process third party fees.
+        let mut updated_wallets = match fee_strategy {
             FeeStrategy::Recipient => fees.collect_to_third_party(view, offer.recipient())?,
             FeeStrategy::Sender => fees.collect_to_third_party(view, offer.sender())?,
             FeeStrategy::RecipientAndSender => fees.collect_to_third_party_2(view, offer.sender(), offer.recipient())?,
             FeeStrategy::Intermediary => fees.collect_to_third_party(view, offer.intermediary().wallet())?,
         };
 
-        // TODO
+        // Process the main transaction.
+        let mut sender = updated_wallets.remove(&offer.sender()).unwrap_or_else(|| {
+            wallet::Schema(&*view).fetch(&offer.sender())
+        });
+        let mut recipient = updated_wallets.remove(&offer.recipient()).unwrap_or_else(|| {
+            wallet::Schema(&*view).fetch(&offer.recipient())
+        });
+
+        wallet::move_coins(&mut sender, &mut recipient, offer.sender_value())?;
+        wallet::move_assets(&mut sender, &mut recipient, &offer.sender_assets())?;
+        wallet::move_assets(&mut recipient, &mut sender, &offer.recipient_assets())?;
+
+        updated_wallets.insert(*offer.sender(), sender);
+        updated_wallets.insert(*offer.recipient(), recipient);
 
         // Save changes to the database.
         for (key, wallet) in updated_wallets {
@@ -153,3 +166,4 @@ impl Transaction for ExchangeIntermediary {
         json!({})
     }
 }
+
