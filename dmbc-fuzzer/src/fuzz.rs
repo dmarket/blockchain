@@ -25,10 +25,9 @@ use exonum_testkit::TestKitBuilder;
 use dmbc::currency::Service;
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::transactions::builders::fee;
-use dmbc::currency::transactions::{ADD_ASSETS_ID, CREATE_WALLET_ID, DELETE_ASSETS_ID,
-                                   EXCHANGE_ID, MINING_ID, TRADE_ID, TRANSFER_ID,
-                                   AddAssets, CreateWallet, DeleteAssets,
-                                   Exchange, Mining, Trade, Transfer};
+use dmbc::currency::transactions::{AddAssets, CreateWallet, DeleteAssets, Exchange, Mining, Trade,
+                                   Transfer, ADD_ASSETS_ID, CREATE_WALLET_ID, DELETE_ASSETS_ID,
+                                   EXCHANGE_ID, MINING_ID, TRADE_ID, TRANSFER_ID};
 
 use fuzz_data::FuzzData;
 
@@ -90,15 +89,11 @@ fn tx_from_raw(rm: RawMessage) -> Result<Box<Transaction>, Box<Error>> {
         EXCHANGE_ID => Exchange::from_raw(rm)
             .map(|t| t.into())
             .map_err(|e| e.into()),
-        TRADE_ID => Trade::from_raw(rm)
-            .map(|t| t.into())
-            .map_err(|e| e.into()),
+        TRADE_ID => Trade::from_raw(rm).map(|t| t.into()).map_err(|e| e.into()),
         TRANSFER_ID => Transfer::from_raw(rm)
             .map(|t| t.into())
             .map_err(|e| e.into()),
-        MINING_ID => Mining::from_raw(rm)
-            .map(|t| t.into())
-            .map_err(|e| e.into()),
+        MINING_ID => Mining::from_raw(rm).map(|t| t.into()).map_err(|e| e.into()),
         _ => Err(Box::new(TxFromRawError)),
     }
 }

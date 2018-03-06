@@ -44,4 +44,3 @@ impl fmt::Display for Error {
         write!(f, "{}", error::Error::description(self))
     }
 }
-

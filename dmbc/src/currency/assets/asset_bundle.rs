@@ -24,4 +24,3 @@ impl From<TradeAsset> for AssetBundle {
         AssetBundle::new(ta.id(), ta.amount())
     }
 }
-

@@ -1,25 +1,25 @@
 extern crate dmbc;
-extern crate rand;
 extern crate exonum;
+extern crate fnv;
 extern crate mio;
 extern crate mio_httpc;
+extern crate rand;
 extern crate serde;
 extern crate serde_json;
-extern crate fnv;
 
 use std::time::Duration;
 
 use exonum::crypto;
 use exonum::crypto::{PublicKey, SecretKey};
 use fnv::FnvHashMap;
-use mio::{Poll, Events};
-use mio_httpc::{Request, CallBuilder, Httpc, RecvState};
+use mio::{Events, Poll};
+use mio_httpc::{CallBuilder, Httpc, RecvState, Request};
 use rand::Rng;
 use serde::Serialize;
 
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::transactions::builders::fee;
-use dmbc::currency::assets::{MetaAsset, AssetBundle, AssetId, TradeAsset};
+use dmbc::currency::assets::{AssetBundle, AssetId, MetaAsset, TradeAsset};
 
 type Wallet = (PublicKey, SecretKey);
 
@@ -282,7 +282,7 @@ fn main() {
                 Ok(mut call) => {
                     httpc.call_send(&poll, &mut call, None);
                     calls.insert(call.get_ref(), call);
-                },
+                }
                 Err(mio_httpc::Error::Io(error)) => {
                     // Errno values for the 'too many open files' condition.
                     // TODO: these are values from linux, other platforms can
@@ -294,14 +294,15 @@ fn main() {
                         Some(EMFILE) | Some(ENFILE) => break,
                         _ => panic!("{}", error),
                     }
-                },
+                }
                 Err(error) => {
                     panic!("{}", error);
-                },
+                }
             }
         }
 
-        poll.poll(&mut events, Some(Duration::from_millis(1))).unwrap();
+        poll.poll(&mut events, Some(Duration::from_millis(1)))
+            .unwrap();
 
         for event in events.iter() {
             let cref = match httpc.event(&event) {
@@ -318,7 +319,7 @@ fn main() {
                     RecvState::Error(e) => {
                         println!("Error receiving: {}", e);
                         true
-                    },
+                    }
                     _ => false,
                 }
             };
@@ -336,4 +337,3 @@ fn main() {
         flooder.op_state.advance();
     }
 }
-

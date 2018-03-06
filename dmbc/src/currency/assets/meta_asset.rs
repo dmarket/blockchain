@@ -1,6 +1,6 @@
 use exonum::crypto::PublicKey;
 
-use currency::assets::{AssetId, Fees, AssetInfo, AssetBundle};
+use currency::assets::{AssetBundle, AssetId, AssetInfo, Fees};
 
 pub const ASSET_DATA_MAX_LENGTH: usize = 10 * 1024;
 
@@ -17,14 +17,14 @@ encoding_struct! {
 
 impl MetaAsset {
     pub fn verify(&self) -> bool {
-        let trade_ok    = self.fees().trade().ratio() != 0;
+        let trade_ok = self.fees().trade().ratio() != 0;
         let exchange_ok = self.fees().exchange().ratio() != 0;
         let transfer_ok = self.fees().transfer().ratio() != 0;
-        let data_ok     = self.data().len() <= ASSET_DATA_MAX_LENGTH;
+        let data_ok = self.data().len() <= ASSET_DATA_MAX_LENGTH;
 
         trade_ok && exchange_ok && transfer_ok && data_ok
     }
-    
+
     pub fn to_info(&self, creator: &PublicKey) -> AssetInfo {
         AssetInfo::new(creator, self.amount(), self.fees())
     }
@@ -33,4 +33,3 @@ impl MetaAsset {
         AssetBundle::new(id, self.amount())
     }
 }
-

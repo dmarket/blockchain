@@ -10,7 +10,6 @@ pub use currency::assets::schema::Schema;
 pub use currency::assets::asset_id::AssetId;
 pub use currency::assets::asset_bundle::AssetBundle;
 pub use currency::assets::meta_asset::MetaAsset;
-pub use currency::assets::fees::{Fees, Fee};
+pub use currency::assets::fees::{Fee, Fees};
 pub use currency::assets::trade_asset::TradeAsset;
 pub use currency::assets::asset_info::AssetInfo;
-

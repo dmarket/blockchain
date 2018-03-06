@@ -6,9 +6,9 @@ use exonum::storage::Fork;
 use exonum::messages::Message;
 use serde_json;
 
-use currency::{SERVICE_ID, Service};
+use currency::{Service, SERVICE_ID};
 use currency::assets;
-use currency::assets::{AssetId, MetaAsset, AssetBundle, AssetInfo};
+use currency::assets::{AssetBundle, AssetId, AssetInfo, MetaAsset};
 use currency::wallet;
 use currency::status;
 use currency::error::Error;
@@ -42,13 +42,13 @@ impl AddAssets {
 
         fees.collect_to_genesis(&mut creator, &mut genesis)?;
 
-        wallet::Schema(&mut*view).store(&genesis_pub, genesis);
-        wallet::Schema(&mut*view).store(&creator_pub, creator);
+        wallet::Schema(&mut *view).store(&genesis_pub, genesis);
+        wallet::Schema(&mut *view).store(&creator_pub, creator);
 
         let updated_wallets = fees.collect_to_third_party(&*view, &creator_pub)?;
 
         for (key, wallet) in updated_wallets {
-            wallet::Schema(&mut*view).store(&key, wallet);
+            wallet::Schema(&mut *view).store(&key, wallet);
         }
 
         let assets = self.extract_assets(view)?;
@@ -61,25 +61,29 @@ impl AddAssets {
                 .or_insert(Vec::new())
                 .push(asset);
 
-            assets::Schema(&mut*view).store(&id, info);
+            assets::Schema(&mut *view).store(&id, info);
         }
 
-        for (key, assets) in recipients  {
+        for (key, assets) in recipients {
             let mut recipient = wallet::Schema(&*view).fetch(&key);
 
             recipient.push_assets(assets);
 
-            wallet::Schema(&mut*view).store(&key, recipient);
+            wallet::Schema(&mut *view).store(&key, recipient);
         }
 
         Ok(())
     }
 
-    fn extract_assets(&self, view: &mut Fork) -> Result<Vec<(PublicKey, AssetBundle, AssetInfo)>, Error> {
-        self.meta_assets().into_iter()
+    fn extract_assets(
+        &self,
+        view: &mut Fork,
+    ) -> Result<Vec<(PublicKey, AssetBundle, AssetInfo)>, Error> {
+        self.meta_assets()
+            .into_iter()
             .map(|meta| {
                 let id = AssetId::from_data(meta.data(), &meta.receiver());
-                let state = assets::Schema(&mut*view).fetch(&id);
+                let state = assets::Schema(&mut *view).fetch(&id);
 
                 let key = self.pub_key();
                 let info = state.map_or_else(
@@ -104,7 +108,7 @@ impl Transaction for AddAssets {
         if !self.verify_signature(&self.pub_key()) {
             return false;
         }
-        
+
         for asset in self.meta_assets() {
             if !asset.verify() {
                 return false;
@@ -123,4 +127,3 @@ impl Transaction for AddAssets {
         json!({})
     }
 }
-

@@ -70,4 +70,3 @@ impl Transaction for Exchange {
         json!({})
     }
 }
-

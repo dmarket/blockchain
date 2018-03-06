@@ -7,6 +7,8 @@ extern crate exonum_configuration;
 extern crate exonum_testkit;
 extern crate hyper;
 extern crate iron;
+#[macro_use]
+extern crate log;
 extern crate nats;
 extern crate router;
 extern crate serde;
@@ -16,8 +18,6 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate unicase;
 extern crate uuid;
-#[macro_use]
-extern crate log;
 
 pub mod config;
 pub mod keys;

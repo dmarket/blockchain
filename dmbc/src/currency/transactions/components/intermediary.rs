@@ -8,4 +8,3 @@ encoding_struct! {
         field commission: u64       [32 => 40]
     }
 }
-

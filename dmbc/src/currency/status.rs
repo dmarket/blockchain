@@ -1,12 +1,14 @@
 use exonum::crypto::Hash;
-use exonum::storage::{Fork, Snapshot, MapIndex};
+use exonum::storage::{Fork, MapIndex, Snapshot};
 
 use currency::SERVICE_NAME;
 use currency::error::Error;
 
 /// Schema for accessing transaction statuses.
 #[derive(Clone, Debug)]
-pub struct Schema<S>(pub S) where S: AsRef<Snapshot>;
+pub struct Schema<S>(pub S)
+where
+    S: AsRef<Snapshot>;
 
 type ResultRepr = u8;
 
@@ -26,7 +28,7 @@ fn from_repr(repr: ResultRepr) -> Result<(), Error> {
 
 impl<S> Schema<S>
 where
-    S: AsRef<Snapshot>
+    S: AsRef<Snapshot>,
 {
     fn index(self) -> MapIndex<S, Hash, ResultRepr> {
         let key = SERVICE_NAME.to_string() + "v1.transactions";
@@ -35,9 +37,7 @@ where
 
     /// Fetch transaction status for transaction.
     pub fn fetch(self, tx_id: &Hash) -> Option<Result<(), Error>> {
-        self.index().get(tx_id).map(|repr| {
-            from_repr(repr)
-        })
+        self.index().get(tx_id).map(|repr| from_repr(repr))
     }
 }
 
@@ -53,4 +53,3 @@ impl<'a> Schema<&'a mut Fork> {
         self.index_mut().put(&tx_id, repr);
     }
 }
-

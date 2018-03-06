@@ -5,9 +5,9 @@ use exonum::storage::Fork;
 use exonum::messages::Message;
 use serde_json;
 
-use currency::{SERVICE_ID, Service};
+use currency::{Service, SERVICE_ID};
 use currency::assets::AssetBundle;
-use currency::transactions::components::{Intermediary, FeeStrategy, Fees};
+use currency::transactions::components::{FeeStrategy, Fees, Intermediary};
 use currency::error::Error;
 use currency::status;
 use currency::wallet;
@@ -53,20 +53,25 @@ impl ExchangeIntermediary {
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
         let offer = self.offer();
 
-        let fee_strategy = FeeStrategy::try_from(offer.fee_strategy())
-            .expect("fee strategy must be valid");
+        let fee_strategy =
+            FeeStrategy::try_from(offer.fee_strategy()).expect("fee strategy must be valid");
 
         let mut fees = Fees::new_exchange(
             &*view,
-            offer.sender_assets().into_iter()
-                 .chain(offer.recipient_assets().into_iter()),
+            offer
+                .sender_assets()
+                .into_iter()
+                .chain(offer.recipient_assets().into_iter()),
         )?;
 
         // Insert intermediary as one of third party fees.
-        fees.add_fee(offer.intermediary().wallet(), offer.intermediary().commission());
+        fees.add_fee(
+            offer.intermediary().wallet(),
+            offer.intermediary().commission(),
+        );
 
         let mut genesis = wallet::Schema(&*view).fetch(&Service::genesis_wallet());
-        
+
         // Collect the blockchain fee. Execution shall not continue if this fails.
         match fee_strategy {
             FeeStrategy::Recipient => {
@@ -74,34 +79,34 @@ impl ExchangeIntermediary {
 
                 fees.collect_to_genesis(&mut recipient, &mut genesis)?;
 
-                wallet::Schema(&mut*view).store(offer.recipient(), recipient);
+                wallet::Schema(&mut *view).store(offer.recipient(), recipient);
             }
             FeeStrategy::Sender => {
                 let mut sender = wallet::Schema(&*view).fetch(offer.sender());
 
                 fees.collect_to_genesis(&mut sender, &mut genesis)?;
 
-                wallet::Schema(&mut*view).store(offer.sender(), sender);
+                wallet::Schema(&mut *view).store(offer.sender(), sender);
             }
             FeeStrategy::RecipientAndSender => {
                 let mut recipient = wallet::Schema(&*view).fetch(offer.recipient());
-                let mut sender    = wallet::Schema(&*view).fetch(offer.sender());
+                let mut sender = wallet::Schema(&*view).fetch(offer.sender());
 
                 fees.collect_to_genesis_2(&mut sender, &mut recipient, &mut genesis)?;
 
-                wallet::Schema(&mut*view).store(offer.sender(),       sender);
-                wallet::Schema(&mut*view).store(offer.recipient(), recipient);
+                wallet::Schema(&mut *view).store(offer.sender(), sender);
+                wallet::Schema(&mut *view).store(offer.recipient(), recipient);
             }
             FeeStrategy::Intermediary => {
                 let mut intermediary = wallet::Schema(&*view).fetch(offer.intermediary().wallet());
 
                 fees.collect_to_genesis(&mut intermediary, &mut genesis)?;
 
-                wallet::Schema(&mut*view).store(offer.intermediary().wallet(), intermediary);
+                wallet::Schema(&mut *view).store(offer.intermediary().wallet(), intermediary);
             }
         }
 
-        wallet::Schema(&mut*view).store(&Service::genesis_wallet(), genesis);
+        wallet::Schema(&mut *view).store(&Service::genesis_wallet(), genesis);
 
         // Operations bellow must either all succeed, or return an error without
         // saving anything to the database.
@@ -110,17 +115,21 @@ impl ExchangeIntermediary {
         let mut updated_wallets = match fee_strategy {
             FeeStrategy::Recipient => fees.collect_to_third_party(view, offer.recipient())?,
             FeeStrategy::Sender => fees.collect_to_third_party(view, offer.sender())?,
-            FeeStrategy::RecipientAndSender => fees.collect_to_third_party_2(view, offer.sender(), offer.recipient())?,
-            FeeStrategy::Intermediary => fees.collect_to_third_party(view, offer.intermediary().wallet())?,
+            FeeStrategy::RecipientAndSender => {
+                fees.collect_to_third_party_2(view, offer.sender(), offer.recipient())?
+            }
+            FeeStrategy::Intermediary => {
+                fees.collect_to_third_party(view, offer.intermediary().wallet())?
+            }
         };
 
         // Process the main transaction.
-        let mut sender = updated_wallets.remove(&offer.sender()).unwrap_or_else(|| {
-            wallet::Schema(&*view).fetch(&offer.sender())
-        });
-        let mut recipient = updated_wallets.remove(&offer.recipient()).unwrap_or_else(|| {
-            wallet::Schema(&*view).fetch(&offer.recipient())
-        });
+        let mut sender = updated_wallets
+            .remove(&offer.sender())
+            .unwrap_or_else(|| wallet::Schema(&*view).fetch(&offer.sender()));
+        let mut recipient = updated_wallets
+            .remove(&offer.recipient())
+            .unwrap_or_else(|| wallet::Schema(&*view).fetch(&offer.recipient()));
 
         wallet::move_coins(&mut sender, &mut recipient, offer.sender_value())?;
         wallet::move_assets(&mut sender, &mut recipient, &offer.sender_assets())?;
@@ -131,7 +140,7 @@ impl ExchangeIntermediary {
 
         // Save changes to the database.
         for (key, wallet) in updated_wallets {
-            wallet::Schema(&mut*view).store(&key, wallet);
+            wallet::Schema(&mut *view).store(&key, wallet);
         }
 
         Ok(())
@@ -147,12 +156,16 @@ impl Transaction for ExchangeIntermediary {
         let offer = self.offer();
 
         let wallets_ok = offer.sender() != offer.recipient()
-                      && offer.intermediary().wallet() != offer.sender()
-                      && offer.intermediary().wallet() != offer.recipient();
+            && offer.intermediary().wallet() != offer.sender()
+            && offer.intermediary().wallet() != offer.recipient();
         let fee_strategy_ok = FeeStrategy::try_from(offer.fee_strategy()).is_some();
         let recipient_ok = self.verify_signature(offer.recipient());
         let sender_ok = crypto::verify(self.sender_signature(), &offer.raw, offer.sender());
-        let intermediary_ok = crypto::verify(self.intermediary_signature(), &offer.raw, offer.intermediary().wallet());
+        let intermediary_ok = crypto::verify(
+            self.intermediary_signature(),
+            &offer.raw,
+            offer.intermediary().wallet(),
+        );
 
         wallets_ok && fee_strategy_ok && recipient_ok && sender_ok && intermediary_ok
     }
@@ -166,4 +179,3 @@ impl Transaction for ExchangeIntermediary {
         json!({})
     }
 }
-

@@ -20,20 +20,17 @@ impl Wallet {
 
     pub fn push_assets<I>(&mut self, new_assets: I)
     where
-        I: IntoIterator<Item=AssetBundle>
+        I: IntoIterator<Item = AssetBundle>,
     {
         let mut assets = self.assets();
         assets.extend(new_assets);
-        *self = Wallet::new(
-            self.balance(),
-            assets
-        );
+        *self = Wallet::new(self.balance(), assets);
     }
 }
 
 pub fn move_coins(from: &mut Wallet, to: &mut Wallet, amount: u64) -> Result<(), Error> {
     if from.balance() < amount {
-        return Err(Error::InsufficientFunds)
+        return Err(Error::InsufficientFunds);
     }
 
     let from_balance = from.balance() - amount;
@@ -45,8 +42,11 @@ pub fn move_coins(from: &mut Wallet, to: &mut Wallet, amount: u64) -> Result<(),
     Ok(())
 }
 
-pub fn move_assets(from: &mut Wallet, to: &mut Wallet, move_specs: &[AssetBundle])
--> Result<(), Error> {
+pub fn move_assets(
+    from: &mut Wallet,
+    to: &mut Wallet,
+    move_specs: &[AssetBundle],
+) -> Result<(), Error> {
     let mut from_assets = from.assets();
     let mut to_assets = to.assets();
 
@@ -73,6 +73,5 @@ pub fn move_assets(from: &mut Wallet, to: &mut Wallet, move_specs: &[AssetBundle
         *to_asset = AssetBundle::new(spec.id(), to_asset.amount() + spec.amount());
     }
 
-    return Ok(())
+    return Ok(());
 }
-

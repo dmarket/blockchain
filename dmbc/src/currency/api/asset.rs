@@ -35,7 +35,8 @@ impl Api for AssetApi {
             let asset_id_str = path.last().unwrap();
             let asset_id = AssetId::from_hex(&asset_id_str);
             if asset_id.is_err() {
-                let res = self_.not_found_response(&serde_json::to_value("Invalid Asset ID").unwrap());
+                let res =
+                    self_.not_found_response(&serde_json::to_value("Invalid Asset ID").unwrap());
                 let mut res = res.unwrap();
                 res.headers.set(AccessControlAllowOrigin::Any);
                 return Ok(res);

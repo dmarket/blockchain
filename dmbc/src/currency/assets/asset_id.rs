@@ -3,7 +3,7 @@ use std::fmt;
 
 use exonum::crypto::PublicKey;
 use exonum::encoding;
-use exonum::encoding::{Field, Offset, CheckedOffset};
+use exonum::encoding::{CheckedOffset, Field, Offset};
 use exonum::encoding::serialize::WriteBufferWrapper;
 use exonum::encoding::serialize::json::ExonumJson;
 use exonum::storage::StorageKey;
@@ -141,8 +141,7 @@ impl ExonumJson for AssetId {
         buffer: &mut B,
         from: Offset,
         to: Offset,
-    ) -> Result<(), Box<Error>>
-    {
+    ) -> Result<(), Box<Error>> {
         match serde_json::from_value::<AssetId>(value.clone()) {
             Ok(asset_id) => {
                 buffer.write(from, to, asset_id);
@@ -168,4 +167,3 @@ impl StorageKey for AssetId {
         buffer.copy_from_slice(&self.0);
     }
 }
-

@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 
 use exonum::crypto::PublicKey;
-use exonum::storage::{Snapshot, Fork};
+use exonum::storage::{Fork, Snapshot};
 
 use currency::Service;
 use currency::assets;
-use currency::assets::{AssetBundle, TradeAsset, MetaAsset};
+use currency::assets::{AssetBundle, MetaAsset, TradeAsset};
 use currency::error::Error;
 use currency::configuration::Configuration;
 use currency::wallet;
@@ -40,7 +40,7 @@ pub struct Fees {
 impl Fees {
     pub fn new<I>(to_genesis: u64, to_third_party: I) -> Self
     where
-        I: IntoIterator<Item=(PublicKey, u64)>
+        I: IntoIterator<Item = (PublicKey, u64)>,
     {
         Fees {
             to_genesis,
@@ -48,11 +48,10 @@ impl Fees {
         }
     }
 
-    pub fn new_add_assets<S, I>(view: S, assets: I)
-        -> Result<Fees, Error>
+    pub fn new_add_assets<S, I>(view: S, assets: I) -> Result<Fees, Error>
     where
         S: AsRef<Snapshot>,
-        I: IntoIterator<Item=MetaAsset>,
+        I: IntoIterator<Item = MetaAsset>,
     {
         let fees_config = Configuration::extract(view.as_ref()).fees();
 
@@ -63,7 +62,9 @@ impl Fees {
             .into_iter()
             .map(|meta| meta.amount() * per_asset)
             .sum();
-        let to_third_party = Some((Service::genesis_wallet(), assets_fee)).into_iter().collect();
+        let to_third_party = Some((Service::genesis_wallet(), assets_fee))
+            .into_iter()
+            .collect();
 
         let fees = Fees {
             to_genesis,
@@ -76,16 +77,17 @@ impl Fees {
     pub fn new_trade<'a, S, I>(view: S, assets: I) -> Result<Fees, Error>
     where
         S: AsRef<Snapshot>,
-        I: IntoIterator<Item=&'a TradeAsset>,
+        I: IntoIterator<Item = &'a TradeAsset>,
         <I as IntoIterator>::IntoIter: Clone,
     {
         let view = view.as_ref();
         let assets = assets.into_iter();
-        let assets_price : u64 = assets.clone().map(|ta| ta.total_price()).sum();
+        let assets_price: u64 = assets.clone().map(|ta| ta.total_price()).sum();
         let mut to_third_party = HashMap::new();
 
         for asset in assets {
-            let info = assets::Schema(view).fetch(&asset.id())
+            let info = assets::Schema(view)
+                .fetch(&asset.id())
                 .ok_or_else(|| Error::AssetNotFound)?;
 
             let fee = info.fees().trade().for_price(assets_price);
@@ -110,14 +112,15 @@ impl Fees {
     pub fn new_exchange<S, I>(view: S, assets: I) -> Result<Self, Error>
     where
         S: AsRef<Snapshot>,
-        I: IntoIterator<Item=AssetBundle>,
+        I: IntoIterator<Item = AssetBundle>,
     {
         let view = view.as_ref();
         let mut to_third_party = HashMap::new();
 
         for asset in assets {
-            let info = assets::Schema(view).fetch(&asset.id())
-                    .ok_or_else(|| Error::AssetNotFound)?;
+            let info = assets::Schema(view)
+                .fetch(&asset.id())
+                .ok_or_else(|| Error::AssetNotFound)?;
 
             let fee = info.fees().exchange().tax();
             to_third_party
@@ -141,14 +144,15 @@ impl Fees {
     pub fn new_transfer<S, I>(view: S, assets: I) -> Result<Self, Error>
     where
         S: AsRef<Snapshot>,
-        I: IntoIterator<Item=AssetBundle>,
+        I: IntoIterator<Item = AssetBundle>,
     {
         let view = view.as_ref();
         let mut to_third_party = HashMap::new();
 
         for asset in assets {
-            let info = assets::Schema(view).fetch(&asset.id())
-                    .ok_or_else(|| Error::AssetNotFound)?;
+            let info = assets::Schema(view)
+                .fetch(&asset.id())
+                .ok_or_else(|| Error::AssetNotFound)?;
 
             let fee = info.fees().transfer().tax();
             to_third_party
@@ -215,7 +219,8 @@ impl Fees {
     ) -> Result<HashMap<PublicKey, Wallet>, Error> {
         let mut payer = wallet::Schema(&*view).fetch(&payer_key);
 
-        let mut updated_wallets = self.to_third_party.iter()
+        let mut updated_wallets = self.to_third_party
+            .iter()
             .filter(|&(key, _)| key != payer_key)
             .map(|(key, fee)| {
                 let mut wallet = wallet::Schema(&*view).fetch(key);
@@ -240,7 +245,8 @@ impl Fees {
         let mut payer_1 = wallet::Schema(&*view).fetch(&payer_key_1);
         let mut payer_2 = wallet::Schema(&*view).fetch(&payer_key_2);
 
-        let mut updated_wallets = self.to_third_party.iter()
+        let mut updated_wallets = self.to_third_party
+            .iter()
             .map(|(key, fee)| {
                 let mut wallet = wallet::Schema(&*view).fetch(&key);
                 if key != payer_key_1 {
@@ -259,4 +265,3 @@ impl Fees {
         Ok(updated_wallets)
     }
 }
-

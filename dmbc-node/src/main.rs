@@ -16,8 +16,7 @@ use std::io::Read;
 use std::fs::File;
 
 use exonum::blockchain;
-use exonum::blockchain::{ConsensusConfig, GenesisConfig, TimeoutAdjusterConfig,
-                         ValidatorKeys};
+use exonum::blockchain::{ConsensusConfig, GenesisConfig, TimeoutAdjusterConfig, ValidatorKeys};
 use exonum::crypto::{PublicKey, SecretKey};
 use exonum::encoding::serialize::FromHex;
 use exonum::node::{Node, NodeApiConfig, NodeConfig};
@@ -137,10 +136,8 @@ fn main() {
     let db = Box::new(RocksDB::open(path, &options).unwrap());
 
     // Initialize services
-    let services: Vec<Box<blockchain::Service>> = vec![
-        Box::new(ConfigurationService::new()),
-        Box::new(Service()),
-    ];
+    let services: Vec<Box<blockchain::Service>> =
+        vec![Box::new(ConfigurationService::new()), Box::new(Service())];
 
     eprintln!("Launching node. What can possibly go wrong?");
 

@@ -18,12 +18,14 @@ impl AssetInfo {
         let fees = self.fees();
         let creator = self.creator();
 
-        if  fees != other.fees()
-        ||  creator != other.creator()
-        {
+        if fees != other.fees() || creator != other.creator() {
             return Err(Error::InvalidAssetInfo);
         }
 
-        Ok(AssetInfo::new(creator, self.amount() + other.amount(), fees))
+        Ok(AssetInfo::new(
+            creator,
+            self.amount() + other.amount(),
+            fees,
+        ))
     }
 }

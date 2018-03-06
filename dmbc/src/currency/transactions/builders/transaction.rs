@@ -3,21 +3,20 @@ use exonum::crypto::{PublicKey, SecretKey};
 use exonum::storage::StorageValue;
 
 use currency;
-use currency::assets::{AssetBundle, Fees, MetaAsset, TradeAsset, AssetId};
+use currency::assets::{AssetBundle, AssetId, Fees, MetaAsset, TradeAsset};
 use currency::transactions::add_assets::AddAssets;
 use currency::transactions::create_wallet::CreateWallet;
 use currency::transactions::delete_assets::DeleteAssets;
-use currency::transactions::exchange::{ExchangeOffer, Exchange};
-use currency::transactions::components::{Intermediary, FeeStrategy};
-use currency::transactions::exchange_intermediary::{ExchangeOfferIntermediary,
-                                                    ExchangeIntermediary};
+use currency::transactions::exchange::{Exchange, ExchangeOffer};
+use currency::transactions::components::{FeeStrategy, Intermediary};
+use currency::transactions::exchange_intermediary::{ExchangeIntermediary,
+                                                    ExchangeOfferIntermediary};
 use currency::transactions::mining::Mining;
-use currency::transactions::trade::{TradeOffer, Trade};
-use currency::transactions::trade_intermediary::{TradeOfferIntermediary,
-                                                 TradeIntermediary};
-use currency::transactions::trade_ask::{TradeAskOffer, TradeAsk};
-use currency::transactions::trade_ask_intermediary::{TradeAskOfferIntermediary,
-                                                     TradeAskIntermediary};
+use currency::transactions::trade::{Trade, TradeOffer};
+use currency::transactions::trade_intermediary::{TradeIntermediary, TradeOfferIntermediary};
+use currency::transactions::trade_ask::{TradeAsk, TradeAskOffer};
+use currency::transactions::trade_ask_intermediary::{TradeAskIntermediary,
+                                                     TradeAskOfferIntermediary};
 use currency::transactions::transfer::Transfer;
 
 pub struct Builder {
@@ -955,17 +954,17 @@ mod test {
     use dmbc::currency::transaction::add_assets::AddAssets;
     use dmbc::currency::transaction::create_wallet::CreateWallet;
     use dmbc::currency::transaction::del_assets::DeleteAssets;
-    use dmbc::currency::transaction::exchange::{ExchangeOffer, Exchange};
+    use dmbc::currency::transaction::exchange::{Exchange, ExchangeOffer};
     use dmbc::currency::transaction::intermediary::Intermediary;
-    use dmbc::currency::transaction::exchange_with_intermediary::{ExchangeOfferIntermediary,
-                                                           ExchangeIntermediary};
+    use dmbc::currency::transaction::exchange_with_intermediary::{ExchangeIntermediary,
+                                                                  ExchangeOfferIntermediary};
     use dmbc::currency::transaction::mining::Mining;
-    use dmbc::currency::transaction::trade_assets::{TradeOffer, Trade};
-    use dmbc::currency::transaction::trade_assets_with_intermediary::{TradeOfferIntermediary,
-                                                               TradeIntermediary};
-    use dmbc::currency::transaction::trade_ask_assets::{TradeAskOffer, TradeAsk};
-    use dmbc::currency::transaction::trade_ask_assets_with_intermediary::{TradeAskOfferIntermediary,
-                                                                   TradeAskIntermediary};
+    use dmbc::currency::transaction::trade_assets::{Trade, TradeOffer};
+    use dmbc::currency::transaction::trade_assets_with_intermediary::{TradeIntermediary,
+                                                                      TradeOfferIntermediary};
+    use dmbc::currency::transaction::trade_ask_assets::{TradeAsk, TradeAskOffer};
+    use dmbc::currency::transaction::trade_ask_assets_with_intermediary::{TradeAskIntermediary,
+                                                                          TradeAskOfferIntermediary};
     use dmbc::currency::transaction::transfer::Transfer;
 
     use dmbc::currency::builders::fee;
@@ -1224,8 +1223,7 @@ mod test {
 
         let offer = TradeAskOffer::new(&public_key, vec![trade_asset]);
         let signature = crypto::sign(&offer.clone().into_bytes(), &secret_key);
-        let equivalent =
-            TradeAsk::new(&buyer, offer, 1, &signature, "trade_ask_test", &secret_key);
+        let equivalent = TradeAsk::new(&buyer, offer, 1, &signature, "trade_ask_test", &secret_key);
 
         assert!(transaction == equivalent);
     }
@@ -1249,8 +1247,7 @@ mod test {
             .build();
 
         let intermediary = Intermediary::new(&intermediary_public_key, 30);
-        let offer =
-            TradeAskOfferIntermediary::new(intermediary, &public_key, vec![trade_asset]);
+        let offer = TradeAskOfferIntermediary::new(intermediary, &public_key, vec![trade_asset]);
         let signature = crypto::sign(&offer.clone().into_bytes(), &secret_key);
         let intermediary_signature =
             crypto::sign(&offer.clone().into_bytes(), &intermediary_secret_key);

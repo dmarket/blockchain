@@ -11,12 +11,11 @@ use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use router::Router;
 
-use currency::transactions::{
-    EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID, TRADE_ID, TRADE_INTERMEDIARY_ID,
-    TRADE_ASK_ID, TRADE_ASK_INTERMEDIARY_ID,
-    AddAssets, CreateWallet, DeleteAssets, Exchange, ExchangeIntermediary,
-    Mining, Trade, TradeIntermediary, TradeAsk, TradeAskIntermediary, Transfer,
-};
+use currency::transactions::{AddAssets, CreateWallet, DeleteAssets, Exchange,
+                             ExchangeIntermediary, Mining, Trade, TradeAsk, TradeAskIntermediary,
+                             TradeIntermediary, Transfer, EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID,
+                             TRADE_ASK_ID, TRADE_ASK_INTERMEDIARY_ID, TRADE_ID,
+                             TRADE_INTERMEDIARY_ID};
 
 #[derive(Clone)]
 pub struct HashApi {}
@@ -98,32 +97,26 @@ impl Api for HashApi {
                             Ok(exchange) => exchange.offer_raw(),
                             Err(_) => vec![],
                         },
-                        EXCHANGE_INTERMEDIARY_ID => {
-                            match ExchangeIntermediary::from_raw(raw_) {
-                                Ok(exchange) => exchange.offer_raw(),
-                                Err(_) => vec![],
-                            }
-                        }
+                        EXCHANGE_INTERMEDIARY_ID => match ExchangeIntermediary::from_raw(raw_) {
+                            Ok(exchange) => exchange.offer_raw(),
+                            Err(_) => vec![],
+                        },
                         TRADE_ID => match Trade::from_raw(raw_) {
                             Ok(trade) => trade.offer_raw(),
                             Err(_) => vec![],
                         },
-                        TRADE_INTERMEDIARY_ID => {
-                            match TradeIntermediary::from_raw(raw_) {
-                                Ok(trade) => trade.offer_raw(),
-                                Err(_) => vec![],
-                            }
-                        }
+                        TRADE_INTERMEDIARY_ID => match TradeIntermediary::from_raw(raw_) {
+                            Ok(trade) => trade.offer_raw(),
+                            Err(_) => vec![],
+                        },
                         TRADE_ASK_ID => match TradeAsk::from_raw(raw_) {
                             Ok(trade) => trade.offer_raw(),
                             Err(_) => vec![],
                         },
-                        TRADE_ASK_INTERMEDIARY_ID => {
-                            match TradeAskIntermediary::from_raw(raw_) {
-                                Ok(trade) => trade.offer_raw(),
-                                Err(_) => vec![],
-                            }
-                        }
+                        TRADE_ASK_INTERMEDIARY_ID => match TradeAskIntermediary::from_raw(raw_) {
+                            Ok(trade) => trade.offer_raw(),
+                            Err(_) => vec![],
+                        },
                         _ => vec![],
                     };
                     let hash = HashApi::hex_string(vec_hash);

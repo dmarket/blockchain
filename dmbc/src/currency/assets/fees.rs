@@ -23,4 +23,3 @@ impl Fee {
         self.tax() + price_ratio
     }
 }
-

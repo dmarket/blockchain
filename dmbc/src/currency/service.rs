@@ -2,7 +2,7 @@ use iron::Handler;
 use router::Router;
 use exonum::api::Api;
 use exonum::blockchain;
-use exonum::blockchain::{Transaction, ApiContext, ServiceContext};
+use exonum::blockchain::{ApiContext, ServiceContext, Transaction};
 use exonum::crypto::PublicKey;
 use exonum::encoding;
 use exonum::messages::RawTransaction;
@@ -16,17 +16,17 @@ use currency::configuration::Configuration;
 use currency::wallet;
 use currency::wallet::Wallet;
 use currency::status;
-use currency::transactions::{
-    ADD_ASSETS_ID, CREATE_WALLET_ID, DELETE_ASSETS_ID, EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID,
-    MINING_ID, TRADE_ID, TRADE_INTERMEDIARY_ID, TRADE_ASK_ID, TRADE_ASK_INTERMEDIARY_ID,
-    AddAssets, CreateWallet, DeleteAssets, Exchange, ExchangeIntermediary,
-    Mining, Trade, TradeIntermediary, TradeAsk, TradeAskIntermediary
-};
+use currency::transactions::{AddAssets, CreateWallet, DeleteAssets, Exchange,
+                             ExchangeIntermediary, Mining, Trade, TradeAsk, TradeAskIntermediary,
+                             TradeIntermediary, ADD_ASSETS_ID, CREATE_WALLET_ID, DELETE_ASSETS_ID,
+                             EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID, MINING_ID, TRADE_ASK_ID,
+                             TRADE_ASK_INTERMEDIARY_ID, TRADE_ID, TRADE_INTERMEDIARY_ID};
 use serde_json;
 
 pub const SERVICE_ID: u16 = 2;
 pub const SERVICE_NAME: &str = "cryptocurrency";
-pub const GENESIS_WALLET_PUB_KEY: &str = "36a05e418393fb4b23819753f6e6dd51550ce030d53842c43dd1349857a96a61";
+pub const GENESIS_WALLET_PUB_KEY: &str =
+    "36a05e418393fb4b23819753f6e6dd51550ce030d53842c43dd1349857a96a61";
 
 pub struct Service();
 
@@ -62,9 +62,11 @@ impl blockchain::Service for Service {
             TRADE_INTERMEDIARY_ID => Box::new(TradeIntermediary::from_raw(raw)?),
             TRADE_ASK_ID => Box::new(TradeAsk::from_raw(raw)?),
             TRADE_ASK_INTERMEDIARY_ID => Box::new(TradeAskIntermediary::from_raw(raw)?),
-            _ => return Err(encoding::Error::IncorrectMessageType {
-                message_type: raw.message_type(),
-            }),
+            _ => {
+                return Err(encoding::Error::IncorrectMessageType {
+                    message_type: raw.message_type(),
+                })
+            }
         };
         Ok(trans)
     }
@@ -88,7 +90,7 @@ impl blockchain::Service for Service {
         let txs = schema.block_txs(last_block.height());
         for hash in txs.iter() {
             let status = status::Schema(ctx.snapshot()).fetch(&hash);
-            let msg = json!({"tx_hash": status}).to_string();
+            let msg = json!({ "tx_hash": status }).to_string();
             let queuename = config::config().nats().queuename();
             nats::publish(queuename, msg);
             info!("Made transaction {:?}", hash.to_hex());
@@ -103,4 +105,3 @@ impl blockchain::Service for Service {
         serde_json::to_value(Configuration::default()).unwrap()
     }
 }
-

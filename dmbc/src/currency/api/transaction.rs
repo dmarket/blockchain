@@ -15,10 +15,9 @@ use iron::prelude::*;
 use router::Router;
 
 use currency::status;
-use currency::transactions::{
-    AddAssets, CreateWallet, DeleteAssets, Exchange, ExchangeIntermediary,
-    Mining, Trade, TradeIntermediary, TradeAsk, TradeAskIntermediary, Transfer,
-};
+use currency::transactions::{AddAssets, CreateWallet, DeleteAssets, Exchange,
+                             ExchangeIntermediary, Mining, Trade, TradeAsk, TradeAskIntermediary,
+                             TradeIntermediary, Transfer};
 
 use currency::error::Error;
 
@@ -125,4 +124,3 @@ impl Api for TransactionApi {
         router.get("/transactions/:hash", get_status, "get_transaction_status");
     }
 }
-

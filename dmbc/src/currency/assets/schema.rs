@@ -1,14 +1,16 @@
-use exonum::storage::{Fork, Snapshot, MapIndex};
+use exonum::storage::{Fork, MapIndex, Snapshot};
 
 use currency::SERVICE_NAME;
 use currency::assets::{AssetId, AssetInfo};
 
 /// Schema for accessing global asset information.
-pub struct Schema<S>(pub S) where S: AsRef<Snapshot>;
+pub struct Schema<S>(pub S)
+where
+    S: AsRef<Snapshot>;
 
 impl<S> Schema<S>
 where
-    S: AsRef<Snapshot>
+    S: AsRef<Snapshot>,
 {
     pub fn index(self) -> MapIndex<S, AssetId, AssetInfo> {
         let key = SERVICE_NAME.to_string() + "_v1.assets";
@@ -22,8 +24,7 @@ where
 }
 
 impl<'a> Schema<&'a mut Fork> {
-    pub fn index_mut(&mut self) -> MapIndex<&mut Fork, AssetId, AssetInfo>
-    {
+    pub fn index_mut(&mut self) -> MapIndex<&mut Fork, AssetId, AssetInfo> {
         let key = SERVICE_NAME.to_string() + "_v1.assets";
         MapIndex::new(key, self.0)
     }
@@ -38,4 +39,3 @@ impl<'a> Schema<&'a mut Fork> {
         self.index_mut().remove(id)
     }
 }
-
