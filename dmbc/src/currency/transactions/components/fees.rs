@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use exonum::crypto::PublicKey;
 use exonum::storage::{Snapshot, Fork};
 
+use currency::Service;
 use currency::assets;
 use currency::assets::{AssetBundle, TradeAsset, MetaAsset};
 use currency::error::Error;
@@ -47,7 +48,7 @@ impl Fees {
         }
     }
 
-    pub fn new_add_assets<S, I>(view: S, creator: PublicKey, assets: I)
+    pub fn new_add_assets<S, I>(view: S, assets: I)
         -> Result<Fees, Error>
     where
         S: AsRef<Snapshot>,
@@ -62,7 +63,7 @@ impl Fees {
             .into_iter()
             .map(|meta| meta.amount() * per_asset)
             .sum();
-        let to_third_party = Some((creator, assets_fee)).into_iter().collect();
+        let to_third_party = Some((Service::genesis_wallet(), assets_fee)).into_iter().collect();
 
         let fees = Fees {
             to_genesis,
@@ -186,7 +187,7 @@ impl Fees {
     }
 
     pub fn collect_to_genesis(
-        &mut self,
+        &self,
         payer: &mut Wallet,
         genesis: &mut Wallet,
     ) -> Result<(), Error> {
@@ -196,7 +197,7 @@ impl Fees {
     }
 
     pub fn collect_to_genesis_2(
-        &mut self,
+        &self,
         payer_1: &mut Wallet,
         payer_2: &mut Wallet,
         genesis: &mut Wallet,
@@ -208,7 +209,7 @@ impl Fees {
     }
 
     pub fn collect_to_third_party(
-        &mut self,
+        &self,
         view: &Fork,
         payer_key: &PublicKey,
     ) -> Result<HashMap<PublicKey, Wallet>, Error> {
@@ -231,7 +232,7 @@ impl Fees {
     }
 
     pub fn collect_to_third_party_2(
-        &mut self,
+        &self,
         view: &mut Fork,
         payer_key_1: &PublicKey,
         payer_key_2: &PublicKey,

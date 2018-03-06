@@ -22,7 +22,7 @@ message!{
         const ID = ADD_ASSETS_ID;
         const SIZE = 48;
 
-        field pub_key:     &PublicKey      [00 => 32]
+        field pub_key:     &PublicKey     [00 => 32]
         field meta_assets: Vec<MetaAsset> [32 => 40]
         field seed:        u64            [40 => 48]
     }
@@ -38,17 +38,18 @@ impl AddAssets {
         let mut genesis = wallet::Schema(&*view).fetch(&genesis_pub);
         let mut creator = wallet::Schema(&*view).fetch(&creator_pub);
 
-        let fees = self.fees(view);
+        let fees = Fees::new_add_assets(&view, self.meta_assets()).unwrap();
 
-        wallet::move_coins(&mut creator, &mut genesis, fees.to_genesis)?;
-
-        wallet::Schema(&mut*view).store(&genesis_pub, genesis.clone());
-        wallet::Schema(&mut*view).store(&creator_pub, creator.clone());
-
-        wallet::move_coins(&mut creator, &mut genesis, fees.to_third_party_total())?;
+        fees.collect_to_genesis(&mut creator, &mut genesis)?;
 
         wallet::Schema(&mut*view).store(&genesis_pub, genesis);
         wallet::Schema(&mut*view).store(&creator_pub, creator);
+
+        let updated_wallets = fees.collect_to_third_party(&*view, &creator_pub)?;
+
+        for (key, wallet) in updated_wallets {
+            wallet::Schema(&mut*view).store(&key, wallet);
+        }
 
         let assets = self.extract_assets(view)?;
 
@@ -91,10 +92,6 @@ impl AddAssets {
                 Ok((*meta.receiver(), asset, info))
             })
             .collect()
-    }
-
-    fn fees(&self, view: &mut Fork) -> Fees {
-        Fees::new_add_assets(view, *self.pub_key(), self.meta_assets()).unwrap()
     }
 }
 
