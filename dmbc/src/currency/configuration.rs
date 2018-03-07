@@ -42,7 +42,8 @@ impl Configuration {
         let schema = Schema::new(snapshot);
         let stored_configuration = schema.actual_configuration();
 
-        match stored_configuration.services.get(currency::SERVICE_NAME) {
+        let service_actual_name = currency::SERVICE_NAME.to_string() + "/v1";
+        match stored_configuration.services.get(&service_actual_name) {
             Some(json) => serde_json::from_value(json.clone())
                 .expect(&format!("Configuration is invalid: {:?}", json)),
             None => panic!(

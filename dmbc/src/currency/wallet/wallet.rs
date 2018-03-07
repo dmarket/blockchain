@@ -6,10 +6,10 @@ use currency::error::Error;
 encoding_struct! {
     #[derive(Eq, PartialOrd, Ord)]
     struct Wallet {
-        const SIZE = 48;
+        const SIZE = 16;
 
-        field balance: u64              [32 => 40]
-        field assets:  Vec<AssetBundle> [40 => 48]
+        field balance: u64              [0 => 8]
+        field assets:  Vec<AssetBundle> [8 => 16]
     }
 }
 
@@ -36,8 +36,8 @@ pub fn move_coins(from: &mut Wallet, to: &mut Wallet, amount: u64) -> Result<(),
     let from_balance = from.balance() - amount;
     let to_balance = to.balance() + amount;
 
-    Field::write(&from_balance, &mut from.raw, 32, 40);
-    Field::write(&to_balance, &mut to.raw, 32, 40);
+    Field::write(&from_balance, &mut from.raw, 0, 8);
+    Field::write(&to_balance, &mut to.raw, 0, 8);
 
     Ok(())
 }
