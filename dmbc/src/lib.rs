@@ -1,3 +1,6 @@
+//! The crate with things required for running a node and supporting
+//! external services.
+
 #![allow(dead_code)]
 extern crate bodyparser;
 #[macro_use]
@@ -20,5 +23,4 @@ extern crate unicase;
 extern crate uuid;
 
 pub mod config;
-pub mod keys;
 pub mod currency;

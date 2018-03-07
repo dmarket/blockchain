@@ -1,4 +1,5 @@
 encoding_struct! {
+    /// Fee data for specific kind of operations.
     struct Fee {
         const SIZE = 16;
 
@@ -8,6 +9,7 @@ encoding_struct! {
 }
 
 encoding_struct! {
+    /// Third party fee data, part of `AssetInfo`.
     struct Fees {
         const SIZE = 24;
 
@@ -18,6 +20,7 @@ encoding_struct! {
 }
 
 impl Fee {
+    /// Calculate fee value for specific price.
     pub fn for_price(&self, price: u64) -> u64 {
         let price_ratio = price / self.ratio();
         self.tax() + price_ratio

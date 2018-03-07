@@ -1,3 +1,5 @@
+//! Currency service configuration.
+
 use serde_json;
 
 use exonum::storage::Snapshot;
@@ -6,6 +8,7 @@ use exonum::blockchain::Schema;
 use currency;
 
 encoding_struct! {
+    /// Fised fees to be paid to the genesis wallet when transaction is executed.
     struct TransactionFees {
         const SIZE = 48;
 
@@ -19,6 +22,7 @@ encoding_struct! {
 }
 
 encoding_struct! {
+    /// Currency service configuration.
     struct Configuration {
         const SIZE = 8;
 
@@ -33,7 +37,7 @@ impl Default for Configuration {
 }
 
 impl Configuration {
-    /// Returns `Configuration` for the service.
+    /// Extract the `Configuration`.
     ///
     /// # Panics
     ///

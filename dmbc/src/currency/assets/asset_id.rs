@@ -13,10 +13,12 @@ use serde_json;
 
 pub const ASSET_ID_LEN: usize = 16;
 
+/// An identifier for an asset.
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, Serialize, Deserialize)]
 pub struct AssetId(pub [u8; ASSET_ID_LEN]);
 
 impl AssetId {
+    /// Create zero `AssetId`.
     pub fn zero() -> AssetId {
         AssetId([0; 16])
     }
@@ -49,6 +51,7 @@ impl AssetId {
         AssetId::from_slice(uuid.as_bytes()).unwrap()
     }
 
+    /// Create an `AssetId` from a slice of bytes.
     pub fn from_slice(b: &[u8]) -> Result<AssetId, ParseError> {
         let len = b.len();
         if len != ASSET_ID_LEN {
@@ -60,6 +63,7 @@ impl AssetId {
         Ok(assetid)
     }
 
+    /// Create an `AssetId` from its hexadecimal representation.
     pub fn from_hex(hex: &str) -> Result<AssetId, ParseError> {
         let mut buffer: [u8; ASSET_ID_LEN] = [0; ASSET_ID_LEN];
 

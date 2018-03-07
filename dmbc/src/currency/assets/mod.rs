@@ -1,3 +1,5 @@
+//! Asset representations.
+
 mod asset_bundle;
 mod asset_id;
 mod meta_asset;

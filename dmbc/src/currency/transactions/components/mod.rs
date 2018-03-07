@@ -1,3 +1,5 @@
+//! Common transaction components.
+
 mod fees;
 mod intermediary;
 

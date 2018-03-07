@@ -1,3 +1,5 @@
+//! Blockchain transactions.
+
 pub mod builders;
 pub mod components;
 

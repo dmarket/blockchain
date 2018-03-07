@@ -14,9 +14,11 @@ use currency::status;
 use currency::error::Error;
 use currency::transactions::components::Fees;
 
+/// Transaction ID.
 pub const ADD_ASSETS_ID: u16 = 300;
 
 message!{
+    /// `add_assets` transaction.
     struct AddAssets {
         const TYPE = SERVICE_ID;
         const ID = ADD_ASSETS_ID;

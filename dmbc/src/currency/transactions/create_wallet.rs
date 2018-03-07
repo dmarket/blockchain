@@ -10,10 +10,12 @@ use currency::wallet;
 use currency::wallet::Wallet;
 use currency::status;
 
+/// Transaction ID.
 pub const CREATE_WALLET_ID: u16 = 100;
 const INITIAL_BALANCE: u64 = 1_00000000;
 
 message! {
+    /// `create_wallet` transaction.
     struct CreateWallet {
         const TYPE = SERVICE_ID;
         const ID = CREATE_WALLET_ID;

@@ -9,6 +9,7 @@ use currency::assets::TradeAsset;
 use currency::error::Error;
 use currency::status;
 
+/// Transaction ID.
 pub const TRADE_ID: u16 = 502;
 
 encoding_struct! {
@@ -22,6 +23,7 @@ encoding_struct! {
 }
 
 message! {
+    /// `trade` transaction.
     struct Trade {
         const TYPE = SERVICE_ID;
         const ID = TRADE_ID;
@@ -34,6 +36,7 @@ message! {
 }
 
 impl Trade {
+    /// Raw bytes of the offer.
     pub fn offer_raw(&self) -> Vec<u8> {
         self.offer().raw
     }

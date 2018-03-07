@@ -10,6 +10,7 @@ use currency::transactions::components::Intermediary;
 use currency::error::Error;
 use currency::status;
 
+/// Transaction ID.
 pub const TRADE_INTERMEDIARY_ID: u16 = 504;
 
 encoding_struct! {
@@ -24,6 +25,7 @@ encoding_struct! {
 }
 
 message! {
+    /// `trade_intermediary` transaction.
     struct TradeIntermediary {
         const TYPE = SERVICE_ID;
         const ID = TRADE_INTERMEDIARY_ID;
@@ -38,6 +40,7 @@ message! {
 }
 
 impl TradeIntermediary {
+    /// Raw bytes of the offer.
     pub fn offer_raw(&self) -> Vec<u8> {
         self.offer().raw
     }

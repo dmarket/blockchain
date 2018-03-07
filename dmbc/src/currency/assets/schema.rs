@@ -12,6 +12,7 @@ impl<S> Schema<S>
 where
     S: AsRef<Snapshot>,
 {
+    /// Internal `MapIndex` for this `Schema`.
     pub fn index(self) -> MapIndex<S, AssetId, AssetInfo> {
         let key = SERVICE_NAME.to_string() + "_v1.assets";
         MapIndex::new(key, self.0)
@@ -24,6 +25,7 @@ where
 }
 
 impl<'a> Schema<&'a mut Fork> {
+    /// Internal `MapIndex` for this `Schema`, with mutable access.
     pub fn index_mut(&mut self) -> MapIndex<&mut Fork, AssetId, AssetInfo> {
         let key = SERVICE_NAME.to_string() + "_v1.assets";
         MapIndex::new(key, self.0)

@@ -9,9 +9,11 @@ use currency::assets::AssetBundle;
 use currency::error::Error;
 use currency::status;
 
+/// Transaction ID.
 pub const DELETE_ASSETS_ID: u16 = 400;
 
 message! {
+    /// `delete_assets` transaction.
     struct DeleteAssets {
         const TYPE = SERVICE_ID;
         const ID = DELETE_ASSETS_ID;

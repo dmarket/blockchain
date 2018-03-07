@@ -1,3 +1,5 @@
+#![allow(missing_docs)]
+
 use exonum::crypto;
 use exonum::crypto::{PublicKey, SecretKey};
 use exonum::storage::StorageValue;

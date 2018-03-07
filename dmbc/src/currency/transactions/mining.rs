@@ -8,9 +8,11 @@ use currency::SERVICE_ID;
 use currency::error::Error;
 use currency::status;
 
+/// Transaction ID.
 pub const MINING_ID: u16 = 700;
 
 message! {
+    /// `mining` transaction.
     struct Mining {
         const TYPE = SERVICE_ID;
         const ID = MINING_ID;

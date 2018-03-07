@@ -1,3 +1,5 @@
+//! Transaction fees.
+
 use std::collections::HashMap;
 
 use exonum::crypto::PublicKey;
@@ -11,16 +13,23 @@ use currency::configuration::Configuration;
 use currency::wallet;
 use currency::wallet::Wallet;
 
+/// For exchange transactions, determines who shall pay the fees.
 #[repr(u8)]
 #[derive(PartialEq, Eq)]
 pub enum FeeStrategy {
+    /// Recipient pays.
     Recipient = 1,
+    /// Sender pays.
     Sender = 2,
+    /// Recipient and sender share paying the fee.
     RecipientAndSender = 3,
+    /// Intermediary pays.
     Intermediary = 4,
 }
 
 impl FeeStrategy {
+    /// Try converting from an u8. To be replaced when the `TryFrom` trait
+    /// is stabilised.
     pub fn try_from(value: u8) -> Option<Self> {
         match value {
             1 => Some(FeeStrategy::Recipient),
@@ -32,12 +41,17 @@ impl FeeStrategy {
     }
 }
 
+/// Transaction fees.
 pub struct Fees {
+    /// Fixed fee to pay for processing the transaction.
     pub to_genesis: u64,
+    /// Fees to be paid to third parties, e.g. creators of assets exchanged
+    /// in a thransaction.
     pub to_third_party: HashMap<PublicKey, u64>,
 }
 
 impl Fees {
+    /// Create fees with specified data.
     pub fn new<I>(to_genesis: u64, to_third_party: I) -> Self
     where
         I: IntoIterator<Item = (PublicKey, u64)>,
@@ -48,6 +62,7 @@ impl Fees {
         }
     }
 
+    /// Create `Fees` for an `add_assets` transaction.
     pub fn new_add_assets<S, I>(view: S, assets: I) -> Result<Fees, Error>
     where
         S: AsRef<Snapshot>,
@@ -74,6 +89,7 @@ impl Fees {
         Ok(fees)
     }
 
+    /// Create `Fees` for `trade` transactions.
     pub fn new_trade<'a, S, I>(view: S, assets: I) -> Result<Fees, Error>
     where
         S: AsRef<Snapshot>,
@@ -109,6 +125,7 @@ impl Fees {
         Ok(fees)
     }
 
+    /// Create `Fees` for `exchange` transactions.
     pub fn new_exchange<S, I>(view: S, assets: I) -> Result<Self, Error>
     where
         S: AsRef<Snapshot>,
@@ -141,6 +158,7 @@ impl Fees {
         Ok(fees)
     }
 
+    /// Create `Fees` for `transfer` transactions.
     pub fn new_transfer<S, I>(view: S, assets: I) -> Result<Self, Error>
     where
         S: AsRef<Snapshot>,
@@ -173,14 +191,18 @@ impl Fees {
         Ok(fees)
     }
 
+    /// Total amount of fees that must be paid in order for the transaction
+    /// to succeed.
     pub fn total(&self) -> u64 {
         self.to_genesis + self.to_third_party_total()
     }
 
+    /// Total amound that needs to be paid to third party wallets.
     pub fn to_third_party_total(&self) -> u64 {
         self.to_third_party.values().sum()
     }
 
+    /// Add a new fee to the list of third party payments.
     pub fn add_fee(&mut self, key: &PublicKey, fee: u64) {
         self.to_third_party
             .entry(*key)
@@ -190,6 +212,10 @@ impl Fees {
             .or_insert(fee);
     }
 
+    /// Collect fees to genesis wallet.
+    ///
+    /// # Errors
+    /// Returns `InsufficientFunds` if the payer is unable to pay the fees.
     pub fn collect_to_genesis(
         &self,
         payer: &mut Wallet,
@@ -200,6 +226,7 @@ impl Fees {
         Ok(())
     }
 
+    /// Split the fee payment to genesis wallet between two wallets.
     pub fn collect_to_genesis_2(
         &self,
         payer_1: &mut Wallet,
@@ -212,6 +239,14 @@ impl Fees {
         Ok(())
     }
 
+    /// Collect fees to third party wallets.
+    /// 
+    /// Returns a list of wallets modified by fee withdrawal.
+    /// This list must usually not be committed or discarded before
+    /// the transaction has otherwise successfully executed.
+    ///
+    /// # Errors
+    /// Returns `InsufficientFunds` if the payer is unable to pay the fees.
     pub fn collect_to_third_party(
         &self,
         view: &Fork,
@@ -236,6 +271,7 @@ impl Fees {
         Ok(updated_wallets)
     }
 
+    /// Split fees to third party wallets between two payers.
     pub fn collect_to_third_party_2(
         &self,
         view: &mut Fork,

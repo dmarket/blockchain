@@ -1,3 +1,5 @@
+//! Transaction statuses.
+
 use exonum::crypto::Hash;
 use exonum::storage::{Fork, MapIndex, Snapshot};
 

@@ -23,18 +23,26 @@ use currency::transactions::{AddAssets, CreateWallet, DeleteAssets, Exchange,
                              TRADE_ASK_INTERMEDIARY_ID, TRADE_ID, TRADE_INTERMEDIARY_ID};
 use serde_json;
 
+/// Service identifier.
 pub const SERVICE_ID: u16 = 2;
+
+/// Name of the cryptocurrency service.
 pub const SERVICE_NAME: &str = "cryptocurrency";
+
+/// Hexadecimal representation of the public key for genesis wallet.
 pub const GENESIS_WALLET_PUB_KEY: &str =
     "36a05e418393fb4b23819753f6e6dd51550ce030d53842c43dd1349857a96a61";
 
+/// Service data.
 pub struct Service();
 
 impl Service {
+    /// Create a new cryptocurrency service.
     pub fn new() -> Self {
         Service()
     }
 
+    /// Genesis wallet public key.
     pub fn genesis_wallet() -> PublicKey {
         PublicKey::from_hex(GENESIS_WALLET_PUB_KEY).unwrap()
     }

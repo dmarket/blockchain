@@ -4,6 +4,7 @@ use currency::assets::AssetBundle;
 use currency::error::Error;
 
 encoding_struct! {
+    /// Wallet data.
     #[derive(Eq, PartialOrd, Ord)]
     struct Wallet {
         const SIZE = 16;
@@ -14,20 +15,28 @@ encoding_struct! {
 }
 
 impl Wallet {
+    /// Create new wallet with zero balance and no assets.
     pub fn new_empty() -> Self {
         Wallet::new(0, Vec::new())
     }
 
+    /// Push assets into the wallet.
     pub fn push_assets<I>(&mut self, new_assets: I)
     where
         I: IntoIterator<Item = AssetBundle>,
     {
+        // FIXME: currently broken for assets that already present in wallet.
         let mut assets = self.assets();
         assets.extend(new_assets);
         *self = Wallet::new(self.balance(), assets);
     }
 }
 
+/// Move funds between wallets.
+///
+/// # Errors
+/// 
+/// Returns `InsufficientFunds` if the `from` wallet balance is less than `amount`.
 pub fn move_coins(from: &mut Wallet, to: &mut Wallet, amount: u64) -> Result<(), Error> {
     if from.balance() < amount {
         return Err(Error::InsufficientFunds);
@@ -42,6 +51,12 @@ pub fn move_coins(from: &mut Wallet, to: &mut Wallet, amount: u64) -> Result<(),
     Ok(())
 }
 
+/// Move assets between wallets.
+///
+/// # Errors
+///
+/// Returns `InsufficientFunds` if the wallets in `move_specs` are not present
+/// in the `from` wallet in the specified quantity.
 pub fn move_assets(
     from: &mut Wallet,
     to: &mut Wallet,

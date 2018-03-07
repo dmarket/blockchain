@@ -1,3 +1,4 @@
+#![allow(missing_docs)]
 use currency::assets::{Fee, Fees};
 
 pub struct Builder {

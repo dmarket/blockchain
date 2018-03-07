@@ -1,3 +1,5 @@
+//! Types and operations on wallets in the blockchain network.
+
 mod schema;
 mod wallet;
 

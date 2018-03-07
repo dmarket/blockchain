@@ -9,9 +9,11 @@ use currency::assets::AssetBundle;
 use currency::error::Error;
 use currency::status;
 
+/// Transaction ID.
 pub const TRANSFER_ID: u16 = 200;
 
 message! {
+    /// `transfer` transaction.
     struct Transfer {
         const TYPE = SERVICE_ID;
         const ID = TRANSFER_ID;

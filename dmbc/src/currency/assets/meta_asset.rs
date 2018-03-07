@@ -5,6 +5,7 @@ use currency::assets::{AssetBundle, AssetId, AssetInfo, Fees};
 pub const ASSET_DATA_MAX_LENGTH: usize = 10 * 1024;
 
 encoding_struct! {
+    /// Info for asset to be committed into the network in `add_assets` transaction.
     struct MetaAsset {
         const SIZE = 56;
 
@@ -16,6 +17,7 @@ encoding_struct! {
 }
 
 impl MetaAsset {
+    /// Verify valididty of the committed assets.
     pub fn verify(&self) -> bool {
         let trade_ok = self.fees().trade().ratio() != 0;
         let exchange_ok = self.fees().exchange().ratio() != 0;
@@ -25,10 +27,12 @@ impl MetaAsset {
         trade_ok && exchange_ok && transfer_ok && data_ok
     }
 
+    /// Create an `AssetInfo` from this `MetaAsset`.
     pub fn to_info(&self, creator: &PublicKey) -> AssetInfo {
         AssetInfo::new(creator, self.amount(), self.fees())
     }
 
+    /// Create an `AssetBundle` from this `MetaAsset`.
     pub fn to_bundle(&self, id: AssetId) -> AssetBundle {
         AssetBundle::new(id, self.amount())
     }

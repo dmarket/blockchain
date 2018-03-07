@@ -1,18 +1,35 @@
+//! Service errors.
+
 use std::error;
 use std::fmt;
 
+/// Enumeration of errors that can happen when processing a transaction.
 #[repr(u8)]
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq)]
 pub enum Error {
+    /// Asset ID is not found in the network.
     AssetNotFound = 1,
+
+    /// Transaction hash is not found in the network.
     TransactionNotFound = 2,
+
+    /// AssetInfo is invalid.
     InvalidAssetInfo = 3,
+
+    /// There is not enough funds on wallet for the operation to succeed.
     InsufficientFunds = 4,
+
+    /// Wallet does not have the amount of assets of specified type required
+    /// for the operation to succeed.
     InsufficientAssets = 5,
+
+    /// Requested operation is not implemented. Must not happen in production
+    /// setting.
     NotImplemented = 255,
 }
 
 impl Error {
+    /// Try creating an error from its u8 representation.
     pub fn try_from(value: u8) -> Option<Self> {
         match value {
             1 => Some(Error::AssetNotFound),
