@@ -39,7 +39,7 @@ impl Wallet {
     }
 
     /// Remove assets from the wallet.
-    pub fn remove_assets<I>(&mut self, assets_to_remove: I)
+    pub fn remove_assets<I>(&mut self, assets_to_remove: I) -> Result<(), Error>
     where
         I: IntoIterator<Item = AssetBundle>,
     {
@@ -47,11 +47,12 @@ impl Wallet {
         for to_remove in assets_to_remove {
             if let Some(index) = assets.iter_mut().position(|a| a.id() == to_remove.id()) {
                 let asset = &mut assets[index];
-                let new_amount = if asset.amount() < to_remove.amount() {
-                    0 
-                } else { 
-                    asset.amount() - to_remove.amount() 
-                };
+                
+                if asset.amount() < to_remove.amount() {
+                    return Err(Error::InsufficientAssets);
+                }
+
+                let new_amount = asset.amount() - to_remove.amount();
 
                 *asset = AssetBundle::new(asset.id(), new_amount);
             }
@@ -62,25 +63,8 @@ impl Wallet {
             .collect();
 
         *self = Wallet::new(self.balance(), remaining_assets);
-    }
 
-    /// Checks if assets and sufficient amount of them are in the wallet.
-    pub fn is_assets_in_wallet<I>(&self, assets_to_ckeck: I) -> bool
-    where
-        I: IntoIterator<Item = AssetBundle>,
-    {
-        let mut result = true;
-        for to_check in assets_to_ckeck {
-            result &= self.assets()
-                .into_iter()
-                .any(|asset| asset.id() == to_check.id() && asset.amount() >= to_check.amount());
-            
-            if !result {
-                break;
-            }
-        }
-
-        result
+        Ok(())
     }
 }
 

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use exonum::crypto::PublicKey;
 use exonum::blockchain::Transaction;
 use exonum::storage::Fork;
@@ -6,7 +8,7 @@ use serde_json;
 
 use currency::{Service, SERVICE_ID};
 use currency::assets;
-use currency::assets::AssetBundle;
+use currency::assets::{AssetBundle, AssetId, AssetInfo};
 use currency::wallet;
 use currency::error::Error;
 use currency::status;
@@ -45,11 +47,9 @@ impl DeleteAssets {
         wallet::Schema(&mut *view).store(&genesis_pub, genesis);
         wallet::Schema(&mut *view).store(&creator_pub, creator.clone());
 
-        // We have to check if Wallet and AssetsInfo have sufficient amount of assets
-        if !creator.is_assets_in_wallet(self.assets()) {
-            return Err(Error::InsufficientAssets);
-        }
+        creator.remove_assets(self.assets())?;
 
+        let mut updated_infos: HashMap<AssetId, AssetInfo> = HashMap::new();
         for asset in self.assets() {
             let id = asset.id();
             let state = assets::Schema(&mut *view).fetch(&id);
@@ -59,14 +59,16 @@ impl DeleteAssets {
                 |info| info.decrease(&creator_pub, asset.amount())
             )?;
 
+            updated_infos.insert(id, info);
+        }
+
+        wallet::Schema(&mut *view).store(&creator_pub, creator);
+        for (id, info) in updated_infos {
             match info.amount() {
                 0 => assets::Schema(&mut *view).remove(&id),
                 _ => assets::Schema(&mut *view).store(&id, info),
             }
         }
-
-        creator.remove_assets(self.assets());
-        wallet::Schema(&mut *view).store(&creator_pub, creator);
 
         Ok(())
     }
@@ -78,6 +80,8 @@ impl Transaction for DeleteAssets {
         if cfg!(fuzzing) {
             return true;
         }
+
+        // TODO: check assets for copies. Its important.
 
         self.verify_signature(self.pub_key())
     }
