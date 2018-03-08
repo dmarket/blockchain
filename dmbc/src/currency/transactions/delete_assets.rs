@@ -59,7 +59,15 @@ impl DeleteAssets {
                 |info| info.decrease(&creator_pub, asset.amount())
             )?;
 
-            updated_infos.insert(id, info);
+            // we should update new AssetInfo candidate not override if it 
+            // already exists from previous iterations.
+            updated_infos.entry(id).and_modify(|prev_info| {
+                *prev_info = AssetInfo::new(
+                    prev_info.creator(), 
+                    prev_info.amount() - asset.amount(), 
+                    prev_info.fees()
+                )
+            }).or_insert(info);
         }
 
         wallet::Schema(&mut *view).store(&creator_pub, creator);
