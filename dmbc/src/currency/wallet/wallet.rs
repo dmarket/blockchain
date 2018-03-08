@@ -25,9 +25,16 @@ impl Wallet {
     where
         I: IntoIterator<Item = AssetBundle>,
     {
-        // FIXME: currently broken for assets that already present in wallet.
         let mut assets = self.assets();
-        assets.extend(new_assets);
+        for new in new_assets {
+            if let Some(index) = assets.iter_mut().position(|a| a.id() == new.id()) {
+                let asset = &mut assets[index];
+                let new_amount = asset.amount() + new.amount();
+                *asset = AssetBundle::new(asset.id(), new_amount);
+            } else {
+                assets.push(new);
+            }
+        }
         *self = Wallet::new(self.balance(), assets);
     }
 }
