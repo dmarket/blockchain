@@ -49,7 +49,7 @@ impl DeleteAssets {
 
         creator.remove_assets(self.assets())?;
 
-        let mut updated_infos: HashMap<AssetId, AssetInfo> = HashMap::new();
+        let mut candidates: HashMap<AssetId, AssetInfo> = HashMap::new();
         for asset in self.assets() {
             let id = asset.id();
             let state = assets::Schema(&mut *view).fetch(&id);
@@ -61,7 +61,7 @@ impl DeleteAssets {
 
             // we should update new AssetInfo candidate not override if it 
             // already exists from previous iterations.
-            updated_infos.entry(id).and_modify(|prev_info| {
+            candidates.entry(id).and_modify(|prev_info| {
                 *prev_info = AssetInfo::new(
                     prev_info.creator(), 
                     prev_info.amount() - asset.amount(), 
@@ -71,7 +71,7 @@ impl DeleteAssets {
         }
 
         wallet::Schema(&mut *view).store(&creator_pub, creator);
-        for (id, info) in updated_infos {
+        for (id, info) in candidates {
             match info.amount() {
                 0 => assets::Schema(&mut *view).remove(&id),
                 _ => assets::Schema(&mut *view).store(&id, info),
