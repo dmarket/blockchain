@@ -69,15 +69,18 @@ impl Wallet {
     where
         I: IntoIterator<Item = AssetBundle>,
     {
+        let mut result = true;
         for to_check in assets_to_ckeck {
-            if self.assets()
+            result &= self.assets()
                 .into_iter()
-                .any(|asset| asset.id() == to_check.id() && asset.amount() >= to_check.amount()) {
-                    return true;
-                }
+                .any(|asset| asset.id() == to_check.id() && asset.amount() >= to_check.amount());
+            
+            if !result {
+                break;
+            }
         }
 
-        false
+        result
     }
 }
 
