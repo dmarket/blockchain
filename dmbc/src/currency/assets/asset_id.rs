@@ -1,3 +1,4 @@
+use std::string::ToString;
 use std::error::Error;
 use std::fmt;
 
@@ -137,7 +138,7 @@ impl Error for ParseError {
 
 impl ExonumJson for AssetId {
     fn serialize_field(&self) -> Result<serde_json::Value, Box<Error>> {
-        serde_json::to_value(self).map_err(|e| e.into())
+        Ok(serde_json::Value::String(self.to_string()))
     }
 
     fn deserialize_field<B: WriteBufferWrapper>(
@@ -169,5 +170,17 @@ impl StorageKey for AssetId {
 
     fn write(&self, buffer: &mut [u8]) {
         buffer.copy_from_slice(&self.0);
+    }
+}
+
+impl ToString for AssetId {
+    fn to_string(&self) -> String {
+        let mut assetid_hex = "".to_string();
+        let len = self.0.len();
+        for i in 0..len {
+            let byte_hex = format!("{:02x}", self.0[i]);
+            assetid_hex += &*byte_hex;
+        }
+        assetid_hex
     }
 }
