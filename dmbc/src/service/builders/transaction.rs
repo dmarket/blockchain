@@ -180,6 +180,13 @@ impl TxAddAssetBuilder {
         self
     }
 
+    pub fn add_assets_value(mut self, assets: Vec<MetaAsset>) -> Self {
+        for asset in assets {
+            self.assets.push(asset);
+        }
+        self
+    }
+
     pub fn add_asset_receiver(
         self,
         receiver: PublicKey,

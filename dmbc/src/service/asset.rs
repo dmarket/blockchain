@@ -67,7 +67,7 @@ encoding_struct! {
 /// A 128-bit (16 byte) buffer containing the ID.
 type AssetIdBytes = [u8; 16];
 
-#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct AssetId {
     /// The 128-bit number stored in 16 bytes
     bytes: AssetIdBytes,
