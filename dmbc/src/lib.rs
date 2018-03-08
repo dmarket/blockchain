@@ -1,5 +1,5 @@
-//! The crate with things required for running a node and supporting
-//! external services.
+//! This crate defines types and operations required for running a blockchain
+//! node and external services.
 
 #![allow(dead_code)]
 extern crate bodyparser;
