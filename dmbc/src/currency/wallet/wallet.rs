@@ -30,6 +30,48 @@ impl Wallet {
         assets.extend(new_assets);
         *self = Wallet::new(self.balance(), assets);
     }
+
+    /// Remove assets from the wallet.
+    pub fn remove_assets<I>(&mut self, assets_to_remove: I)
+    where
+        I: IntoIterator<Item = AssetBundle>,
+    {
+        let mut assets = self.assets();
+        for to_remove in assets_to_remove {
+            if let Some(index) = assets.iter_mut().position(|a| a.id() == to_remove.id()) {
+                let asset = &mut assets[index];
+                let new_amount = if asset.amount() < to_remove.amount() {
+                    0 
+                } else { 
+                    asset.amount() - to_remove.amount() 
+                };
+
+                *asset = AssetBundle::new(asset.id(), new_amount);
+            }
+        }
+
+        let remaining_assets = assets.into_iter()
+            .filter(|a| a.amount() > 0)
+            .collect();
+
+        *self = Wallet::new(self.balance(), remaining_assets);
+    }
+
+    /// Checks if assets and sufficient amount of them are in the wallet.
+    pub fn is_assets_in_wallet<I>(&self, assets_to_ckeck: I) -> bool
+    where
+        I: IntoIterator<Item = AssetBundle>,
+    {
+        for to_check in assets_to_ckeck {
+            if self.assets()
+                .into_iter()
+                .any(|asset| asset.id() == to_check.id() && asset.amount() >= to_check.amount()) {
+                    return true;
+                }
+        }
+
+        false
+    }
 }
 
 /// Move funds between wallets.
