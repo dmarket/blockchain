@@ -19,6 +19,6 @@ impl TradeAsset {
 
     /// Get total value of the `TradeAsset`.
     pub fn total_price(&self) -> u64 {
-        self.amount() as u64 * self.price()
+        self.amount() * self.price()
     }
 }
