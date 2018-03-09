@@ -48,44 +48,12 @@ impl Trade {
 
 
         let mut wallet_buyer = wallet::Schema(&*view).fetch(self.offer().buyer());
-        if wallet_buyer.balance() < self.offer().assets().total_price() {
-            
-        }
-
         let mut wallet_seller = wallet::Schema(&*view).fetch(self.offer().seller());
         let mut wallet_genesis = wallet::Schema(&*view).fetch(&Service::genesis_wallet());
 
-        let fees = Fees::new_trade(&*view,self.offer().assets())?;
+        let fees = Fees::new_trade(&*view,&self.offer().assets())?;
 
         // Collect the blockchain fee. Execution shall not continue if this fails.
-
-        fees.collect_to_genesis(&mut wallet_buyer, &mut genesis)?;
-
-        wallet::Schema(&mut *view).store(self.from(), wallet_from);
-        wallet::Schema(&mut *view).store(&Service::genesis_wallet(), genesis);
-
-        // Operations bellow must either all succeed, or return an error without
-        // saving anything to the database.
-
-        // Process third party fees.
-        let mut updated_wallets = fees.collect_to_third_party(view, self.from())?;
-
-        // Process the main transaction.
-        let mut wallet_from = updated_wallets
-            .remove(&self.from())
-            .unwrap_or_else(|| wallet::Schema(&*view).fetch(&self.from()));
-
-        let mut wallet_to = wallet::Schema(&*view).fetch(self.to());
-        wallet::move_coins(&mut wallet_from, &mut wallet_to, self.amount())?;
-        wallet::move_assets(&mut wallet_from, &mut wallet_to, &self.assets())?;
-
-        updated_wallets.insert(*self.from(), wallet_from);
-        updated_wallets.insert(*self.to(), wallet_to);
-
-        // Save changes to the database.
-        for (key, wallet) in updated_wallets {
-            wallet::Schema(&mut *view).store(&key, wallet);
-        }
 
         Ok(())
     }
@@ -98,7 +66,7 @@ impl Transaction for Trade {
         }
 
         let wallets_ok = self.offer().buyer() != self.offer().seller();
-        let seller_verify_ok = crypto::verify(self.seller_signature(), self.offer().raw, self.offer().seller());
+        let seller_verify_ok = crypto::verify(self.seller_signature(), &self.offer().raw, self.offer().seller());
         let buyer_verify_ok = self.verify_signature(&self.offer().buyer());
 
         wallets_ok && buyer_verify_ok && seller_verify_ok

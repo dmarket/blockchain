@@ -16,7 +16,7 @@ use router::Router;
 
 use currency::status;
 use currency::transactions::{AddAssets, CreateWallet, DeleteAssets, Exchange,
-                             ExchangeIntermediary, Mining, Trade, TradeAsk, TradeAskIntermediary,
+                             ExchangeIntermediary, Mining, Trade,
                              TradeIntermediary, Transfer};
 
 use currency::error::Error;
@@ -35,9 +35,7 @@ enum TransactionRequest {
     AddAssets(AddAssets),
     DeleteAssets(DeleteAssets),
     Trade(Trade),
-    TradeAsk(TradeAsk),
     TradeIntermediary(TradeIntermediary),
-    TradeAskIntermediary(TradeAskIntermediary),
     Exchange(Exchange),
     ExchangeIntermediary(ExchangeIntermediary),
     Mining(Mining),
@@ -51,9 +49,7 @@ impl Into<Box<Transaction>> for TransactionRequest {
             TransactionRequest::AddAssets(trans) => Box::new(trans),
             TransactionRequest::DeleteAssets(trans) => Box::new(trans),
             TransactionRequest::Trade(trans) => Box::new(trans),
-            TransactionRequest::TradeAsk(trans) => Box::new(trans),
             TransactionRequest::TradeIntermediary(trans) => Box::new(trans),
-            TransactionRequest::TradeAskIntermediary(trans) => Box::new(trans),
             TransactionRequest::Exchange(trans) => Box::new(trans),
             TransactionRequest::ExchangeIntermediary(trans) => Box::new(trans),
             TransactionRequest::Mining(trans) => Box::new(trans),

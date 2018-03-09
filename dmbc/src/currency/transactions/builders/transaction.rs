@@ -16,9 +16,6 @@ use currency::transactions::exchange_intermediary::{ExchangeIntermediary,
 use currency::transactions::mining::Mining;
 use currency::transactions::trade::{Trade, TradeOffer};
 use currency::transactions::trade_intermediary::{TradeIntermediary, TradeOfferIntermediary};
-use currency::transactions::trade_ask::{TradeAsk, TradeAskOffer};
-use currency::transactions::trade_ask_intermediary::{TradeAskIntermediary,
-                                                     TradeAskOfferIntermediary};
 use currency::transactions::transfer::Transfer;
 
 pub struct Builder {
@@ -130,16 +127,6 @@ impl Builder {
     pub fn tx_trade_assets_with_intermediary(self) -> TradeIntermediaryBuilder {
         self.validate();
         TradeIntermediaryBuilder::new(self.into())
-    }
-
-    pub fn tx_trade_ask_assets(self) -> TradeAskBuilder {
-        self.validate();
-        TradeAskBuilder::new(self.into())
-    }
-
-    pub fn tx_trade_ask_assets_with_intermediary(self) -> TradeAskIntermediaryBuilder {
-        self.validate();
-        TradeAskIntermediaryBuilder::new(self.into())
     }
 
     pub fn tx_transfer(self) -> TransferBuilder {
@@ -689,175 +676,6 @@ impl TradeIntermediaryBuilder {
             &self.intermediary_secret_key.unwrap(),
         );
         TradeIntermediary::new(
-            offer,
-            self.seed,
-            &signature,
-            &intermediary_signature,
-            &self.data_info.unwrap_or_default(),
-            &self.meta.secret_key,
-        )
-    }
-
-    fn verify(&self) {
-        assert!(self.buyer.is_some());
-        assert!(self.intermediary_public_key.is_some());
-        assert!(self.intermediary_secret_key.is_some());
-    }
-}
-
-pub struct TradeAskBuilder {
-    meta: TransactionMetadata,
-    buyer: Option<PublicKey>,
-    assets: Vec<TradeAsset>,
-    seed: u64,
-    data_info: Option<String>,
-}
-
-impl TradeAskBuilder {
-    fn new(meta: TransactionMetadata) -> Self {
-        TradeAskBuilder {
-            meta,
-            buyer: None,
-            assets: Vec::new(),
-            seed: 0,
-            data_info: None,
-        }
-    }
-
-    pub fn buyer(self, pub_key: PublicKey) -> Self {
-        TradeAskBuilder {
-            buyer: Some(pub_key),
-            ..self
-        }
-    }
-
-    pub fn add_asset(self, name: &str, count: u64, price: u64) -> Self {
-        let id = AssetId::from_data(name, &self.meta.public_key);
-        let asset = TradeAsset::new(id, count, price);
-        self.add_asset_value(asset)
-    }
-
-    pub fn add_asset_value(mut self, asset: TradeAsset) -> Self {
-        self.assets.push(asset);
-        self
-    }
-
-    pub fn seed(self, seed: u64) -> Self {
-        TradeAskBuilder { seed, ..self }
-    }
-
-    pub fn data_info(self, data_info: &str) -> Self {
-        TradeAskBuilder {
-            data_info: Some(data_info.to_string()),
-            ..self
-        }
-    }
-
-    pub fn build(self) -> TradeAsk {
-        self.verify();
-
-        let offer = TradeAskOffer::new(&self.meta.public_key, self.assets);
-        let signature = crypto::sign(&offer.clone().into_bytes(), &self.meta.secret_key);
-        TradeAsk::new(
-            &self.buyer.unwrap(),
-            offer,
-            self.seed,
-            &signature,
-            &self.data_info.unwrap_or_default(),
-            &self.meta.secret_key,
-        )
-    }
-
-    fn verify(&self) {
-        assert!(self.buyer.is_some());
-    }
-}
-
-pub struct TradeAskIntermediaryBuilder {
-    meta: TransactionMetadata,
-    buyer: Option<PublicKey>,
-    intermediary_public_key: Option<PublicKey>,
-    intermediary_secret_key: Option<SecretKey>,
-    commision: u64,
-
-    assets: Vec<TradeAsset>,
-    seed: u64,
-    data_info: Option<String>,
-}
-
-impl TradeAskIntermediaryBuilder {
-    fn new(meta: TransactionMetadata) -> Self {
-        TradeAskIntermediaryBuilder {
-            meta,
-            buyer: None,
-            intermediary_public_key: None,
-            intermediary_secret_key: None,
-            commision: 0,
-            assets: Vec::new(),
-            seed: 0,
-            data_info: None,
-        }
-    }
-
-    pub fn buyer(self, pub_key: PublicKey) -> Self {
-        TradeAskIntermediaryBuilder {
-            buyer: Some(pub_key),
-            ..self
-        }
-    }
-
-    pub fn intermediary_key_pair(self, public_key: PublicKey, secret_key: SecretKey) -> Self {
-        TradeAskIntermediaryBuilder {
-            intermediary_public_key: Some(public_key),
-            intermediary_secret_key: Some(secret_key),
-            ..self
-        }
-    }
-
-    pub fn commision(self, commision: u64) -> Self {
-        TradeAskIntermediaryBuilder {
-            commision: commision,
-            ..self
-        }
-    }
-
-    pub fn add_asset(self, name: &str, count: u64, price: u64) -> Self {
-        let id = AssetId::from_data(name, &self.meta.public_key);
-        let asset = TradeAsset::new(id, count, price);
-        self.add_asset_value(asset)
-    }
-
-    pub fn add_asset_value(mut self, asset: TradeAsset) -> Self {
-        self.assets.push(asset);
-        self
-    }
-
-    pub fn seed(self, seed: u64) -> Self {
-        TradeAskIntermediaryBuilder { seed, ..self }
-    }
-
-    pub fn data_info(self, data_info: &str) -> Self {
-        TradeAskIntermediaryBuilder {
-            data_info: Some(data_info.to_string()),
-            ..self
-        }
-    }
-
-    pub fn build(self) -> TradeAskIntermediary {
-        self.verify();
-
-        let intermediary =
-            Intermediary::new(&self.intermediary_public_key.unwrap(), self.commision);
-
-        let offer =
-            TradeAskOfferIntermediary::new(intermediary, &self.meta.public_key, self.assets);
-        let signature = crypto::sign(&offer.clone().into_bytes(), &self.meta.secret_key);
-        let intermediary_signature = crypto::sign(
-            &offer.clone().into_bytes(),
-            &self.intermediary_secret_key.unwrap(),
-        );
-        TradeAskIntermediary::new(
-            &self.buyer.unwrap(),
             offer,
             self.seed,
             &signature,

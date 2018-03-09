@@ -12,10 +12,9 @@ use iron::prelude::*;
 use router::Router;
 
 use currency::transactions::{AddAssets, CreateWallet, DeleteAssets, Exchange,
-                             ExchangeIntermediary, Mining, Trade, TradeAsk, TradeAskIntermediary,
+                             ExchangeIntermediary, Mining, Trade,
                              TradeIntermediary, Transfer, EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID,
-                             TRADE_ASK_ID, TRADE_ASK_INTERMEDIARY_ID, TRADE_ID,
-                             TRADE_INTERMEDIARY_ID};
+                             TRADE_ID, TRADE_INTERMEDIARY_ID};
 
 #[derive(Clone)]
 pub struct HashApi {}
@@ -29,8 +28,6 @@ enum TransactionRequest {
     DeleteAssets(DeleteAssets),
     Trade(Trade),
     TradeIntermediary(TradeIntermediary),
-    TradeAsk(TradeAsk),
-    TradeAskIntermediary(TradeAskIntermediary),
     Exchange(Exchange),
     ExchangeIntermediary(ExchangeIntermediary),
     Mining(Mining),
@@ -45,8 +42,6 @@ impl Into<Box<Transaction>> for TransactionRequest {
             TransactionRequest::DeleteAssets(trans) => Box::new(trans),
             TransactionRequest::Trade(trans) => Box::new(trans),
             TransactionRequest::TradeIntermediary(trans) => Box::new(trans),
-            TransactionRequest::TradeAsk(trans) => Box::new(trans),
-            TransactionRequest::TradeAskIntermediary(trans) => Box::new(trans),
             TransactionRequest::Exchange(trans) => Box::new(trans),
             TransactionRequest::ExchangeIntermediary(trans) => Box::new(trans),
             TransactionRequest::Mining(trans) => Box::new(trans),
@@ -106,14 +101,6 @@ impl Api for HashApi {
                             Err(_) => vec![],
                         },
                         TRADE_INTERMEDIARY_ID => match TradeIntermediary::from_raw(raw_) {
-                            Ok(trade) => trade.offer_raw(),
-                            Err(_) => vec![],
-                        },
-                        TRADE_ASK_ID => match TradeAsk::from_raw(raw_) {
-                            Ok(trade) => trade.offer_raw(),
-                            Err(_) => vec![],
-                        },
-                        TRADE_ASK_INTERMEDIARY_ID => match TradeAskIntermediary::from_raw(raw_) {
                             Ok(trade) => trade.offer_raw(),
                             Err(_) => vec![],
                         },

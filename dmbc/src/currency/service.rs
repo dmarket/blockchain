@@ -17,10 +17,10 @@ use currency::wallet;
 use currency::wallet::Wallet;
 use currency::status;
 use currency::transactions::{AddAssets, CreateWallet, DeleteAssets, Exchange,
-                             ExchangeIntermediary, Mining, Trade, TradeAsk, TradeAskIntermediary,
+                             ExchangeIntermediary, Mining, Trade,
                              TradeIntermediary, ADD_ASSETS_ID, CREATE_WALLET_ID, DELETE_ASSETS_ID,
-                             EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID, MINING_ID, TRADE_ASK_ID,
-                             TRADE_ASK_INTERMEDIARY_ID, TRADE_ID, TRADE_INTERMEDIARY_ID};
+                             EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID, MINING_ID,
+                             TRADE_ID, TRADE_INTERMEDIARY_ID};
 use serde_json;
 
 /// Service identifier.
@@ -68,8 +68,6 @@ impl blockchain::Service for Service {
             MINING_ID => Box::new(Mining::from_raw(raw)?),
             TRADE_ID => Box::new(Trade::from_raw(raw)?),
             TRADE_INTERMEDIARY_ID => Box::new(TradeIntermediary::from_raw(raw)?),
-            TRADE_ASK_ID => Box::new(TradeAsk::from_raw(raw)?),
-            TRADE_ASK_INTERMEDIARY_ID => Box::new(TradeAskIntermediary::from_raw(raw)?),
             _ => {
                 return Err(encoding::Error::IncorrectMessageType {
                     message_type: raw.message_type(),
