@@ -1,6 +1,7 @@
 use std::string::ToString;
 use std::error::Error;
 use std::fmt;
+use std::u8;
 
 use exonum::crypto::PublicKey;
 use exonum::encoding;
@@ -68,12 +69,12 @@ impl AssetId {
     pub fn from_hex(hex: &str) -> Result<AssetId, ParseError> {
         let mut buffer: [u8; ASSET_ID_LEN] = [0; ASSET_ID_LEN];
 
-        if hex.len() < ASSET_ID_LEN {
+        if hex.len() != 2* ASSET_ID_LEN {
             return Err(ParseError::InvalidLength(hex.len()));
         }
 
-        for i in 0..hex.len() {
-            buffer[i] = hex.as_bytes()[i];
+        for i in 0..hex.len() / 2 {
+            buffer[i] = u8::from_str_radix(&hex[i..i+1], 16).unwrap();
         }
 
         Ok(AssetId(buffer))
@@ -147,12 +148,13 @@ impl ExonumJson for AssetId {
         from: Offset,
         to: Offset,
     ) -> Result<(), Box<Error>> {
-        match serde_json::from_value::<AssetId>(value.clone()) {
+        let val = value.as_str().ok_or("Can't cast json as string")?;
+        match AssetId::from_hex(&val) {
             Ok(asset_id) => {
                 buffer.write(from, to, asset_id);
                 Ok(())
             }
-            Err(err) => Err(Box::new(err)),
+            Err(error) => Err(Box::new(error)),
         }
     }
 }
