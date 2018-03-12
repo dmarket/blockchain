@@ -1,13 +1,16 @@
+use exonum::crypto;
 use exonum::crypto::{PublicKey, Signature};
 use exonum::blockchain::Transaction;
 use exonum::storage::Fork;
 use exonum::messages::Message;
 use serde_json;
 
+use currency::{Service, SERVICE_ID};
 use currency::assets::AssetBundle;
+use currency::transactions::components::{FeeStrategy, Fees};
 use currency::error::Error;
 use currency::status;
-use currency::SERVICE_ID;
+use currency::wallet;
 
 /// Transaction ID.
 pub const EXCHANGE_ID: u16 = 601;
@@ -48,20 +51,106 @@ impl Exchange {
     }
 
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
-        // TODO
-        let _ = view;
-        Err(Error::NotImplemented)
+        let offer = self.offer();
+
+        let fee_strategy =
+            FeeStrategy::try_from(offer.fee_strategy()).expect("fee strategy must be valid");
+
+        let fees = Fees::new_exchange(
+            &*view,
+            offer
+                .sender_assets()
+                .into_iter()
+                .chain(offer.recipient_assets().into_iter()),
+        )?;
+
+        let mut genesis = wallet::Schema(&*view).fetch(&Service::genesis_wallet());
+
+        // Collect the blockchain fee. Execution shall not continue if this fails.
+        match fee_strategy {
+            FeeStrategy::Recipient => {
+                let mut recipient = wallet::Schema(&*view).fetch(offer.recipient());
+
+                fees.collect_to_genesis(&mut recipient, &mut genesis)?;
+
+                wallet::Schema(&mut *view).store(offer.recipient(), recipient);
+            }
+            FeeStrategy::Sender => {
+                let mut sender = wallet::Schema(&*view).fetch(offer.sender());
+
+                fees.collect_to_genesis(&mut sender, &mut genesis)?;
+
+                wallet::Schema(&mut *view).store(offer.sender(), sender);
+            }
+            FeeStrategy::RecipientAndSender => {
+                let mut recipient = wallet::Schema(&*view).fetch(offer.recipient());
+                let mut sender = wallet::Schema(&*view).fetch(offer.sender());
+
+                fees.collect_to_genesis_2(&mut sender, &mut recipient, &mut genesis)?;
+
+                wallet::Schema(&mut *view).store(offer.sender(), sender);
+                wallet::Schema(&mut *view).store(offer.recipient(), recipient);
+            }
+            FeeStrategy::Intermediary => return Err(Error::InvalidTransaction),
+        }
+
+        wallet::Schema(&mut *view).store(&Service::genesis_wallet(), genesis);
+
+        // Operations bellow must either all succeed, or return an error without
+        // saving anything to the database.
+
+        // Process third party fees.
+        let mut updated_wallets = match fee_strategy {
+            FeeStrategy::Recipient => fees.collect_to_third_party(view, offer.recipient())?,
+            FeeStrategy::Sender => fees.collect_to_third_party(view, offer.sender())?,
+            FeeStrategy::RecipientAndSender => {
+                fees.collect_to_third_party_2(view, offer.sender(), offer.recipient())?
+            }
+            FeeStrategy::Intermediary => unreachable!(),
+        };
+
+        // Process the main transaction.
+        let mut sender = updated_wallets
+            .remove(&offer.sender())
+            .unwrap_or_else(|| wallet::Schema(&*view).fetch(&offer.sender()));
+        let mut recipient = updated_wallets
+            .remove(&offer.recipient())
+            .unwrap_or_else(|| wallet::Schema(&*view).fetch(&offer.recipient()));
+
+        wallet::move_coins(&mut sender, &mut recipient, offer.sender_value())?;
+        wallet::move_assets(&mut sender, &mut recipient, &offer.sender_assets())?;
+        wallet::move_assets(&mut recipient, &mut sender, &offer.recipient_assets())?;
+
+        updated_wallets.insert(*offer.sender(), sender);
+        updated_wallets.insert(*offer.recipient(), recipient);
+
+        // Save changes to the database.
+        for (key, wallet) in updated_wallets {
+            wallet::Schema(&mut *view).store(&key, wallet);
+        }
+
+        Ok(())
     }
 }
 
 impl Transaction for Exchange {
     fn verify(&self) -> bool {
-        // TODO
         if cfg!(fuzzing) {
             return true;
         }
 
-        false
+        let offer = self.offer();
+
+        let wallets_ok = offer.sender() != offer.recipient();
+        let fee_strategy_ok = match FeeStrategy::try_from(offer.fee_strategy()).unwrap() {
+            FeeStrategy::Recipient | FeeStrategy::Sender | FeeStrategy::RecipientAndSender => true,
+            _ => false,
+        };
+        let recipient_ok = self.verify_signature(offer.recipient());
+        let sender_ok = crypto::verify(self.sender_signature(), &offer.raw, offer.sender());
+
+        wallets_ok && fee_strategy_ok && recipient_ok && sender_ok
+
     }
 
     fn execute(&self, view: &mut Fork) {

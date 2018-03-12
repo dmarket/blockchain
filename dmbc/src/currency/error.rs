@@ -23,11 +23,8 @@ pub enum Error {
     /// for the operation to succeed.
     InsufficientAssets = 5,
 
-    /// Invalid parameter have been passed.
-    InvalidParameter = 6,
-
-    /// Operation is denied due to permissions.
-    PermisionDenied = 7,
+    /// Transaction is invalid
+    InvalidTransaction = 6,
 
     /// Requested operation is not implemented. Must not happen in production
     /// setting.
@@ -43,8 +40,7 @@ impl Error {
             3 => Some(Error::InvalidAssetInfo),
             4 => Some(Error::InsufficientFunds),
             5 => Some(Error::InsufficientAssets),
-            6 => Some(Error::InvalidParameter),
-            7 => Some(Error::PermisionDenied),
+            6 => Some(Error::InvalidTransaction),
             255 => Some(Error::NotImplemented),
             _ => None,
         }
@@ -59,9 +55,8 @@ impl error::Error for Error {
             &Error::InvalidAssetInfo => "invalid asset info",
             &Error::InsufficientFunds => "insufficient funds",
             &Error::InsufficientAssets => "insufficient assets",
-            &Error::InvalidParameter => "invalid parameter",
-            &Error::PermisionDenied => "permission denied",
             &Error::NotImplemented => "not implemented",
+            &Error::InvalidTransaction => "invalid transaction",
         }
     }
 }
