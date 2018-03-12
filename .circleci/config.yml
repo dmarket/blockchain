@@ -4,13 +4,13 @@ jobs:
     working_directory: /project
 
     docker:
-      - image: rust
+      - image: ubuntu:16.04
 
     steps:
 
       - run:
           name: Install System Packages
-          command: apt-get update && apt-get -y install libsodium18 libsodium-dev pkg-config
+          command: apt update && apt -y install libsodium18 libsodium-dev pkg-config gcc g++ make libssl-dev curl
 
       - checkout
 
@@ -18,8 +18,14 @@ jobs:
           key: suntechsoft-dmarket-blockchain-{{ .Branch }}-{{ checksum "Cargo.toml" }}
 
       - run:
+          name: Install Rust
+          command: |
+            curl https://sh.rustup.rs -sSf | sh -s -- -y
+
+      - run:
           name: Build project
           command: |
+            export PATH="$HOME/.cargo/bin:$PATH"
             cargo build --all -vv
 
       - save_cache:
