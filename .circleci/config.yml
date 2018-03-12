@@ -10,23 +10,37 @@ jobs:
 
       - run:
           name: Install System Packages
-          command: apt-get update && apt-get -y install libsodium18 libsodium-dev pkg-config
+          command: |
+            apt-get update
+            apt-get -y install libsodium18 libsodium-dev pkg-config
+            apt-get -y install clang
 
       - checkout
 
-      - restore_cache:
-          key: suntechsoft-dmarket-blockchain-{{ .Branch }}-{{ checksum "Cargo.toml" }}
+      - run:
+          name: ii
+          command: |
+            export CC=clang
+            export CXX=clang++
+            rustup default nightly
+            rustup update
+            rustup show
+
+#      - restore_cache:
+#          key: suntechsoft-dmarket-blockchain-{{ .Branch }}-{{ checksum "Cargo.toml" }}
 
       - run:
           name: Build project
           command: |
-            cargo build --all -vv
+            cargo clean
+            cargo update
+            cargo build -p dmbc -p dmbc-node -vv
 
-      - save_cache:
-          key: suntechsoft-dmarket-blockchain-{{ .Branch }}-{{ checksum "Cargo.toml" }}
-          paths:
-            - "/project/target"
-            - "/project/Cargo.lock"
+#      - save_cache:
+#          key: suntechsoft-dmarket-blockchain-{{ .Branch }}-{{ checksum "Cargo.toml" }}
+#          paths:
+#            - "/project/target"
+#            - "/project/Cargo.lock"
 
 #      - run:
 #          name: Run Fmt
