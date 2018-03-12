@@ -13,7 +13,7 @@ use currency::status;
 use currency::wallet;
 
 /// Transaction ID.
-pub const TRADE_ID: u16 = 502;
+pub const TRADE_ID: u16 = 501;
 
 encoding_struct! {
     struct TradeOffer {

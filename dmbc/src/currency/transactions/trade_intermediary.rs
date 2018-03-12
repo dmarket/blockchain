@@ -11,7 +11,7 @@ use currency::error::Error;
 use currency::status;
 
 /// Transaction ID.
-pub const TRADE_INTERMEDIARY_ID: u16 = 504;
+pub const TRADE_INTERMEDIARY_ID: u16 = 502;
 
 encoding_struct! {
     struct TradeOfferIntermediary {
