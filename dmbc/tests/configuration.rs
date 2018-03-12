@@ -11,7 +11,10 @@ use dmbc::currency::configuration::{Configuration, TransactionFees};
 #[test]
 #[should_panic]
 fn default_service_configuration() {
-    let mut testkit = TestKitBuilder::validator().with_validators(1).create();
+    let mut testkit = TestKitBuilder::validator()
+        .with_validators(1)
+        .with_service(currency::Service::new())
+        .create();
 
     testkit.create_block();
     let fork = testkit.blockchain_mut().fork();
@@ -32,7 +35,7 @@ fn proposed_service_configuration() {
         validators.push(testkit.network().us().clone());
         cfg.set_validators(validators);
         // Change configuration of our service.
-        cfg.set_service_config(service::SERVICE_NAME, configuration.clone());
+        cfg.set_service_config(&currency::Service::name(), configuration.clone());
         // Set the height with which the configuration takes effect.
         cfg.set_actual_from(cfg_change_height);
         cfg

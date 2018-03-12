@@ -50,8 +50,7 @@ impl Service {
 
 impl blockchain::Service for Service {
     fn service_name(&self) -> &'static str {
-        // TODO: need to use versioned name instead of constant.
-        "cryptocurrency/v1"
+        SERVICE_NAME
     }
 
     fn service_id(&self) -> u16 {

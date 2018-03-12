@@ -117,7 +117,7 @@ impl Api for HashApi {
                 Err(e) => Err(ApiError::IncorrectRequest(Box::new(e)))?,
             }
         };
-        router.post("/hash", hash_transaction, "hash_transaction");
-        router.post("/hash/offer", hash_offer, "hash_offer");
+        router.post("/v1/hash", hash_transaction, "hash_transaction");
+        router.post("/v1/hash/offer", hash_offer, "hash_offer");
     }
 }

@@ -103,10 +103,10 @@ impl Api for WalletApi {
             Ok(res)
         };
 
-        router.get("/wallets", wallets_info, "wallets_info");
-        router.get("/wallets/:pub_key", wallet_info, "get_balance");
+        router.get("/v1/wallets", wallets_info, "wallets_info");
+        router.get("/v1/wallets/:pub_key", wallet_info, "get_balance");
         router.get(
-            "/wallets/:pub_key/assets",
+            "/v1/wallets/:pub_key/assets",
             wallet_assets_info,
             "assets_info",
         );

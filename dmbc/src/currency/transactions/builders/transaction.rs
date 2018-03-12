@@ -1027,64 +1027,6 @@ mod test {
     }
 
     #[test]
-    fn trade_ask_assets() {
-        let (public_key, secret_key) = crypto::gen_keypair();
-        let (buyer, _) = crypto::gen_keypair();
-        let asset = AssetBundle::from_data("foobar", 9, &public_key);
-        let trade_asset = asset.into_trade_asset(9);
-        let transaction = transaction::Builder::new()
-            .keypair(public_key, secret_key.clone())
-            .tx_trade_ask_assets()
-            .add_asset_value(trade_asset.clone())
-            .buyer(buyer)
-            .seed(1)
-            .data_info("trade_ask_test")
-            .build();
-
-        let offer = TradeAskOffer::new(&public_key, vec![trade_asset]);
-        let signature = crypto::sign(&offer.clone().into_bytes(), &secret_key);
-        let equivalent = TradeAsk::new(&buyer, offer, 1, &signature, "trade_ask_test", &secret_key);
-
-        assert!(transaction == equivalent);
-    }
-
-    #[test]
-    fn trade_ask_assets_with_intermediary() {
-        let (public_key, secret_key) = crypto::gen_keypair();
-        let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
-        let (buyer, _) = crypto::gen_keypair();
-        let asset = AssetBundle::from_data("foobar", 9, &public_key);
-        let trade_asset = asset.into_trade_asset(9);
-        let transaction = transaction::Builder::new()
-            .keypair(public_key, secret_key.clone())
-            .tx_trade_ask_assets_with_intermediary()
-            .add_asset_value(trade_asset.clone())
-            .buyer(buyer)
-            .intermediary_key_pair(intermediary_public_key, intermediary_secret_key.clone())
-            .commision(30)
-            .seed(1)
-            .data_info("trade_ask_test")
-            .build();
-
-        let intermediary = Intermediary::new(&intermediary_public_key, 30);
-        let offer = TradeAskOfferIntermediary::new(intermediary, &public_key, vec![trade_asset]);
-        let signature = crypto::sign(&offer.clone().into_bytes(), &secret_key);
-        let intermediary_signature =
-            crypto::sign(&offer.clone().into_bytes(), &intermediary_secret_key);
-        let equivalent = TradeAskIntermediary::new(
-            &buyer,
-            offer,
-            1,
-            &signature,
-            &intermediary_signature,
-            "trade_ask_test",
-            &secret_key,
-        );
-
-        assert!(transaction == equivalent);
-    }
-
-    #[test]
     fn transfer() {
         let (public_key, secret_key) = crypto::gen_keypair();
         let (recipient, _) = crypto::gen_keypair();

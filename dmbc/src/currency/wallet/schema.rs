@@ -15,7 +15,7 @@ where
 {
     /// Internal `MapIndex` with immutable access.
     pub fn index(self) -> MapIndex<S, PublicKey, Wallet> {
-        let key = SERVICE_NAME.to_string() + "_v1.wallets";
+        let key = SERVICE_NAME.to_string() + ".wallets";
         MapIndex::new(key, self.0)
     }
 
@@ -30,7 +30,7 @@ where
 impl<'a> Schema<&'a mut Fork> {
     /// Internal `MapIndex` with mutable access.
     pub fn index_mut(&mut self) -> MapIndex<&mut Fork, PublicKey, Wallet> {
-        let key = SERVICE_NAME.to_string() + "_v1.wallets";
+        let key = SERVICE_NAME.to_string() + ".wallets";
         MapIndex::new(key, &mut *self.0)
     }
 

@@ -54,7 +54,11 @@ impl Transfer {
             .remove(&self.from())
             .unwrap_or_else(|| wallet::Schema(&*view).fetch(&self.from()));
 
-        let mut wallet_to = wallet::Schema(&*view).fetch(self.to());
+        let mut wallet_to = updated_wallets
+            .remove(&self.to())
+            .unwrap_or_else(|| wallet::Schema(&*view).fetch(&self.to()));
+
+        //wallet::Schema(&*view).fetch(self.to());
         wallet::move_coins(&mut wallet_from, &mut wallet_to, self.amount())?;
         wallet::move_assets(&mut wallet_from, &mut wallet_to, &self.assets())?;
 

@@ -56,7 +56,7 @@ impl Api for AssetApi {
         };
 
         router.get(
-            "/asset/:asset_id",
+            "/v1/asset/:asset_id",
             get_owner_for_asset_id,
             "get_owner_for_asset_id",
         );

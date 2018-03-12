@@ -116,7 +116,7 @@ impl Api for TransactionApi {
             }
         };
 
-        router.post("/transactions", transaction, "transaction");
-        router.get("/transactions/:hash", get_status, "get_transaction_status");
+        router.post("/v1/transactions", transaction, "transaction");
+        router.get("/v1/transactions/:hash", get_status, "get_transaction_status");
     }
 }
