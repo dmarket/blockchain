@@ -66,17 +66,30 @@ impl AssetId {
 
     /// Create an `AssetId` from its hexadecimal representation.
     pub fn from_hex(hex: &str) -> Result<AssetId, ParseError> {
-        let mut buffer: [u8; ASSET_ID_LEN] = [0; ASSET_ID_LEN];
-
-        if hex.len() < ASSET_ID_LEN {
-            return Err(ParseError::InvalidLength(hex.len()));
+        let len = hex.len();
+        if len != ASSET_ID_LEN * 2 {
+            return Err(ParseError::InvalidLength(len));
         }
 
-        for i in 0..hex.len() {
-            buffer[i] = hex.as_bytes()[i];
+        let mut cs = hex.chars().enumerate();
+        for (i, c) in cs.by_ref() {
+            if !c.is_digit(16) {
+                return Err(ParseError::InvalidCharacter(c, i));
+            }
         }
 
-        Ok(AssetId(buffer))
+        let mut bytes = [0u8; 16];
+
+        for i in 0..bytes.len() {
+            let offset = i * 2;
+            let to = offset + 2;
+            match u8::from_str_radix(&hex[offset..to], 16) {
+                Ok(byte) => bytes[i] = byte,
+                Err(..) => return Err(ParseError::UnexpectedError(offset)),
+            }
+        }
+
+        Ok(AssetId(bytes))
     }
 }
 
@@ -114,6 +127,8 @@ impl<'a> Field<'a> for AssetId {
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub enum ParseError {
     InvalidLength(usize),
+    InvalidCharacter(char, usize),
+    UnexpectedError(usize),
 }
 
 const SIMPLE_LENGTH: usize = 32;
@@ -126,6 +141,12 @@ impl fmt::Display for ParseError {
                 "Invalid length; expecting {}, found {}",
                 SIMPLE_LENGTH, found
             ),
+            ParseError::InvalidCharacter(found, pos) => write!(
+                f,
+                "Invalid character; found `{}` (0x{:02x}) at offset {}",
+                found, found as usize, pos
+            ),
+            ParseError::UnexpectedError(pos) => write!(f, "Unexpected, at {}", pos),
         }
     }
 }
@@ -147,7 +168,8 @@ impl ExonumJson for AssetId {
         from: Offset,
         to: Offset,
     ) -> Result<(), Box<Error>> {
-        match serde_json::from_value::<AssetId>(value.clone()) {
+        let value = value.as_str().ok_or("AssetId JSON value is not a string")?;
+        match AssetId::from_hex(value) {
             Ok(asset_id) => {
                 buffer.write(from, to, asset_id);
                 Ok(())
