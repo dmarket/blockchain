@@ -33,7 +33,7 @@ where
     S: AsRef<Snapshot>,
 {
     fn index(self) -> MapIndex<S, Hash, ResultRepr> {
-        let key = SERVICE_NAME.to_string() + "v1.transactions";
+        let key = SERVICE_NAME.to_string() + ".statuses";
         MapIndex::new(key, self.0)
     }
 
@@ -45,7 +45,7 @@ where
 
 impl<'a> Schema<&'a mut Fork> {
     fn index_mut(&mut self) -> MapIndex<&mut Fork, Hash, ResultRepr> {
-        let key = SERVICE_NAME.to_string() + "v1.transactions";
+        let key = SERVICE_NAME.to_string() + ".statuses";
         MapIndex::new(key, self.0)
     }
 
