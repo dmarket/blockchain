@@ -21,4 +21,8 @@ impl TradeAsset {
     pub fn total_price(&self) -> u64 {
         self.amount() * self.price()
     }
+
+    pub fn to_bundle(&self) -> AssetBundle {
+        AssetBundle::new(self.id(), self.amount())
+    }
 }

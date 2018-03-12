@@ -52,6 +52,53 @@ impl Trade {
         let mut wallet_genesis = wallet::Schema(&*view).fetch(&Service::genesis_wallet());
 
         let fees = Fees::new_trade(&*view,&self.offer().assets())?;
+        let total = self.offer().assets()
+            .iter()
+            .map(|asset| {asset.amount() * asset.price()})
+            .sum();
+        println!("{:?}", &total);
+
+        wallet::move_coins(&mut wallet_buyer, &mut wallet_seller, total)
+            .or_else(|e| {
+                fees.collect_to_genesis(&mut wallet_seller, &mut wallet_genesis)?;
+                wallet::Schema(&mut *view).store(&self.offer().seller(), wallet_seller.clone());
+                wallet::Schema(&mut *view).store(&self.offer().buyer(), wallet_buyer.clone());
+                wallet::Schema(&mut *view).store(&Service::genesis_wallet(), wallet_genesis.clone());
+
+                Err(e)
+            })
+            .and_then(|_| {
+                fees.collect_to_genesis(&mut wallet_seller, &mut wallet_genesis)?;
+                wallet::Schema(&mut *view).store(&self.offer().seller(), wallet_seller);
+                wallet::Schema(&mut *view).store(&self.offer().buyer(), wallet_buyer);
+                wallet::Schema(&mut *view).store(&Service::genesis_wallet(), wallet_genesis);
+
+                let mut updated_wallets = fees.collect_to_third_party(view, self.offer().seller())?;
+
+                let mut wallet_seller = updated_wallets
+                    .remove(&self.offer().seller())
+                    .unwrap_or_else(|| wallet::Schema(&*view).fetch(&self.offer().seller()));
+                let mut wallet_buyer = updated_wallets
+                    .remove(&self.offer().buyer())
+                    .unwrap_or_else(|| wallet::Schema(&*view).fetch(&self.offer().buyer()));
+                let assets = self.offer().assets()
+                    .into_iter()
+                    .map(|a| a.to_bundle())
+                    .collect::<Vec<_>>();
+
+                wallet::move_assets(&mut wallet_seller, &mut wallet_buyer, &assets)?;
+
+                updated_wallets.insert(*self.offer().seller(), wallet_seller);
+
+                // Save changes to the database.
+                for (key, wallet) in updated_wallets {
+                    wallet::Schema(&mut *view).store(&key, wallet);
+                }
+
+                Ok(())
+            })?;
+
+
 
         // Collect the blockchain fee. Execution shall not continue if this fails.
 

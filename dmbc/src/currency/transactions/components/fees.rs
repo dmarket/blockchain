@@ -202,6 +202,14 @@ impl Fees {
         self.to_third_party.values().sum()
     }
 
+
+    pub fn total_for_wallet(&self, pub_key: &PublicKey ) -> u64 {
+        self.to_third_party
+            .iter()
+            .filter_map(|(key, fee)| if key != pub_key {Some(fee)} else {None} )
+            .sum()
+    }
+
     /// Add a new fee to the list of third party payments.
     pub fn add_fee(&mut self, key: &PublicKey, fee: u64) {
         self.to_third_party
