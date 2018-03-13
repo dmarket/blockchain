@@ -32,7 +32,6 @@ jobs:
           command: |
             export CC=clang
             export CXX=clang++
-            cargo clean
             cargo update
             cargo build -p dmbc -p dmbc-node -p dmbc-discovery -vv
 
