@@ -2,11 +2,11 @@ extern crate exonum;
 extern crate rand;
 
 use exonum::crypto::PublicKey;
-use dmbc::service::asset::MetaAsset;
-use dmbc::service::builders::fee;
+use dmbc::currency::assets::MetaAsset;
+use dmbc::currency::transactions::builders::fee;
 use rand::Rng;
 
-const MAX_AMOUNT: u32 = 10_000;
+const MAX_AMOUNT: u64 = 10_000;
 const MAX_GEN_ASSETS: u8 = 5;
 
 pub fn generate_meta_assets(pk:PublicKey) -> Vec<MetaAsset> {

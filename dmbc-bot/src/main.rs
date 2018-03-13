@@ -1,9 +1,6 @@
 extern crate curl;
 extern crate dmbc;
 extern crate exonum;
-extern crate fnv;
-extern crate mio;
-extern crate mio_httpc;
 extern crate rand;
 extern crate serde;
 extern crate serde_json;
@@ -11,8 +8,8 @@ extern crate serde_json;
 extern crate log;
 extern crate env_logger;
 
-use dmbc::service::asset::{AssetId, Asset};
-use dmbc::service::wallet::Wallet as EvoWallet;
+use dmbc::currency::assets::{AssetId, AssetBundle};
+use dmbc::currency::wallet::Wallet as EvoWallet;
 //use dmbc::service::builders::fee;
 //use dmbc::service::builders::transaction;
 use exonum::crypto;
@@ -32,19 +29,19 @@ mod asset;
 use asset::meta_asset::generate_meta_assets;
 use transaction::add_asset::create_add_asset_tx;
 
-const NODE_URL: &str = "http://88.99.64.219:8000";
+const NODE_URL: &str = "http://127.0.0.1:8000";
 
 #[derive(Clone, Debug)]
 pub struct Wallet {
     public: PublicKey,
     secret: SecretKey,
-    assets: HashMap<AssetId, u32>,
+    assets: HashMap<AssetId, u64>,
     balance: u64,
 }
 
 impl Wallet {
     fn new(public: PublicKey, secret: SecretKey) -> Self {
-        let empty_assets: HashMap<AssetId, u32> = HashMap::new();
+        let empty_assets: HashMap<AssetId, u64> = HashMap::new();
         Wallet {
             public,
             secret,
@@ -55,7 +52,7 @@ impl Wallet {
 
     fn generate() -> Self {
         let (pk, sk) = crypto::gen_keypair();
-        let empty_assets: HashMap<AssetId, u32> = HashMap::new();
+        let empty_assets: HashMap<AssetId, u64> = HashMap::new();
         Wallet {
             public: pk,
             secret: sk,
@@ -64,9 +61,9 @@ impl Wallet {
         }
     }
 }
-fn data_from_str(s: String) -> (u64, HashMap<AssetId, u32>) {
+fn data_from_str(s: String) -> (u64, HashMap<AssetId, u64>) {
     let evo_wallet: EvoWallet = serde_json::from_str(&s).unwrap();
-    let mut result: HashMap<AssetId, u32> = HashMap::new();
+    let mut result: HashMap<AssetId, u64> = HashMap::new();
     for asset in evo_wallet.assets() {
         result.insert(asset.id(), asset.amount());
     }
