@@ -19,7 +19,7 @@ fn default_service_configuration() {
     testkit.create_block();
     let fork = testkit.blockchain_mut().fork();
     let configuration = Configuration::extract(&fork);
-    assert_eq!(configuration, Configuration::default());
+    assert_eq!(configuration, Configuration::default()); //todo: it's fail
 }
 
 #[test]
@@ -35,7 +35,7 @@ fn proposed_service_configuration() {
         validators.push(testkit.network().us().clone());
         cfg.set_validators(validators);
         // Change configuration of our service.
-        cfg.set_service_config(&currency::Service::name(), configuration.clone());
+        cfg.set_service_config(&currency::SERVICE_NAME, configuration.clone());
         // Set the height with which the configuration takes effect.
         cfg.set_actual_from(cfg_change_height);
         cfg

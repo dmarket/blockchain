@@ -9,6 +9,7 @@ use currency;
 
 encoding_struct! {
     /// Fised fees to be paid to the genesis wallet when transaction is executed.
+    #[derive(Eq, PartialOrd, Ord)]
     struct TransactionFees {
         const SIZE = 48;
 
@@ -23,6 +24,7 @@ encoding_struct! {
 
 encoding_struct! {
     /// Currency service configuration.
+    #[derive(Eq, PartialOrd, Ord)]
     struct Configuration {
         const SIZE = 8;
 
