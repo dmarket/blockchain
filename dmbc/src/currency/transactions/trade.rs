@@ -45,8 +45,6 @@ impl Trade {
     }
 
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
-
-
         let mut wallet_buyer = wallet::Schema(&*view).fetch(self.offer().buyer());
         let mut wallet_seller = wallet::Schema(&*view).fetch(self.offer().seller());
         let mut wallet_genesis = wallet::Schema(&*view).fetch(&Service::genesis_wallet());
@@ -56,7 +54,6 @@ impl Trade {
             .iter()
             .map(|asset| {asset.amount() * asset.price()})
             .sum();
-        println!("{:?}", &total);
 
         wallet::move_coins(&mut wallet_buyer, &mut wallet_seller, total)
             .or_else(|e| {
@@ -89,6 +86,7 @@ impl Trade {
                 wallet::move_assets(&mut wallet_seller, &mut wallet_buyer, &assets)?;
 
                 updated_wallets.insert(*self.offer().seller(), wallet_seller);
+                updated_wallets.insert(*self.offer().buyer(), wallet_buyer);
 
                 // Save changes to the database.
                 for (key, wallet) in updated_wallets {
@@ -97,10 +95,6 @@ impl Trade {
 
                 Ok(())
             })?;
-
-
-
-        // Collect the blockchain fee. Execution shall not continue if this fails.
 
         Ok(())
     }
