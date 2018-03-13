@@ -16,8 +16,8 @@ use std::io::{ErrorKind, Read, Write};
 use exonum::crypto;
 use exonum::crypto::SecretKey;
 use exonum::storage::StorageValue;
-use dmbc::service::builders::transaction;
-use dmbc::service::builders::fee;
+use dmbc::currency::transactions::builders::transaction;
+use dmbc::currency::transactions::builders::fee;
 
 use fuzz_data::FuzzData;
 
@@ -99,7 +99,6 @@ fn setup() -> Result<(), Box<Error>> {
                 .sender_value(1000)
                 .recipient(data.bob)
                 .recipient_add_asset("bob_asset", 10)
-                .recipient_value(1000)
                 .fee_strategy(1)
                 .seed(83)
                 .build()
