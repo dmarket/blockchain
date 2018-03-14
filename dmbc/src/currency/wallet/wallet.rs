@@ -55,14 +55,14 @@ impl Wallet {
                 let new_amount = asset.amount() - to_remove.amount();
 
                 *asset = AssetBundle::new(asset.id(), new_amount);
+            } else {
+                return Err(Error::InsufficientAssets);
             }
         }
 
-        let remaining_assets = assets.into_iter()
-            .filter(|a| a.amount() > 0)
-            .collect();
+        assets.retain(|a| a.amount() > 0);
 
-        *self = Wallet::new(self.balance(), remaining_assets);
+        *self = Wallet::new(self.balance(), assets);
 
         Ok(())
     }
