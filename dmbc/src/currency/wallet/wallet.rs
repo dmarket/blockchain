@@ -21,7 +21,7 @@ impl Wallet {
     }
 
     /// Push assets into the wallet.
-    pub fn push_assets<I>(&mut self, new_assets: I)
+    pub fn add_assets<I>(&mut self, new_assets: I)
     where
         I: IntoIterator<Item = AssetBundle>,
     {

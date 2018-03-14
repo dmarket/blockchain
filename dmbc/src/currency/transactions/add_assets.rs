@@ -69,7 +69,7 @@ impl AddAssets {
         for (key, assets) in recipients {
             let mut recipient = wallet::Schema(&*view).fetch(&key);
 
-            recipient.push_assets(assets);
+            recipient.add_assets(assets);
 
             wallet::Schema(&mut *view).store(&key, recipient);
         }
