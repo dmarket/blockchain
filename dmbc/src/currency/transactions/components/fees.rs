@@ -89,8 +89,8 @@ impl Fees {
         Ok(fees)
     }
 
-    /// Create `Fees` for an `del_assets` transaction.
-    pub fn new_del_assets<S, I>(view: S, _assets: I) -> Result<Fees, Error>
+    /// Create `Fees` for an `delete_assets` transaction.
+    pub fn new_delete_assets<S, I>(view: S, _assets: I) -> Result<Fees, Error>
     where
         S: AsRef<Snapshot>,
         I: IntoIterator<Item = AssetBundle>,

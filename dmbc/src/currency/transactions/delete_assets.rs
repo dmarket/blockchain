@@ -8,7 +8,7 @@ use serde_json;
 
 use currency::{Service, SERVICE_ID};
 use currency::assets;
-use currency::assets::{AssetBundle, AssetId, AssetInfo};
+use currency::assets::AssetBundle;
 use currency::wallet;
 use currency::error::Error;
 use currency::status;
@@ -40,42 +40,33 @@ impl DeleteAssets {
         let mut genesis = wallet::Schema(&*view).fetch(&genesis_pub);
         let mut creator = wallet::Schema(&*view).fetch(&creator_pub);
 
-        let fees = Fees::new_del_assets(&view, self.assets()).unwrap();
+        let fees = Fees::new_delete_assets(&view, self.assets()).unwrap();
 
         fees.collect_to_genesis(&mut creator, &mut genesis)?;
 
-        wallet::Schema(&mut *view).store(&genesis_pub, genesis);
-        wallet::Schema(&mut *view).store(&creator_pub, creator.clone());
+        wallet::Schema(&mut*view).store(&genesis_pub, genesis);
+        wallet::Schema(&mut*view).store(&creator_pub, creator.clone());
+
+        let mut infos = HashMap::new();
+
+        for asset in self.assets() {
+            let info = match assets::Schema(&*view).fetch(&asset.id()) {
+                Some(info) => info,
+                None => return Err(Error::AssetNotFound),
+            };
+            if info.creator() != creator_pub {
+                return Err(Error::InvalidTransaction);
+            }
+            let mut entry = infos.remove(&asset.id()).unwrap_or(info);
+            entry.decrease(asset.amount())?;
+        }
 
         creator.remove_assets(self.assets())?;
 
-        let mut candidates: HashMap<AssetId, AssetInfo> = HashMap::new();
-        for asset in self.assets() {
-            let id = asset.id();
-            let state = assets::Schema(&mut *view).fetch(&id);
-            
-            let info = state.map_or_else(
-                || Err(Error::AssetNotFound),
-                |info| info.decrease(&creator_pub, asset.amount())
-            )?;
+        wallet::Schema(&mut*view).store(creator_pub, creator);
 
-            // we should update new AssetInfo candidate not override if it 
-            // already exists from previous iterations.
-            candidates.entry(id).and_modify(|prev_info| {
-                *prev_info = AssetInfo::new(
-                    prev_info.creator(), 
-                    prev_info.amount() - asset.amount(), 
-                    prev_info.fees()
-                )
-            }).or_insert(info);
-        }
-
-        wallet::Schema(&mut *view).store(&creator_pub, creator);
-        for (id, info) in candidates {
-            match info.amount() {
-                0 => assets::Schema(&mut *view).remove(&id),
-                _ => assets::Schema(&mut *view).store(&id, info),
-            }
+        for (id, info) in infos {
+            assets::Schema(&mut*view).store(&id, info);
         }
 
         Ok(())
