@@ -25,6 +25,8 @@ message! {
 
 impl Mining {
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
+        info!("Processing tx: {:?}", self);
+
         // TODO
         let _ = view;
         Err(Error::NotImplemented)

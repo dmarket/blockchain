@@ -34,4 +34,21 @@ impl AssetInfo {
             fees,
         ))
     }
+
+    /// Decreases amount of assets
+    /// 
+    /// # Errors
+    /// Returns an `InsufficientAssets` error if requested amount is bigger 
+    /// than `AssetInfo` contains.
+    pub fn decrease(self, amount: u64) -> Result<Self, Error> {
+        if self.amount() < amount {
+            return Err(Error::InsufficientAssets);
+        }
+
+        Ok(AssetInfo::new(
+            self.creator(),
+            self.amount() - amount,
+            self.fees()
+        ))
+    }
 }

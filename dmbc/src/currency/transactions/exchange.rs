@@ -51,6 +51,8 @@ impl Exchange {
     }
 
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
+        info!("Processing tx: {:?}", self);
+
         let offer = self.offer();
 
         let fee_strategy =

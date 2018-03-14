@@ -21,7 +21,7 @@ impl Wallet {
     }
 
     /// Push assets into the wallet.
-    pub fn push_assets<I>(&mut self, new_assets: I)
+    pub fn add_assets<I>(&mut self, new_assets: I)
     where
         I: IntoIterator<Item = AssetBundle>,
     {
@@ -36,6 +36,35 @@ impl Wallet {
             }
         }
         *self = Wallet::new(self.balance(), assets);
+    }
+
+    /// Remove assets from the wallet.
+    pub fn remove_assets<I>(&mut self, assets_to_remove: I) -> Result<(), Error>
+    where
+        I: IntoIterator<Item = AssetBundle>,
+    {
+        let mut assets = self.assets();
+        for to_remove in assets_to_remove {
+            if let Some(index) = assets.iter_mut().position(|a| a.id() == to_remove.id()) {
+                let asset = &mut assets[index];
+                
+                if asset.amount() < to_remove.amount() {
+                    return Err(Error::InsufficientAssets);
+                }
+
+                let new_amount = asset.amount() - to_remove.amount();
+
+                *asset = AssetBundle::new(asset.id(), new_amount);
+            } else {
+                return Err(Error::InsufficientAssets);
+            }
+        }
+
+        assets.retain(|a| a.amount() > 0);
+
+        *self = Wallet::new(self.balance(), assets);
+
+        Ok(())
     }
 }
 

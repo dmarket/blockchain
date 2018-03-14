@@ -89,6 +89,25 @@ impl Fees {
         Ok(fees)
     }
 
+    /// Create `Fees` for an `delete_assets` transaction.
+    pub fn new_delete_assets<S, I>(view: S, _assets: I) -> Result<Fees, Error>
+    where
+        S: AsRef<Snapshot>,
+        I: IntoIterator<Item = AssetBundle>,
+    {
+        let fees_config = Configuration::extract(view.as_ref()).fees();
+
+        let to_genesis = fees_config.del_asset();
+        let to_third_party = HashMap::new();
+
+        let fees = Fees {
+            to_genesis,
+            to_third_party,
+        };
+
+        Ok(fees)
+    }
+
     /// Create `Fees` for `trade` transactions.
     pub fn new_trade<'a, S, I>(view: S, assets: I) -> Result<Fees, Error>
     where

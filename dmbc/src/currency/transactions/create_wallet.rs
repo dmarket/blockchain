@@ -27,6 +27,7 @@ message! {
 
 impl CreateWallet {
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
+        info!("Processing tx: {:?}", self);
         let wallet = Wallet::new(INITIAL_BALANCE, Vec::new());
         wallet::Schema(&mut *view).store(&self.pub_key(), wallet);
         Ok(())
