@@ -33,7 +33,10 @@ impl<'a> Schema<&'a mut Fork> {
 
     /// Store asset info in the database.
     pub fn store(&mut self, id: &AssetId, asset: AssetInfo) {
-        self.index_mut().put(&*id, asset);
+        match asset.amount() {
+            0 => self.remove(id),
+            _ => self.index_mut().put(&*id, asset),
+        };
     }
 
     /// Remove asset info from the database.
