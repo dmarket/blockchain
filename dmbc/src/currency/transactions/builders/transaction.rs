@@ -21,16 +21,16 @@ use currency::transactions::transfer::Transfer;
 pub struct Builder {
     public_key: Option<PublicKey>,
     secret_key: Option<SecretKey>,
-    network_id: u32,
-    protocol_version: u32,
+    network_id: u8,
+    protocol_version: u8,
     service_id: u16,
 }
 
 struct TransactionMetadata {
     public_key: PublicKey,
     secret_key: SecretKey,
-    network_id: u32,
-    protocol_version: u32,
+    network_id: u8,
+    protocol_version: u8,
     service_id: u16,
 }
 
@@ -74,15 +74,12 @@ impl Builder {
         }
     }
 
-    pub fn network_id(self, network_id: u32) -> Self {
+    pub fn network_id(self, network_id: u8) -> Self {
         Builder { network_id, ..self }
     }
 
-    pub fn protocol_version(self, protocol_version: u32) -> Self {
-        Builder {
-            protocol_version,
-            ..self
-        }
+    pub fn protocol_version(self, protocol_version: u8) -> Self {
+        Builder { protocol_version, ..self }
     }
 
     pub fn service_id(self, service_id: u16) -> Self {
@@ -379,7 +376,7 @@ pub struct ExchangeIntermediaryBuilder {
 
     intermediary_public_key: Option<PublicKey>,
     intermediary_secret_key: Option<SecretKey>,
-    commision: u64,
+    commission: u64,
 
     sender_assets: Vec<AssetBundle>,
     sender_value: u64,
@@ -401,7 +398,7 @@ impl ExchangeIntermediaryBuilder {
 
             intermediary_public_key: None,
             intermediary_secret_key: None,
-            commision: 0,
+            commission: 0,
 
             sender_assets: Vec::new(),
             sender_value: 0,
@@ -442,9 +439,9 @@ impl ExchangeIntermediaryBuilder {
         }
     }
 
-    pub fn commision(self, commision: u64) -> Self {
+    pub fn commission(self, commission: u64) -> Self {
         ExchangeIntermediaryBuilder {
-            commision: commision,
+            commission: commission,
             ..self
         }
     }
@@ -488,7 +485,7 @@ impl ExchangeIntermediaryBuilder {
         self.verify();
 
         let intermediary =
-            Intermediary::new(&self.intermediary_public_key.unwrap(), self.commision);
+            Intermediary::new(&self.intermediary_public_key.unwrap(), self.commission);
 
         let offer = ExchangeOfferIntermediary::new(
             intermediary,
@@ -600,7 +597,7 @@ pub struct TradeIntermediaryBuilder {
     buyer: Option<PublicKey>,
     intermediary_public_key: Option<PublicKey>,
     intermediary_secret_key: Option<SecretKey>,
-    commision: u64,
+    commission: u64,
 
     assets: Vec<TradeAsset>,
     seed: u64,
@@ -614,7 +611,7 @@ impl TradeIntermediaryBuilder {
             buyer: None,
             intermediary_public_key: None,
             intermediary_secret_key: None,
-            commision: 0,
+            commission: 0,
             assets: Vec::new(),
             seed: 0,
             data_info: None,
@@ -636,9 +633,9 @@ impl TradeIntermediaryBuilder {
         }
     }
 
-    pub fn commision(self, commision: u64) -> Self {
+    pub fn commission(self, commission: u64) -> Self {
         TradeIntermediaryBuilder {
-            commision: commision,
+            commission: commission,
             ..self
         }
     }
@@ -669,7 +666,7 @@ impl TradeIntermediaryBuilder {
         self.verify();
 
         let intermediary =
-            Intermediary::new(&self.intermediary_public_key.unwrap(), self.commision);
+            Intermediary::new(&self.intermediary_public_key.unwrap(), self.commission);
 
         let offer = TradeOfferIntermediary::new(
             intermediary,
@@ -776,26 +773,23 @@ mod test {
     use exonum::crypto;
     use exonum::storage::StorageValue;
 
-    use dmbc::currency::asset::{AssetBundle, MetaAsset};
+    use currency::assets::{AssetBundle, MetaAsset, TradeAsset};
 
-    use dmbc::currency::transaction::add_assets::AddAssets;
-    use dmbc::currency::transaction::create_wallet::CreateWallet;
-    use dmbc::currency::transaction::del_assets::DeleteAssets;
-    use dmbc::currency::transaction::exchange::{Exchange, ExchangeOffer};
-    use dmbc::currency::transaction::intermediary::Intermediary;
-    use dmbc::currency::transaction::exchange_with_intermediary::{ExchangeIntermediary,
-                                                                  ExchangeOfferIntermediary};
-    use dmbc::currency::transaction::mining::Mining;
-    use dmbc::currency::transaction::trade_assets::{Trade, TradeOffer};
-    use dmbc::currency::transaction::trade_assets_with_intermediary::{TradeIntermediary,
-                                                                      TradeOfferIntermediary};
-    use dmbc::currency::transaction::trade_ask_assets::{TradeAsk, TradeAskOffer};
-    use dmbc::currency::transaction::trade_ask_assets_with_intermediary::{TradeAskIntermediary,
-                                                                          TradeAskOfferIntermediary};
-    use dmbc::currency::transaction::transfer::Transfer;
+    use currency::transactions::add_assets::AddAssets;
+    use currency::transactions::create_wallet::CreateWallet;
+    use currency::transactions::delete_assets::DeleteAssets;
+    use currency::transactions::exchange::{Exchange, ExchangeOffer};
+    use currency::transactions::components::Intermediary;
+    use currency::transactions::exchange_intermediary::{ExchangeIntermediary,
+                                                        ExchangeOfferIntermediary};
+    use currency::transactions::mining::Mining;
+    use currency::transactions::trade::{Trade, TradeOffer};
+    use currency::transactions::trade_intermediary::{TradeIntermediary,
+                                                     TradeOfferIntermediary};
+    use currency::transactions::transfer::Transfer;
 
-    use dmbc::currency::builders::fee;
-    use dmbc::currency::builders::transaction;
+    use currency::transactions::builders::fee;
+    use currency::transactions::builders::transaction;
 
     #[test]
     #[should_panic]
@@ -814,7 +808,7 @@ mod test {
 
         let equivalent = Mining::new(&public_key, 18, &secret_key);
 
-        assert!(transaction != equivalent);
+        assert_ne!(transaction, equivalent);
     }
 
     #[test]
@@ -847,7 +841,7 @@ mod test {
         let assets = vec![asset_foobar, asset_bazqux];
         let equivalent = AddAssets::new(&public_key, assets, 0, &secret_key);
 
-        assert!(transaction == equivalent);
+        assert_eq!(transaction, equivalent);
     }
 
     #[test]
@@ -860,7 +854,7 @@ mod test {
 
         let equivalent = CreateWallet::new(&public_key, &secret_key);
 
-        assert!(transaction == equivalent);
+        assert_eq!(transaction, equivalent);
     }
 
     #[test]
@@ -877,7 +871,7 @@ mod test {
         let assets = vec![asset];
         let equivalent = DeleteAssets::new(&public_key, assets, 6, &secret_key);
 
-        assert!(transaction == equivalent);
+        assert_eq!(transaction, equivalent);
     }
 
     #[test]
@@ -911,7 +905,7 @@ mod test {
         let signature = crypto::sign(&offer.clone().into_bytes(), &secret_key);
         let equivalent = Exchange::new(offer, 1, &signature, "test_exchange", &secret_key);
 
-        assert!(transaction == equivalent);
+        assert_eq!(transaction, equivalent);
     }
 
     #[test]
@@ -926,7 +920,7 @@ mod test {
             .keypair(public_key, secret_key.clone())
             .tx_exchange_with_intermediary()
             .intermediary_key_pair(intermediary_public_key, intermediary_secret_key.clone())
-            .commision(10)
+            .commission(10)
             .sender_add_asset_value(sender_asset.clone())
             .sender_value(9)
             .recipient(recipient)
@@ -959,7 +953,7 @@ mod test {
             &secret_key,
         );
 
-        assert!(transaction == equivalent);
+        assert_eq!(transaction, equivalent);
     }
 
     #[test]
@@ -973,7 +967,7 @@ mod test {
 
         let equivalent = Mining::new(&public_key, 9, &secret_key);
 
-        assert!(transaction == equivalent);
+        assert_eq!(transaction, equivalent);
     }
 
     #[test]
@@ -981,7 +975,7 @@ mod test {
         let (public_key, secret_key) = crypto::gen_keypair();
         let (buyer, _) = crypto::gen_keypair();
         let asset = AssetBundle::from_data("foobar", 9, &public_key);
-        let trade_asset = asset.into_trade_asset(9);
+        let trade_asset = TradeAsset::from_bundle(asset, 10);
         let transaction = transaction::Builder::new()
             .keypair(public_key, secret_key.clone())
             .tx_trade_assets()
@@ -994,7 +988,7 @@ mod test {
         let signature = crypto::sign(&offer.clone().into_bytes(), &secret_key);
         let equivalent = Trade::new(offer, 1, &signature, &secret_key);
 
-        assert!(transaction == equivalent);
+        assert_eq!(transaction, equivalent);
     }
 
     #[test]
@@ -1003,12 +997,12 @@ mod test {
         let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
         let (buyer, _) = crypto::gen_keypair();
         let asset = AssetBundle::from_data("foobar", 9, &public_key);
-        let trade_asset = asset.into_trade_asset(9);
+        let trade_asset = TradeAsset::from_bundle(asset, 10);
         let transaction = transaction::Builder::new()
             .keypair(public_key, secret_key.clone())
             .tx_trade_assets_with_intermediary()
             .intermediary_key_pair(intermediary_public_key, intermediary_secret_key.clone())
-            .commision(40)
+            .commission(40)
             .add_asset_value(trade_asset.clone())
             .buyer(buyer)
             .seed(1)
@@ -1030,7 +1024,7 @@ mod test {
             &secret_key,
         );
 
-        assert!(transaction == equivalent);
+        assert_eq!(transaction, equivalent);
     }
 
     #[test]
@@ -1058,6 +1052,6 @@ mod test {
             &secret_key,
         );
 
-        assert!(transaction == equivalent);
+        assert_eq!(transaction, equivalent);
     }
 }
