@@ -38,17 +38,11 @@ impl AssetInfo {
     /// Decreases amount of assets
     /// 
     /// # Errors
-    /// Returns a `PermisionDenied` error if provided public key differs from
-    /// creators
-    /// Returns an `InvalidParameter` error fi requested amount is bigger 
+    /// Returns an `InsufficientAssets` error if requested amount is bigger 
     /// than `AssetInfo` contains.
-    pub fn decrease(self, pub_key: &PublicKey, amount: u64) -> Result<Self, Error> {
-        if self.creator() != pub_key {
-            return Err(Error::PermisionDenied);
-        }
-
+    pub fn decrease(self, amount: u64) -> Result<Self, Error> {
         if self.amount() < amount {
-            return Err(Error::InvalidParameter);
+            return Err(Error::InsufficientAssets);
         }
 
         Ok(AssetInfo::new(
