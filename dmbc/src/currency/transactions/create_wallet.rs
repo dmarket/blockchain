@@ -12,7 +12,7 @@ use currency::status;
 
 /// Transaction ID.
 pub const CREATE_WALLET_ID: u16 = 100;
-const INITIAL_BALANCE: u64 = 1_00000000;
+pub const INITIAL_BALANCE: u64 = 1_00000000;   // 1 dmc
 
 message! {
     /// `create_wallet` transaction.

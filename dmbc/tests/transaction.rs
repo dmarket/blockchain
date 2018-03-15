@@ -1,30 +1,106 @@
 extern crate dmbc;
 extern crate exonum;
 extern crate exonum_testkit;
+#[macro_use]
+extern crate serde_json;
 
-use exonum::blockchain::Transaction;
 use exonum::crypto;
+use exonum::crypto::{PublicKey, Hash};
+use exonum_testkit::{ApiKind, TestKit, TestKitApi, TestKitBuilder};
+use exonum::encoding::serialize::reexport::Serialize;
+use exonum::encoding::serialize::json::reexport::Value;
 use exonum::messages::Message;
-use exonum::storage::{Database, MemoryDB};
-use exonum_testkit::TestKitBuilder;
 
 use dmbc::currency::Service;
+use dmbc::currency::SERVICE_NAME;
 use dmbc::currency::assets;
 use dmbc::currency::assets::{AssetBundle, AssetId, AssetInfo};
 use dmbc::currency::transactions::builders::fee;
 use dmbc::currency::transactions::builders::transaction;
+use dmbc::currency::status::ResultRepr;
 use dmbc::currency::wallet;
+use dmbc::currency::wallet::Wallet;
+use dmbc::currency::api::transaction::{TransactionResponse, StatusResponse};
+
+
+fn init_testkit() -> TestKit {
+    TestKitBuilder::validator()
+        .with_validators(4)
+        .with_service(Service::new())
+        .create()
+}
+
+fn get_wallet(api: &TestKitApi, pub_key: &PublicKey) -> Wallet {
+    api.get(
+        ApiKind::Service(SERVICE_NAME),
+        &format!("v1/wallets/{}", pub_key.to_string()),
+    )
+}
+
+fn get_status(api: &TestKitApi, tx_hash: &Hash) -> StatusResponse {
+    api.get(
+        ApiKind::Service(SERVICE_NAME),
+        &format!("v1/transactions/{}", tx_hash.to_string()),
+    )
+}
+
+fn post_tx<T>(api: &TestKitApi, tx: &T)
+    where T:Message + Serialize
+{
+    let tx_response:TransactionResponse = api.post(
+        ApiKind::Service(SERVICE_NAME),
+        "v1/transactions",
+        &tx
+    );
+
+    assert_eq!(tx_response.tx_hash, tx.hash());
+}
+
+#[test]
+fn create_wallet() {
+    use dmbc::currency::transactions::INITIAL_BALANCE;
+
+    let mut testkit = init_testkit();
+    let api = testkit.api();
+
+    let (public_key, secret_key) = crypto::gen_keypair();
+    let tx = transaction::Builder::new()
+        .keypair(public_key, secret_key.clone())
+        .tx_create_wallet()
+        .build();
+
+    post_tx(&api, &tx);
+
+    testkit.create_block();
+
+    let w = get_wallet(&api, &public_key);
+
+    assert_eq!(INITIAL_BALANCE, w.balance());
+}
 
 #[test]
 fn add_assets() {
+    let mut testkit = init_testkit();
+    let api = testkit.api();
+
+    let fork = &mut testkit.blockchain_mut().fork();
+
     let (public_key, secret_key) = crypto::gen_keypair();
     let (receiver_key, _) = crypto::gen_keypair();
 
-    let absent_data = "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f";
-    let existing_data = "a8d5c97d-9978-4111-9947-7a95dcb31d0f";
+    let tx = transaction::Builder::new()
+        .keypair(public_key, secret_key.clone())
+        .tx_create_wallet()
+        .build();
 
-    let absent_id = AssetId::new(absent_data, &public_key).unwrap();
-    let existing_id = AssetId::new(existing_data, &public_key).unwrap();
+    post_tx(&api, &tx);
+
+    testkit.create_block();
+
+    let absent_data = "absent_asset";
+//    let existing_data = "existing_data";
+    let absent_id = AssetId::from_data(absent_data, &public_key);
+//    let existing_id = AssetId::from_data(existing_data, &public_key);
 
     let absent_fees = fee::Builder::new()
         .trade(10, 10)
@@ -32,61 +108,45 @@ fn add_assets() {
         .transfer(10, 10)
         .build();
 
-    let existing_fees = fee::Builder::new()
-        .trade(11, 10)
-        .exchange(11, 10)
-        .transfer(11, 10)
-        .build();
+//    let existing_fees = fee::Builder::new()
+//        .trade(11, 10)
+//        .exchange(11, 10)
+//        .transfer(11, 10)
+//        .build();
 
-    let tx = transaction::Builder::new()
+    let tx_add_assets = transaction::Builder::new()
         .keypair(public_key, secret_key.clone())
         .tx_add_assets()
         .add_asset_receiver(receiver_key, absent_data, 45, absent_fees.clone())
-        .add_asset_receiver(receiver_key, existing_data, 17, existing_fees.clone())
+//        .add_asset_receiver(receiver_key, existing_data, 17, existing_fees.clone())
         .seed(85)
         .build();
+    println!("{}", json!(tx_add_assets));
+    post_tx(&api, &tx_add_assets);
 
-    let mut testkit = TestKitBuilder::validator()
-        .with_service(Service::new())
-        .create();
+    testkit.create_block();
 
-    let fork = &mut testkit.blockchain_mut().fork();
+    let w = get_wallet(&api, &public_key);
+    let s = get_status(&api, &tx_add_assets.hash());
 
-    assets::Schema::map(fork, |mut s| {
-        s.assets()
-            .put(&existing_id, AssetInfo::new(&public_key, 3, existing_fees))
-    });
+    println!("{:?}", w);
+    assert_eq!(Some(Ok(())), s.tx_status);
+//    tx.execute(&mut *fork);
 
-    let wallet = wallet::Builder::new().key(public_key).balance(2000).build();
-
-    let receiver_wallet = wallet::Builder::new()
-        .key(receiver_key)
-        .add_asset_value(Asset::new(existing_id, 3))
-        .balance(0)
-        .build();
-
-    WalletSchema::map(fork, |mut s| {
-        s.wallets().put(&public_key, wallet);
-        s.wallets().put(&receiver_key, receiver_wallet);
-    });
-
-    fork.checkpoint();
-    tx.execute(fork);
-
-    let existing_info = AssetSchema::map(fork, |mut s| s.info(&existing_id).unwrap());
-
-    assert_eq!(20, existing_info.amount());
-
-    let wallet = WalletSchema::map(fork, |mut s| s.wallet(tx.pub_key()));
-    let receiver_waller = WalletSchema::map(fork, |mut s| s.wallet(&receiver_key));
-
-    assert_eq!(2000 - tx.get_fee(fork).amount(), wallet.balance());
-    assert_eq!(20, receiver_waller.asset(existing_id).unwrap().amount());
-    assert_eq!(45, receiver_waller.asset(absent_id).unwrap().amount());
-
-    let tx_status = TxStatusSchema::map(fork, |mut s| s.get_status(&tx.hash())).unwrap();
-    let expected_status = TxStatus::Success;
-    assert_eq!(tx_status, expected_status);
+//    let existing_info = assets::Schema(&mut *fork).fetch(&existing_id).unwrap();
+//
+//    assert_eq!(20, existing_info.amount());
+//
+//    let wallet = WalletSchema::map(fork, |mut s| s.wallet(tx.pub_key()));
+//    let receiver_waller = WalletSchema::map(fork, |mut s| s.wallet(&receiver_key));
+//
+//    assert_eq!(2000 - tx.get_fee(fork).amount(), wallet.balance());
+//    assert_eq!(20, receiver_waller.asset(existing_id).unwrap().amount());
+//    assert_eq!(45, receiver_waller.asset(absent_id).unwrap().amount());
+//
+//    let tx_status = TxStatusSchema::map(fork, |mut s| s.get_status(&tx.hash())).unwrap();
+//    let expected_status = TxStatus::Success;
+//    assert_eq!(tx_status, expected_status);
 }
 
 //#[test]
@@ -141,31 +201,6 @@ fn add_assets() {
 //    assert_eq!(tx_status, expected_status);
 //    assert_eq!(2000 - tx.get_fee(fork).amount(), wallet.balance());
 //    assert_eq!(asset_info.unwrap().amount(), 1);
-//}
-
-//#[test]
-//fn create_wallet() {
-//    use dmbc::currency::transactions::create_wallet::INIT_BALANCE;
-//
-//    let (public_key, secret_key) = crypto::gen_keypair();
-//    let tx = transaction::Builder::new()
-//        .keypair(public_key, secret_key.clone())
-//        .tx_create_wallet()
-//        .build();
-//
-//    let db = MemoryDB::new();
-//    let fork = &mut db.fork();
-//
-//    let wallet = wallet::Builder::new()
-//        .key(public_key)
-//        .balance(INIT_BALANCE)
-//        .build();
-//
-//    tx.execute(fork);
-//
-//    WalletSchema::map(fork, |mut schema| {
-//        assert_eq!(wallet, schema.wallet(tx.pub_key()));
-//    });
 //}
 
 //#[test]

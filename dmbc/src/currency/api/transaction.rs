@@ -58,10 +58,15 @@ impl Into<Box<Transaction>> for TransactionRequest {
 }
 
 #[derive(Serialize, Deserialize)]
-struct TransactionResponse {
-    tx_hash: Hash,
+pub struct TransactionResponse {
+    pub tx_hash: Hash,
     transaction_info: serde_json::Value,
     tx_status: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct StatusResponse {
+    pub tx_status: Option<Result<(), Error>>
 }
 
 impl TransactionApi {
