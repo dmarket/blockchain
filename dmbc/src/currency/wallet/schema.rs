@@ -36,9 +36,9 @@ impl<'a> Schema<&'a mut Fork> {
 
     /// Store the new state for a wallet in the database.
     pub fn store(&mut self, pub_key: &PublicKey, wallet: Wallet) {
-        match wallet.balance() {
-            0 => self.remove(pub_key),
-            _ => self.index_mut().put(pub_key, wallet),
+        match (wallet.balance(), wallet.assets().len()) {
+            (0, 0) => self.remove(pub_key),
+            (_, _) => self.index_mut().put(pub_key, wallet),
         };
     }
 
