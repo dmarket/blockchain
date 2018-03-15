@@ -84,7 +84,7 @@ impl AddAssets {
         self.meta_assets()
             .into_iter()
             .map(|meta| {
-                let id = AssetId::from_data(meta.data(), &meta.receiver());
+                let id = AssetId::from_data(meta.data(), &self.pub_key());
                 let state = assets::Schema(&mut *view).fetch(&id);
 
                 let key = self.pub_key();

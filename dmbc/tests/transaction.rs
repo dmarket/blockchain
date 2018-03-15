@@ -1,27 +1,21 @@
 extern crate dmbc;
 extern crate exonum;
 extern crate exonum_testkit;
-#[macro_use]
-extern crate serde_json;
 
 use exonum::crypto;
 use exonum::crypto::{PublicKey, Hash};
 use exonum_testkit::{ApiKind, TestKit, TestKitApi, TestKitBuilder};
 use exonum::encoding::serialize::reexport::Serialize;
-use exonum::encoding::serialize::json::reexport::Value;
 use exonum::messages::Message;
 
 use dmbc::currency::Service;
 use dmbc::currency::SERVICE_NAME;
-use dmbc::currency::assets;
-use dmbc::currency::assets::{AssetBundle, AssetId, AssetInfo};
+use dmbc::currency::assets::{AssetBundle, MetaAsset, AssetId};
 use dmbc::currency::transactions::builders::fee;
 use dmbc::currency::transactions::builders::transaction;
-use dmbc::currency::status::ResultRepr;
-use dmbc::currency::wallet;
 use dmbc::currency::wallet::Wallet;
 use dmbc::currency::api::transaction::{TransactionResponse, StatusResponse};
-
+use dmbc::currency::api::asset::AssetResponse;
 
 fn init_testkit() -> TestKit {
     TestKitBuilder::validator()
@@ -41,6 +35,13 @@ fn get_status(api: &TestKitApi, tx_hash: &Hash) -> StatusResponse {
     api.get(
         ApiKind::Service(SERVICE_NAME),
         &format!("v1/transactions/{}", tx_hash.to_string()),
+    )
+}
+
+fn get_asset_info(api: &TestKitApi, asset_id: &AssetId) -> AssetResponse {
+    api.get(
+        ApiKind::Service(SERVICE_NAME),
+        &format!("/v1/assets/{}", asset_id.to_string()),
     )
 }
 
@@ -83,8 +84,6 @@ fn add_assets() {
     let mut testkit = init_testkit();
     let api = testkit.api();
 
-    let fork = &mut testkit.blockchain_mut().fork();
-
     let (public_key, secret_key) = crypto::gen_keypair();
     let (receiver_key, _) = crypto::gen_keypair();
 
@@ -97,56 +96,44 @@ fn add_assets() {
 
     testkit.create_block();
 
-    let absent_data = "absent_asset";
-//    let existing_data = "existing_data";
-    let absent_id = AssetId::from_data(absent_data, &public_key);
-//    let existing_id = AssetId::from_data(existing_data, &public_key);
-
-    let absent_fees = fee::Builder::new()
+    let fees = fee::Builder::new()
         .trade(10, 10)
         .exchange(10, 10)
         .transfer(10, 10)
         .build();
 
-//    let existing_fees = fee::Builder::new()
-//        .trade(11, 10)
-//        .exchange(11, 10)
-//        .transfer(11, 10)
-//        .build();
+    let meta_data = r#"{"name":"test_item","type":"skin","category":"gun","image":"http://test.com/test_item.jpg"}"#;
+    let asset = AssetBundle::from_data(meta_data, 3, &public_key);
+    let meta_asset = MetaAsset::new(
+        &receiver_key,
+        meta_data,
+        3,
+        fees.clone()
+    );
 
     let tx_add_assets = transaction::Builder::new()
         .keypair(public_key, secret_key.clone())
         .tx_add_assets()
-        .add_asset_receiver(receiver_key, absent_data, 45, absent_fees.clone())
-//        .add_asset_receiver(receiver_key, existing_data, 17, existing_fees.clone())
+        .add_asset_value(meta_asset.clone())
         .seed(85)
         .build();
-    println!("{}", json!(tx_add_assets));
+
     post_tx(&api, &tx_add_assets);
 
     testkit.create_block();
 
-    let w = get_wallet(&api, &public_key);
     let s = get_status(&api, &tx_add_assets.hash());
+    assert_eq!(Ok(Ok(())), s);
 
-    println!("{:?}", w);
-    assert_eq!(Some(Ok(())), s.tx_status);
-//    tx.execute(&mut *fork);
+    let mining_wallet = get_wallet(&api, &public_key);
+    let empty_assets: Vec<AssetBundle> = Vec::new();
+    assert_eq!(empty_assets, mining_wallet.assets());
 
-//    let existing_info = assets::Schema(&mut *fork).fetch(&existing_id).unwrap();
-//
-//    assert_eq!(20, existing_info.amount());
-//
-//    let wallet = WalletSchema::map(fork, |mut s| s.wallet(tx.pub_key()));
-//    let receiver_waller = WalletSchema::map(fork, |mut s| s.wallet(&receiver_key));
-//
-//    assert_eq!(2000 - tx.get_fee(fork).amount(), wallet.balance());
-//    assert_eq!(20, receiver_waller.asset(existing_id).unwrap().amount());
-//    assert_eq!(45, receiver_waller.asset(absent_id).unwrap().amount());
-//
-//    let tx_status = TxStatusSchema::map(fork, |mut s| s.get_status(&tx.hash())).unwrap();
-//    let expected_status = TxStatus::Success;
-//    assert_eq!(tx_status, expected_status);
+    let receiver_wallet = get_wallet(&api, &receiver_key);
+    assert_eq!(vec![asset.clone()], receiver_wallet.assets());
+
+    let bc_asset_info = get_asset_info(&api, &asset.id()).unwrap();
+    assert_eq!(meta_asset.to_info(&public_key), bc_asset_info);
 }
 
 //#[test]

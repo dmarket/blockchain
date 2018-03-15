@@ -5,7 +5,7 @@ use std::fmt;
 
 /// Enumeration of errors that can happen when processing a transaction.
 #[repr(u8)]
-#[derive(Debug, Serialize, Deserialize, Eq, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Copy, Clone)]
 pub enum Error {
     /// Asset ID is not found in the network.
     AssetNotFound = 1,

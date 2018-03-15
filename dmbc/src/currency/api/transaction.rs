@@ -5,15 +5,19 @@ extern crate router;
 extern crate serde;
 extern crate serde_json;
 
-use exonum::api::{Api, ApiError};
+use exonum::api::{Api, ApiError as ExonumApiError};
 use exonum::blockchain::{Blockchain, Transaction};
 use exonum::crypto::Hash;
 use exonum::encoding::serialize::FromHex;
 use exonum::node::{ApiSender, TransactionSend};
 use iron::headers::AccessControlAllowOrigin;
+use hyper::header::{ContentType};
 use iron::prelude::*;
+use iron::status as istatus;
+//use hyper::status::StatusCode;
 use router::Router;
 
+use currency::api::error::ApiError;
 use currency::status;
 use currency::transactions::{AddAssets, CreateWallet, DeleteAssets, Exchange,
                              ExchangeIntermediary, Mining, Trade,
@@ -64,10 +68,8 @@ pub struct TransactionResponse {
     tx_status: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct StatusResponse {
-    pub tx_status: Option<Result<(), Error>>
-}
+//#[derive(Serialize, Deserialize, Debug)]
+pub type StatusResponse = Result<Result<(), Error>, ApiError>;
 
 impl TransactionApi {
     fn get_status(&self, tx_hash: &Hash) -> Option<Result<(), Error>> {
@@ -85,7 +87,7 @@ impl Api for TransactionApi {
                     let transaction: Box<Transaction> = transaction.into();
                     let tx_hash = transaction.hash();
                     let tx_info = transaction.info();
-                    self_.channel.send(transaction).map_err(ApiError::from)?;
+                    self_.channel.send(transaction).map_err(ExonumApiError::from)?;
                     let response_data = json!(TransactionResponse {
                         tx_hash,
                         transaction_info: tx_info,
@@ -96,8 +98,8 @@ impl Api for TransactionApi {
                     res.headers.set(AccessControlAllowOrigin::Any);
                     Ok(res)
                 }
-                Ok(None) => Err(ApiError::IncorrectRequest("Empty request body".into()))?,
-                Err(e) => Err(ApiError::IncorrectRequest(Box::new(e)))?,
+                Ok(None) => Err(ExonumApiError::IncorrectRequest("Empty request body".into()))?,
+                Err(e) => Err(ExonumApiError::IncorrectRequest(Box::new(e)))?,
             }
         };
         // Bind the transaction handler to a specific route.
@@ -106,19 +108,18 @@ impl Api for TransactionApi {
         let get_status = move |request: &mut Request| -> IronResult<Response> {
             let path = request.url.path();
             let tx_hash_str = path.last().unwrap();
-            let tx_hash = Hash::from_hex(tx_hash_str).unwrap();
-            if let Some(status) = self_.get_status(&tx_hash) {
-                let res = self_.ok_response(&json!({ "tx_status": status }));
-                let mut res = res.unwrap();
-                res.headers.set(AccessControlAllowOrigin::Any);
-                Ok(res)
-            } else {
-                let res = self_
-                    .not_found_response(&serde_json::to_value("Transaction hash not found").unwrap());
-                let mut res = res.unwrap();
-                res.headers.set(AccessControlAllowOrigin::Any);
-                Ok(res)
-            }
+            let s:StatusResponse = Hash::from_hex(tx_hash_str)
+                .map_err(|_|{ ApiError::TransactionHashInvalid})
+                .and_then(|tx_hash| self_.get_status(&tx_hash).ok_or(ApiError::TransactionNotFound));
+
+            let mut res = Response::with((
+                s.clone().err().map(|e| e.to_status()).unwrap_or(istatus::Ok),
+                serde_json::to_string_pretty(&s).unwrap(),
+            ));
+            res.headers.set(ContentType::json());
+            res.headers.set(AccessControlAllowOrigin::Any);
+
+            Ok(res)
         };
 
         router.post("/v1/transactions", transaction, "transaction");

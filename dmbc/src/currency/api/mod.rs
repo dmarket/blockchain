@@ -5,7 +5,7 @@ pub mod transaction;
 pub mod asset;
 pub mod wallet;
 pub mod hash;
-
+pub mod error;
 extern crate params;
 
 use exonum::api::Api;
