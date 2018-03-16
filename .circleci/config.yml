@@ -48,7 +48,7 @@ jobs:
       - run:
           name: Run Tests
           command: |
-            cargo test --color=always --package dmbc --test configuration proposed_service_configuration
+            cargo test --color=always
 
 #      - store_artifacts:
 #          path: /project/report/

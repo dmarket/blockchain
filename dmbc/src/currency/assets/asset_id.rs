@@ -35,13 +35,13 @@ impl AssetId {
     /// #
     /// # use exonum::crypto::{PublicKey};
     /// # use exonum::encoding::serialize::FromHex;
-    /// # use dmbc::currency::asset::AssetId;
+    /// # use dmbc::currency::assets::AssetId;
     ///
     /// let data = "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f";
     /// let public_key = PublicKey::from_hex("3115dbc2ff73f4819672d5e9e421692305a9de1a18e4389df041c0cf6c8918a8").unwrap();
     ///
-    /// let assetid = AssetId::from_data(&data, &public_key).unwrap();
-    /// assert_eq!(assetid.to_string(), "82c1f90bed24508e9ce74b536f97fa9c");
+    /// let asset_id = AssetId::from_data(&data, &public_key);
+    /// assert_eq!(asset_id.to_string(), "82c1f90bed24508e9ce74b536f97fa9c");
     /// # }
     /// ```
     pub fn from_data(data: &str, pub_key: &PublicKey) -> AssetId {

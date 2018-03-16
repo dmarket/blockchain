@@ -58,16 +58,14 @@ fn post_tx<T>(api: &TestKitApi, tx: &T)
 }
 
 #[test]
-fn create_wallet() {
-    use dmbc::currency::transactions::INITIAL_BALANCE;
-
+fn mine_wallet() {
     let mut testkit = init_testkit();
     let api = testkit.api();
 
     let (public_key, secret_key) = crypto::gen_keypair();
     let tx = transaction::Builder::new()
         .keypair(public_key, secret_key.clone())
-        .tx_create_wallet()
+        .tx_mine()
         .build();
 
     post_tx(&api, &tx);
@@ -76,7 +74,7 @@ fn create_wallet() {
 
     let w = get_wallet(&api, &public_key);
 
-    assert_eq!(INITIAL_BALANCE, w.balance());
+    assert_eq!(1_00_000_000, w.balance()); //1 dmc
 }
 
 #[test]
@@ -89,7 +87,7 @@ fn add_assets() {
 
     let tx = transaction::Builder::new()
         .keypair(public_key, secret_key.clone())
-        .tx_create_wallet()
+        .tx_mine()
         .build();
 
     post_tx(&api, &tx);

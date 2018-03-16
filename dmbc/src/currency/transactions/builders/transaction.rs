@@ -746,7 +746,6 @@ mod test {
     use currency::assets::{AssetBundle, MetaAsset, TradeAsset};
 
     use currency::transactions::add_assets::AddAssets;
-    use currency::transactions::create_wallet::CreateWallet;
     use currency::transactions::delete_assets::DeleteAssets;
     use currency::transactions::exchange::{Exchange, ExchangeOffer};
     use currency::transactions::components::Intermediary;
@@ -810,19 +809,6 @@ mod test {
 
         let assets = vec![asset_foobar, asset_bazqux];
         let equivalent = AddAssets::new(&public_key, assets, 0, &secret_key);
-
-        assert_eq!(transaction, equivalent);
-    }
-
-    #[test]
-    fn create_wallet() {
-        let (public_key, secret_key) = crypto::gen_keypair();
-        let transaction = transaction::Builder::new()
-            .keypair(public_key, secret_key.clone())
-            .tx_create_wallet()
-            .build();
-
-        let equivalent = CreateWallet::new(&public_key, &secret_key);
 
         assert_eq!(transaction, equivalent);
     }
