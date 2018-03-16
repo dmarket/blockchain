@@ -15,7 +15,6 @@ pub const MINE_ID: u16 = 700;
 const MINE_AMOUNT: u64 = 1_00000000;
 
 message! {
-    /// `create_wallet` transaction.
     struct Mine {
         const TYPE = SERVICE_ID;
         const ID = MINE_ID;

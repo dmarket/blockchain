@@ -23,6 +23,7 @@ exonum-configuration = "0.4"
 hyper = "0.10.13"
 unicase = "1.0"
 log = "0.4"
+chrono = "0.4"
 
 [dev-dependencies]
 exonum-testkit = "0.1"

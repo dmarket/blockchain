@@ -5,7 +5,7 @@ pub mod transaction;
 pub mod asset;
 pub mod wallet;
 pub mod hash;
-
+pub mod error;
 extern crate params;
 
 use exonum::api::Api;
@@ -61,6 +61,21 @@ impl ServiceApi {
         }
 
         elements
+    }
+
+    pub fn pagination_params(req: &mut Request) -> (u64, u64){
+        let parameters = req.get_ref::<Params>().unwrap();
+        let offset_parameter = parameters.get(PARAMETER_OFFSET_KEY);
+        let limit_parameter = parameters.get(PARAMETER_LIMIT_KEY);
+
+        // pagination parameters `offset` and `limit` should be considered together
+        if offset_parameter.is_some() && limit_parameter.is_some() {
+            let offset = FromValue::from_value(offset_parameter.unwrap()).unwrap_or(0);
+            let limit = FromValue::from_value(limit_parameter.unwrap()).unwrap_or(1000);
+            (offset, limit)
+        } else {
+            (0, 1000)
+        }
     }
 
     pub fn add_option_headers(headers: &mut Headers) {

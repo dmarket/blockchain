@@ -12,7 +12,7 @@ pub struct Schema<S>(pub S)
 where
     S: AsRef<Snapshot>;
 
-type ResultRepr = u8;
+pub type ResultRepr = u8;
 
 fn to_repr(result: Result<(), Error>) -> ResultRepr {
     match result {

@@ -21,6 +21,7 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate unicase;
 extern crate uuid;
+extern crate chrono;
 
 pub mod config;
 pub mod currency;

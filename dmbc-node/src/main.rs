@@ -136,8 +136,10 @@ fn main() {
     let db = Box::new(RocksDB::open(path, &options).unwrap());
 
     // Initialize services
-    let services: Vec<Box<blockchain::Service>> =
-        vec![Box::new(ConfigurationService::new()), Box::new(Service())];
+    let services: Vec<Box<blockchain::Service>> = vec![
+        Box::new(ConfigurationService::new()),
+        Box::new(Service())
+    ];
 
     eprintln!("Launching node. What can possibly go wrong?");
 
