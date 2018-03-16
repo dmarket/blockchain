@@ -137,10 +137,6 @@ impl Exchange {
 
 impl Transaction for Exchange {
     fn verify(&self) -> bool {
-        if cfg!(fuzzing) {
-            return true;
-        }
-
         let offer = self.offer();
 
         let wallets_ok = offer.sender() != offer.recipient();
@@ -148,6 +144,11 @@ impl Transaction for Exchange {
             FeeStrategy::Recipient | FeeStrategy::Sender | FeeStrategy::RecipientAndSender => true,
             _ => false,
         };
+
+        if cfg!(fuzzing) {
+            return wallets_ok && fee_strategy_ok;
+        }
+
         let recipient_ok = self.verify_signature(offer.recipient());
         let sender_ok = crypto::verify(self.sender_signature(), &offer.raw, offer.sender());
 

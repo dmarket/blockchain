@@ -75,12 +75,9 @@ impl DeleteAssets {
 
 impl Transaction for DeleteAssets {
     fn verify(&self) -> bool {
-        // TODO
         if cfg!(fuzzing) {
             return true;
         }
-
-        // TODO: check assets for copies. Its important.
 
         self.verify_signature(self.pub_key())
     }

@@ -76,10 +76,12 @@ impl Transfer {
 
 impl Transaction for Transfer {
     fn verify(&self) -> bool {
-        if cfg!(fuzzing) {
-            return true;
-        }
         let wallets_ok = self.from() != self.to();
+
+        if cfg!(fuzzing) {
+            return wallets_ok;
+        }
+
         let verify_ok = self.verify_signature(&self.from());
 
         wallets_ok && verify_ok

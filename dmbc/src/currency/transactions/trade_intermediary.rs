@@ -111,15 +111,16 @@ impl TradeIntermediary {
 
 impl Transaction for TradeIntermediary {
     fn verify(&self) -> bool {
-        if cfg!(fuzzing) {
-            return true;
-        }
-
         let offer = self.offer();
 
         let wallets_ok = offer.seller() != offer.buyer()
             && offer.intermediary().wallet() != offer.seller()
             && offer.intermediary().wallet() != offer.buyer();
+
+        if cfg!(fuzzing) {
+            return true;
+        }
+
         let buyer_ok = self.verify_signature(offer.buyer());
 
         let seller_ok = crypto::verify(

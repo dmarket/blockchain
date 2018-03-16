@@ -154,16 +154,17 @@ impl ExchangeIntermediary {
 
 impl Transaction for ExchangeIntermediary {
     fn verify(&self) -> bool {
-        if cfg!(fuzzing) {
-            return true;
-        }
-
         let offer = self.offer();
 
         let wallets_ok = offer.sender() != offer.recipient()
             && offer.intermediary().wallet() != offer.sender()
             && offer.intermediary().wallet() != offer.recipient();
         let fee_strategy_ok = FeeStrategy::try_from(offer.fee_strategy()).is_some();
+
+        if cfg!(fuzzing) {
+            return wallets_ok && fee_strategy_ok;
+        }
+
         let recipient_ok = self.verify_signature(offer.recipient());
         let sender_ok = crypto::verify(self.sender_signature(), &offer.raw, offer.sender());
         let intermediary_ok = crypto::verify(

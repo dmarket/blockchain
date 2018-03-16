@@ -103,18 +103,18 @@ impl AddAssets {
 
 impl Transaction for AddAssets {
     fn verify(&self) -> bool {
+        for asset in self.meta_assets() {
+            if !asset.verify() {
+                return false;
+            }
+        }
+
         if cfg!(fuzzing) {
             return true;
         }
 
         if !self.verify_signature(&self.pub_key()) {
             return false;
-        }
-
-        for asset in self.meta_assets() {
-            if !asset.verify() {
-                return false;
-            }
         }
 
         true

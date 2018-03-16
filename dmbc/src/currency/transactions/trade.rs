@@ -102,11 +102,12 @@ impl Trade {
 
 impl Transaction for Trade {
     fn verify(&self) -> bool {
+        let wallets_ok = self.offer().buyer() != self.offer().seller();
+
         if cfg!(fuzzing) {
-            return true;
+            return wallets_ok;
         }
 
-        let wallets_ok = self.offer().buyer() != self.offer().seller();
         let seller_verify_ok = crypto::verify(self.seller_signature(), &self.offer().raw, self.offer().seller());
         let buyer_verify_ok = self.verify_signature(&self.offer().buyer());
 
