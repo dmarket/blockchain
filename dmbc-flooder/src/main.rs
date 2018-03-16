@@ -1,29 +1,29 @@
 extern crate dmbc;
-extern crate rand;
 extern crate exonum;
+extern crate fnv;
 extern crate mio;
 extern crate mio_httpc;
+extern crate rand;
 extern crate serde;
 extern crate serde_json;
-extern crate fnv;
 
 use std::time::Duration;
 
 use exonum::crypto;
 use exonum::crypto::{PublicKey, SecretKey};
 use fnv::FnvHashMap;
-use mio::{Poll, Events};
-use mio_httpc::{Request, CallBuilder, Httpc, RecvState};
+use mio::{Events, Poll};
+use mio_httpc::{CallBuilder, Httpc, RecvState, Request};
 use rand::Rng;
 use serde::Serialize;
 
-use dmbc::service::builders::transaction;
-use dmbc::service::builders::fee;
-use dmbc::service::asset::{MetaAsset, Asset};
+use dmbc::currency::transactions::builders::transaction;
+use dmbc::currency::transactions::builders::fee;
+use dmbc::currency::assets::{AssetBundle, AssetId, MetaAsset, TradeAsset};
 
 type Wallet = (PublicKey, SecretKey);
 
-const MAX_AMOUNT: u32 = 10_000;
+const MAX_AMOUNT: u64 = 10_000;
 const ASSET_NAME: &str = "RAXXLA";
 
 #[derive(Clone, Copy)]
@@ -63,7 +63,7 @@ impl OpState {
 struct Flooder {
     rng: rand::ThreadRng,
     wallets: Vec<Wallet>,
-    assets: Vec<Asset>,
+    assets: Vec<AssetBundle>,
     op_state: OpState,
 }
 
@@ -84,7 +84,7 @@ impl Flooder {
                 self.wallets.push(wallet.clone());
                 let tx = transaction::Builder::new()
                     .keypair(wallet.0, wallet.1)
-                    .tx_create_wallet()
+                    .tx_mine()
                     .build();
 
                 serialize(tx)
@@ -99,7 +99,8 @@ impl Flooder {
                     .transfer(10, 10)
                     .build();
                 let asset = MetaAsset::new(&wallet.0, ASSET_NAME, amount, fees);
-                self.assets.push(Asset::from_meta_asset(&asset, &wallet.0));
+                let id = AssetId::from_data(ASSET_NAME, &wallet.0);
+                self.assets.push(asset.to_bundle(id));
                 let tx = transaction::Builder::new()
                     .keypair(wallet.0, wallet.1)
                     .tx_add_assets()
@@ -153,7 +154,7 @@ impl Flooder {
                     .keypair(sender.0, sender.1)
                     .tx_exchange_with_intermediary()
                     .intermediary_key_pair(intermediary.0, intermediary.1)
-                    .commision(10)
+                    .commission(10)
                     .sender_add_asset_value(s_asset)
                     .sender_value(9)
                     .recipient(receiver.0)
@@ -168,7 +169,7 @@ impl Flooder {
                 let wallet = self.pick_wallet();
                 let tx = transaction::Builder::new()
                     .keypair(wallet.0, wallet.1)
-                    .tx_mining()
+                    .tx_mine()
                     .build();
 
                 serialize(tx)
@@ -183,7 +184,7 @@ impl Flooder {
                     .keypair(seller.0, seller.1)
                     .tx_trade_assets()
                     .buyer(buyer.0)
-                    .add_asset_value(asset.into_trade_asset(50))
+                    .add_asset_value(TradeAsset::from_bundle(asset, 50))
                     .build();
 
                 serialize(tx)
@@ -200,8 +201,8 @@ impl Flooder {
                     .tx_trade_assets_with_intermediary()
                     .buyer(buyer.0)
                     .intermediary_key_pair(intermediary.0, intermediary.1)
-                    .commision(1_0000_0000)
-                    .add_asset_value(asset.into_trade_asset(50))
+                    .commission(1_0000_0000)
+                    .add_asset_value(TradeAsset::from_bundle(asset, 50))
                     .build();
 
                 serialize(tx)
@@ -226,20 +227,20 @@ impl Flooder {
         }
     }
 
-    fn pick_asset(&mut self) -> Asset {
+    fn pick_asset(&mut self) -> AssetBundle {
         let asset = self.rng.choose(&self.assets).unwrap();
-        Asset::new(asset.id(), self.rng.gen_range(0, asset.amount() + 1))
+        AssetBundle::new(asset.id(), self.rng.gen_range(0, asset.amount() + 1))
     }
 
-    fn split_asset(&mut self) -> Asset {
+    fn split_asset(&mut self) -> AssetBundle {
         let asset_ref = self.rng.choose_mut(&mut self.assets).unwrap();
         let amount = self.rng.gen_range(0, asset_ref.amount() + 1);
-        let asset = Asset::new(asset_ref.id(), amount);
+        let asset = AssetBundle::new(asset_ref.id(), amount);
         let new_amount = match asset_ref.amount() - amount {
             0 => 1,
             amount => amount,
         };
-        *asset_ref = Asset::new(asset.id(), new_amount);
+        *asset_ref = AssetBundle::new(asset.id(), new_amount);
         asset
     }
 
@@ -281,7 +282,7 @@ fn main() {
                 Ok(mut call) => {
                     httpc.call_send(&poll, &mut call, None);
                     calls.insert(call.get_ref(), call);
-                },
+                }
                 Err(mio_httpc::Error::Io(error)) => {
                     // Errno values for the 'too many open files' condition.
                     // TODO: these are values from linux, other platforms can
@@ -293,14 +294,15 @@ fn main() {
                         Some(EMFILE) | Some(ENFILE) => break,
                         _ => panic!("{}", error),
                     }
-                },
+                }
                 Err(error) => {
                     panic!("{}", error);
-                },
+                }
             }
         }
 
-        poll.poll(&mut events, Some(Duration::from_millis(1))).unwrap();
+        poll.poll(&mut events, Some(Duration::from_millis(1)))
+            .unwrap();
 
         for event in events.iter() {
             let cref = match httpc.event(&event) {
@@ -317,7 +319,7 @@ fn main() {
                     RecvState::Error(e) => {
                         println!("Error receiving: {}", e);
                         true
-                    },
+                    }
                     _ => false,
                 }
             };
@@ -335,4 +337,3 @@ fn main() {
         flooder.op_state.advance();
     }
 }
-

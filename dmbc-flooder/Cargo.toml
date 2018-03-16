@@ -8,7 +8,7 @@ dmbc = { path = "../dmbc" }
 rand = "*"
 exonum = "0.4"
 mio = "*"
-mio_httpc = { version = "*", features = ["native"] }
+mio_httpc = { version = "0.4", features = ["native"] }
 serde = "*"
 serde_json = "*"
 fnv = "*"

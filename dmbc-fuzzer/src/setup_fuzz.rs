@@ -16,8 +16,8 @@ use std::io::{ErrorKind, Read, Write};
 use exonum::crypto;
 use exonum::crypto::SecretKey;
 use exonum::storage::StorageValue;
-use dmbc::service::builders::transaction;
-use dmbc::service::builders::fee;
+use dmbc::currency::transactions::builders::transaction;
+use dmbc::currency::transactions::builders::fee;
 
 use fuzz_data::FuzzData;
 
@@ -66,17 +66,6 @@ fn setup() -> Result<(), Box<Error>> {
         })
         .unwrap_or_else(|e| eprintln!("{}", e));
 
-    tx_file("./fuzz-in/tx_create_wallet.in")
-        .and_then(|mut f| {
-            let tx = transaction::Builder::new()
-                .keypair(data.alice, SecretKey::zero())
-                .tx_create_wallet()
-                .build()
-                .into_bytes();
-            f.write_all(&tx).map_err(|e| e.into())
-        })
-        .unwrap_or_else(|e| eprintln!("{}", e));
-
     tx_file("./fuzz-in/tx_del_assets.in")
         .and_then(|mut f| {
             let tx = transaction::Builder::new()
@@ -99,7 +88,6 @@ fn setup() -> Result<(), Box<Error>> {
                 .sender_value(1000)
                 .recipient(data.bob)
                 .recipient_add_asset("bob_asset", 10)
-                .recipient_value(1000)
                 .fee_strategy(1)
                 .seed(83)
                 .build()
@@ -112,7 +100,7 @@ fn setup() -> Result<(), Box<Error>> {
         .and_then(|mut f| {
             let tx = transaction::Builder::new()
                 .keypair(data.alice, SecretKey::zero())
-                .tx_mining()
+                .tx_mine()
                 .seed(3)
                 .build()
                 .into_bytes();

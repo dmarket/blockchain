@@ -1,3 +1,5 @@
+//! Startup configuration.
+
 extern crate toml;
 
 use std::env;
@@ -8,6 +10,7 @@ use std::net::{SocketAddr, ToSocketAddrs};
 use std::path::Path;
 use std::result::Result;
 
+/// Representation of configuration file contents.
 #[derive(Deserialize)]
 #[warn(unused_must_use)]
 pub struct Config {
@@ -17,6 +20,7 @@ pub struct Config {
     service_discovery: ServiceDiscovery,
 }
 
+/// Node communications configuration.
 #[derive(Deserialize)]
 pub struct Api {
     current_node: Option<String>,
@@ -28,11 +32,13 @@ pub struct Api {
     is_validator: Option<bool>,
 }
 
+/// Database configuration.
 #[derive(Deserialize)]
 pub struct Db {
     path: Option<String>,
 }
 
+/// NATS reporting configuration.
 #[derive(Deserialize)]
 pub struct Nats {
     enabled: Option<bool>,
@@ -40,27 +46,36 @@ pub struct Nats {
     queuename: Option<String>,
 }
 
+/// Configuration for communicating with a global service discovery.
 #[derive(Deserialize)]
 pub struct ServiceDiscovery {
     address: Option<String>,
 }
 
 impl Config {
+    /// Get `Api` configuration from the config file.
     pub fn api(self) -> Api {
         self.api
     }
+
+    /// Get `Db` configuration from the config file.
     pub fn db(self) -> Db {
         self.db
     }
+
+    /// Get `NATS` configuration from the config file.
     pub fn nats(self) -> Nats {
         self.nats
     }
+
+    /// Get `ServiceDiscovery` configuration from the config file.
     pub fn service_discovery(self) -> ServiceDiscovery {
         self.service_discovery
     }
 }
 
 impl Api {
+    /// Name of the current node.
     pub fn current_node(self) -> String {
         match env::var("CURRENT_NODE") {
             Ok(value) => value,
@@ -68,6 +83,7 @@ impl Api {
         }
     }
 
+    /// Public API address of the current node.
     pub fn address(self) -> String {
         match env::var("API_ADDRESS") {
             Ok(value) => value,
@@ -75,6 +91,7 @@ impl Api {
         }
     }
 
+    /// Private address of the current node.
     pub fn private_address(self) -> String {
         match env::var("API_PRIVATE_ADDRESS") {
             Ok(value) => value,
@@ -82,12 +99,15 @@ impl Api {
         }
     }
 
+    /// Path to the directory with key files.
     pub fn keys_path(self) -> String {
         match env::var("API_KEYS_PATH") {
             Ok(value) => value,
             Err(_) => self.keys_path.unwrap(),
         }
     }
+
+    /// Peer address for the current node.
     pub fn peer_address(self) -> String {
         match env::var("API_PEER_ADDRESS") {
             Ok(value) => value,
@@ -95,6 +115,7 @@ impl Api {
         }
     }
 
+    /// Existing peers of the current node.
     pub fn peers(self) -> Vec<SocketAddr> {
         match env::var("API_PEERS") {
             Ok(_) => vec![], // todo: add parse environment
@@ -114,6 +135,7 @@ impl Api {
         }
     }
 
+    /// Checks whether this node will take part in consensus.
     pub fn is_validator(self) -> bool {
         match env::var("VALIDATOR") {
             Ok(value) => value.parse::<bool>().unwrap(),
@@ -123,6 +145,7 @@ impl Api {
 }
 
 impl Db {
+    /// Path to the database.
     pub fn path(self) -> String {
         match env::var("DB_PATH") {
             Ok(value) => value,
@@ -132,6 +155,7 @@ impl Db {
 }
 
 impl Nats {
+    /// Checks whether the current node send messages to NATS.
     pub fn enabled(self) -> bool {
         match env::var("NATS_ENABLED") {
             Ok(value) => if value == "false" {
@@ -143,6 +167,7 @@ impl Nats {
         }
     }
 
+    /// Addresses of NATS servers.
     pub fn addresses(self) -> Vec<String> {
         match env::var("NATS_ADDRESSES") {
             Ok(addresses) => addresses
@@ -154,6 +179,7 @@ impl Nats {
         }
     }
 
+    /// Name of the queue to which the messages shall be pushed.
     pub fn queuename(self) -> String {
         match env::var("NATS_QUEUENAME") {
             Ok(queuename) => queuename,
@@ -164,6 +190,7 @@ impl Nats {
 }
 
 impl ServiceDiscovery {
+    /// Address of the service discovery.
     pub fn address(self) -> String {
         match env::var("SD_ADDRESS") {
             Ok(address) => address,
@@ -172,7 +199,6 @@ impl ServiceDiscovery {
     }
 }
 
-///
 /// Load configuration
 ///
 /// # Examples
@@ -189,6 +215,7 @@ pub fn read_config() -> Result<Config, Error> {
     Ok(toml::from_str(content.as_str()).unwrap())
 }
 
+/// Read config from the config file.
 pub fn config() -> Config {
     read_config().unwrap()
 }

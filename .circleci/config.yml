@@ -10,23 +10,37 @@ jobs:
 
       - run:
           name: Install System Packages
-          command: apt-get update && apt-get -y install libsodium18 libsodium-dev pkg-config
+          command: |
+            apt-get update
+            apt-get -y install libsodium18 libsodium-dev pkg-config
+            apt-get -y install clang
 
       - checkout
 
+      - run:
+          name: ii
+          command: |
+            rustup default nightly
+            rustup update
+            rustup show
+
       - restore_cache:
-          key: suntechsoft-dmarket-blockchain-{{ .Branch }}-{{ checksum "Cargo.toml" }}
+          key: suntechsoft-dmarket-blockchain-{{ .Branch }}-{{ checksum "Cargo.lock" }}
 
       - run:
           name: Build project
           command: |
-            cargo build --all -vv
+            export CC=clang
+            export CXX=clang++
+            cargo clean
+            cargo update
+            cargo build -p dmbc -p dmbc-node -p dmbc-discovery -vv
 
       - save_cache:
-          key: suntechsoft-dmarket-blockchain-{{ .Branch }}-{{ checksum "Cargo.toml" }}
+          key: suntechsoft-dmarket-blockchain-{{ .Branch }}-{{ checksum "Cargo.lock" }}
           paths:
             - "/project/target"
-            - "/project/Cargo.lock"
+            - "/root/.cargo/registry"
 
 #      - run:
 #          name: Run Fmt
@@ -35,7 +49,7 @@ jobs:
       - run:
           name: Run Tests
           command: |
-            cargo test
+            cargo test --color=always --package dmbc --test configuration proposed_service_configuration
 
 #      - store_artifacts:
 #          path: /project/report/

@@ -22,18 +22,12 @@ use exonum::crypto::SecretKey;
 use exonum::messages::{MessageBuffer, RawMessage};
 use exonum_testkit::TestKitBuilder;
 
-use dmbc::service::CurrencyService;
-use dmbc::service::builders::transaction;
-use dmbc::service::builders::fee;
-use dmbc::service::transaction::{TX_ADD_ASSETS_ID, TX_CREATE_WALLET_ID, TX_DEL_ASSETS_ID,
-                                 TX_EXCHANGE_ID, TX_MINING_ID, TX_TRADE_ASSETS_ID, TX_TRANSFER_ID};
-use dmbc::service::transaction::add_assets::TxAddAsset;
-use dmbc::service::transaction::create_wallet::TxCreateWallet;
-use dmbc::service::transaction::del_assets::TxDelAsset;
-use dmbc::service::transaction::exchange::TxExchange;
-use dmbc::service::transaction::mining::TxMining;
-use dmbc::service::transaction::trade_assets::TxTrade;
-use dmbc::service::transaction::transfer::TxTransfer;
+use dmbc::currency::Service;
+use dmbc::currency::transactions::builders::transaction;
+use dmbc::currency::transactions::builders::fee;
+use dmbc::currency::transactions::{AddAssets, DeleteAssets, Exchange, Mine, Trade,
+                                   Transfer, ADD_ASSETS_ID, DELETE_ASSETS_ID,
+                                   EXCHANGE_ID, MINE_ID, TRADE_ID, TRANSFER_ID};
 
 use fuzz_data::FuzzData;
 
@@ -49,7 +43,7 @@ fn main() {
 
         let mut testkit = TestKitBuilder::validator()
             .with_validators(1)
-            .with_service(CurrencyService)
+            .with_service(Service())
             .create();
 
         testkit.create_block();
@@ -83,27 +77,20 @@ impl ::std::fmt::Display for TxFromRawError {
 
 fn tx_from_raw(rm: RawMessage) -> Result<Box<Transaction>, Box<Error>> {
     match rm.message_type() {
-        TX_ADD_ASSETS_ID => TxAddAsset::from_raw(rm)
+        ADD_ASSETS_ID => AddAssets::from_raw(rm)
             .map(|t| t.into())
             .map_err(|e| e.into()),
-        TX_CREATE_WALLET_ID => TxCreateWallet::from_raw(rm)
+        DELETE_ASSETS_ID => DeleteAssets::from_raw(rm)
             .map(|t| t.into())
             .map_err(|e| e.into()),
-        TX_DEL_ASSETS_ID => TxDelAsset::from_raw(rm)
+        EXCHANGE_ID => Exchange::from_raw(rm)
             .map(|t| t.into())
             .map_err(|e| e.into()),
-        TX_EXCHANGE_ID => TxExchange::from_raw(rm)
+        TRADE_ID => Trade::from_raw(rm).map(|t| t.into()).map_err(|e| e.into()),
+        TRANSFER_ID => Transfer::from_raw(rm)
             .map(|t| t.into())
             .map_err(|e| e.into()),
-        TX_TRADE_ASSETS_ID => TxTrade::from_raw(rm)
-            .map(|t| t.into())
-            .map_err(|e| e.into()),
-        TX_TRANSFER_ID => TxTransfer::from_raw(rm)
-            .map(|t| t.into())
-            .map_err(|e| e.into()),
-        TX_MINING_ID => TxMining::from_raw(rm)
-            .map(|t| t.into())
-            .map_err(|e| e.into()),
+        MINE_ID => Mine::from_raw(rm).map(|t| t.into()).map_err(|e| e.into()),
         _ => Err(Box::new(TxFromRawError)),
     }
 }
