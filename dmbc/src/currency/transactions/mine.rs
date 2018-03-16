@@ -11,30 +11,32 @@ use currency::wallet::Wallet;
 use currency::status;
 
 /// Transaction ID.
-pub const CREATE_WALLET_ID: u16 = 100;
-const INITIAL_BALANCE: u64 = 1_00000000;
+pub const MINE_ID: u16 = 700;
+const MINE_AMOUNT: u64 = 1_00000000;
 
 message! {
     /// `create_wallet` transaction.
-    struct CreateWallet {
+    struct Mine {
         const TYPE = SERVICE_ID;
-        const ID = CREATE_WALLET_ID;
-        const SIZE = 32;
+        const ID = MINE_ID;
+        const SIZE = 40;
 
-        field pub_key:     &PublicKey  [00 => 32]
+        field pub_key: &PublicKey [00 => 32]
+        field seed:    u64        [32 => 40]
     }
 }
 
-impl CreateWallet {
+impl Mine {
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
         info!("Processing tx: {:?}", self);
-        let wallet = Wallet::new(INITIAL_BALANCE, Vec::new());
+        let wallet = wallet::Schema(&*view).fetch(self.pub_key());
+        let wallet = Wallet::new(wallet.balance() + MINE_AMOUNT, wallet.assets());
         wallet::Schema(&mut *view).store(&self.pub_key(), wallet);
         Ok(())
     }
 }
 
-impl Transaction for CreateWallet {
+impl Transaction for Mine {
     fn verify(&self) -> bool {
         if cfg!(fuzzing) {
             return true;

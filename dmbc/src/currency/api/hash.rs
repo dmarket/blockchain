@@ -11,8 +11,8 @@ use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use router::Router;
 
-use currency::transactions::{AddAssets, CreateWallet, DeleteAssets, Exchange,
-                             ExchangeIntermediary, Mining, Trade,
+use currency::transactions::{AddAssets, DeleteAssets, Exchange,
+                             ExchangeIntermediary, Mine, Trade,
                              TradeIntermediary, Transfer, EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID,
                              TRADE_ID, TRADE_INTERMEDIARY_ID};
 
@@ -22,7 +22,6 @@ pub struct HashApi {}
 #[serde(untagged)]
 #[derive(Clone, Serialize, Deserialize)]
 enum TransactionRequest {
-    CreateWallet(CreateWallet),
     Transfer(Transfer),
     AddAssets(AddAssets),
     DeleteAssets(DeleteAssets),
@@ -30,13 +29,12 @@ enum TransactionRequest {
     TradeIntermediary(TradeIntermediary),
     Exchange(Exchange),
     ExchangeIntermediary(ExchangeIntermediary),
-    Mining(Mining),
+    Mine(Mine),
 }
 
 impl Into<Box<Transaction>> for TransactionRequest {
     fn into(self) -> Box<Transaction> {
         match self {
-            TransactionRequest::CreateWallet(trans) => Box::new(trans),
             TransactionRequest::Transfer(trans) => Box::new(trans),
             TransactionRequest::AddAssets(trans) => Box::new(trans),
             TransactionRequest::DeleteAssets(trans) => Box::new(trans),
@@ -44,7 +42,7 @@ impl Into<Box<Transaction>> for TransactionRequest {
             TransactionRequest::TradeIntermediary(trans) => Box::new(trans),
             TransactionRequest::Exchange(trans) => Box::new(trans),
             TransactionRequest::ExchangeIntermediary(trans) => Box::new(trans),
-            TransactionRequest::Mining(trans) => Box::new(trans),
+            TransactionRequest::Mine(trans) => Box::new(trans),
         }
     }
 }

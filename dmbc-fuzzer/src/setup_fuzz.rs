@@ -66,17 +66,6 @@ fn setup() -> Result<(), Box<Error>> {
         })
         .unwrap_or_else(|e| eprintln!("{}", e));
 
-    tx_file("./fuzz-in/tx_create_wallet.in")
-        .and_then(|mut f| {
-            let tx = transaction::Builder::new()
-                .keypair(data.alice, SecretKey::zero())
-                .tx_create_wallet()
-                .build()
-                .into_bytes();
-            f.write_all(&tx).map_err(|e| e.into())
-        })
-        .unwrap_or_else(|e| eprintln!("{}", e));
-
     tx_file("./fuzz-in/tx_del_assets.in")
         .and_then(|mut f| {
             let tx = transaction::Builder::new()
@@ -111,7 +100,7 @@ fn setup() -> Result<(), Box<Error>> {
         .and_then(|mut f| {
             let tx = transaction::Builder::new()
                 .keypair(data.alice, SecretKey::zero())
-                .tx_mining()
+                .tx_mine()
                 .seed(3)
                 .build()
                 .into_bytes();

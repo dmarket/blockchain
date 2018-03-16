@@ -84,7 +84,7 @@ impl Flooder {
                 self.wallets.push(wallet.clone());
                 let tx = transaction::Builder::new()
                     .keypair(wallet.0, wallet.1)
-                    .tx_create_wallet()
+                    .tx_mine()
                     .build();
 
                 serialize(tx)
@@ -154,7 +154,7 @@ impl Flooder {
                     .keypair(sender.0, sender.1)
                     .tx_exchange_with_intermediary()
                     .intermediary_key_pair(intermediary.0, intermediary.1)
-                    .commision(10)
+                    .commission(10)
                     .sender_add_asset_value(s_asset)
                     .sender_value(9)
                     .recipient(receiver.0)
@@ -169,7 +169,7 @@ impl Flooder {
                 let wallet = self.pick_wallet();
                 let tx = transaction::Builder::new()
                     .keypair(wallet.0, wallet.1)
-                    .tx_mining()
+                    .tx_mine()
                     .build();
 
                 serialize(tx)
@@ -201,7 +201,7 @@ impl Flooder {
                     .tx_trade_assets_with_intermediary()
                     .buyer(buyer.0)
                     .intermediary_key_pair(intermediary.0, intermediary.1)
-                    .commision(1_0000_0000)
+                    .commission(1_0000_0000)
                     .add_asset_value(TradeAsset::from_bundle(asset, 50))
                     .build();
 

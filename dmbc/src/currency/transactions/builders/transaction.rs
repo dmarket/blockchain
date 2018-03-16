@@ -7,13 +7,12 @@ use exonum::storage::StorageValue;
 use currency;
 use currency::assets::{AssetBundle, AssetId, Fees, MetaAsset, TradeAsset};
 use currency::transactions::add_assets::AddAssets;
-use currency::transactions::create_wallet::CreateWallet;
 use currency::transactions::delete_assets::DeleteAssets;
 use currency::transactions::exchange::{Exchange, ExchangeOffer};
 use currency::transactions::components::{FeeStrategy, Intermediary};
 use currency::transactions::exchange_intermediary::{ExchangeIntermediary,
                                                     ExchangeOfferIntermediary};
-use currency::transactions::mining::Mining;
+use currency::transactions::mine::Mine;
 use currency::transactions::trade::{Trade, TradeOffer};
 use currency::transactions::trade_intermediary::{TradeIntermediary, TradeOfferIntermediary};
 use currency::transactions::transfer::Transfer;
@@ -91,11 +90,6 @@ impl Builder {
         AddAssetBuilder::new(self.into())
     }
 
-    pub fn tx_create_wallet(self) -> CreateWalletBuilder {
-        self.validate();
-        CreateWalletBuilder::new(self.into())
-    }
-
     pub fn tx_del_assets(self) -> DelAssetBuilder {
         self.validate();
         DelAssetBuilder::new(self.into())
@@ -111,9 +105,9 @@ impl Builder {
         ExchangeIntermediaryBuilder::new(self.into())
     }
 
-    pub fn tx_mining(self) -> MiningBuilder {
+    pub fn tx_mine(self) -> MineBuilder {
         self.validate();
-        MiningBuilder::new(self.into())
+        MineBuilder::new(self.into())
     }
 
     pub fn tx_trade_assets(self) -> TradeBuilder {
@@ -187,23 +181,6 @@ impl AddAssetBuilder {
             self.seed,
             &self.meta.secret_key,
         )
-    }
-
-    fn validate(&self) {}
-}
-
-pub struct CreateWalletBuilder {
-    meta: TransactionMetadata,
-}
-
-impl CreateWalletBuilder {
-    fn new(meta: TransactionMetadata) -> Self {
-        CreateWalletBuilder { meta }
-    }
-
-    pub fn build(self) -> CreateWallet {
-        self.validate();
-        CreateWallet::new(&self.meta.public_key, &self.meta.secret_key)
     }
 
     fn validate(&self) {}
@@ -511,23 +488,23 @@ impl ExchangeIntermediaryBuilder {
     }
 }
 
-pub struct MiningBuilder {
+pub struct MineBuilder {
     meta: TransactionMetadata,
     seed: u64,
 }
 
-impl MiningBuilder {
+impl MineBuilder {
     fn new(meta: TransactionMetadata) -> Self {
-        MiningBuilder { meta, seed: 0 }
+        MineBuilder { meta, seed: 0 }
     }
 
     pub fn seed(self, seed: u64) -> Self {
-        MiningBuilder { seed, ..self }
+        MineBuilder { seed, ..self }
     }
 
-    pub fn build(self) -> Mining {
+    pub fn build(self) -> Mine {
         self.verify();
-        Mining::new(&self.meta.public_key, self.seed, &self.meta.secret_key)
+        Mine::new(&self.meta.public_key, self.seed, &self.meta.secret_key)
     }
 
     fn verify(&self) {}
@@ -775,7 +752,7 @@ mod test {
     use currency::transactions::components::Intermediary;
     use currency::transactions::exchange_intermediary::{ExchangeIntermediary,
                                                         ExchangeOfferIntermediary};
-    use currency::transactions::mining::Mining;
+    use currency::transactions::mine::Mine;
     use currency::transactions::trade::{Trade, TradeOffer};
     use currency::transactions::trade_intermediary::{TradeIntermediary,
                                                      TradeOfferIntermediary};
@@ -795,11 +772,11 @@ mod test {
         let (public_key, secret_key) = crypto::gen_keypair();
         let transaction = transaction::Builder::new()
             .keypair(public_key, secret_key.clone())
-            .tx_mining()
+            .tx_mine()
             .seed(9)
             .build();
 
-        let equivalent = Mining::new(&public_key, 18, &secret_key);
+        let equivalent = Mine::new(&public_key, 18, &secret_key);
 
         assert_ne!(transaction, equivalent);
     }
@@ -950,15 +927,15 @@ mod test {
     }
 
     #[test]
-    fn mining() {
+    fn mine() {
         let (public_key, secret_key) = crypto::gen_keypair();
         let transaction = transaction::Builder::new()
             .keypair(public_key, secret_key.clone())
-            .tx_mining()
+            .tx_mine()
             .seed(9)
             .build();
 
-        let equivalent = Mining::new(&public_key, 9, &secret_key);
+        let equivalent = Mine::new(&public_key, 9, &secret_key);
 
         assert_eq!(transaction, equivalent);
     }

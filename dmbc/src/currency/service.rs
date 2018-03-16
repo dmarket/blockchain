@@ -16,10 +16,10 @@ use currency::configuration::Configuration;
 use currency::wallet;
 use currency::wallet::Wallet;
 use currency::status;
-use currency::transactions::{AddAssets, CreateWallet, DeleteAssets, Exchange,
-                             ExchangeIntermediary, Mining, Trade,
-                             TradeIntermediary, ADD_ASSETS_ID, CREATE_WALLET_ID, DELETE_ASSETS_ID,
-                             EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID, MINING_ID,
+use currency::transactions::{AddAssets, DeleteAssets, Exchange,
+                             ExchangeIntermediary, Mine, Trade,
+                             TradeIntermediary, ADD_ASSETS_ID, DELETE_ASSETS_ID,
+                             EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID, MINE_ID,
                              TRADE_ID, TRADE_INTERMEDIARY_ID};
 use serde_json;
 
@@ -60,11 +60,10 @@ impl blockchain::Service for Service {
     fn tx_from_raw(&self, raw: RawTransaction) -> Result<Box<Transaction>, encoding::Error> {
         let trans: Box<Transaction> = match raw.message_type() {
             ADD_ASSETS_ID => Box::new(AddAssets::from_raw(raw)?),
-            CREATE_WALLET_ID => Box::new(CreateWallet::from_raw(raw)?),
             DELETE_ASSETS_ID => Box::new(DeleteAssets::from_raw(raw)?),
             EXCHANGE_ID => Box::new(Exchange::from_raw(raw)?),
             EXCHANGE_INTERMEDIARY_ID => Box::new(ExchangeIntermediary::from_raw(raw)?),
-            MINING_ID => Box::new(Mining::from_raw(raw)?),
+            MINE_ID => Box::new(Mine::from_raw(raw)?),
             TRADE_ID => Box::new(Trade::from_raw(raw)?),
             TRADE_INTERMEDIARY_ID => Box::new(TradeIntermediary::from_raw(raw)?),
             _ => {
