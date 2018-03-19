@@ -39,12 +39,7 @@ fn add_assets() {
         .build();
 
     let meta_data = r#"{"name":"test_item","type":"skin","category":"gun","image":"http://test.com/test_item.jpg"}"#;
-    let meta_asset_receiver = MetaAsset::new(
-        &receiver_key,
-        meta_data,
-        3,
-        fees.clone()
-    );
+    let meta_asset_receiver = MetaAsset::new(&receiver_key, meta_data, 3, fees.clone());
 
     // Maйним ассет с отсылкой его на другой кошелек. Ассета нет в сети, ранее не майнили,
     // Кошелек на который майнят нет других ассетов.
@@ -109,12 +104,7 @@ fn add_assets() {
 
 
     // Майним уже замайненный ассет. Оставляем его на кошельке майнера.
-    let meta_asset = MetaAsset::new(
-        &public_key,
-        meta_data,
-        5,
-        fees.clone()
-    );
+    let meta_asset = MetaAsset::new(&public_key, meta_data, 5, fees.clone());
 
     let tx_add_assets = transaction::Builder::new()
         .keypair(public_key, secret_key.clone())
@@ -142,19 +132,8 @@ fn add_assets() {
 
     // Майним уже замайненный ассет. Оставляем его на кошельке майнера.
     // Майним уже замайненный ассет c указанием другого кошелька получателя.
-    let meta_miners_asset = MetaAsset::new(
-        &public_key,
-        meta_data,
-        1,
-        fees.clone()
-    );
-
-    let meta_receivers_asset = MetaAsset::new(
-        &receiver_key,
-        meta_data,
-        2,
-        fees.clone()
-    );
+    let meta_miners_asset = MetaAsset::new(&public_key, meta_data, 1, fees.clone());
+    let meta_receivers_asset = MetaAsset::new(&receiver_key, meta_data, 2,fees.clone());
 
     let tx_add_assets = transaction::Builder::new()
         .keypair(public_key, secret_key.clone())
@@ -194,13 +173,7 @@ fn add_assets() {
 
     let meta_data2 = r#"{"name":"test_item2","type":"skin","category":"revolver","image":"http://test.com/test_item2.jpg"}"#;
     let asset_id2 = AssetId::from_data(meta_data2, &public_key);
-    let meta_asset_receiver2 = MetaAsset::new(
-        &receiver_key,
-        meta_data2,
-        4,
-        fees2.clone()
-    );
-
+    let meta_asset_receiver2 = MetaAsset::new(&receiver_key, meta_data2, 4, fees2.clone());
 
     // Maйним ассет с отсылкой его на другой кошелек. Ассета нет в сети, ранее не майнили,
     // Кошелек на который майнят eсть другой ассет.
@@ -237,12 +210,7 @@ fn add_assets() {
 
 
     // Майним уже замайненный ассет. Оставляем его на кошельке майнера.
-    let meta_asset2 = MetaAsset::new(
-        &public_key,
-        meta_data2,
-        7,
-        fees2.clone()
-    );
+    let meta_asset2 = MetaAsset::new(&public_key, meta_data2, 7, fees2.clone());
 
     let tx_add_assets = transaction::Builder::new()
         .keypair(public_key, secret_key.clone())
@@ -273,19 +241,8 @@ fn add_assets() {
 
     // Майним уже замайненный ассет. Оставляем его на кошельке майнера.
     // Майним уже замайненный ассет c указанием другого кошелька получателя.
-    let meta_miners_asset2 = MetaAsset::new(
-        &public_key,
-        meta_data2,
-        2,
-        fees2.clone()
-    );
-
-    let meta_receivers_asset2 = MetaAsset::new(
-        &receiver_key,
-        meta_data2,
-        1,
-        fees2.clone()
-    );
+    let meta_miners_asset2 = MetaAsset::new(&public_key, meta_data2, 2, fees2.clone());
+    let meta_receivers_asset2 = MetaAsset::new(&receiver_key, meta_data2, 1, fees2.clone());
 
     let tx_add_assets = transaction::Builder::new()
         .keypair(public_key, secret_key.clone())
@@ -349,12 +306,7 @@ fn add_assets_with_different_fees() {
 
     let meta_data = r#"{"name":"test_item","type":"skin","category":"gun","image":"http://test.com/test_item.jpg"}"#;
     let asset_id = AssetId::from_data(meta_data, &public_key);
-    let meta_asset = MetaAsset::new(
-        &public_key,
-        meta_data,
-        1,
-        fees.clone()
-    );
+    let meta_asset = MetaAsset::new(&public_key, meta_data, 1, fees.clone());
 
     let tx_add_assets = transaction::Builder::new()
         .keypair(public_key, secret_key.clone())
@@ -387,12 +339,7 @@ fn add_assets_with_different_fees() {
         .transfer(10, 10)
         .build();
 
-    let meta_asset2 = MetaAsset::new(
-        &public_key,
-        meta_data,
-        1,
-        fees2.clone()
-    );
+    let meta_asset2 = MetaAsset::new(&public_key, meta_data, 1, fees2.clone());
 
     let tx_add_assets = transaction::Builder::new()
         .keypair(public_key, secret_key.clone())
@@ -418,8 +365,6 @@ fn add_assets_with_different_fees() {
 
     let bc_asset_info = get_asset_info(&api, &asset_id).unwrap();
     assert_eq!(meta_asset.to_info(&public_key), bc_asset_info);
-
-
 }
 
 #[test]
@@ -438,12 +383,7 @@ fn add_assets_insufficient_funds() {
         .build();
 
     let meta_data = r#"{"name":"test_item","type":"skin","category":"gun","image":"http://test.com/test_item.jpg"}"#;
-    let meta_asset = MetaAsset::new(
-        &public_key,
-        meta_data,
-        1,
-        fees.clone()
-    );
+    let meta_asset = MetaAsset::new(&public_key, meta_data, 1, fees.clone());
 
     let tx_add_assets = transaction::Builder::new()
         .keypair(public_key, secret_key.clone())
@@ -474,6 +414,113 @@ fn add_assets_insufficient_funds() {
 
     let s = get_status(&api, &tx_add_assets.hash());
     assert_eq!(Ok(Err(Error::InsufficientFunds)), s);
+}
+
+#[test]
+fn add_assets_to_empty_wallet_without_meta_info() {
+    let mut testkit = init_testkit();
+    let api = testkit.api();
+
+    let (public_key, secret_key) = crypto::gen_keypair();
+
+    let fees = fee::Builder::new()
+        .trade(10, 10)
+        .exchange(10, 10)
+        .transfer(10, 10)
+        .build();
+
+    let meta_data = r#"{"name":"test_item","type":"skin","category":"gun","image":"http://test.com/test_item.jpg"}"#;
+    let asset_id = AssetId::from_data(meta_data, &public_key);
+    let meta_asset = MetaAsset::new(&public_key, meta_data, 1, fees.clone());
+
+    let tx_add_assets = transaction::Builder::new()
+        .keypair(public_key, secret_key.clone())
+        .tx_add_assets()
+        .add_asset_value(meta_asset.clone())
+        .seed(85)
+        .build();
+
+    post_tx(&api, &tx_add_assets);
+    testkit.create_block();
+
+    let s = get_status(&api, &tx_add_assets.hash());
+    assert_eq!(Ok(Ok(())), s);
+
+    let bc_asset_info = get_asset_info(&api, &asset_id).unwrap();
+    assert_eq!(meta_asset.to_info(&public_key), bc_asset_info);
+
+    let mining_wallet = get_wallet(&api, &public_key);
+    let assets: Vec<AssetBundle> = vec![
+        meta_asset.to_bundle(asset_id.clone()),
+    ];
+    assert_eq!(assets, mining_wallet.assets());
+}
+
+#[test]
+fn add_assets_to_empty_wallet_with_exist_meta_info() {
+    let mut testkit = init_testkit();
+    let api = testkit.api();
+
+    let (public_key, secret_key) = crypto::gen_keypair();
+    let (receiver_key, _) = crypto::gen_keypair();
+
+    let fees = fee::Builder::new()
+        .trade(10, 10)
+        .exchange(10, 10)
+        .transfer(10, 10)
+        .build();
+
+    let meta_data = r#"{"name":"test_item","type":"skin","category":"gun","image":"http://test.com/test_item.jpg"}"#;
+    let asset_id = AssetId::from_data(meta_data, &public_key);
+    let meta_asset = MetaAsset::new(&receiver_key, meta_data, 1, fees.clone());
+
+    let tx_add_assets = transaction::Builder::new()
+        .keypair(public_key, secret_key.clone())
+        .tx_add_assets()
+        .add_asset_value(meta_asset.clone())
+        .seed(85)
+        .build();
+
+    post_tx(&api, &tx_add_assets);
+    testkit.create_block();
+
+    let s = get_status(&api, &tx_add_assets.hash());
+    assert_eq!(Ok(Ok(())), s);
+
+    let bc_asset_info = get_asset_info(&api, &asset_id).unwrap();
+    assert_eq!(meta_asset.to_info(&public_key), bc_asset_info);
+
+    let mining_wallet = get_wallet(&api, &public_key);
+    let empty_assets: Vec<AssetBundle> = vec![];
+    assert_eq!(empty_assets, mining_wallet.assets());
+
+    let receiver_wallet = get_wallet(&api, &receiver_key);
+    let assets: Vec<AssetBundle> = vec![meta_asset.to_bundle(asset_id.clone())];
+    assert_eq!(assets, receiver_wallet.assets());
 
 
+    let meta_asset = MetaAsset::new(&public_key, meta_data, 1, fees.clone());
+
+    let tx_add_assets = transaction::Builder::new()
+        .keypair(public_key, secret_key.clone())
+        .tx_add_assets()
+        .add_asset_value(meta_asset.clone())
+        .seed(85)
+        .build();
+
+    post_tx(&api, &tx_add_assets);
+    testkit.create_block();
+
+    let s = get_status(&api, &tx_add_assets.hash());
+    assert_eq!(Ok(Ok(())), s);
+
+    let bc_asset_info = get_asset_info(&api, &asset_id).unwrap();
+    assert_eq!(meta_asset.to_info(&public_key).creator(), bc_asset_info.creator());
+    assert_eq!(2, bc_asset_info.amount());
+
+    let mining_wallet = get_wallet(&api, &public_key);
+    assert_eq!(assets, mining_wallet.assets());
+
+    let receiver_wallet = get_wallet(&api, &receiver_key);
+    assert_eq!(assets, receiver_wallet.assets());
 }

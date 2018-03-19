@@ -11,8 +11,9 @@ use dmbc::currency::api::transaction::{TransactionResponse, StatusResponse};
 use dmbc::currency::api::asset::AssetResponse;
 use dmbc::currency::configuration::{Configuration, TransactionFees};
 
-pub mod add_assets;
 pub mod mine;
+pub mod add_assets;
+pub mod delete_assets;
 
 pub const DMC_1:u64 = 1_00_000_000;
 
