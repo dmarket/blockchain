@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::collections::hash_map::Entry;
 
 use exonum::blockchain::Transaction;
 use exonum::crypto::PublicKey;
@@ -8,7 +9,7 @@ use serde_json;
 
 use currency::{Service, SERVICE_ID};
 use currency::assets;
-use currency::assets::{AssetBundle, AssetId, AssetInfo, MetaAsset};
+use currency::assets::{AssetId, AssetInfo, MetaAsset};
 use currency::wallet;
 use currency::status;
 use currency::error::Error;
@@ -47,57 +48,43 @@ impl AddAssets {
         wallet::Schema(&mut *view).store(&genesis_pub, genesis);
         wallet::Schema(&mut *view).store(&creator_pub, creator);
 
-        let updated_wallets = fees.collect_to_third_party(&*view, &creator_pub)?;
+        let mut wallets = fees.collect_to_third_party(&*view, &creator_pub)?;
+        let mut infos: HashMap<AssetId, AssetInfo> = HashMap::new();
 
-        for (key, wallet) in updated_wallets {
+        let key = self.pub_key();
+
+        for meta in self.meta_assets() {
+            let id = AssetId::from_data(meta.data(), key);
+
+            let wallet = wallets.entry(*key)
+                .or_insert_with(|| wallet::Schema(&*view).fetch(key));
+            wallet.add_assets(Some(meta.to_bundle(id)));
+
+            match infos.entry(id) {
+                Entry::Occupied(entry) => {
+                    let info = entry.into_mut();
+                    *info = info.clone().merge(meta.to_info(key))?;
+                }
+                Entry::Vacant(entry) => {
+                    let new_info = meta.to_info(key);
+                    let info = match assets::Schema(&*view).fetch(&id) {
+                        Some(info) => info.merge(new_info)?,
+                        None => new_info,
+                    };
+                    entry.insert(info);
+                }
+            }
+        }
+
+        for (key, wallet) in wallets {
             wallet::Schema(&mut *view).store(&key, wallet);
         }
 
-        let assets = self.extract_assets(view)?;
-
-        let mut recipients = HashMap::new();
-        for (recipient, asset, info) in assets {
-            let id = asset.id();
-            recipients
-                .entry(recipient)
-                .or_insert(Vec::new())
-                .push(asset);
-
+        for (id, info) in infos {
             assets::Schema(&mut *view).store(&id, info);
         }
 
-        for (key, assets) in recipients {
-            let mut recipient = wallet::Schema(&*view).fetch(&key);
-
-            recipient.add_assets(assets);
-
-            wallet::Schema(&mut *view).store(&key, recipient);
-        }
-
         Ok(())
-    }
-
-    fn extract_assets(
-        &self,
-        view: &mut Fork,
-    ) -> Result<Vec<(PublicKey, AssetBundle, AssetInfo)>, Error> {
-        self.meta_assets()
-            .into_iter()
-            .map(|meta| {
-                let id = AssetId::from_data(meta.data(), &self.pub_key());
-                let state = assets::Schema(&mut *view).fetch(&id);
-
-                let key = self.pub_key();
-                let info = state.map_or_else(
-                    || Ok(meta.to_info(&key)),
-                    |info| info.merge(meta.to_info(&key)),
-                )?;
-
-                let asset = meta.to_bundle(id);
-
-                Ok((*meta.receiver(), asset, info))
-            })
-            .collect()
     }
 }
 
