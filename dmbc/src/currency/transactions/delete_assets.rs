@@ -58,7 +58,8 @@ impl DeleteAssets {
                 return Err(Error::InvalidTransaction);
             }
             let mut entry = infos.remove(&asset.id()).unwrap_or(info);
-            entry.decrease(asset.amount())?;
+            let entry = entry.decrease(asset.amount())?;
+            infos.insert(asset.id(), entry);
         }
 
         creator.remove_assets(self.assets())?;
