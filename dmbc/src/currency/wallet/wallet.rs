@@ -124,6 +124,7 @@ pub fn move_assets(
         *to_asset = AssetBundle::new(spec.id(), to_asset.amount() + spec.amount());
     }
 
+    from_assets.retain(|a| a.amount() > 0);
     *from = Wallet::new(from.balance(), from_assets);
     *to = Wallet::new(to.balance(), to_assets);
 
