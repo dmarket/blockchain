@@ -16,6 +16,7 @@ use dmbc::currency::transactions::builders::transaction;
 pub mod mine;
 pub mod add_assets;
 pub mod delete_assets;
+pub mod transfer;
 pub mod exchange;
 
 pub const DMC_1:u64 = 1_00_000_000;
