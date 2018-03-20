@@ -231,10 +231,12 @@ impl DelAssetBuilder {
 pub struct ExchangeBuilder {
     meta: TransactionMetadata,
 
+    sender: Option<PublicKey>,
+    sender_secret: Option<SecretKey>,
+
     sender_assets: Vec<AssetBundle>,
     sender_value: u64,
 
-    recipient: Option<PublicKey>,
     recipient_assets: Vec<AssetBundle>,
 
     fee_strategy: u8,
@@ -249,10 +251,12 @@ impl ExchangeBuilder {
         ExchangeBuilder {
             meta,
 
+            sender: None,
+            sender_secret: None,
+
             sender_assets: Vec::new(),
             sender_value: 0,
 
-            recipient: None,
             recipient_assets: Vec::new(),
 
             fee_strategy: 1,
@@ -262,9 +266,23 @@ impl ExchangeBuilder {
             data_info: None,
         }
     }
+    pub fn sender(self, pub_key: PublicKey) -> Self {
+        ExchangeBuilder {
+            sender: Some(pub_key),
+            ..self
+        }
+    }
+
+    pub fn sender_secret(self, secret_key: SecretKey) -> Self {
+        ExchangeBuilder {
+            sender_secret: Some(secret_key),
+            ..self
+        }
+    }
+
 
     pub fn sender_add_asset(self, name: &str, count: u64) -> Self {
-        let asset = AssetBundle::from_data(name, count, &self.meta.public_key);
+        let asset = AssetBundle::from_data(name, count, &self.sender.unwrap());
         self.sender_add_asset_value(asset)
     }
 
@@ -280,15 +298,8 @@ impl ExchangeBuilder {
         }
     }
 
-    pub fn recipient(self, pub_key: PublicKey) -> Self {
-        ExchangeBuilder {
-            recipient: Some(pub_key),
-            ..self
-        }
-    }
-
     pub fn recipient_add_asset(self, name: &str, count: u64) -> Self {
-        let asset = AssetBundle::from_data(name, count, &self.recipient.unwrap());
+        let asset = AssetBundle::from_data(name, count, &self.meta.public_key);
         self.recipient_add_asset_value(asset)
     }
 
@@ -318,25 +329,26 @@ impl ExchangeBuilder {
     pub fn build(self) -> Exchange {
         self.verify();
         let offer = ExchangeOffer::new(
-            &self.meta.public_key,
+            self.sender.as_ref().unwrap(),
             self.sender_assets,
             self.sender_value,
-            self.recipient.as_ref().unwrap(),
+            &self.meta.public_key,
             self.recipient_assets,
             self.fee_strategy,
         );
-        let signature = crypto::sign(&offer.clone().into_bytes(), &self.meta.secret_key);
+        let sender_signature = crypto::sign(&offer.clone().into_bytes(), &self.sender_secret.unwrap());
         Exchange::new(
             offer,
             self.seed,
-            &signature,
+            &sender_signature,
             &self.data_info.unwrap_or_default(),
             &self.meta.secret_key,
         )
     }
 
     fn verify(&self) {
-        assert!(self.recipient.is_some());
+        assert!(self.sender.is_some());
+        assert!(self.sender_secret.is_some());
         assert!(FeeStrategy::try_from(self.fee_strategy).is_some());
     }
 }
@@ -832,18 +844,19 @@ mod test {
 
     #[test]
     fn exchange() {
-        let (public_key, secret_key) = crypto::gen_keypair();
+        let (recipient_pk, recipient_sk) = crypto::gen_keypair();
 
-        let (recipient, _) = crypto::gen_keypair();
-        let sender_asset = AssetBundle::from_data("foobar", 9, &public_key);
-        let recipient_asset = AssetBundle::from_data("bazqux", 13, &public_key);
+        let (sender_pk, sender_sk) = crypto::gen_keypair();
+        let sender_asset = AssetBundle::from_data("foobar", 9, &sender_pk);
+        let recipient_asset = AssetBundle::from_data("bazqux", 13, &recipient_pk);
 
         let transaction = transaction::Builder::new()
-            .keypair(public_key, secret_key.clone())
+            .keypair(recipient_pk, recipient_sk.clone())
             .tx_exchange()
+            .sender(sender_pk)
+            .sender_secret(sender_sk.clone())
             .sender_add_asset_value(sender_asset.clone())
             .sender_value(9)
-            .recipient(recipient)
             .recipient_add_asset_value(recipient_asset.clone())
             .fee_strategy(1)
             .seed(1)
@@ -851,15 +864,15 @@ mod test {
             .build();
 
         let offer = ExchangeOffer::new(
-            &public_key,
+            &sender_pk,
             vec![sender_asset.clone()],
             9,
-            &recipient,
+            &recipient_pk,
             vec![recipient_asset.clone()],
             1,
         );
-        let signature = crypto::sign(&offer.clone().into_bytes(), &secret_key);
-        let equivalent = Exchange::new(offer, 1, &signature, "test_exchange", &secret_key);
+        let sender_signature = crypto::sign(&offer.clone().into_bytes(), &sender_sk.clone());
+        let equivalent = Exchange::new(offer, 1, &sender_signature, "test_exchange", &recipient_sk);
 
         assert_eq!(transaction, equivalent);
     }
