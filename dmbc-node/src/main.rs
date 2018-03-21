@@ -11,7 +11,8 @@ extern crate dmbc;
 mod keyfile;
 mod net_config;
 
-use exonum::blockchain::{ConsensusConfig, GenesisConfig, Service, TimeoutAdjusterConfig,
+use exonum::blockchain;
+use exonum::blockchain::{ConsensusConfig, GenesisConfig, TimeoutAdjusterConfig,
                          ValidatorKeys};
 use exonum::crypto::PublicKey;
 use exonum::encoding::serialize::FromHex;
@@ -126,7 +127,7 @@ fn main() {
     // Initialize services
     let services: Vec<Box<blockchain::Service>> = vec![
         Box::new(ConfigurationService::new()),
-        Box::new(Service())
+        Box::new(Service::new())
     ];
 
     eprintln!("Launching node. What can possibly go wrong?");
