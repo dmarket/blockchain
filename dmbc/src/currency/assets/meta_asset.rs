@@ -19,12 +19,7 @@ encoding_struct! {
 impl MetaAsset {
     /// Verify valididty of the committed assets.
     pub fn verify(&self) -> bool {
-        let trade_ok = self.fees().trade().ratio() != 0;
-        let exchange_ok = self.fees().exchange().ratio() != 0;
-        let transfer_ok = self.fees().transfer().ratio() != 0;
-        let data_ok = self.data().len() <= ASSET_DATA_MAX_LENGTH;
-
-        trade_ok && exchange_ok && transfer_ok && data_ok
+        self.data().len() <= ASSET_DATA_MAX_LENGTH
     }
 
     /// Create an `AssetInfo` from this `MetaAsset`.
