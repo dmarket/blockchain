@@ -239,7 +239,7 @@ pub struct ExchangeBuilder {
 
     recipient_assets: Vec<AssetBundle>,
 
-    fee_strategy: u8,
+    fee_strategy: FeeStrategy,
 
     seed: u64,
 
@@ -259,7 +259,7 @@ impl ExchangeBuilder {
 
             recipient_assets: Vec::new(),
 
-            fee_strategy: 1,
+            fee_strategy: FeeStrategy::Recipient,
 
             seed: 0,
 
@@ -308,7 +308,7 @@ impl ExchangeBuilder {
         self
     }
 
-    pub fn fee_strategy(self, fee_strategy: u8) -> Self {
+    pub fn fee_strategy(self, fee_strategy: FeeStrategy) -> Self {
         ExchangeBuilder {
             fee_strategy,
             ..self
@@ -334,7 +334,7 @@ impl ExchangeBuilder {
             self.sender_value,
             &self.meta.public_key,
             self.recipient_assets,
-            self.fee_strategy,
+            self.fee_strategy as u8,
         );
         let sender_signature = crypto::sign(&offer.clone().into_bytes(), &self.sender_secret.unwrap());
         Exchange::new(
@@ -349,7 +349,6 @@ impl ExchangeBuilder {
     fn verify(&self) {
         assert!(self.sender.is_some());
         assert!(self.sender_secret.is_some());
-        assert!(FeeStrategy::try_from(self.fee_strategy).is_some());
     }
 }
 
@@ -366,7 +365,7 @@ pub struct ExchangeIntermediaryBuilder {
     recipient: Option<PublicKey>,
     recipient_assets: Vec<AssetBundle>,
 
-    fee_strategy: u8,
+    fee_strategy: FeeStrategy,
 
     seed: u64,
 
@@ -388,7 +387,7 @@ impl ExchangeIntermediaryBuilder {
             recipient: None,
             recipient_assets: Vec::new(),
 
-            fee_strategy: 1,
+            fee_strategy: FeeStrategy::Recipient,
 
             seed: 0,
 
@@ -423,7 +422,7 @@ impl ExchangeIntermediaryBuilder {
 
     pub fn commission(self, commission: u64) -> Self {
         ExchangeIntermediaryBuilder {
-            commission: commission,
+            commission,
             ..self
         }
     }
@@ -445,7 +444,7 @@ impl ExchangeIntermediaryBuilder {
         self
     }
 
-    pub fn fee_strategy(self, fee_strategy: u8) -> Self {
+    pub fn fee_strategy(self, fee_strategy: FeeStrategy) -> Self {
         ExchangeIntermediaryBuilder {
             fee_strategy,
             ..self
@@ -476,7 +475,7 @@ impl ExchangeIntermediaryBuilder {
             self.sender_value,
             self.recipient.as_ref().unwrap(),
             self.recipient_assets,
-            self.fee_strategy,
+            self.fee_strategy as u8,
         );
         let signature = crypto::sign(&offer.clone().into_bytes(), &self.meta.secret_key);
         let intermediary_signature = crypto::sign(
@@ -760,7 +759,7 @@ mod test {
     use currency::transactions::add_assets::AddAssets;
     use currency::transactions::delete_assets::DeleteAssets;
     use currency::transactions::exchange::{Exchange, ExchangeOffer};
-    use currency::transactions::components::Intermediary;
+    use currency::transactions::components::{FeeStrategy, Intermediary};
     use currency::transactions::exchange_intermediary::{ExchangeIntermediary,
                                                         ExchangeOfferIntermediary};
     use currency::transactions::mine::Mine;
@@ -858,7 +857,7 @@ mod test {
             .sender_add_asset_value(sender_asset.clone())
             .sender_value(9)
             .recipient_add_asset_value(recipient_asset.clone())
-            .fee_strategy(1)
+            .fee_strategy(FeeStrategy::Recipient)
             .seed(1)
             .data_info("test_exchange")
             .build();
@@ -894,7 +893,7 @@ mod test {
             .sender_value(9)
             .recipient(recipient)
             .recipient_add_asset_value(recipient_asset.clone())
-            .fee_strategy(1)
+            .fee_strategy(FeeStrategy::Recipient)
             .seed(1)
             .data_info("test_exchange")
             .build();
