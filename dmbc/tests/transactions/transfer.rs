@@ -18,15 +18,8 @@ fn transfer() {
     let api = testkit.api();
     set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 0, 0, 100));
 
-    let (public_key, secret_key) = crypto::gen_keypair();
+    let (public_key, secret_key) = mine_wallet(&mut testkit);
     let (recipient_key, _) = crypto::gen_keypair();
-    let mine_1_dmc = transaction::Builder::new()
-        .keypair(public_key, secret_key.clone())
-        .tx_mine()
-        .build();
-
-    post_tx(&api, &mine_1_dmc);
-    testkit.create_block();
 
     let fees = fee::Builder::new()
         .trade(10, 10)
@@ -82,9 +75,9 @@ fn transfer() {
 fn tranfer_nonexisting_asset() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::new(100, 100, 100, 100, 100, 100));
+    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 0, 0, 100));
 
-    let (public_key, secret_key) = crypto::gen_keypair();
+    let (public_key, secret_key) = mine_wallet(&mut testkit);
     let (recipient_key, _) = crypto::gen_keypair();
 
     let meta_data = r#"{"name":"test_item","type":"skin","category":"gun","image":"http://test.com/test_item.jpg"}"#;
@@ -109,41 +102,24 @@ fn tranfer_insufficient_funds() {
     let mut testkit = init_testkit();
     let api = testkit.api();
 
-    set_configuration(&mut testkit, TransactionFees::new(10, 1_00_000_000, 1_00_000_000, 1_00_000_000, 1_00_000_000, 1_00_000_000));
+    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 0, 0, 100));
 
     let (public_key, secret_key) = crypto::gen_keypair();
     let (recipient_key, _) = crypto::gen_keypair();
 
     let meta_data = r#"{"name":"test_item","type":"skin","category":"gun","image":"http://test.com/test_item.jpg"}"#;
 
-    let tx_add_assets = transaction::Builder::new()
+    let tx_transfer = transaction::Builder::new()
         .keypair(public_key, secret_key.clone())
         .tx_transfer()
         .add_asset(meta_data, 2)
         .recipient(recipient_key)
-        .seed(85)
+        .seed(42)
         .build();
-
-    post_tx(&api, &tx_add_assets);
-
+        
+    post_tx(&api, &tx_transfer);
     testkit.create_block();
 
-    let s = get_status(&api, &tx_add_assets.hash());
-    assert_eq!(Ok(Err(Error::InsufficientFunds)), s);
-
-
-    let mine_1_dmc = transaction::Builder::new()
-        .keypair(public_key, secret_key.clone())
-        .tx_mine()
-        .build();
-
-    post_tx(&api, &mine_1_dmc);
-    testkit.create_block();
-
-    post_tx(&api, &tx_add_assets);
-
-    testkit.create_block();
-
-    let s = get_status(&api, &tx_add_assets.hash());
+    let s = get_status(&api, &tx_transfer.hash());
     assert_eq!(Ok(Err(Error::InsufficientFunds)), s);
 }
