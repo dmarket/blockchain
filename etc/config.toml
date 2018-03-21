@@ -11,7 +11,7 @@ is_validator = true
 path = "./var/db"
 
 [nats]
-enabled = true
+enabled = false
 addresses = ["nats://vRJY4vOIoNSsG72F:UCF0IsKwMlYON4g7@35.197.200.238:4222"]
 queuename = "transaction.commit"
 

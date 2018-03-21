@@ -19,7 +19,7 @@ use exonum::node::{Node, NodeApiConfig, NodeConfig};
 use exonum::storage::{RocksDB, RocksDBOptions};
 use exonum_configuration::ConfigurationService;
 use dmbc::config;
-use dmbc::service::CurrencyService;
+use dmbc::currency::Service;
 
 const GENESIS_VALIDATOR_PUBLIC: &str =
     "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f";
@@ -124,9 +124,9 @@ fn main() {
     let db = Box::new(RocksDB::open(path, &options).unwrap());
 
     // Initialize services
-    let services: Vec<Box<Service>> = vec![
+    let services: Vec<Box<blockchain::Service>> = vec![
         Box::new(ConfigurationService::new()),
-        Box::new(CurrencyService),
+        Box::new(Service())
     ];
 
     eprintln!("Launching node. What can possibly go wrong?");
