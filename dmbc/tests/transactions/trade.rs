@@ -2,7 +2,6 @@ extern crate dmbc;
 extern crate exonum;
 extern crate exonum_testkit;
 
-use exonum::crypto;
 use exonum::messages::Message;
 
 use dmbc::currency::transactions::builders::fee;
@@ -38,10 +37,10 @@ fn trade() {
     let price_per_unit = 1000;
 
     let tx_trade = transaction::Builder::new()
-        .keypair(seller_public_key, seller_secret_key)
+        .keypair(buyer_public_key, buyer_secret_key)
         .tx_trade_assets()
         .add_asset(&meta_data, units, price_per_unit)
-        .buyer(buyer_public_key, buyer_secret_key)
+        .seller(seller_public_key, seller_secret_key)
         .fee_strategy(FeeStrategy::Recipient)
         .seed(12)
         .build();
@@ -77,10 +76,10 @@ fn trade_fee_strategy() {
     let price_per_unit = 1000;
 
     let tx_trade = transaction::Builder::new()
-        .keypair(seller_public_key, seller_secret_key)
+        .keypair(buyer_public_key, buyer_secret_key)
         .tx_trade_assets()
         .add_asset(&meta_data, units, price_per_unit)
-        .buyer(buyer_public_key, buyer_secret_key)
+        .seller(seller_public_key, seller_secret_key)
         .fee_strategy(FeeStrategy::Recipient)
         .seed(12)
         .build();
@@ -110,12 +109,12 @@ fn trade_fee_strategy() {
     let (buyer_public_key, buyer_secret_key) = WalletMiner::new().mine(&mut testkit);
 
     let tx_trade = transaction::Builder::new()
-        .keypair(seller_public_key, seller_secret_key)
+        .keypair(buyer_public_key, buyer_secret_key)
         .tx_trade_assets()
         .add_asset(&meta_data, units, price_per_unit)
-        .buyer(buyer_public_key, buyer_secret_key)
+        .seller(seller_public_key, seller_secret_key)
         .fee_strategy(FeeStrategy::Sender)
-        .seed(120)
+        .seed(12)
         .build();
 
     post_tx(&api, &tx_trade);
@@ -144,12 +143,12 @@ fn trade_fee_strategy() {
     let (buyer_public_key, buyer_secret_key) = WalletMiner::new().mine(&mut testkit);
 
     let tx_trade = transaction::Builder::new()
-        .keypair(seller_public_key, seller_secret_key)
+        .keypair(buyer_public_key, buyer_secret_key)
         .tx_trade_assets()
         .add_asset(&meta_data, units, price_per_unit)
-        .buyer(buyer_public_key, buyer_secret_key)
+        .seller(seller_public_key, seller_secret_key)
         .fee_strategy(FeeStrategy::RecipientAndSender)
-        .seed(120)
+        .seed(12)
         .build();
 
     post_tx(&api, &tx_trade);
@@ -178,12 +177,12 @@ fn trade_fee_strategy() {
     let (buyer_public_key, buyer_secret_key) = WalletMiner::new().mine(&mut testkit);
 
     let tx_trade = transaction::Builder::new()
-        .keypair(seller_public_key, seller_secret_key)
+        .keypair(buyer_public_key, buyer_secret_key)
         .tx_trade_assets()
         .add_asset(&meta_data, units, price_per_unit)
-        .buyer(buyer_public_key, buyer_secret_key)
+        .seller(seller_public_key, seller_secret_key)
         .fee_strategy(FeeStrategy::Intermediary)
-        .seed(120)
+        .seed(12)
         .build();
 
     post_tx(&api, &tx_trade);
@@ -211,10 +210,10 @@ fn trade_insuffisient_funds() {
     let price_per_unit = 1000;
 
     let tx_trade = transaction::Builder::new()
-        .keypair(seller_public_key, seller_secret_key)
+        .keypair(buyer_public_key, buyer_secret_key)
         .tx_trade_assets()
         .add_asset(&meta_data, units, price_per_unit)
-        .buyer(buyer_public_key, buyer_secret_key)
+        .seller(seller_public_key, seller_secret_key)
         .fee_strategy(FeeStrategy::Recipient)
         .seed(12)
         .build();
@@ -243,10 +242,10 @@ fn trade_assets_not_found() {
     let price_per_unit = 1000;
 
     let tx_trade = transaction::Builder::new()
-        .keypair(seller_public_key, seller_secret_key)
+        .keypair(buyer_public_key, buyer_secret_key)
         .tx_trade_assets()
         .add_asset(&meta_data, units, price_per_unit)
-        .buyer(buyer_public_key, buyer_secret_key)
+        .seller(seller_public_key, seller_secret_key)
         .fee_strategy(FeeStrategy::Recipient)
         .seed(12)
         .build();
@@ -276,10 +275,10 @@ fn trade_insuffisient_assets() {
     let price_per_unit = 1000;
 
     let tx_trade = transaction::Builder::new()
-        .keypair(seller_public_key, seller_secret_key)
+        .keypair(buyer_public_key, buyer_secret_key)
         .tx_trade_assets()
         .add_asset(&meta_data, units, price_per_unit)
-        .buyer(buyer_public_key, buyer_secret_key)
+        .seller(seller_public_key, seller_secret_key)
         .fee_strategy(FeeStrategy::Recipient)
         .seed(12)
         .build();
@@ -307,11 +306,11 @@ fn trade_insuffisient_funds_for_execution() {
     let price_per_unit = 1000;
 
     let tx_trade = transaction::Builder::new()
-        .keypair(seller_public_key, seller_secret_key)
+        .keypair(buyer_public_key, buyer_secret_key)
         .tx_trade_assets()
         .add_asset(&meta_data, units, price_per_unit)
-        .buyer(buyer_public_key, buyer_secret_key)
-        .fee_strategy(FeeStrategy::Sender)
+        .seller(seller_public_key, seller_secret_key)
+        .fee_strategy(FeeStrategy::Recipient)
         .seed(12)
         .build();
 

@@ -523,9 +523,10 @@ impl MineBuilder {
 
 pub struct TradeBuilder {
     meta: TransactionMetadata,
-    buyer_public: Option<PublicKey>,
-    buyer_secret: Option<SecretKey>,
+    seller_public: Option<PublicKey>,
+    seller_secret: Option<SecretKey>,
     assets: Vec<TradeAsset>,
+    data_for_assets: Vec<(String, u64, u64)>,
     fee_strategy: FeeStrategy,
     seed: u64,
 }
@@ -534,26 +535,26 @@ impl TradeBuilder {
     fn new(meta: TransactionMetadata) -> Self {
         TradeBuilder {
             meta,
-            buyer_public: None,
-            buyer_secret: None, 
+            seller_public: None,
+            seller_secret: None, 
             assets: Vec::new(),
+            data_for_assets: Vec::new(),
             fee_strategy: FeeStrategy::Recipient,
             seed: 0,
         }
     }
 
-    pub fn buyer(self, pub_key: PublicKey, sec_key: SecretKey) -> Self {
+    pub fn seller(self, pub_key: PublicKey, sec_key: SecretKey) -> Self {
         TradeBuilder {
-            buyer_public: Some(pub_key),
-            buyer_secret: Some(sec_key),
+            seller_public: Some(pub_key),
+            seller_secret: Some(sec_key),
             ..self
         }
     }
 
-    pub fn add_asset(self, name: &str, count: u64, price: u64) -> Self {
-        let id = AssetId::from_data(name, &self.meta.public_key);
-        let asset = TradeAsset::new(id, count, price);
-        self.add_asset_value(asset)
+    pub fn add_asset(mut self, name: &str, count: u64, price: u64) -> Self {
+        self.data_for_assets.push((name.to_string(), count, price));
+        self
     }
 
     pub fn add_asset_value(mut self, asset: TradeAsset) -> Self {
@@ -572,22 +573,28 @@ impl TradeBuilder {
         TradeBuilder { seed, ..self }
     }
 
-    pub fn build(self) -> Trade {
+    pub fn build(mut self) -> Trade {
         self.verify();
 
+        for (name, count, price) in self.data_for_assets {
+            let id = AssetId::from_data(&name, &self.seller_public.unwrap());
+            let asset = TradeAsset::new(id, count, price);
+            self.assets.push(asset);
+        }
+
         let offer = TradeOffer::new(
-            &self.buyer_public.unwrap(), 
             &self.meta.public_key, 
+            &self.seller_public.unwrap(), 
             self.assets, 
             self.fee_strategy as u8
         );
-        let signature = crypto::sign(&offer.clone().into_bytes(), &self.meta.secret_key);
-        Trade::new(offer, self.seed, &signature, &self.buyer_secret.unwrap())
+        let signature = crypto::sign(&offer.clone().into_bytes(), &self.seller_secret.unwrap());
+        Trade::new(offer, self.seed, &signature, &self.meta.secret_key)
     }
 
     fn verify(&self) {
-        assert!(self.buyer_public.is_some());
-        assert!(self.buyer_secret.is_some());
+        assert!(self.seller_public.is_some());
+        assert!(self.seller_secret.is_some());
     }
 }
 
@@ -959,21 +966,21 @@ mod test {
     #[test]
     fn trade_assets() {
         let (public_key, secret_key) = crypto::gen_keypair();
-        let (buyer_public, buyer_secret) = crypto::gen_keypair();
+        let (seller_public, seller_secret) = crypto::gen_keypair();
         let asset = AssetBundle::from_data("foobar", 9, &public_key);
         let trade_asset = TradeAsset::from_bundle(asset, 10);
         let transaction = transaction::Builder::new()
             .keypair(public_key, secret_key.clone())
             .tx_trade_assets()
             .add_asset_value(trade_asset.clone())
-            .buyer(buyer_public, buyer_secret.clone())
+            .seller(seller_public, seller_secret.clone())
             .fee_strategy(FeeStrategy::Recipient)
             .seed(1)
             .build();
 
-        let offer = TradeOffer::new(&buyer_public, &public_key, vec![trade_asset], FeeStrategy::Recipient as u8);
-        let signature = crypto::sign(&offer.clone().into_bytes(), &secret_key);
-        let equivalent = Trade::new(offer, 1, &signature, &buyer_secret);
+        let offer = TradeOffer::new(&public_key, &seller_public, vec![trade_asset], FeeStrategy::Recipient as u8);
+        let signature = crypto::sign(&offer.clone().into_bytes(), &seller_secret);
+        let equivalent = Trade::new(offer, 1, &signature, &secret_key);
 
         assert_eq!(transaction, equivalent);
     }
