@@ -56,8 +56,8 @@ impl AddAssets {
         for meta in self.meta_assets() {
             let id = AssetId::from_data(meta.data(), key);
 
-            let wallet = wallets.entry(*key)
-                .or_insert_with(|| wallet::Schema(&*view).fetch(key));
+            let wallet = wallets.entry(*meta.receiver())
+                .or_insert_with(|| wallet::Schema(&*view).fetch(meta.receiver()));
             wallet.add_assets(Some(meta.to_bundle(id)));
 
             match infos.entry(id) {
