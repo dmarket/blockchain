@@ -8,7 +8,7 @@ use serde_json;
 use currency::{SERVICE_ID, Service};
 use currency::assets::TradeAsset;
 use currency::transactions::components::Intermediary;
-use currency::transactions::components::Fees;
+use currency::transactions::components::{FeeStrategy, Fees};
 use currency::error::Error;
 use currency::status;
 use currency::wallet;
@@ -18,12 +18,14 @@ pub const TRADE_INTERMEDIARY_ID: u16 = 502;
 
 encoding_struct! {
     struct TradeOfferIntermediary {
-        const SIZE = 80;
+        const SIZE = 81;
 
         field intermediary: Intermediary       [00 => 08]
         field buyer:        &PublicKey         [08 => 40]
         field seller:       &PublicKey         [40 => 72]
         field assets:       Vec<TradeAsset>    [72 => 80]
+
+        field fee_strategy: u8                 [80 => 81]
     }
 }
 
@@ -49,35 +51,75 @@ impl TradeIntermediary {
     }
 
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
-        let mut wallet_buyer = wallet::Schema(&*view).fetch(self.offer().buyer());
-        let mut wallet_seller = wallet::Schema(&*view).fetch(self.offer().seller());
-        let mut wallet_genesis = wallet::Schema(&*view).fetch(&Service::genesis_wallet());
+        info!("Processing tx: {:?}", self);
 
-        let mut fees = Fees::new_trade(&*view,&self.offer().assets())?;
+        let offer = self.offer();
+
+        let mut fees = Fees::new_trade(&*view,&offer.assets())?;
         fees.add_fee(
-            self.offer().intermediary().wallet(),
-            self.offer().intermediary().commission(),
+            offer.intermediary().wallet(),
+            offer.intermediary().commission(),
         );
 
-        let total = self.offer().assets()
+        let fee_strategy =
+            FeeStrategy::try_from(offer.fee_strategy()).expect("fee strategy must be valid");
+
+        let total = offer.assets()
             .iter()
             .map(|asset| {asset.amount() * asset.price()})
             .sum::<u64>();
 
+        let mut genesis = wallet::Schema(&*view).fetch(&Service::genesis_wallet());
+
+        // Collect the blockchain fee. Execution shall not continue if this fails.
+        match fee_strategy {
+            FeeStrategy::Recipient => {
+                let mut buyer = wallet::Schema(&*view).fetch(offer.buyer());
+
+                fees.collect_to_genesis(&mut buyer, &mut genesis)?;
+
+                wallet::Schema(&mut *view).store(offer.buyer(), buyer);
+            }
+            FeeStrategy::Sender => {
+                let mut seller = wallet::Schema(&*view).fetch(offer.seller());
+
+                fees.collect_to_genesis(&mut seller, &mut genesis)?;
+
+                wallet::Schema(&mut *view).store(offer.seller(), seller);
+            }
+            FeeStrategy::RecipientAndSender => {
+                let mut buyer = wallet::Schema(&*view).fetch(offer.buyer());
+                let mut seller = wallet::Schema(&*view).fetch(offer.seller());
+
+                fees.collect_to_genesis_2(&mut seller, &mut buyer, &mut genesis)?;
+
+                wallet::Schema(&mut *view).store(offer.seller(), seller);
+                wallet::Schema(&mut *view).store(offer.buyer(), buyer);
+            }
+            FeeStrategy::Intermediary => {
+                let mut intermediary = wallet::Schema(&*view).fetch(offer.intermediary().wallet());
+
+                fees.collect_to_genesis(&mut intermediary, &mut genesis)?;
+
+                wallet::Schema(&mut *view).store(offer.intermediary().wallet(), intermediary);
+            }
+        }
+
+        wallet::Schema(&mut *view).store(&Service::genesis_wallet(), genesis);
+
+        let mut wallet_buyer = wallet::Schema(&*view).fetch(self.offer().buyer());
+        let mut wallet_seller = wallet::Schema(&*view).fetch(self.offer().seller());
+
         wallet::move_coins(&mut wallet_buyer, &mut wallet_seller, total)
             .or_else(|e| {
-                fees.collect_to_genesis(&mut wallet_seller, &mut wallet_genesis)?;
                 wallet::Schema(&mut *view).store(&self.offer().seller(), wallet_seller.clone());
                 wallet::Schema(&mut *view).store(&self.offer().buyer(), wallet_buyer.clone());
-                wallet::Schema(&mut *view).store(&Service::genesis_wallet(), wallet_genesis.clone());
 
                 Err(e)
             })
             .and_then(|_| {
-                fees.collect_to_genesis(&mut wallet_seller, &mut wallet_genesis)?;
                 wallet::Schema(&mut *view).store(&self.offer().seller(), wallet_seller);
                 wallet::Schema(&mut *view).store(&self.offer().buyer(), wallet_buyer);
-                wallet::Schema(&mut *view).store(&Service::genesis_wallet(), wallet_genesis);
 
                 let mut updated_wallets = fees.collect_to_third_party(view, self.offer().seller())?;
 
@@ -116,9 +158,10 @@ impl Transaction for TradeIntermediary {
         let wallets_ok = offer.seller() != offer.buyer()
             && offer.intermediary().wallet() != offer.seller()
             && offer.intermediary().wallet() != offer.buyer();
+        let fee_strategy_ok = FeeStrategy::try_from(offer.fee_strategy()).is_some();
 
         if cfg!(fuzzing) {
-            return true;
+            return wallets_ok && fee_strategy_ok;
         }
 
         let buyer_ok = self.verify_signature(offer.buyer());
@@ -134,7 +177,7 @@ impl Transaction for TradeIntermediary {
             offer.intermediary().wallet(),
         );
 
-        wallets_ok && buyer_ok && seller_ok && intermediary_ok
+        wallets_ok && fee_strategy_ok && buyer_ok && seller_ok && intermediary_ok
     }
 
     fn execute(&self, view: &mut Fork) {
