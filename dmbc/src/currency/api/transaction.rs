@@ -5,16 +5,15 @@ extern crate router;
 extern crate serde;
 extern crate serde_json;
 
-use exonum::api::{Api, ApiError as ExonumApiError};
+use exonum::api::Api;
 use exonum::blockchain::{Blockchain, Transaction};
 use exonum::crypto::Hash;
 use exonum::encoding::serialize::FromHex;
 use exonum::node::{ApiSender, TransactionSend};
 use iron::headers::AccessControlAllowOrigin;
-use hyper::header::{ContentType};
+use hyper::header::ContentType;
 use iron::prelude::*;
 use iron::status as istatus;
-//use hyper::status::StatusCode;
 use router::Router;
 
 use currency::api::error::ApiError;
@@ -33,7 +32,7 @@ pub struct TransactionApi {
 
 #[serde(untagged)]
 #[derive(Clone, Serialize, Deserialize)]
-enum TransactionRequest {
+pub enum TransactionRequest {
     Transfer(Transfer),
     AddAssets(AddAssets),
     DeleteAssets(DeleteAssets),
@@ -59,12 +58,12 @@ impl Into<Box<Transaction>> for TransactionRequest {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Copy, Clone, Eq, PartialEq, Debug)]
 pub struct TransactionResponse {
     pub tx_hash: Hash,
-    transaction_info: serde_json::Value,
-    tx_status: String,
 }
+
+pub type TxPostResponse = Result<Result<TransactionResponse, Error>, ApiError>;
 
 //#[derive(Serialize, Deserialize, Debug)]
 pub type StatusResponse = Result<Result<(), Error>, ApiError>;
@@ -80,25 +79,26 @@ impl Api for TransactionApi {
     fn wire(&self, router: &mut Router) {
         let self_ = self.clone();
         let transaction = move |req: &mut Request| -> IronResult<Response> {
-            match req.get::<bodyparser::Struct<TransactionRequest>>() {
+            let s: TxPostResponse = match req.get::<bodyparser::Struct<TransactionRequest>>() {
                 Ok(Some(transaction)) => {
-                    let transaction: Box<Transaction> = transaction.into();
-                    let tx_hash = transaction.hash();
-                    let tx_info = transaction.info();
-                    self_.channel.send(transaction).map_err(ExonumApiError::from)?;
-                    let response_data = json!(TransactionResponse {
-                        tx_hash,
-                        transaction_info: tx_info,
-                        tx_status: "pending".to_string(),
-                    });
-                    let ok_res = self_.ok_response(&response_data);
-                    let mut res = ok_res.unwrap();
-                    res.headers.set(AccessControlAllowOrigin::Any);
-                    Ok(res)
+                    let tx: Box<Transaction> = transaction.into();
+                    let tx_hash = tx.hash();
+                    match self_.channel.send(tx) {
+                        Ok(_) =>  Ok(Ok(TransactionResponse {tx_hash})),
+                        Err(_) => Ok(Err(Error::UnableToVerifyTransaction)),
+                    }
                 }
-                Ok(None) => Err(ExonumApiError::IncorrectRequest("Empty request body".into()))?,
-                Err(e) => Err(ExonumApiError::IncorrectRequest(Box::new(e)))?,
-            }
+                Ok(None) => Err(ApiError::EmptyRequestBody),
+                Err(_) => Err(ApiError::IncorrectRequest),
+            };
+            let mut res = Response::with((
+                s.clone().err().map(|e| e.to_status()).unwrap_or(istatus::Ok),
+                serde_json::to_string_pretty(&s).unwrap(),
+            ));
+            res.headers.set(ContentType::json());
+            res.headers.set(AccessControlAllowOrigin::Any);
+
+            Ok(res)
         };
         // Bind the transaction handler to a specific route.
 

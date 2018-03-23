@@ -523,8 +523,11 @@ impl MineBuilder {
 
 pub struct TradeBuilder {
     meta: TransactionMetadata,
-    buyer: Option<PublicKey>,
+    seller_public: Option<PublicKey>,
+    seller_secret: Option<SecretKey>,
     assets: Vec<TradeAsset>,
+    data_for_assets: Vec<(String, u64, u64)>,
+    fee_strategy: FeeStrategy,
     seed: u64,
 }
 
@@ -532,23 +535,26 @@ impl TradeBuilder {
     fn new(meta: TransactionMetadata) -> Self {
         TradeBuilder {
             meta,
-            buyer: None,
+            seller_public: None,
+            seller_secret: None, 
             assets: Vec::new(),
+            data_for_assets: Vec::new(),
+            fee_strategy: FeeStrategy::Recipient,
             seed: 0,
         }
     }
 
-    pub fn buyer(self, pub_key: PublicKey) -> Self {
+    pub fn seller(self, pub_key: PublicKey, sec_key: SecretKey) -> Self {
         TradeBuilder {
-            buyer: Some(pub_key),
+            seller_public: Some(pub_key),
+            seller_secret: Some(sec_key),
             ..self
         }
     }
 
-    pub fn add_asset(self, name: &str, count: u64, price: u64) -> Self {
-        let id = AssetId::from_data(name, &self.meta.public_key);
-        let asset = TradeAsset::new(id, count, price);
-        self.add_asset_value(asset)
+    pub fn add_asset(mut self, name: &str, count: u64, price: u64) -> Self {
+        self.data_for_assets.push((name.to_string(), count, price));
+        self
     }
 
     pub fn add_asset_value(mut self, asset: TradeAsset) -> Self {
@@ -556,31 +562,53 @@ impl TradeBuilder {
         self
     }
 
+    pub fn fee_strategy(self, fee_strategy: FeeStrategy) -> Self {
+        TradeBuilder {
+            fee_strategy,
+            ..self
+        }
+    }
+
     pub fn seed(self, seed: u64) -> Self {
         TradeBuilder { seed, ..self }
     }
 
-    pub fn build(self) -> Trade {
+    pub fn build(mut self) -> Trade {
         self.verify();
 
-        let offer = TradeOffer::new(&self.buyer.unwrap(), &self.meta.public_key, self.assets);
-        let signature = crypto::sign(&offer.clone().into_bytes(), &self.meta.secret_key);
+        for (name, count, price) in self.data_for_assets {
+            let id = AssetId::from_data(&name, &self.seller_public.unwrap());
+            let asset = TradeAsset::new(id, count, price);
+            self.assets.push(asset);
+        }
+
+        let offer = TradeOffer::new(
+            &self.meta.public_key, 
+            &self.seller_public.unwrap(), 
+            self.assets, 
+            self.fee_strategy as u8
+        );
+        let signature = crypto::sign(&offer.clone().into_bytes(), &self.seller_secret.unwrap());
         Trade::new(offer, self.seed, &signature, &self.meta.secret_key)
     }
 
     fn verify(&self) {
-        assert!(self.buyer.is_some());
+        assert!(self.seller_public.is_some());
+        assert!(self.seller_secret.is_some());
     }
 }
 
 pub struct TradeIntermediaryBuilder {
     meta: TransactionMetadata,
-    buyer: Option<PublicKey>,
+    seller_public: Option<PublicKey>,
+    seller_secret: Option<SecretKey>,
     intermediary_public_key: Option<PublicKey>,
     intermediary_secret_key: Option<SecretKey>,
     commission: u64,
 
     assets: Vec<TradeAsset>,
+    data_for_assets: Vec<(String, u64, u64)>,
+    fee_strategy: FeeStrategy,
     seed: u64,
     data_info: Option<String>,
 }
@@ -589,19 +617,23 @@ impl TradeIntermediaryBuilder {
     fn new(meta: TransactionMetadata) -> Self {
         TradeIntermediaryBuilder {
             meta,
-            buyer: None,
+            seller_public: None,
+            seller_secret: None,
             intermediary_public_key: None,
             intermediary_secret_key: None,
             commission: 0,
             assets: Vec::new(),
+            data_for_assets: Vec::new(),
+            fee_strategy: FeeStrategy::Recipient,
             seed: 0,
             data_info: None,
         }
     }
 
-    pub fn buyer(self, pub_key: PublicKey) -> Self {
+    pub fn seller(self, pub_key: PublicKey, sec_key: SecretKey) -> Self {
         TradeIntermediaryBuilder {
-            buyer: Some(pub_key),
+            seller_public: Some(pub_key),
+            seller_secret: Some(sec_key),
             ..self
         }
     }
@@ -621,15 +653,21 @@ impl TradeIntermediaryBuilder {
         }
     }
 
-    pub fn add_asset(self, name: &str, count: u64, price: u64) -> Self {
-        let id = AssetId::from_data(name, &self.meta.public_key);
-        let asset = TradeAsset::new(id, count, price);
-        self.add_asset_value(asset)
+    pub fn add_asset(mut self, name: &str, count: u64, price: u64) -> Self {
+        self.data_for_assets.push((name.to_string(), count, price));
+        self
     }
 
     pub fn add_asset_value(mut self, asset: TradeAsset) -> Self {
         self.assets.push(asset);
         self
+    }
+
+    pub fn fee_strategy(self, fee_strategy: FeeStrategy) -> Self {
+        TradeIntermediaryBuilder {
+            fee_strategy,
+            ..self
+        }
     }
 
     pub fn seed(self, seed: u64) -> Self {
@@ -643,19 +681,26 @@ impl TradeIntermediaryBuilder {
         }
     }
 
-    pub fn build(self) -> TradeIntermediary {
+    pub fn build(mut self) -> TradeIntermediary {
         self.verify();
+
+        for (name, count, price) in self.data_for_assets {
+            let id = AssetId::from_data(&name, &self.meta.public_key);
+            let asset = TradeAsset::new(id, count, price);
+            self.assets.push(asset);
+        }
 
         let intermediary =
             Intermediary::new(&self.intermediary_public_key.unwrap(), self.commission);
 
         let offer = TradeOfferIntermediary::new(
             intermediary,
-            &self.buyer.unwrap(),
             &self.meta.public_key,
+            &self.seller_public.unwrap(),
             self.assets,
+            self.fee_strategy as u8,
         );
-        let signature = crypto::sign(&offer.clone().into_bytes(), &self.meta.secret_key);
+        let seller_signature = crypto::sign(&offer.clone().into_bytes(), &self.seller_secret.unwrap());
         let intermediary_signature = crypto::sign(
             &offer.clone().into_bytes(),
             &self.intermediary_secret_key.unwrap(),
@@ -663,7 +708,7 @@ impl TradeIntermediaryBuilder {
         TradeIntermediary::new(
             offer,
             self.seed,
-            &signature,
+            &seller_signature,
             &intermediary_signature,
             &self.data_info.unwrap_or_default(),
             &self.meta.secret_key,
@@ -671,7 +716,8 @@ impl TradeIntermediaryBuilder {
     }
 
     fn verify(&self) {
-        assert!(self.buyer.is_some());
+        assert!(self.seller_public.is_some());
+        assert!(self.seller_secret.is_some());
         assert!(self.intermediary_public_key.is_some());
         assert!(self.intermediary_secret_key.is_some());
     }
@@ -941,19 +987,20 @@ mod test {
     #[test]
     fn trade_assets() {
         let (public_key, secret_key) = crypto::gen_keypair();
-        let (buyer, _) = crypto::gen_keypair();
+        let (seller_public, seller_secret) = crypto::gen_keypair();
         let asset = AssetBundle::from_data("foobar", 9, &public_key);
         let trade_asset = TradeAsset::from_bundle(asset, 10);
         let transaction = transaction::Builder::new()
             .keypair(public_key, secret_key.clone())
             .tx_trade_assets()
             .add_asset_value(trade_asset.clone())
-            .buyer(buyer)
+            .seller(seller_public, seller_secret.clone())
+            .fee_strategy(FeeStrategy::Recipient)
             .seed(1)
             .build();
 
-        let offer = TradeOffer::new(&buyer, &public_key, vec![trade_asset]);
-        let signature = crypto::sign(&offer.clone().into_bytes(), &secret_key);
+        let offer = TradeOffer::new(&public_key, &seller_public, vec![trade_asset], FeeStrategy::Recipient as u8);
+        let signature = crypto::sign(&offer.clone().into_bytes(), &seller_secret);
         let equivalent = Trade::new(offer, 1, &signature, &secret_key);
 
         assert_eq!(transaction, equivalent);
@@ -961,35 +1008,42 @@ mod test {
 
     #[test]
     fn trade_assets_with_intermediary() {
-        let (public_key, secret_key) = crypto::gen_keypair();
+        let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
         let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
-        let (buyer, _) = crypto::gen_keypair();
-        let asset = AssetBundle::from_data("foobar", 9, &public_key);
+        let (seller_public_key, seller_secret_key) = crypto::gen_keypair();
+        let asset = AssetBundle::from_data("foobar", 9, &seller_public_key);
         let trade_asset = TradeAsset::from_bundle(asset, 10);
         let transaction = transaction::Builder::new()
-            .keypair(public_key, secret_key.clone())
+            .keypair(buyer_public_key, buyer_secret_key.clone())
             .tx_trade_assets_with_intermediary()
             .intermediary_key_pair(intermediary_public_key, intermediary_secret_key.clone())
             .commission(40)
             .add_asset_value(trade_asset.clone())
-            .buyer(buyer)
+            .seller(seller_public_key, seller_secret_key.clone())
+            .fee_strategy(FeeStrategy::Recipient)
             .seed(1)
             .data_info("trade_test")
             .build();
 
         let intermediary = Intermediary::new(&intermediary_public_key, 40);
         let offer =
-            TradeOfferIntermediary::new(intermediary, &buyer, &public_key, vec![trade_asset]);
-        let signature = crypto::sign(&offer.clone().into_bytes(), &secret_key);
+            TradeOfferIntermediary::new(
+                intermediary, 
+                &buyer_public_key, 
+                &seller_public_key, 
+                vec![trade_asset], 
+                FeeStrategy::Recipient as u8
+            );
+        let seller_signature = crypto::sign(&offer.clone().into_bytes(), &seller_secret_key);
         let intermediary_signature =
             crypto::sign(&offer.clone().into_bytes(), &intermediary_secret_key);
         let equivalent = TradeIntermediary::new(
             offer,
             1,
-            &signature,
+            &seller_signature,
             &intermediary_signature,
             "trade_test",
-            &secret_key,
+            &buyer_secret_key,
         );
 
         assert_eq!(transaction, equivalent);
