@@ -572,3 +572,130 @@ fn exchange_asset_send_value() {
     assert_eq!(genesis_balance, genesis_wallet.balance());
 
 }
+
+#[test]
+fn exchange_asset_send_value_and_assets() {
+    let mut testkit = init_testkit();
+    let api = testkit.api();
+    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 100, 0, 0));
+
+    let (sender_pk, sender_sk) = mine_wallet(&mut testkit);
+    let (recipient_pk, recipient_sk) = mine_wallet(&mut testkit);
+    let (creator_pk, creator_sk) = crypto::gen_keypair();
+    let mut sender_balance = DMC_1;
+    let mut recipient_balance = DMC_1;
+    let mut genesis_balance = 137_000_000_00000000u64;
+    let mut creator_balance = 0u64;
+
+    let tx_add_assets = transaction::Builder::new()
+        .keypair(creator_pk, creator_sk.clone())
+        .tx_add_assets()
+        .add_asset_receiver(sender_pk, "asset1", 4, exchange_fee(10))
+        .seed(123333)
+        .build();
+
+    post_tx(&api, &tx_add_assets);
+    testkit.create_block();
+
+    let s = get_status(&api, &tx_add_assets.hash());
+    assert_eq!(Ok(Ok(())), s);
+
+    let tx_exchange_assets = transaction::Builder::new()
+        .keypair(recipient_pk, recipient_sk.clone())
+        .tx_exchange()
+        .sender(sender_pk)
+        .sender_secret(sender_sk.clone())
+        .fee_strategy(FeeStrategy::RecipientAndSender)
+        .sender_add_asset_value(AssetBundle::from_data("asset1", 1, &creator_pk))
+        .sender_value(1000)
+        .seed(1)
+        .build();
+
+    post_tx(&api, &tx_exchange_assets);
+    testkit.create_block();
+
+    sender_balance = sender_balance - 1000 - ((100 + 10) / 2) ;
+    recipient_balance = recipient_balance + 1000 - ((100 + 10) / 2);
+    genesis_balance += 100;
+    creator_balance += 10;
+
+    let status = get_status(&api, &tx_exchange_assets.hash());
+    let sender_wallet = get_wallet(&api, &sender_pk);
+    let recipient_wallet = get_wallet(&api, &recipient_pk);
+    let creator_wallet = get_wallet(&api, &creator_pk);
+    let genesis_wallet = get_wallet(&api, &Service::genesis_wallet());
+
+    assert_eq!(Ok(Ok(())), status);
+    assert_eq!(sender_balance, sender_wallet.balance());
+    assert_eq!(recipient_balance, recipient_wallet.balance());
+    assert_eq!(creator_balance, creator_wallet.balance());
+    assert_eq!(genesis_balance, genesis_wallet.balance());
+    assert_eq!(vec![AssetBundle::from_data("asset1", 3, &creator_pk)], sender_wallet.assets());
+    assert_eq!(vec![AssetBundle::from_data("asset1", 1, &creator_pk)], recipient_wallet.assets());
+
+    let tx_exchange_assets = transaction::Builder::new()
+        .keypair(recipient_pk, recipient_sk.clone())
+        .tx_exchange()
+        .sender(sender_pk)
+        .sender_secret(sender_sk.clone())
+        .fee_strategy(FeeStrategy::Recipient)
+        .sender_add_asset_value(AssetBundle::from_data("asset1", 1, &creator_pk))
+        .sender_value(1000)
+        .seed(2)
+        .build();
+
+    post_tx(&api, &tx_exchange_assets);
+    testkit.create_block();
+
+    sender_balance = sender_balance - 1000;
+    recipient_balance = recipient_balance + 1000 - (100 + 10);
+    genesis_balance += 100;
+    creator_balance += 10;
+
+    let status = get_status(&api, &tx_exchange_assets.hash());
+    let sender_wallet = get_wallet(&api, &sender_pk);
+    let recipient_wallet = get_wallet(&api, &recipient_pk);
+    let creator_wallet = get_wallet(&api, &creator_pk);
+    let genesis_wallet = get_wallet(&api, &Service::genesis_wallet());
+
+    assert_eq!(Ok(Ok(())), status);
+    assert_eq!(sender_balance, sender_wallet.balance());
+    assert_eq!(recipient_balance, recipient_wallet.balance());
+    assert_eq!(creator_balance, creator_wallet.balance());
+    assert_eq!(genesis_balance, genesis_wallet.balance());
+    assert_eq!(vec![AssetBundle::from_data("asset1", 2, &creator_pk)], sender_wallet.assets());
+    assert_eq!(vec![AssetBundle::from_data("asset1", 2, &creator_pk)], recipient_wallet.assets());
+
+    let tx_exchange_assets = transaction::Builder::new()
+        .keypair(recipient_pk, recipient_sk.clone())
+        .tx_exchange()
+        .sender(sender_pk)
+        .sender_secret(sender_sk.clone())
+        .fee_strategy(FeeStrategy::Sender)
+        .sender_add_asset_value(AssetBundle::from_data("asset1", 1, &creator_pk))
+        .sender_value(1000)
+        .seed(3)
+        .build();
+
+    post_tx(&api, &tx_exchange_assets);
+    testkit.create_block();
+
+    sender_balance = sender_balance - 1000 - (100 + 10);
+    recipient_balance = recipient_balance + 1000;
+    genesis_balance += 100;
+    creator_balance += 10;
+
+    let status = get_status(&api, &tx_exchange_assets.hash());
+    let sender_wallet = get_wallet(&api, &sender_pk);
+    let recipient_wallet = get_wallet(&api, &recipient_pk);
+    let creator_wallet = get_wallet(&api, &creator_pk);
+    let genesis_wallet = get_wallet(&api, &Service::genesis_wallet());
+
+    assert_eq!(Ok(Ok(())), status);
+    assert_eq!(sender_balance, sender_wallet.balance());
+    assert_eq!(recipient_balance, recipient_wallet.balance());
+    assert_eq!(creator_balance, creator_wallet.balance());
+    assert_eq!(genesis_balance, genesis_wallet.balance());
+    assert_eq!(vec![AssetBundle::from_data("asset1", 1, &creator_pk)], sender_wallet.assets());
+    assert_eq!(vec![AssetBundle::from_data("asset1", 3, &creator_pk)], recipient_wallet.assets());
+}
