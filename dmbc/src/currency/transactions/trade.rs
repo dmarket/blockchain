@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use exonum::crypto;
 use exonum::crypto::{PublicKey, Signature};
 use exonum::blockchain::Transaction;
@@ -77,8 +79,8 @@ impl Trade {
                 let mut buyer = wallet::Schema(&*view).fetch(offer.buyer());
                 let mut seller = wallet::Schema(&*view).fetch(offer.seller());
 
-                wallet::move_coins(&mut seller, &mut genesis, genesis_fee)?;
-                wallet::move_coins(&mut buyer, &mut genesis, genesis_fee)?;
+                wallet::move_coins(&mut seller, &mut genesis, genesis_fee / 2)?;
+                wallet::move_coins(&mut buyer, &mut genesis, genesis_fee / 2)?;
 
                 wallet::Schema(&mut *view).store(offer.seller(), seller);
                 wallet::Schema(&mut *view).store(offer.buyer(), buyer);
@@ -109,7 +111,14 @@ impl Trade {
                 wallet::Schema(&mut *view).store(&offer.seller(), wallet_seller);
                 wallet::Schema(&mut *view).store(&offer.buyer(), wallet_buyer);
 
-                let mut updated_wallets = fees.collect(view, offer.seller())?;
+                let mut updated_wallets = match fee_strategy {
+                    FeeStrategy::Recipient => fees.collect(view, offer.buyer())?,
+                    FeeStrategy::Sender => fees.collect(view, offer.seller())?,
+                    FeeStrategy::RecipientAndSender => {
+                    fees.collect2(view, offer.seller(), offer.buyer())?
+                },
+                    FeeStrategy::Intermediary => HashMap::<PublicKey, wallet::Wallet>::new(),
+                };
 
                 let mut wallet_seller = updated_wallets
                     .remove(&offer.seller())

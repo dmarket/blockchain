@@ -127,13 +127,13 @@ impl TradeIntermediary {
                 wallet::Schema(&mut *view).store(&offer.buyer(), wallet_buyer);
 
                 let mut updated_wallets = match fee_strategy {
-		    FeeStrategy::Recipient => fees.collect(view, offer.buyer())?,
-		    FeeStrategy::Sender => fees.collect(view, offer.seller())?,
-		    FeeStrategy::RecipientAndSender => {
-			fees.collect2(view, offer.seller(), offer.buyer())?
-		},
-		    FeeStrategy::Intermediary => HashMap::<PublicKey, wallet::Wallet>::new(),
-		};
+                    FeeStrategy::Recipient => fees.collect(view, offer.buyer())?,
+                    FeeStrategy::Sender => fees.collect(view, offer.seller())?,
+                    FeeStrategy::RecipientAndSender => {
+                    fees.collect2(view, offer.seller(), offer.buyer())?
+                },
+                    FeeStrategy::Intermediary => HashMap::<PublicKey, wallet::Wallet>::new(),
+                };
 
                 let mut wallet_seller = updated_wallets
                     .remove(&self.offer().seller())
