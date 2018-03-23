@@ -91,8 +91,15 @@ impl Api for TransactionApi {
                 Ok(None) => Err(ApiError::EmptyRequestBody),
                 Err(_) => Err(ApiError::IncorrectRequest),
             };
+            let ss =
+                s.clone()
+                    .ok()
+                    .map(|r|
+                        r.err().map(|_| istatus::BadRequest).unwrap_or(istatus::Created))
+                    .unwrap_or(istatus::BadRequest);
+
             let mut res = Response::with((
-                s.clone().err().map(|e| e.to_status()).unwrap_or(istatus::Ok),
+                ss,
                 serde_json::to_string_pretty(&s).unwrap(),
             ));
             res.headers.set(ContentType::json());
