@@ -191,8 +191,8 @@ fn trade_intermediary_fee_strategy() {
 
     let asset_price = units * price_per_unit;
     let trade_fee = trade_tax + asset_price / trade_ratio;
-    let seller_expected_balance = DMC_1 + asset_price + trade_fee/2 - commission/2 - transaction_fee/2;
-    let buyer_expected_balance = DMC_1 - asset_price - trade_fee/2 - commission/2 - transaction_fee/2;
+    let seller_expected_balance = DMC_1 + asset_price + trade_fee/2 - transaction_fee/2 - commission/2;
+    let buyer_expected_balance = DMC_1 - asset_price - trade_fee/2 - transaction_fee/2 - commission/2;
     let intermediary_expected_balance = commission;
 
     assert!(seller_wallet.assets().is_empty());

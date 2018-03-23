@@ -90,8 +90,8 @@ impl TradeIntermediary {
                 let mut buyer = wallet::Schema(&*view).fetch(offer.buyer());
                 let mut seller = wallet::Schema(&*view).fetch(offer.seller());
 
-                wallet::move_coins(&mut seller, &mut genesis, genesis_fee)?;
-                wallet::move_coins(&mut buyer, &mut genesis, genesis_fee)?;
+                wallet::move_coins(&mut seller, &mut genesis, genesis_fee / 2)?;
+                wallet::move_coins(&mut buyer, &mut genesis, genesis_fee / 2)?;
 
                 wallet::Schema(&mut *view).store(offer.seller(), seller);
                 wallet::Schema(&mut *view).store(offer.buyer(), buyer);
