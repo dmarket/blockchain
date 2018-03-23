@@ -42,37 +42,18 @@ impl FeeStrategy {
 }
 
 /// Transaction fees.
-pub struct Fees {
-    /// Fixed fee to pay for processing the transaction.
-    pub to_genesis: u64,
-    /// Fees to be paid to third parties, e.g. creators of assets exchanged
-    /// in a thransaction.
-    pub to_third_party: HashMap<PublicKey, u64>,
-}
+pub struct ThirdPartyFees(pub HashMap<PublicKey, u64>);
 
-impl Fees {
-    /// Create fees with specified data.
-    pub fn new<I>(to_genesis: u64, to_third_party: I) -> Self
-    where
-        I: IntoIterator<Item = (PublicKey, u64)>,
-    {
-        Fees {
-            to_genesis,
-            to_third_party: to_third_party.into_iter().collect(),
-        }
-    }
-
-    /// Create `Fees` for an `add_assets` transaction.
-    pub fn new_add_assets<S, I>(view: S, assets: I) -> Result<Fees, Error>
+impl ThirdPartyFees {
+    /// Create `ThirdPartyFees` for an `add_assets` transaction.
+    pub fn new_add_assets<S, I>(view: S, assets: I) -> Result<ThirdPartyFees, Error>
     where
         S: AsRef<Snapshot>,
         I: IntoIterator<Item = MetaAsset>,
     {
         let fees_config = Configuration::extract(view.as_ref()).fees();
 
-        let to_genesis = fees_config.add_asset();
-
-        let per_asset = fees_config.per_add_asset();
+        let per_asset = fees_config.add_assets_per_entry();
         let assets_fee = assets
             .into_iter()
             .map(|meta| meta.amount() * per_asset)
@@ -81,35 +62,26 @@ impl Fees {
             .into_iter()
             .collect();
 
-        let fees = Fees {
-            to_genesis,
-            to_third_party,
-        };
+        let fees = ThirdPartyFees(to_third_party);
 
         Ok(fees)
     }
 
-    /// Create `Fees` for an `delete_assets` transaction.
-    pub fn new_delete_assets<S, I>(view: S, _assets: I) -> Result<Fees, Error>
+    /// Create `ThirdPartyFees` for an `delete_assets` transaction.
+    pub fn new_delete_assets<S, I>(_view: S, _assets: I) -> Result<ThirdPartyFees, Error>
     where
         S: AsRef<Snapshot>,
         I: IntoIterator<Item = AssetBundle>,
     {
-        let fees_config = Configuration::extract(view.as_ref()).fees();
-
-        let to_genesis = fees_config.del_asset();
         let to_third_party = HashMap::new();
 
-        let fees = Fees {
-            to_genesis,
-            to_third_party,
-        };
+        let fees = ThirdPartyFees(to_third_party);
 
         Ok(fees)
     }
 
-    /// Create `Fees` for `trade` transactions.
-    pub fn new_trade<'a, S, I>(view: S, assets: I) -> Result<Fees, Error>
+    /// Create `ThirdPartyFees` for `trade` transactions.
+    pub fn new_trade<'a, S, I>(view: S, assets: I) -> Result<ThirdPartyFees, Error>
     where
         S: AsRef<Snapshot>,
         I: IntoIterator<Item = &'a TradeAsset>,
@@ -134,17 +106,12 @@ impl Fees {
                 .or_insert(fee);
         }
 
-        let to_genesis = Configuration::extract(view).fees().trade();
-
-        let fees = Fees {
-            to_genesis,
-            to_third_party,
-        };
+        let fees = ThirdPartyFees(to_third_party);
 
         Ok(fees)
     }
 
-    /// Create `Fees` for `exchange` transactions.
+    /// Create `ThirdPartyFees` for `exchange` transactions.
     pub fn new_exchange<S, I>(view: S, assets: I) -> Result<Self, Error>
     where
         S: AsRef<Snapshot>,
@@ -167,17 +134,12 @@ impl Fees {
                 .or_insert(fee);
         }
 
-        let to_genesis = Configuration::extract(view).fees().exchange();
-
-        let fees = Fees {
-            to_genesis,
-            to_third_party,
-        };
+        let fees = ThirdPartyFees(to_third_party);
 
         Ok(fees)
     }
 
-    /// Create `Fees` for `transfer` transactions.
+    /// Create `ThirdPartyFees` for `transfer` transactions.
     pub fn new_transfer<S, I>(view: S, assets: I) -> Result<Self, Error>
     where
         S: AsRef<Snapshot>,
@@ -200,30 +162,18 @@ impl Fees {
                 .or_insert(fee);
         }
 
-        let to_genesis = Configuration::extract(view).fees().transfer();
-
-        let fees = Fees {
-            to_genesis,
-            to_third_party,
-        };
+        let fees = ThirdPartyFees(to_third_party);
 
         Ok(fees)
     }
 
-    /// Total amount of fees that must be paid in order for the transaction
-    /// to succeed.
-    pub fn total(&self) -> u64 {
-        self.to_genesis + self.to_third_party_total()
-    }
-
     /// Total amound that needs to be paid to third party wallets.
-    pub fn to_third_party_total(&self) -> u64 {
-        self.to_third_party.values().sum()
+    pub fn total(&self) -> u64 {
+        self.0.values().sum()
     }
-
 
     pub fn total_for_wallet(&self, pub_key: &PublicKey ) -> u64 {
-        self.to_third_party
+        self.0
             .iter()
             .filter_map(|(key, fee)| if key != pub_key {Some(fee)} else {None} )
             .sum()
@@ -231,39 +181,12 @@ impl Fees {
 
     /// Add a new fee to the list of third party payments.
     pub fn add_fee(&mut self, key: &PublicKey, fee: u64) {
-        self.to_third_party
+        self.0
             .entry(*key)
             .and_modify(|prev_fee| {
                 *prev_fee += fee;
             })
             .or_insert(fee);
-    }
-
-    /// Collect fees to genesis wallet.
-    ///
-    /// # Errors
-    /// Returns `InsufficientFunds` if the payer is unable to pay the fees.
-    pub fn collect_to_genesis(
-        &self,
-        payer: &mut Wallet,
-        genesis: &mut Wallet,
-    ) -> Result<(), Error> {
-        wallet::move_coins(payer, genesis, self.to_genesis)?;
-
-        Ok(())
-    }
-
-    /// Split the fee payment to genesis wallet between two wallets.
-    pub fn collect_to_genesis_2(
-        &self,
-        payer_1: &mut Wallet,
-        payer_2: &mut Wallet,
-        genesis: &mut Wallet,
-    ) -> Result<(), Error> {
-        wallet::move_coins(payer_1, genesis, self.to_genesis / 2)?;
-        wallet::move_coins(payer_2, genesis, self.to_genesis / 2)?;
-
-        Ok(())
     }
 
     /// Collect fees to third party wallets.
@@ -274,14 +197,14 @@ impl Fees {
     ///
     /// # Errors
     /// Returns `InsufficientFunds` if the payer is unable to pay the fees.
-    pub fn collect_to_third_party(
+    pub fn collect(
         &self,
         view: &Fork,
         payer_key: &PublicKey,
     ) -> Result<HashMap<PublicKey, Wallet>, Error> {
         let mut payer = wallet::Schema(&*view).fetch(&payer_key);
 
-        let mut updated_wallets = self.to_third_party
+        let mut updated_wallets = self.0
             .iter()
             .filter(|&(key, _)| key != payer_key)
             .map(|(key, fee)| {
@@ -299,7 +222,7 @@ impl Fees {
     }
 
     /// Split fees to third party wallets between two payers.
-    pub fn collect_to_third_party_2(
+    pub fn collect2(
         &self,
         view: &mut Fork,
         payer_key_1: &PublicKey,
@@ -307,8 +230,8 @@ impl Fees {
     ) -> Result<HashMap<PublicKey, Wallet>, Error> {
         let mut payer_1 = wallet::Schema(&*view).fetch(&payer_key_1);
         let mut payer_2 = wallet::Schema(&*view).fetch(&payer_key_2);
-
-        let mut to_third_party = self.to_third_party.clone();
+	
+	    let mut to_third_party = self.0.clone();
 
         if let Some(fee) = to_third_party.remove(payer_key_1) {
             wallet::move_coins(&mut payer_2, &mut payer_1, fee / 2)?;
@@ -317,7 +240,7 @@ impl Fees {
         if let Some(fee) = to_third_party.remove(payer_key_2) {
             wallet::move_coins(&mut payer_1, &mut payer_2, fee / 2)?;
         }
-
+        
         let mut updated_wallets = to_third_party
             .iter()
             .map(|(key, fee)| {

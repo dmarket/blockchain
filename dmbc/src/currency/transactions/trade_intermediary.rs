@@ -10,10 +10,11 @@ use serde_json;
 use currency::{SERVICE_ID, Service};
 use currency::assets::TradeAsset;
 use currency::transactions::components::Intermediary;
-use currency::transactions::components::{FeeStrategy, Fees};
+use currency::transactions::components::{FeeStrategy, ThirdPartyFees};
 use currency::error::Error;
 use currency::status;
 use currency::wallet;
+use currency::configuration::Configuration;
 
 /// Transaction ID.
 pub const TRADE_INTERMEDIARY_ID: u16 = 502;
@@ -55,13 +56,9 @@ impl TradeIntermediary {
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
         info!("Processing tx: {:?}", self);
 
-        let offer = self.offer();
+        let genesis_fee = Configuration::extract(view).fees().trade();
 
-        let mut fees = Fees::new_trade(&*view,&offer.assets())?;
-        fees.add_fee(
-            offer.intermediary().wallet(),
-            offer.intermediary().commission(),
-        );
+        let offer = self.offer();
 
         let fee_strategy =
             FeeStrategy::try_from(offer.fee_strategy()).expect("fee strategy must be valid");
@@ -78,14 +75,14 @@ impl TradeIntermediary {
             FeeStrategy::Recipient => {
                 let mut buyer = wallet::Schema(&*view).fetch(offer.buyer());
 
-                fees.collect_to_genesis(&mut buyer, &mut genesis)?;
+                wallet::move_coins(&mut buyer, &mut genesis, genesis_fee)?;
 
                 wallet::Schema(&mut *view).store(offer.buyer(), buyer);
             }
             FeeStrategy::Sender => {
                 let mut seller = wallet::Schema(&*view).fetch(offer.seller());
 
-                fees.collect_to_genesis(&mut seller, &mut genesis)?;
+                wallet::move_coins(&mut seller, &mut genesis, genesis_fee)?;
 
                 wallet::Schema(&mut *view).store(offer.seller(), seller);
             }
@@ -93,7 +90,8 @@ impl TradeIntermediary {
                 let mut buyer = wallet::Schema(&*view).fetch(offer.buyer());
                 let mut seller = wallet::Schema(&*view).fetch(offer.seller());
 
-                fees.collect_to_genesis_2(&mut seller, &mut buyer, &mut genesis)?;
+                wallet::move_coins(&mut seller, &mut genesis, genesis_fee)?;
+                wallet::move_coins(&mut buyer, &mut genesis, genesis_fee)?;
 
                 wallet::Schema(&mut *view).store(offer.seller(), seller);
                 wallet::Schema(&mut *view).store(offer.buyer(), buyer);
@@ -101,7 +99,7 @@ impl TradeIntermediary {
             FeeStrategy::Intermediary => {
                 let mut intermediary = wallet::Schema(&*view).fetch(offer.intermediary().wallet());
 
-                fees.collect_to_genesis(&mut intermediary, &mut genesis)?;
+                wallet::move_coins(&mut intermediary, &mut genesis, genesis_fee)?;
 
                 wallet::Schema(&mut *view).store(offer.intermediary().wallet(), intermediary);
             }
@@ -109,8 +107,13 @@ impl TradeIntermediary {
 
         wallet::Schema(&mut *view).store(&Service::genesis_wallet(), genesis);
 
-        let mut wallet_buyer = wallet::Schema(&*view).fetch(offer.buyer());
-        let mut wallet_seller = wallet::Schema(&*view).fetch(offer.seller());
+	let mut fees = ThirdPartyFees::new_trade(&*view,&offer.assets())?;
+        fees.add_fee(
+            offer.intermediary().wallet(),
+            offer.intermediary().commission(),
+        );
+        let mut wallet_buyer = wallet::Schema(&*view).fetch(self.offer().buyer());
+        let mut wallet_seller = wallet::Schema(&*view).fetch(self.offer().seller());
 
         wallet::move_coins(&mut wallet_buyer, &mut wallet_seller, total)
             .or_else(|e| {
@@ -124,13 +127,13 @@ impl TradeIntermediary {
                 wallet::Schema(&mut *view).store(&offer.buyer(), wallet_buyer);
 
                 let mut updated_wallets = match fee_strategy {
-                    FeeStrategy::Recipient => fees.collect_to_third_party(view, offer.buyer())?,
-                    FeeStrategy::Sender => fees.collect_to_third_party(view, offer.seller())?,
-                    FeeStrategy::RecipientAndSender => {
-                        fees.collect_to_third_party_2(view, offer.seller(), offer.buyer())?
-                    },
-                    FeeStrategy::Intermediary => HashMap::<PublicKey, wallet::Wallet>::new(),
-                };
+		    FeeStrategy::Recipient => fees.collect(view, offer.buyer())?,
+		    FeeStrategy::Sender => fees.collect(view, offer.seller())?,
+		    FeeStrategy::RecipientAndSender => {
+			fees.collect2(view, offer.seller(), offer.buyer())?
+		},
+		    FeeStrategy::Intermediary => HashMap::<PublicKey, wallet::Wallet>::new(),
+		};
 
                 let mut wallet_seller = updated_wallets
                     .remove(&self.offer().seller())

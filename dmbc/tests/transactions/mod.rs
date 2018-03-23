@@ -8,7 +8,7 @@ use dmbc::currency::Service;
 use dmbc::currency::SERVICE_NAME;
 use dmbc::currency::assets::AssetId;
 use dmbc::currency::wallet::Wallet;
-use dmbc::currency::api::transaction::{TransactionResponse, StatusResponse};
+use dmbc::currency::api::transaction::{TransactionResponse, StatusResponse, TxPostResponse};
 use dmbc::currency::api::asset::AssetResponse;
 use dmbc::currency::configuration::{Configuration, TransactionFees};
 use dmbc::currency::transactions::builders::transaction;
@@ -19,6 +19,7 @@ pub mod add_assets;
 pub mod delete_assets;
 pub mod transfer;
 pub mod exchange;
+pub mod exchange_intermediary;
 pub mod trade;
 pub mod trade_intermediary;
 
@@ -55,13 +56,13 @@ pub fn get_asset_info(api: &TestKitApi, asset_id: &AssetId) -> AssetResponse {
 pub fn post_tx<T>(api: &TestKitApi, tx: &T)
     where T:Message + Serialize
 {
-    let tx_response:TransactionResponse = api.post(
+    let tx_response:TxPostResponse = api.post(
         ApiKind::Service(SERVICE_NAME),
         "v1/transactions",
         &tx
     );
 
-    assert_eq!(tx_response.tx_hash, tx.hash());
+    assert_eq!(tx_response, Ok(Ok(TransactionResponse{tx_hash:tx.hash()})));
 }
 
 pub fn set_configuration(testkit: &mut TestKit, fees: TransactionFees) {

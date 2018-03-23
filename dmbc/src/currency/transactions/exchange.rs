@@ -7,10 +7,11 @@ use serde_json;
 
 use currency::{Service, SERVICE_ID};
 use currency::assets::AssetBundle;
-use currency::transactions::components::{FeeStrategy, Fees};
+use currency::transactions::components::{FeeStrategy, ThirdPartyFees};
 use currency::error::Error;
 use currency::status;
 use currency::wallet;
+use currency::configuration::Configuration;
 
 /// Transaction ID.
 pub const EXCHANGE_ID: u16 = 601;
@@ -53,18 +54,12 @@ impl Exchange {
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
         info!("Processing tx: {:?}", self);
 
+        let genesis_fee = Configuration::extract(view).fees().exchange();
+
         let offer = self.offer();
 
         let fee_strategy =
             FeeStrategy::try_from(offer.fee_strategy()).expect("fee strategy must be valid");
-
-        let fees = Fees::new_exchange(
-            &*view,
-            offer
-                .sender_assets()
-                .into_iter()
-                .chain(offer.recipient_assets().into_iter()),
-        )?;
 
         let mut genesis = wallet::Schema(&*view).fetch(&Service::genesis_wallet());
 
@@ -73,14 +68,14 @@ impl Exchange {
             FeeStrategy::Recipient => {
                 let mut recipient = wallet::Schema(&*view).fetch(offer.recipient());
 
-                fees.collect_to_genesis(&mut recipient, &mut genesis)?;
+                wallet::move_coins(&mut recipient, &mut genesis, genesis_fee)?;
 
                 wallet::Schema(&mut *view).store(offer.recipient(), recipient);
             }
             FeeStrategy::Sender => {
                 let mut sender = wallet::Schema(&*view).fetch(offer.sender());
 
-                fees.collect_to_genesis(&mut sender, &mut genesis)?;
+                wallet::move_coins(&mut sender, &mut genesis, genesis_fee)?;
 
                 wallet::Schema(&mut *view).store(offer.sender(), sender);
             }
@@ -88,7 +83,8 @@ impl Exchange {
                 let mut recipient = wallet::Schema(&*view).fetch(offer.recipient());
                 let mut sender = wallet::Schema(&*view).fetch(offer.sender());
 
-                fees.collect_to_genesis_2(&mut sender, &mut recipient, &mut genesis)?;
+                wallet::move_coins(&mut recipient, &mut genesis, genesis_fee / 2)?;
+                wallet::move_coins(&mut sender, &mut genesis, genesis_fee / 2)?;
 
                 wallet::Schema(&mut *view).store(offer.sender(), sender);
                 wallet::Schema(&mut *view).store(offer.recipient(), recipient);
@@ -98,16 +94,22 @@ impl Exchange {
 
         wallet::Schema(&mut *view).store(&Service::genesis_wallet(), genesis);
 
+        let fees = ThirdPartyFees::new_exchange(
+            &*view,
+            offer
+                .sender_assets()
+                .into_iter()
+                .chain(offer.recipient_assets().into_iter()),
+        )?;
+
         // Operations bellow must either all succeed, or return an error without
         // saving anything to the database.
 
         // Process third party fees.
         let mut updated_wallets = match fee_strategy {
-            FeeStrategy::Recipient => fees.collect_to_third_party(view, offer.recipient())?,
-            FeeStrategy::Sender => fees.collect_to_third_party(view, offer.sender())?,
-            FeeStrategy::RecipientAndSender => {
-                fees.collect_to_third_party_2(view, offer.sender(), offer.recipient())?
-            }
+            FeeStrategy::Recipient => fees.collect(view, offer.recipient())?,
+            FeeStrategy::Sender => fees.collect(view, offer.sender())?,
+            FeeStrategy::RecipientAndSender => fees.collect2(view, offer.sender(), offer.recipient())?,
             FeeStrategy::Intermediary => unreachable!(),
         };
 

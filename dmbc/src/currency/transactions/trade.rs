@@ -7,10 +7,11 @@ use serde_json;
 
 use currency::{Service, SERVICE_ID};
 use currency::assets::TradeAsset;
-use currency::transactions::components::{FeeStrategy, Fees};
+use currency::transactions::components::{FeeStrategy, ThirdPartyFees};
 use currency::error::Error;
 use currency::status;
 use currency::wallet;
+use currency::configuration::Configuration;
 
 /// Transaction ID.
 pub const TRADE_ID: u16 = 501;
@@ -49,8 +50,9 @@ impl Trade {
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
         info!("Processing tx: {:?}", self);
 
+        let genesis_fee = Configuration::extract(view).fees().trade();
+
         let offer = self.offer();
-        let fees = Fees::new_trade(&*view, &offer.assets())?;
         let fee_strategy =
             FeeStrategy::try_from(offer.fee_strategy()).expect("fee strategy must be valid");
 
@@ -60,14 +62,14 @@ impl Trade {
             FeeStrategy::Recipient => {
                 let mut buyer = wallet::Schema(&*view).fetch(offer.buyer());
 
-                fees.collect_to_genesis(&mut buyer, &mut genesis)?;
+                wallet::move_coins(&mut buyer, &mut genesis, genesis_fee)?;
 
                 wallet::Schema(&mut *view).store(offer.buyer(), buyer);
             },
             FeeStrategy::Sender => {
                 let mut seller = wallet::Schema(&*view).fetch(offer.seller());
 
-                fees.collect_to_genesis(&mut seller, &mut genesis)?;
+                wallet::move_coins(&mut seller, &mut genesis, genesis_fee)?;
 
                 wallet::Schema(&mut *view).store(offer.seller(), seller);
             },
@@ -75,7 +77,8 @@ impl Trade {
                 let mut buyer = wallet::Schema(&*view).fetch(offer.buyer());
                 let mut seller = wallet::Schema(&*view).fetch(offer.seller());
 
-                fees.collect_to_genesis_2(&mut seller, &mut buyer, &mut genesis)?;
+                wallet::move_coins(&mut seller, &mut genesis, genesis_fee)?;
+                wallet::move_coins(&mut buyer, &mut genesis, genesis_fee)?;
 
                 wallet::Schema(&mut *view).store(offer.seller(), seller);
                 wallet::Schema(&mut *view).store(offer.buyer(), buyer);
@@ -84,6 +87,8 @@ impl Trade {
         }
 
         wallet::Schema(&mut *view).store(&Service::genesis_wallet(), genesis);
+
+        let fees = ThirdPartyFees::new_trade(&*view, &offer.assets())?;
 
         let mut wallet_buyer = wallet::Schema(&*view).fetch(offer.buyer());
         let mut wallet_seller = wallet::Schema(&*view).fetch(offer.seller());
@@ -104,7 +109,7 @@ impl Trade {
                 wallet::Schema(&mut *view).store(&offer.seller(), wallet_seller);
                 wallet::Schema(&mut *view).store(&offer.buyer(), wallet_buyer);
 
-                let mut updated_wallets = fees.collect_to_third_party(view, offer.seller())?;
+                let mut updated_wallets = fees.collect(view, offer.seller())?;
 
                 let mut wallet_seller = updated_wallets
                     .remove(&offer.seller())
