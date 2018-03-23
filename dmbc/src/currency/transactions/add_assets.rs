@@ -13,7 +13,8 @@ use currency::assets::{AssetId, AssetInfo, MetaAsset};
 use currency::wallet;
 use currency::status;
 use currency::error::Error;
-use currency::transactions::components::Fees;
+use currency::transactions::components::ThirdPartyFees;
+use currency::configuration::Configuration;
 
 /// Transaction ID.
 pub const ADD_ASSETS_ID: u16 = 300;
@@ -35,20 +36,22 @@ impl AddAssets {
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
         info!("Processing tx: {:?}", self);
 
+        let tx_fee = Configuration::extract(view).fees().add_assets();
+
         let genesis_pub = Service::genesis_wallet();
         let creator_pub = self.pub_key();
 
         let mut genesis = wallet::Schema(&*view).fetch(&genesis_pub);
         let mut creator = wallet::Schema(&*view).fetch(&creator_pub);
 
-        let fees = Fees::new_add_assets(&view, self.meta_assets()).unwrap();
+        wallet::move_coins(&mut creator, &mut genesis, tx_fee)?;
 
-        fees.collect_to_genesis(&mut creator, &mut genesis)?;
+        let fees = ThirdPartyFees::new_add_assets(&view, self.meta_assets())?;
 
         wallet::Schema(&mut *view).store(&genesis_pub, genesis);
         wallet::Schema(&mut *view).store(&creator_pub, creator);
 
-        let mut wallets = fees.collect_to_third_party(&*view, &creator_pub)?;
+        let mut wallets = fees.collect(view, &creator_pub)?;
         let mut infos: HashMap<AssetId, AssetInfo> = HashMap::new();
 
         let key = self.pub_key();
