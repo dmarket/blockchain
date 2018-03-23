@@ -308,22 +308,29 @@ impl Fees {
         let mut payer_1 = wallet::Schema(&*view).fetch(&payer_key_1);
         let mut payer_2 = wallet::Schema(&*view).fetch(&payer_key_2);
 
-        let mut updated_wallets = self.to_third_party
+        let mut to_third_party = self.to_third_party.clone();
+
+        if let Some(fee) = to_third_party.remove(payer_key_1) {
+            wallet::move_coins(&mut payer_2, &mut payer_1, fee / 2)?;
+        }
+
+        if let Some(fee) = to_third_party.remove(payer_key_2) {
+            wallet::move_coins(&mut payer_1, &mut payer_2, fee / 2)?;
+        }
+
+        let mut updated_wallets = to_third_party
             .iter()
             .map(|(key, fee)| {
                 let mut wallet = wallet::Schema(&*view).fetch(&key);
-                if key != payer_key_1 {
-                    wallet::move_coins(&mut payer_1, &mut wallet, fee / 2)?;
-                }
-                if key != payer_key_2 {
-                    wallet::move_coins(&mut payer_2, &mut wallet, fee / 2)?;
-                }
+                wallet::move_coins(&mut payer_1, &mut wallet, fee / 2)?;
+                wallet::move_coins(&mut payer_2, &mut wallet, fee / 2)?;
+
                 Ok((*key, wallet))
             })
             .collect::<Result<HashMap<_, _>, _>>()?;
 
-        updated_wallets.entry(*payer_key_1).or_insert(payer_1);
-        updated_wallets.entry(*payer_key_2).or_insert(payer_2);
+        updated_wallets.insert(*payer_key_1, payer_1);
+        updated_wallets.insert(*payer_key_2, payer_2);
 
         Ok(updated_wallets)
     }

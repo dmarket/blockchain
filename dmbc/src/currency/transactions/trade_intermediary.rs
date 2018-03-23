@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use exonum::crypto;
 use exonum::crypto::{PublicKey, Signature};
 use exonum::blockchain::Transaction;
@@ -107,21 +109,28 @@ impl TradeIntermediary {
 
         wallet::Schema(&mut *view).store(&Service::genesis_wallet(), genesis);
 
-        let mut wallet_buyer = wallet::Schema(&*view).fetch(self.offer().buyer());
-        let mut wallet_seller = wallet::Schema(&*view).fetch(self.offer().seller());
+        let mut wallet_buyer = wallet::Schema(&*view).fetch(offer.buyer());
+        let mut wallet_seller = wallet::Schema(&*view).fetch(offer.seller());
 
         wallet::move_coins(&mut wallet_buyer, &mut wallet_seller, total)
             .or_else(|e| {
-                wallet::Schema(&mut *view).store(&self.offer().seller(), wallet_seller.clone());
-                wallet::Schema(&mut *view).store(&self.offer().buyer(), wallet_buyer.clone());
+                wallet::Schema(&mut *view).store(&offer.seller(), wallet_seller.clone());
+                wallet::Schema(&mut *view).store(&offer.buyer(), wallet_buyer.clone());
 
                 Err(e)
             })
             .and_then(|_| {
-                wallet::Schema(&mut *view).store(&self.offer().seller(), wallet_seller);
-                wallet::Schema(&mut *view).store(&self.offer().buyer(), wallet_buyer);
+                wallet::Schema(&mut *view).store(&offer.seller(), wallet_seller);
+                wallet::Schema(&mut *view).store(&offer.buyer(), wallet_buyer);
 
-                let mut updated_wallets = fees.collect_to_third_party(view, self.offer().seller())?;
+                let mut updated_wallets = match fee_strategy {
+                    FeeStrategy::Recipient => fees.collect_to_third_party(view, offer.buyer())?,
+                    FeeStrategy::Sender => fees.collect_to_third_party(view, offer.seller())?,
+                    FeeStrategy::RecipientAndSender => {
+                        fees.collect_to_third_party_2(view, offer.seller(), offer.buyer())?
+                    },
+                    FeeStrategy::Intermediary => HashMap::<PublicKey, wallet::Wallet>::new(),
+                };
 
                 let mut wallet_seller = updated_wallets
                     .remove(&self.offer().seller())

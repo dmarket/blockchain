@@ -20,6 +20,7 @@ pub mod delete_assets;
 pub mod transfer;
 pub mod exchange;
 pub mod trade;
+pub mod trade_intermediary;
 
 pub const DMC_1:u64 = 1_00_000_000;
 

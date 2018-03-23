@@ -286,9 +286,9 @@ fn exchange_asset_insufficient_funds_fee_asset_very_big() {
     let (sender_pk, sender_sk) = mine_wallet(&mut testkit);
     let (recipient_pk, recipient_sk) = mine_wallet(&mut testkit);
     let (creator_pk, creator_sk) = crypto::gen_keypair();
-    let mut sender_balance = DMC_1;
+    let sender_balance = DMC_1;
     let mut recipient_balance = DMC_1;
-    let mut creator_balance = 0u64;
+    let creator_balance = 0u64;
     let mut genesis_balance = 137_000_000_00000000u64;
 
     let tx_add_assets = transaction::Builder::new()

@@ -685,7 +685,7 @@ impl TradeIntermediaryBuilder {
         self.verify();
 
         for (name, count, price) in self.data_for_assets {
-            let id = AssetId::from_data(&name, &self.meta.public_key);
+            let id = AssetId::from_data(&name, &self.seller_public.unwrap());
             let asset = TradeAsset::new(id, count, price);
             self.assets.push(asset);
         }
