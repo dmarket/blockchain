@@ -44,6 +44,16 @@ struct AssetIdResponse {
     pub assets: HashMap<String, String>,
 }
 
+#[derive(Clone, Serialize, Deserialize, Debug)]
+struct AssetIdBatchRequest {
+    pub assets: HashMap<String, Vec<String>>,
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+struct AssetIdBatchResponse {
+    pub assets: HashMap<String, HashMap<String, String>>,
+}
+
 pub type AssetResponse = Result<Option<AssetInfo>, ApiError>;
 
 impl Api for AssetApi {
@@ -124,6 +134,32 @@ impl Api for AssetApi {
             }
         };
 
+        let self_ = self.clone();
+        let get_asset_id_batch = move |req: &mut Request| -> IronResult<Response> {
+            match req.get::<bodyparser::Struct<AssetIdBatchRequest>>() {
+                Ok(Some(request)) => {
+                    let mut assets_batch = HashMap::<String, HashMap<String, String>>::new();
+                    for (key, assets_data) in request.assets {
+                        let public_key = PublicKey::from_hex(key.clone()).map_err(ExonumApiError::FromHex)?;
+                        let mut assets = HashMap::<String, String>::new();
+                        for asset in assets_data {
+                            let id = AssetId::from_data(&asset, &public_key);
+                            assets.insert(asset, id.to_string());
+                        }
+                        assets_batch.insert(key, assets);
+                    }
+
+                    let response_data = json!(AssetIdBatchResponse { assets: assets_batch });
+                    let ok_res = self_.ok_response(&response_data);
+                    let mut res = ok_res.unwrap();
+                    res.headers.set(AccessControlAllowOrigin::Any);
+                    Ok(res)
+                },
+                Ok(None) => Err(ExonumApiError::IncorrectRequest("Empty request body".into()))?,
+                Err(e) => Err(ExonumApiError::IncorrectRequest(Box::new(e)))?,
+            }
+        };
+
         router.get(
             "/v1/assets/:asset_id",
             get_owner_for_asset_id,
@@ -140,6 +176,12 @@ impl Api for AssetApi {
             "/v1/assets/:pub_key",
             get_assets_ids,
             "assets_ids",
+        );
+
+        router.post(
+            "/v1/assets/batch",
+            get_asset_id_batch,
+            "assets_ids_batch"
         );
     }
 }
