@@ -6,10 +6,11 @@ use serde_json;
 
 use currency::{Service, SERVICE_ID};
 use currency::assets::AssetBundle;
-use currency::transactions::components::Fees;
+use currency::transactions::components::ThirdPartyFees;
 use currency::error::Error;
 use currency::status;
 use currency::wallet;
+use currency::configuration::Configuration;
 
 /// Transaction ID.
 pub const TRANSFER_ID: u16 = 200;
@@ -32,22 +33,24 @@ message! {
 
 impl Transfer {
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
-        let mut genesis = wallet::Schema(&*view).fetch(&Service::genesis_wallet());
+        let genesis_fee = Configuration::extract(view).fees().transfer();
 
-        let fees = Fees::new_transfer(&*view,self.assets())?;
+        let mut genesis = wallet::Schema(&*view).fetch(&Service::genesis_wallet());
 
         // Collect the blockchain fee. Execution shall not continue if this fails.
         let mut wallet_from = wallet::Schema(&*view).fetch(self.from());
-        fees.collect_to_genesis(&mut wallet_from, &mut genesis)?;
+        wallet::move_coins(&mut wallet_from, &mut genesis, genesis_fee)?;
 
         wallet::Schema(&mut *view).store(self.from(), wallet_from);
         wallet::Schema(&mut *view).store(&Service::genesis_wallet(), genesis);
+
+        let fees = ThirdPartyFees::new_transfer(&*view,self.assets())?;
 
         // Operations bellow must either all succeed, or return an error without
         // saving anything to the database.
 
         // Process third party fees.
-        let mut updated_wallets = fees.collect_to_third_party(view, self.from())?;
+        let mut updated_wallets = fees.collect(view, self.from())?;
 
         // Process the main transaction.
         let mut wallet_from = updated_wallets

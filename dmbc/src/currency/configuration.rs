@@ -13,12 +13,12 @@ encoding_struct! {
     struct TransactionFees {
         const SIZE = 48;
 
-        field add_asset:     u64 [0 => 8]
-        field per_add_asset: u64 [8 => 16]
-        field del_asset:     u64 [16 => 24]
-        field exchange:      u64 [24 => 32]
-        field trade:         u64 [32 => 40]
-        field transfer:      u64 [40 => 48]
+        field add_assets:           u64 [ 0 =>  8]
+        field add_assets_per_entry: u64 [ 8 => 16]
+        field delete_assets:        u64 [16 => 24]
+        field exchange:             u64 [24 => 32]
+        field trade:                u64 [32 => 40]
+        field transfer:             u64 [40 => 48]
     }
 }
 

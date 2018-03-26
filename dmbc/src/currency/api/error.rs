@@ -6,6 +6,8 @@ pub enum ApiError {
     TransactionHashInvalid,
     AssetIdNotFound,
     AssetIdHashInvalid,
+    EmptyRequestBody,
+    IncorrectRequest,
 }
 
 impl ApiError {
@@ -15,6 +17,8 @@ impl ApiError {
             ApiError::TransactionHashInvalid => StatusCode::BadRequest,
             ApiError::AssetIdNotFound => StatusCode::NotFound,
             ApiError::AssetIdHashInvalid => StatusCode::BadRequest,
+            ApiError::EmptyRequestBody => StatusCode::BadRequest,
+            ApiError::IncorrectRequest => StatusCode::BadRequest,
         }
     }
 }

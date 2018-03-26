@@ -12,7 +12,7 @@ use currency::assets::AssetBundle;
 use currency::wallet;
 use currency::error::Error;
 use currency::status;
-use currency::transactions::components::Fees;
+use currency::configuration::Configuration;
 
 /// Transaction ID.
 pub const DELETE_ASSETS_ID: u16 = 400;
@@ -34,15 +34,15 @@ impl DeleteAssets {
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
         info!("Processing tx: {:?}", self);
 
+        let genesis_fee = Configuration::extract(view).fees().delete_assets();
+
         let genesis_pub = Service::genesis_wallet();
         let creator_pub = self.pub_key();
 
         let mut genesis = wallet::Schema(&*view).fetch(&genesis_pub);
         let mut creator = wallet::Schema(&*view).fetch(&creator_pub);
 
-        let fees = Fees::new_delete_assets(&view, self.assets()).unwrap();
-
-        fees.collect_to_genesis(&mut creator, &mut genesis)?;
+        wallet::move_coins(&mut creator, &mut genesis, genesis_fee)?;
 
         wallet::Schema(&mut*view).store(&genesis_pub, genesis);
         wallet::Schema(&mut*view).store(&creator_pub, creator.clone());
@@ -58,7 +58,8 @@ impl DeleteAssets {
                 return Err(Error::InvalidTransaction);
             }
             let mut entry = infos.remove(&asset.id()).unwrap_or(info);
-            entry.decrease(asset.amount())?;
+            let entry = entry.decrease(asset.amount())?;
+            infos.insert(asset.id(), entry);
         }
 
         creator.remove_assets(self.assets())?;
