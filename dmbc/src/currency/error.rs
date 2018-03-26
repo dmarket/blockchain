@@ -26,6 +26,9 @@ pub enum Error {
     /// Transaction is invalid
     InvalidTransaction = 6,
 
+    /// Unable to verify transaction
+    UnableToVerifyTransaction = 7,
+
     /// Requested operation is not implemented. Must not happen in production
     /// setting.
     NotImplemented = 255,
@@ -41,6 +44,7 @@ impl Error {
             4 => Some(Error::InsufficientFunds),
             5 => Some(Error::InsufficientAssets),
             6 => Some(Error::InvalidTransaction),
+            7 => Some(Error::UnableToVerifyTransaction),
             255 => Some(Error::NotImplemented),
             _ => None,
         }
@@ -57,6 +61,7 @@ impl error::Error for Error {
             &Error::InsufficientAssets => "insufficient assets",
             &Error::NotImplemented => "not implemented",
             &Error::InvalidTransaction => "invalid transaction",
+            &Error::UnableToVerifyTransaction => "unable to verify transaction",
         }
     }
 }

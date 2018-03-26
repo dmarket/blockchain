@@ -30,7 +30,7 @@ impl AssetApi {
     }
 }
 
-pub type AssetResponse = Result<AssetInfo, ApiError>;
+pub type AssetResponse = Result<Option<AssetInfo>, ApiError>;
 
 impl Api for AssetApi {
     fn wire(&self, router: &mut Router) {
@@ -40,7 +40,8 @@ impl Api for AssetApi {
             let asset_id_str = path.last().unwrap();
             let a: AssetResponse = AssetId::from_hex(&asset_id_str)
                 .map_err(|_| ApiError::AssetIdHashInvalid)
-                .and_then(|asset_id| self_.get_asset_info(&asset_id).ok_or(ApiError::AssetIdNotFound));
+//                .and_then(|asset_id| self_.get_asset_info(&asset_id).ok_or(ApiError::AssetIdNotFound));
+                .map(|asset_id| self_.get_asset_info(&asset_id));
 
             let mut res = Response::with((
                 a.clone().err().map(|e| e.to_status()).unwrap_or(status::Ok),

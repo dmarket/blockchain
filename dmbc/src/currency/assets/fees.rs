@@ -22,7 +22,11 @@ encoding_struct! {
 impl Fee {
     /// Calculate fee value for specific price.
     pub fn for_price(&self, price: u64) -> u64 {
-        let price_ratio = price / self.ratio();
+        let price_ratio = if self.ratio() > 0 {
+            price / self.ratio()
+        } else {
+            0
+        };
         self.tax() + price_ratio
     }
 }
