@@ -68,9 +68,10 @@ jobs:
       - run:
           name: Generate Coverage
           command: |
-            mkdir -p $CIRCLE_ARTIFACTS/target/debug
             kcov --verify --include-path dmbc target/debug/coverage $(find target/debug -maxdepth 1 -type f -executable -name 'transaction-*')
-            mv target/debug/coverage $CIRCLE_ARTIFACTS/target/debug
+
+      - store_artifacts:
+          path: target/debug/coverage
 
       - setup_remote_docker
 
