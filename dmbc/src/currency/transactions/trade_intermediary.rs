@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use exonum::crypto;
 use exonum::crypto::{PublicKey, Signature};
 use exonum::blockchain::Transaction;
@@ -130,26 +128,26 @@ impl TradeIntermediary {
                     FeeStrategy::Recipient => fees.collect(view, offer.buyer())?,
                     FeeStrategy::Sender => fees.collect(view, offer.seller())?,
                     FeeStrategy::RecipientAndSender => {
-                    fees.collect2(view, offer.seller(), offer.buyer())?
-                },
-                    FeeStrategy::Intermediary => HashMap::<PublicKey, wallet::Wallet>::new(),
+                        fees.collect2(view, offer.seller(), offer.buyer())?
+                    },
+                    FeeStrategy::Intermediary => fees.collect(view, offer.intermediary().wallet())?,
                 };
 
                 let mut wallet_seller = updated_wallets
-                    .remove(&self.offer().seller())
-                    .unwrap_or_else(|| wallet::Schema(&*view).fetch(&self.offer().seller()));
+                    .remove(&offer.seller())
+                    .unwrap_or_else(|| wallet::Schema(&*view).fetch(&offer.seller()));
                 let mut wallet_buyer = updated_wallets
-                    .remove(&self.offer().buyer())
-                    .unwrap_or_else(|| wallet::Schema(&*view).fetch(&self.offer().buyer()));
-                let assets = self.offer().assets()
+                    .remove(&offer.buyer())
+                    .unwrap_or_else(|| wallet::Schema(&*view).fetch(&offer.buyer()));
+                let assets = offer.assets()
                     .into_iter()
                     .map(|a| a.to_bundle())
                     .collect::<Vec<_>>();
 
                 wallet::move_assets(&mut wallet_seller, &mut wallet_buyer, &assets)?;
 
-                updated_wallets.insert(*self.offer().seller(), wallet_seller);
-                updated_wallets.insert(*self.offer().buyer(), wallet_buyer);
+                updated_wallets.insert(*offer.seller(), wallet_seller);
+                updated_wallets.insert(*offer.buyer(), wallet_buyer);
 
                 // Save changes to the database.
                 for (key, wallet) in updated_wallets {

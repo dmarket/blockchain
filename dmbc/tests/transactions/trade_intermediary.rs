@@ -235,9 +235,9 @@ fn trade_intermediary_fee_strategy() {
 
     let asset_price = units * price_per_unit;
     let trade_fee = trade_tax + asset_price / trade_ratio;
-    let seller_expected_balance = DMC_1 + asset_price;
+    let seller_expected_balance = DMC_1 + asset_price + trade_fee;
     let buyer_expected_balance = DMC_1 - asset_price;
-    let intermediary_expected_balance = DMC_1 - transaction_fee;
+    let intermediary_expected_balance = DMC_1 - transaction_fee - trade_fee;
 
     assert!(seller_wallet.assets().is_empty());
     assert_eq!(seller_wallet.balance(), seller_expected_balance);
@@ -246,4 +246,9 @@ fn trade_intermediary_fee_strategy() {
     assert_eq!(buyer_wallet.balance(), buyer_expected_balance);
 
     assert_eq!(intermediary_wallet.balance(), intermediary_expected_balance);
+}
+
+#[test]
+fn trade_interemedary_insufficient_funds() {
+
 }
