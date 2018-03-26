@@ -60,7 +60,7 @@ jobs:
           command: |
             wget https://github.com/SimonKagstrom/kcov/archive/v34.zip -O /tmp/kcov.zip
             unzip /tmp/kcov.zip
-            cd kcov-master
+            cd kcov-v34
             cmake .
             make -j$(nproc)
             make install
