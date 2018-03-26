@@ -5,6 +5,8 @@ extern crate router;
 extern crate serde;
 extern crate serde_json;
 
+use std::collections::HashMap;
+
 use exonum::api::{Api, ApiError as ExonumApiError};
 use exonum::blockchain::Blockchain;
 use exonum::crypto::PublicKey;
@@ -30,6 +32,16 @@ impl AssetApi {
         let view = self.blockchain.fork();
         assets::Schema(view).fetch(asset_id)
     }
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+struct AssetIdRequest {
+    pub assets: Vec<String>,
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+struct AssetIdResponse {
+    pub assets: HashMap<String, String>,
 }
 
 pub type AssetResponse = Result<Option<AssetInfo>, ApiError>;
@@ -84,6 +96,34 @@ impl Api for AssetApi {
             Ok(res)
         };
 
+        let self_ = self.clone();
+        let get_assets_ids = move |req: &mut Request| -> IronResult<Response> {
+            let public_key = {
+                let wallet_key = req.extensions
+                    .get::<Router>()
+                    .unwrap()
+                    .find("pub_key")
+                    .unwrap();
+                PublicKey::from_hex(wallet_key).map_err(ExonumApiError::FromHex)?
+            };
+            match req.get::<bodyparser::Struct<AssetIdRequest>>() {
+                Ok(Some(request)) => {
+                    let mut assets = HashMap::<String, String>::new();
+                    for asset in request.assets {
+                        let id = AssetId::from_data(&asset, &public_key);
+                        assets.insert(asset, id.to_string());
+                    }
+                    let response_data = json!(AssetIdResponse { assets });
+                    let ok_res = self_.ok_response(&response_data);
+                    let mut res = ok_res.unwrap();
+                    res.headers.set(AccessControlAllowOrigin::Any);
+                    Ok(res)
+                },
+                Ok(None) => Err(ExonumApiError::IncorrectRequest("Empty request body".into()))?,
+                Err(e) => Err(ExonumApiError::IncorrectRequest(Box::new(e)))?,
+            }
+        };
+
         router.get(
             "/v1/assets/:asset_id",
             get_owner_for_asset_id,
@@ -94,6 +134,12 @@ impl Api for AssetApi {
             "/v1/assets/:pub_key/:meta_data",
             get_asset_id,
             "asset_id",
+        );
+
+        router.post(
+            "/v1/assets/:pub_key",
+            get_assets_ids,
+            "assets_ids",
         );
     }
 }
