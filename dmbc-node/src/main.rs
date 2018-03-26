@@ -8,16 +8,13 @@ extern crate serde_json;
 
 extern crate dmbc;
 
+mod keyfile;
 mod net_config;
 
-use std::path::Path;
-use std::io;
-use std::io::Read;
-use std::fs::File;
-
 use exonum::blockchain;
-use exonum::blockchain::{ConsensusConfig, GenesisConfig, TimeoutAdjusterConfig, ValidatorKeys};
-use exonum::crypto::{PublicKey, SecretKey};
+use exonum::blockchain::{ConsensusConfig, GenesisConfig, TimeoutAdjusterConfig,
+                         ValidatorKeys};
+use exonum::crypto::PublicKey;
 use exonum::encoding::serialize::FromHex;
 use exonum::node::{Node, NodeApiConfig, NodeConfig};
 use exonum::storage::{RocksDB, RocksDBOptions};
@@ -39,16 +36,8 @@ fn main() {
         config::config().api().current_node()
     );
 
-    let keys_path = config::config().api().keys_path();
-
-    let consensus_public_key =
-        PublicKey::from_hex(slurp(keys_path.clone() + "/consensus.pub").unwrap()).unwrap();
-    let consensus_secret_key =
-        SecretKey::from_hex(slurp(keys_path.clone() + "/consensus").unwrap()).unwrap();
-    let service_public_key =
-        PublicKey::from_hex(slurp(keys_path.clone() + "/service.pub").unwrap()).unwrap();
-    let service_secret_key =
-        SecretKey::from_hex(slurp(keys_path.clone() + "/service").unwrap()).unwrap();
+    let (consensus_public_key, consensus_secret_key) = keyfile::pair("consensus").unwrap();
+    let (service_public_key, service_secret_key) = keyfile::pair("service").unwrap();
 
     let public_api = config::config().api().address().parse().unwrap();
     let private_api = config::config().api().private_address().parse().unwrap();
@@ -138,7 +127,7 @@ fn main() {
     // Initialize services
     let services: Vec<Box<blockchain::Service>> = vec![
         Box::new(ConfigurationService::new()),
-        Box::new(Service())
+        Box::new(Service::new())
     ];
 
     eprintln!("Launching node. What can possibly go wrong?");
@@ -147,10 +136,3 @@ fn main() {
     node.run().unwrap();
 }
 
-fn slurp<P: AsRef<Path>>(filename: P) -> io::Result<String> {
-    let mut out = String::new();
-    File::open(filename)
-        .and_then(|mut file| file.read_to_string(&mut out))
-        .map(|_| eprintln!("Slurped: {}", &out))
-        .map(move |_| out)
-}

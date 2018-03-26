@@ -14,7 +14,7 @@
 /var/db/*
 !/var/db/.gitkeep
 
-/var/keys/test.json
+/var/keys/*
 #!/var/keys/.gitkeep
 /var/discovery/
 #!/var/discovery/.gitkeep
