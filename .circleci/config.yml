@@ -15,6 +15,7 @@ jobs:
             apt-get -y install libsodium18 libsodium-dev pkg-config
             apt-get -y install clang
             apt-get -y install kcov
+            kcov --version
 
       - run:
           name: setup nightly
