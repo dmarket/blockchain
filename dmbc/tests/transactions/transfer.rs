@@ -72,7 +72,7 @@ fn transfer() {
 }
 
 #[test]
-fn tranfer_nonexisting_asset() {
+fn tranfer_asset_not_found() {
     let mut testkit = init_testkit();
     let api = testkit.api();
     set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 0, 0, 100));
