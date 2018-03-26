@@ -370,11 +370,8 @@ fn exchange_i_assets_payer_fee_intermediary() {
         .recipient_add_asset_value(AssetBundle::from_data("asset6", 4, &intermediary_pk))
         .build();
 
-//    let assets_fee = 6*1 + 6*4;
-
     post_tx(&api, &tx_exchange_assets);
     testkit.create_block();
-
 
     let status = get_status(&api, &tx_exchange_assets.hash());
     let sender_wallet = get_wallet(&api, &sender_pk);
@@ -442,4 +439,76 @@ fn exchange_i_assets_payer_fee_intermediary() {
         ],
         recipient_wallet.assets()
     );
+
+    let (creator_pk, creator_sk) = crypto::gen_keypair();
+    let mut creator_balance = 0u64;
+    let tx_add_assets = transaction::Builder::new()
+        .keypair(creator_pk, creator_sk.clone())
+        .tx_add_assets()
+        .add_asset_receiver(sender_pk, "asset1", 10, exchange_fee(1))
+        .add_asset_receiver(recipient_pk, "asset6", 5, exchange_fee(6))
+        .seed(133)
+        .build();
+
+    post_tx(&api, &tx_add_assets);
+    testkit.create_block();
+
+    let s = get_status(&api, &tx_add_assets.hash());
+    assert_eq!(Ok(Ok(())), s);
+
+    let tx_exchange_assets = transaction::Builder::new()
+        .keypair(recipient_pk, recipient_sk.clone())
+        .tx_exchange_with_intermediary()
+        .intermediary_key_pair(intermediary_pk, intermediary_sk.clone())
+        .commission(INTER_COMMISSION)
+        .sender_key_pair(sender_pk, sender_sk.clone())
+        .fee_strategy(FeeStrategy::Intermediary)
+        .sender_add_asset_value(AssetBundle::from_data("asset1", 6, &creator_pk))
+        .recipient_add_asset_value(AssetBundle::from_data("asset6", 4, &creator_pk))
+        .seed(333)
+        .build();
+
+    let assets_fee = 6*1 + 6*4;
+
+    post_tx(&api, &tx_exchange_assets);
+    testkit.create_block();
+    intermediary_balance -= BC_FEE + assets_fee;
+    genesis_balance += BC_FEE;
+    creator_balance += assets_fee;
+
+    let status = get_status(&api, &tx_exchange_assets.hash());
+    let sender_wallet = get_wallet(&api, &sender_pk);
+    let recipient_wallet = get_wallet(&api, &recipient_pk);
+    let genesis_wallet = get_wallet(&api, &Service::genesis_wallet());
+    let intermediary_wallet = get_wallet(&api, &intermediary_pk);
+    let creator_wallet = get_wallet(&api, &creator_pk);
+
+    assert_eq!(Ok(Ok(())), status);
+    assert_eq!(sender_balance, sender_wallet.balance());
+    assert_eq!(recipient_balance, recipient_wallet.balance());
+    assert_eq!(genesis_balance, genesis_wallet.balance());
+    assert_eq!(intermediary_balance, intermediary_wallet.balance());
+    assert_eq!(creator_balance, creator_wallet.balance());
+
+    assert_eq!(intermediary_balance, intermediary_wallet.balance());
+    assert_eq!(
+        vec![
+            AssetBundle::from_data("asset1", 4, &intermediary_pk),
+            AssetBundle::from_data("asset6", 4, &intermediary_pk),
+            AssetBundle::from_data("asset1", 4, &creator_pk),
+            AssetBundle::from_data("asset6", 4, &creator_pk),
+        ],
+        sender_wallet.assets()
+    );
+
+    assert_eq!(
+        vec![
+            AssetBundle::from_data("asset6", 1, &intermediary_pk),
+            AssetBundle::from_data("asset1", 6, &intermediary_pk),
+            AssetBundle::from_data("asset6", 1, &creator_pk),
+            AssetBundle::from_data("asset1", 6, &creator_pk),
+        ],
+        recipient_wallet.assets()
+    );
+
 }
