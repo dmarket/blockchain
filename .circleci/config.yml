@@ -14,8 +14,6 @@ jobs:
             apt-get update
             apt-get -y install libsodium18 libsodium-dev pkg-config
             apt-get -y install clang
-            apt-get -y install kcov
-            kcov --version
 
       - run:
           name: setup nightly
@@ -55,6 +53,16 @@ jobs:
 #      - store_artifacts:
 #          path: /project/report/
 #          destination: artifact-dir
+
+      - run:
+          name: Install Coverage Dependencies
+          command: |
+            wget https://github.com/SimonKagstrom/kcov/archive/v34.zip -O /tmp/kcov.zip
+            unzip /tmp/kcov.zip
+            cd kcov-master
+            cmake .
+            make -j$(nproc)
+            make install
 
       - run:
           name: Generate Coverage
