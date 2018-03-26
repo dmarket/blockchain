@@ -107,7 +107,7 @@ impl Api for AssetApi {
         };
 
         let self_ = self.clone();
-        let get_assets_ids = move |req: &mut Request| -> IronResult<Response> {
+        let get_asset_ids_for_key = move |req: &mut Request| -> IronResult<Response> {
             let public_key = {
                 let wallet_key = req.extensions
                     .get::<Router>()
@@ -174,8 +174,8 @@ impl Api for AssetApi {
 
         router.post(
             "/v1/assets/:pub_key",
-            get_assets_ids,
-            "assets_ids",
+            get_asset_ids_for_key,
+            "assets_ids_for_key",
         );
 
         router.post(
