@@ -37,14 +37,14 @@ impl Transfer {
 
         let mut genesis = wallet::Schema(&*view).fetch(&Service::genesis_wallet());
 
-        let fees = ThirdPartyFees::new_transfer(&*view,self.assets())?;
-
         // Collect the blockchain fee. Execution shall not continue if this fails.
         let mut wallet_from = wallet::Schema(&*view).fetch(self.from());
         wallet::move_coins(&mut wallet_from, &mut genesis, genesis_fee)?;
 
         wallet::Schema(&mut *view).store(self.from(), wallet_from);
         wallet::Schema(&mut *view).store(&Service::genesis_wallet(), genesis);
+
+        let fees = ThirdPartyFees::new_transfer(&*view,self.assets())?;
 
         // Operations bellow must either all succeed, or return an error without
         // saving anything to the database.

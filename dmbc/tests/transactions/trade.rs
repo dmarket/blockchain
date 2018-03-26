@@ -290,7 +290,7 @@ fn trade_insuffisient_funds_for_execution() {
         .tx_trade_assets()
         .add_asset(&meta_data, units, price_per_unit)
         .seller(seller_public_key, seller_secret_key)
-        .fee_strategy(FeeStrategy::Recipient)
+        .fee_strategy(FeeStrategy::Sender)
         .seed(12)
         .build();
 
