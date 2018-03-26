@@ -14,7 +14,7 @@ jobs:
             apt-get update
             apt-get -y install libsodium18 libsodium-dev pkg-config
             apt-get -y install clang
-            apt-get -y install unzip cmake make
+            apt-get -y install unzip cmake make binutils-dev libcurl4-openssl-dev zlib1g-dev libdw-dev libiberty-dev
 
       - run:
           name: setup nightly
