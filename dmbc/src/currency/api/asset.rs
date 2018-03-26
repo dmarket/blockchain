@@ -5,8 +5,10 @@ extern crate router;
 extern crate serde;
 extern crate serde_json;
 
-use exonum::api::Api;
+use exonum::api::{Api, ApiError as ExonumApiError};
 use exonum::blockchain::Blockchain;
+use exonum::crypto::PublicKey;
+use exonum::encoding::serialize::FromHex;
 use hyper::header::ContentType;
 use iron::headers::AccessControlAllowOrigin;
 use iron::status;
@@ -52,10 +54,45 @@ impl Api for AssetApi {
             Ok(res)
         };
 
+        let self_ = self.clone();
+        let get_asset_id = move |req: &mut Request| -> IronResult<Response> {
+            let public_key = {
+                let wallet_key = req.extensions
+                    .get::<Router>()
+                    .unwrap()
+                    .find("pub_key")
+                    .unwrap();
+                PublicKey::from_hex(wallet_key).map_err(ExonumApiError::FromHex)?
+            };
+            let meta_data = {
+                req.extensions
+                    .get::<Router>()
+                    .unwrap()
+                    .find("meta_data")
+                    .unwrap()
+            };
+            let id = AssetId::from_data(meta_data, &public_key);
+
+            let response_body = json!({
+                "id": id.to_string(),
+            });
+
+            let res = self_.ok_response(&serde_json::to_value(response_body).unwrap());
+            let mut res = res.unwrap();
+            res.headers.set(AccessControlAllowOrigin::Any);
+            Ok(res)
+        };
+
         router.get(
             "/v1/assets/:asset_id",
             get_owner_for_asset_id,
             "get_owner_for_asset_id",
+        );
+
+        router.get(
+            "/v1/assets/:pub_key/:meta_data",
+            get_asset_id,
+            "asset_id",
         );
     }
 }
