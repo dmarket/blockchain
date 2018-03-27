@@ -177,7 +177,7 @@ impl Api for AssetInternApi {
         );
 
         router.post(
-            "/v1/intern/assets/batch",
+            "/v1/intern/assets",
             get_asset_id_batch,
             "assets_ids_batch"
         );
