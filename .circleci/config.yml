@@ -14,6 +14,7 @@ jobs:
             apt-get update
             apt-get -y install libsodium18 libsodium-dev pkg-config
             apt-get -y install clang
+            apt-get -y install unzip cmake make binutils-dev libcurl4-openssl-dev zlib1g-dev libdw-dev libiberty-dev
 
       - run:
           name: setup nightly
@@ -53,6 +54,24 @@ jobs:
 #      - store_artifacts:
 #          path: /project/report/
 #          destination: artifact-dir
+
+      - run:
+          name: Install Coverage Dependencies
+          command: |
+            wget https://github.com/SimonKagstrom/kcov/archive/v34.zip -O /tmp/kcov.zip
+            unzip /tmp/kcov.zip
+            cd kcov-34
+            cmake .
+            make -j$(nproc)
+            make install
+
+      - run:
+          name: Generate Coverage
+          command: |
+            kcov --verify --include-path dmbc target/debug/coverage $(find target/debug -maxdepth 1 -type f -executable -name 'transaction-*')
+
+      - store_artifacts:
+          path: target/debug/coverage
 
       - setup_remote_docker
 
