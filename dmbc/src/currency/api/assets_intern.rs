@@ -165,19 +165,19 @@ impl Api for AssetInternApi {
         };
 
         router.get(
-            "/v1/intern/assets/:pub_key/:meta_data",
+            "/v1/assets/intern/:pub_key/:meta_data",
             get_asset_id,
             "asset_id",
         );
 
         router.post(
-            "/v1/intern/assets/:pub_key",
+            "/v1/assets/intern/:pub_key",
             get_asset_ids_for_key,
             "assets_ids_for_key",
         );
 
         router.post(
-            "/v1/intern/assets",
+            "/v1/assets/intern",
             get_asset_id_batch,
             "assets_ids_batch"
         );
