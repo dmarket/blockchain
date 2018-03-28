@@ -258,3 +258,7 @@ impl ThirdPartyFees {
         Ok(updated_wallets)
     }
 }
+
+pub trait FeesCalculator {
+    fn get_fees(&self, view: &mut Fork) -> Result<(), Error>;
+}

@@ -13,7 +13,7 @@ use currency::assets::{AssetId, AssetInfo, MetaAsset};
 use currency::wallet;
 use currency::status;
 use currency::error::Error;
-use currency::transactions::components::ThirdPartyFees;
+use currency::transactions::components::{ThirdPartyFees, FeesCalculator};
 use currency::configuration::Configuration;
 
 /// Transaction ID.
@@ -32,7 +32,17 @@ message!{
     }
 }
 
+impl FeesCalculator for AddAssets {
+    fn get_fees(&self, view: &mut Fork) -> Result<(), Error> {
+        let tx_fee = Configuration::extract(view).fees().add_assets();
+        let fees = ThirdPartyFees::new_add_assets(&view, self.meta_assets())?;
+
+        Ok(())
+    }
+}
+
 impl AddAssets {
+
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
         info!("Processing tx: {:?}", self);
 
