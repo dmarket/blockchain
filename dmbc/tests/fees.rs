@@ -18,6 +18,7 @@ use dmbc::currency::transactions::builders::fee;
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::transactions::components::FeesTable;
 use dmbc::currency::assets::{Fees, MetaAsset, AssetBundle};
+use dmbc::currency::error::Error;
 
 pub fn init_testkit() -> TestKit {
     TestKitBuilder::validator()
@@ -237,4 +238,30 @@ fn fees_for_transfer() {
     expected.insert(sender_pub_key, expected_fee);
 
     assert_eq!(Ok(Ok(FeesResponseBody{fees: expected})), response);
+}
+
+#[test]
+fn fees_for_transfer_asset_not_found() {
+    let mut testkit = init_testkit();
+    let api = testkit.api();
+    let transaction_fee = 1000;
+    let amount = 2;
+    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 0, 0, transaction_fee));
+
+    let meta_data = "asset";
+    let (public_key, secret_key) = WalletMiner::new()
+        .mine_empty();
+
+    let (recipient_key, _) = crypto::gen_keypair();
+        
+    let tx_transfer = transaction::Builder::new()
+        .keypair(public_key, secret_key)
+        .tx_transfer()
+        .add_asset(meta_data, amount)
+        .recipient(recipient_key)
+        .seed(42)
+        .build();
+
+    let response = post_request(&api, &tx_transfer);
+    assert_eq!(Ok(Err(Error::AssetNotFound)), response);
 }
