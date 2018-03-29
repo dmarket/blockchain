@@ -12,6 +12,7 @@ use currency::assets::AssetBundle;
 use currency::wallet;
 use currency::error::Error;
 use currency::status;
+use currency::transactions::components::FeesCalculator;
 use currency::configuration::Configuration;
 
 /// Transaction ID.
@@ -27,6 +28,15 @@ message! {
         field pub_key:     &PublicKey       [00 => 32]
         field assets:      Vec<AssetBundle> [32 => 40]
         field seed:        u64              [40 => 48]
+    }
+}
+
+impl FeesCalculator for DeleteAssets {
+    fn get_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error> {
+        let mut fees_map = HashMap::<PublicKey, u64>::new();
+        let tx_fee = Configuration::extract(view).fees().delete_assets();
+        fees_map.insert(*self.pub_key(), tx_fee);
+        Ok(fees_map)
     }
 }
 

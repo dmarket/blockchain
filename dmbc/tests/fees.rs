@@ -52,7 +52,7 @@ pub fn post_tx<T>(api: &TestKitApi, tx: &T) -> FeesResponse
 }
 
 #[test]
-fn fees_add_assets() {
+fn fees_for_add_assets() {
     let mut testkit = init_testkit();
     let api = testkit.api();
     let transaction_fee = 100;
@@ -69,11 +69,11 @@ fn fees_add_assets() {
         .transfer(10, 10)
         .build();
 
-    let meta_data = r#"{"name":"test_item","type":"skin","category":"gun","image":"http://test.com/test_item.jpg"}"#;
+    let meta_data = "asset";
     let meta_asset = MetaAsset::new(&receiver_key, meta_data, amount, fees.clone());
 
     let tx_add_assets = transaction::Builder::new()
-        .keypair(public_key, secret_key.clone())
+        .keypair(public_key, secret_key)
         .tx_add_assets()
         .add_asset_value(meta_asset.clone())
         .seed(85)
@@ -82,6 +82,30 @@ fn fees_add_assets() {
     let response = post_tx(&api, &tx_add_assets);
     let mut expected: HashMap<PublicKey, u64> = HashMap::new();
     expected.insert(public_key, transaction_fee + amount * per_asset_fee);
+
+    assert_eq!(Ok(Ok(FeesResponseBody{fees: expected})), response);
+}
+
+#[test]
+fn fees_for_delete_assets() {
+    let mut testkit = init_testkit();
+    let api = testkit.api();
+    let transaction_fee = 1000;
+    set_configuration(&mut testkit, TransactionFees::new(0, 0, transaction_fee, 0, 0, 0));
+
+    let meta_data = "asset";
+    let (public_key, secret_key) = crypto::gen_keypair();
+
+    let tx_delete_assets = transaction::Builder::new()
+        .keypair(public_key, secret_key)
+        .tx_del_assets()
+        .add_asset(meta_data, 5)
+        .seed(85)
+        .build();
+
+    let response = post_tx(&api, &tx_delete_assets);
+    let mut expected: HashMap<PublicKey, u64> = HashMap::new();
+    expected.insert(public_key, transaction_fee);
 
     assert_eq!(Ok(Ok(FeesResponseBody{fees: expected})), response);
 }

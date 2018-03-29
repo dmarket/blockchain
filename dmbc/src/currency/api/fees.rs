@@ -34,7 +34,7 @@ pub struct FeesApi {
 pub enum FeesRequest {
     // Transfer(Transfer),
     AddAssets(AddAssets),
-    // DeleteAssets(DeleteAssets),
+    DeleteAssets(DeleteAssets),
     // Trade(Trade),
     // TradeIntermediary(TradeIntermediary),
     // Exchange(Exchange),
@@ -47,7 +47,7 @@ impl Into<Box<FeesCalculator>> for FeesRequest {
         match self {
             // FeesRequest::Transfer(trans) => Box::new(trans),
             FeesRequest::AddAssets(trans) => Box::new(trans),
-            // FeesRequest::DeleteAssets(trans) => Box::new(trans),
+            FeesRequest::DeleteAssets(trans) => Box::new(trans),
             // FeesRequest::Trade(trans) => Box::new(trans),
             // FeesRequest::TradeIntermediary(trans) => Box::new(trans),
             // FeesRequest::Exchange(trans) => Box::new(trans),
