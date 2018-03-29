@@ -260,5 +260,5 @@ impl ThirdPartyFees {
 }
 
 pub trait FeesCalculator {
-    fn get_fees(&self, view: &mut Fork) -> Result<(), Error>;
+    fn get_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error>;
 }

@@ -9,7 +9,7 @@ use std::collections::HashMap;
 
 use exonum::api::Api;
 use exonum::blockchain::Blockchain;
-// use exonum::crypto::PublicKey;
+use exonum::crypto::PublicKey;
 // use exonum::encoding::serialize::FromHex;
 use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
@@ -57,9 +57,9 @@ impl Into<Box<FeesCalculator>> for FeesRequest {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct FeesResponseBody {
-    pub fees: HashMap<String, u64>,
+    pub fees: HashMap<PublicKey, u64>,
 }
 
 pub type FeesResponse = Result<Result<FeesResponseBody, Error>, ApiError>;
@@ -72,8 +72,10 @@ impl Api for FeesApi {
                 Ok(Some(request)) => {
                     let calculator: Box<FeesCalculator> = request.into();
                     let view = &mut self_.blockchain.fork();
-                    println!("{:?}", calculator.get_fees(view));
-                    Ok(Ok(FeesResponseBody{ fees: HashMap::new() }))
+                    match calculator.get_fees(view) {
+                        Ok(fees) => Ok(Ok(FeesResponseBody{ fees })),
+                        Err(_) => Err(ApiError::IncorrectRequest),
+                    }
                 },
                 Ok(None) => Err(ApiError::EmptyRequestBody),
                 Err(_) => Err(ApiError::IncorrectRequest),

@@ -33,11 +33,12 @@ message!{
 }
 
 impl FeesCalculator for AddAssets {
-    fn get_fees(&self, view: &mut Fork) -> Result<(), Error> {
+    fn get_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error> {
+        let mut fees_map = HashMap::<PublicKey, u64>::new();
         let tx_fee = Configuration::extract(view).fees().add_assets();
-        let fees = ThirdPartyFees::new_add_assets(&view, self.meta_assets())?;
-
-        Ok(())
+        let fees = ThirdPartyFees::new_add_assets(&view, self.meta_assets())?;   
+        fees_map.insert(*self.pub_key(), tx_fee + fees.total());
+        Ok(fees_map)
     }
 }
 
