@@ -21,29 +21,13 @@ fn fees_for_transfer() {
     set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 0, 0, transaction_fee));
 
     let meta_data = "asset";
-    let (public_key, secret_key) = WalletMiner::new()
+    let (creator_key, _) = WalletMiner::new()
         .add_asset(meta_data, amount, asset_fee(tax, 0))
         .mine(&mut testkit);
-
     let (recipient_key, _) = WalletMiner::new().mine_empty(&mut testkit);
-        
-    let tx_transfer = transaction::Builder::new()
-        .keypair(public_key, secret_key)
-        .tx_transfer()
-        .add_asset(meta_data, amount)
-        .recipient(recipient_key)
-        .seed(42)
-        .build();
-
-    let response = post_fee(&api, &tx_transfer);
-    let mut expected = FeesTable::new();
-    expected.insert(public_key, transaction_fee);
-
-    assert_eq!(Ok(Ok(FeesResponseBody{fees: expected})), response);
-
-    // sender is not asset creator
-    let asset = AssetBundle::from_data(meta_data, amount, &public_key);
     let (sender_pub_key, sender_sec_key) = WalletMiner::new().mine_empty(&mut testkit);
+
+    let asset = AssetBundle::from_data(meta_data, amount, &creator_key);
 
     let tx_transfer = transaction::Builder::new()
         .keypair(sender_pub_key, sender_sec_key)
@@ -62,6 +46,36 @@ fn fees_for_transfer() {
 }
 
 #[test]
+fn fees_for_transfer_sender_is_creator() {
+    let mut testkit = init_testkit();
+    let api = testkit.api();
+    let transaction_fee = 1000;
+    let amount = 2;
+    let tax = 10;
+    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 0, 0, transaction_fee));
+
+    let meta_data = "asset";
+    let (sender_key, secret_key) = WalletMiner::new()
+        .add_asset(meta_data, amount, asset_fee(tax, 0))
+        .mine(&mut testkit);
+    let (recipient_key, _) = WalletMiner::new().mine_empty(&mut testkit);
+        
+    let tx_transfer = transaction::Builder::new()
+        .keypair(sender_key, secret_key)
+        .tx_transfer()
+        .add_asset(meta_data, amount)
+        .recipient(recipient_key)
+        .seed(42)
+        .build();
+
+    let response = post_fee(&api, &tx_transfer);
+    let mut expected = FeesTable::new();
+    expected.insert(sender_key, transaction_fee);
+
+    assert_eq!(Ok(Ok(FeesResponseBody{fees: expected})), response);
+}
+
+#[test]
 fn fees_for_transfer_asset_not_found() {
     let mut testkit = init_testkit();
     let api = testkit.api();
@@ -70,12 +84,11 @@ fn fees_for_transfer_asset_not_found() {
     set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 0, 0, transaction_fee));
 
     let meta_data = "asset";
-    let (public_key, secret_key) = WalletMiner::new().mine_empty(&mut testkit);
-
+    let (sender_key, secret_key) = WalletMiner::new().mine_empty(&mut testkit);
     let (recipient_key, _) = WalletMiner::new().mine_empty(&mut testkit);
         
     let tx_transfer = transaction::Builder::new()
-        .keypair(public_key, secret_key)
+        .keypair(sender_key, secret_key)
         .tx_transfer()
         .add_asset(meta_data, amount)
         .recipient(recipient_key)
