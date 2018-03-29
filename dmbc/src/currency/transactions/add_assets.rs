@@ -34,10 +34,19 @@ message!{
 
 impl FeesCalculator for AddAssets {
     fn get_fees(&self, view: &mut Fork) -> Result<FeesTable, Error> {
-        let mut fees_table = FeesTable::new();
-        let tx_fee = Configuration::extract(view).fees().add_assets();
+        let genesis_fee = Configuration::extract(view).fees().add_assets();
         let fees = ThirdPartyFees::new_add_assets(&view, self.meta_assets())?;   
-        fees_table.insert(*self.pub_key(), tx_fee + fees.total());
+
+        let mut fees_table = FeesTable::new();
+        if Service::genesis_wallet() != *self.pub_key() {
+            fees_table.insert(*self.pub_key(), genesis_fee);
+        }
+
+        for (pub_key, fee) in fees.0 {
+            if pub_key != *self.pub_key() {
+                *fees_table.entry(*self.pub_key()).or_insert(0) += fee;
+            }
+        }
         Ok(fees_table)
     }
 }

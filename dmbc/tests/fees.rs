@@ -4,6 +4,7 @@ extern crate exonum_testkit;
 extern crate serde_json;
 
 use exonum::crypto;
+use exonum::crypto::{PublicKey, SecretKey};
 use exonum_testkit::{ApiKind, TestKit, TestKitApi, TestKitBuilder};
 use exonum::encoding::serialize::reexport::Serialize;
 use exonum::messages::Message;
@@ -11,11 +12,12 @@ use exonum::messages::Message;
 use dmbc::currency::configuration::{Configuration, TransactionFees};
 use dmbc::currency::Service;
 use dmbc::currency::SERVICE_NAME;
+use dmbc::currency::api::transaction::{TxPostResponse, TransactionResponse};
 use dmbc::currency::api::fees::{FeesResponseBody, FeesResponse};
 use dmbc::currency::transactions::builders::fee;
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::transactions::components::FeesTable;
-use dmbc::currency::assets::MetaAsset;
+use dmbc::currency::assets::{Fees, MetaAsset, AssetBundle};
 
 pub fn init_testkit() -> TestKit {
     TestKitBuilder::validator()
@@ -37,7 +39,7 @@ pub fn set_configuration(testkit: &mut TestKit, fees: TransactionFees) {
     testkit.create_block();
 }
 
-pub fn post_tx<T>(api: &TestKitApi, tx: &T) -> FeesResponse
+pub fn post_request<T>(api: &TestKitApi, tx: &T) -> FeesResponse
     where T:Message + Serialize
 {
     let response: FeesResponse = api.post(
@@ -47,6 +49,77 @@ pub fn post_tx<T>(api: &TestKitApi, tx: &T) -> FeesResponse
     );
 
     response
+}
+
+pub fn post_tx<T>(api: &TestKitApi, tx: &T)
+    where T:Message + Serialize
+{
+    let tx_response:TxPostResponse = api.post(
+        ApiKind::Service(SERVICE_NAME),
+        "v1/transactions",
+        &tx
+    );
+
+    assert_eq!(tx_response, Ok(Ok(TransactionResponse{tx_hash:tx.hash()})));
+}
+
+pub struct WalletMiner {
+    public_key: PublicKey,
+    secret_key: SecretKey,
+    assets: Vec<MetaAsset>,
+}
+
+impl WalletMiner {
+    fn new() -> Self {
+        let (public_key, secret_key) = crypto::gen_keypair();
+        WalletMiner {
+            public_key,
+            secret_key,
+            assets: Vec::new(),
+        }
+    }
+
+    pub fn add_asset(self, name: &str, count: u64, fees: Fees) -> Self {
+        let asset = MetaAsset::new(&self.public_key, name, count, fees);
+        self.add_asset_value(asset)
+    }
+
+    pub fn add_asset_value(mut self, asset: MetaAsset) -> Self {
+        self.assets.push(asset);
+        self
+    }
+
+    pub fn mine_empty(self) -> (PublicKey, SecretKey) {
+        (self.public_key, self.secret_key)
+    }
+
+    pub fn mine(self, testkit: &mut TestKit) -> (PublicKey, SecretKey) {
+        let mine_1_dmc = transaction::Builder::new()
+            .keypair(self.public_key, self.secret_key.clone())
+            .tx_mine()
+            .build();
+
+        post_tx(&testkit.api(), &mine_1_dmc);
+        testkit.create_block();
+
+        if !self.assets.is_empty() {
+            let mut tx_add_assets_builder = transaction::Builder::new()
+            .keypair(self.public_key, self.secret_key.clone())
+            .tx_add_assets()
+            .seed(85);
+
+            for asset in self.assets {
+                tx_add_assets_builder = tx_add_assets_builder.add_asset_value(asset);
+            }
+
+            let tx_add_assets = tx_add_assets_builder.build();
+
+            post_tx(&testkit.api(), &tx_add_assets);
+            testkit.create_block();
+        }
+
+        (self.public_key, self.secret_key)
+    }   
 }
 
 #[test]
@@ -77,7 +150,7 @@ fn fees_for_add_assets() {
         .seed(85)
         .build();
 
-    let response = post_tx(&api, &tx_add_assets);
+    let response = post_request(&api, &tx_add_assets);
     let mut expected = FeesTable::new();
     expected.insert(public_key, transaction_fee + amount * per_asset_fee);
 
@@ -101,9 +174,67 @@ fn fees_for_delete_assets() {
         .seed(85)
         .build();
 
-    let response = post_tx(&api, &tx_delete_assets);
+    let response = post_request(&api, &tx_delete_assets);
     let mut expected = FeesTable::new();
     expected.insert(public_key, transaction_fee);
+
+    assert_eq!(Ok(Ok(FeesResponseBody{fees: expected})), response);
+}
+
+fn transefer_fee(t: u64) -> Fees {
+    fee::Builder::new()
+        .trade(0, 0)
+        .exchange(0, 0)
+        .transfer(t, 0)
+        .build()
+}
+
+#[test]
+fn fees_for_transfer() {
+    let mut testkit = init_testkit();
+    let api = testkit.api();
+    let transaction_fee = 1000;
+    let amount = 2;
+    let tax = 10;
+    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 0, 0, transaction_fee));
+
+    let meta_data = "asset";
+    let (public_key, secret_key) = WalletMiner::new()
+        .add_asset(meta_data, amount, transefer_fee(tax))
+        .mine(&mut testkit);
+
+    let (recipient_key, _) = crypto::gen_keypair();
+        
+    let tx_transfer = transaction::Builder::new()
+        .keypair(public_key, secret_key)
+        .tx_transfer()
+        .add_asset(meta_data, amount)
+        .recipient(recipient_key)
+        .seed(42)
+        .build();
+
+    let response = post_request(&api, &tx_transfer);
+    let mut expected = FeesTable::new();
+    expected.insert(public_key, transaction_fee);
+
+    assert_eq!(Ok(Ok(FeesResponseBody{fees: expected})), response);
+
+    // sender is not asset creator
+    let asset = AssetBundle::from_data(meta_data, amount, &public_key);
+    let (sender_pub_key, sender_sec_key) = crypto::gen_keypair();
+
+    let tx_transfer = transaction::Builder::new()
+        .keypair(sender_pub_key, sender_sec_key)
+        .tx_transfer()
+        .add_asset_value(asset)
+        .recipient(recipient_key)
+        .seed(42)
+        .build();
+
+    let response = post_request(&api, &tx_transfer);
+    let mut expected = FeesTable::new();
+    let expected_fee = transaction_fee + amount * tax;
+    expected.insert(sender_pub_key, expected_fee);
 
     assert_eq!(Ok(Ok(FeesResponseBody{fees: expected})), response);
 }

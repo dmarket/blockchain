@@ -33,9 +33,12 @@ message! {
 
 impl FeesCalculator for DeleteAssets {
     fn get_fees(&self, view: &mut Fork) -> Result<FeesTable, Error> {
-        let mut fees_table = FeesTable::new();
         let tx_fee = Configuration::extract(view).fees().delete_assets();
-        fees_table.insert(*self.pub_key(), tx_fee);
+
+        let mut fees_table = FeesTable::new();
+        if Service::genesis_wallet() != *self.pub_key() {
+            fees_table.insert(*self.pub_key(), tx_fee);
+        }
         Ok(fees_table)
     }
 }

@@ -32,7 +32,7 @@ pub struct FeesApi {
 #[serde(untagged)]
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub enum FeesRequest {
-    // Transfer(Transfer),
+    Transfer(Transfer),
     AddAssets(AddAssets),
     DeleteAssets(DeleteAssets),
     // Trade(Trade),
@@ -45,7 +45,7 @@ pub enum FeesRequest {
 impl Into<Box<FeesCalculator>> for FeesRequest {
     fn into(self) -> Box<FeesCalculator> {
         match self {
-            // FeesRequest::Transfer(trans) => Box::new(trans),
+            FeesRequest::Transfer(trans) => Box::new(trans),
             FeesRequest::AddAssets(trans) => Box::new(trans),
             FeesRequest::DeleteAssets(trans) => Box::new(trans),
             // FeesRequest::Trade(trans) => Box::new(trans),
@@ -74,7 +74,7 @@ impl Api for FeesApi {
                     let view = &mut self_.blockchain.fork();
                     match calculator.get_fees(view) {
                         Ok(fees) => Ok(Ok(FeesResponseBody{ fees })),
-                        Err(_) => Err(ApiError::IncorrectRequest),
+                        Err(e) => Ok(Err(e)),
                     }
                 },
                 Ok(None) => Err(ApiError::EmptyRequestBody),

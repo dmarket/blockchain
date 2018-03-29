@@ -31,11 +31,26 @@ message! {
     }
 }
 
-// impl FeesCalculator for Transfer {
-//     fn get_fees(&self, view: &mut Fork) -> Result<FeesTable, Error> {
+impl FeesCalculator for Transfer {
+    fn get_fees(&self, view: &mut Fork) -> Result<FeesTable, Error> {
+        let genesis_fee = Configuration::extract(view).fees().transfer();
+        let fees = ThirdPartyFees::new_transfer(&*view,self.assets())?;
 
-//     }
-// }
+        let mut fees_table = FeesTable::new();
+        if Service::genesis_wallet() != *self.from() {
+            fees_table.insert(*self.from(), genesis_fee);
+        }
+
+        for (pub_key, fee) in fees.0 {
+            if pub_key != *self.from() {
+                *fees_table.entry(*self.from()).or_insert(0) += fee;
+            }
+        }
+
+
+        Ok(fees_table)
+    }
+}
 
 impl Transfer {
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
