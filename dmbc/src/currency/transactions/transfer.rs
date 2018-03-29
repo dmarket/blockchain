@@ -6,7 +6,7 @@ use serde_json;
 
 use currency::{Service, SERVICE_ID};
 use currency::assets::AssetBundle;
-use currency::transactions::components::ThirdPartyFees;
+use currency::transactions::components::{FeesCalculator, ThirdPartyFees, FeesTable};
 use currency::error::Error;
 use currency::status;
 use currency::wallet;
@@ -30,6 +30,12 @@ message! {
         field data_info: &str             [88 => 96]
     }
 }
+
+// impl FeesCalculator for Transfer {
+//     fn get_fees(&self, view: &mut Fork) -> Result<FeesTable, Error> {
+
+//     }
+// }
 
 impl Transfer {
     fn process(&self, view: &mut Fork) -> Result<(), Error> {

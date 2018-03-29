@@ -13,7 +13,7 @@ use currency::assets::{AssetId, AssetInfo, MetaAsset};
 use currency::wallet;
 use currency::status;
 use currency::error::Error;
-use currency::transactions::components::{ThirdPartyFees, FeesCalculator};
+use currency::transactions::components::{ThirdPartyFees, FeesCalculator, FeesTable};
 use currency::configuration::Configuration;
 
 /// Transaction ID.
@@ -33,12 +33,12 @@ message!{
 }
 
 impl FeesCalculator for AddAssets {
-    fn get_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error> {
-        let mut fees_map = HashMap::<PublicKey, u64>::new();
+    fn get_fees(&self, view: &mut Fork) -> Result<FeesTable, Error> {
+        let mut fees_table = FeesTable::new();
         let tx_fee = Configuration::extract(view).fees().add_assets();
         let fees = ThirdPartyFees::new_add_assets(&view, self.meta_assets())?;   
-        fees_map.insert(*self.pub_key(), tx_fee + fees.total());
-        Ok(fees_map)
+        fees_table.insert(*self.pub_key(), tx_fee + fees.total());
+        Ok(fees_table)
     }
 }
 

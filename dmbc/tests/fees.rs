@@ -3,10 +3,7 @@ extern crate exonum;
 extern crate exonum_testkit;
 extern crate serde_json;
 
-use std::collections::HashMap;
-
 use exonum::crypto;
-use exonum::crypto::PublicKey;
 use exonum_testkit::{ApiKind, TestKit, TestKitApi, TestKitBuilder};
 use exonum::encoding::serialize::reexport::Serialize;
 use exonum::messages::Message;
@@ -17,6 +14,7 @@ use dmbc::currency::SERVICE_NAME;
 use dmbc::currency::api::fees::{FeesResponseBody, FeesResponse};
 use dmbc::currency::transactions::builders::fee;
 use dmbc::currency::transactions::builders::transaction;
+use dmbc::currency::transactions::components::FeesTable;
 use dmbc::currency::assets::MetaAsset;
 
 pub fn init_testkit() -> TestKit {
@@ -80,7 +78,7 @@ fn fees_for_add_assets() {
         .build();
 
     let response = post_tx(&api, &tx_add_assets);
-    let mut expected: HashMap<PublicKey, u64> = HashMap::new();
+    let mut expected = FeesTable::new();
     expected.insert(public_key, transaction_fee + amount * per_asset_fee);
 
     assert_eq!(Ok(Ok(FeesResponseBody{fees: expected})), response);
@@ -104,7 +102,7 @@ fn fees_for_delete_assets() {
         .build();
 
     let response = post_tx(&api, &tx_delete_assets);
-    let mut expected: HashMap<PublicKey, u64> = HashMap::new();
+    let mut expected = FeesTable::new();
     expected.insert(public_key, transaction_fee);
 
     assert_eq!(Ok(Ok(FeesResponseBody{fees: expected})), response);
