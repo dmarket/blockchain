@@ -39,7 +39,7 @@ pub fn set_configuration(testkit: &mut TestKit, fees: TransactionFees) {
     testkit.create_block();
 }
 
-pub fn post_transaction<T>(api: &TestKitApi, tx: &T)
+pub fn post_tx<T>(api: &TestKitApi, tx: &T)
     where T:Message + Serialize
 {
     let tx_response:TxPostResponse = api.post(
@@ -107,7 +107,7 @@ impl WalletMiner {
             .tx_mine()
             .build();
 
-        post_transaction(&testkit.api(), &mine_1_dmc);
+        post_tx(&testkit.api(), &mine_1_dmc);
         testkit.create_block();
 
         if !self.assets.is_empty() {
@@ -122,7 +122,7 @@ impl WalletMiner {
 
             let tx_add_assets = tx_add_assets_builder.build();
 
-            post_transaction(&testkit.api(), &tx_add_assets);
+            post_tx(&testkit.api(), &tx_add_assets);
             testkit.create_block();
         }
 
