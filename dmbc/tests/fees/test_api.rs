@@ -1,8 +1,3 @@
-extern crate dmbc;
-extern crate exonum;
-extern crate exonum_testkit;
-extern crate serde_json;
-
 use exonum::crypto;
 use exonum::crypto::{PublicKey, SecretKey};
 use exonum_testkit::{ApiKind, TestKit, TestKitApi, TestKitBuilder};

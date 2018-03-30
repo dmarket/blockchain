@@ -1,7 +1,3 @@
-extern crate dmbc;
-extern crate exonum;
-extern crate exonum_testkit;
-
 use dmbc::currency::api::fees::FeesResponseBody;
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::configuration::TransactionFees;
