@@ -17,7 +17,7 @@ use currency::transactions::{AddAssets, DeleteAssets, Exchange,
                              TRADE_ID, TRADE_INTERMEDIARY_ID};
 
 #[derive(Clone)]
-pub struct HashApi {}
+pub struct HexApi {}
 
 #[serde(untagged)]
 #[derive(Clone, Serialize, Deserialize)]
@@ -48,26 +48,26 @@ impl Into<Box<Transaction>> for TransactionRequest {
 }
 
 #[derive(Serialize, Deserialize)]
-struct TransactionHashResponse {
-    hash: String,
+struct HexResponse {
+    hex: String,
 }
 
-impl HashApi {
+impl HexApi {
     pub fn hex_string(bytes: Vec<u8>) -> String {
         let strs: Vec<String> = bytes.iter().map(|b| format!("{:02x}", b)).collect();
         strs.join("")
     }
 }
 
-impl Api for HashApi {
+impl Api for HexApi {
     fn wire(&self, router: &mut Router) {
         let self_ = self.clone();
-        let hash_transaction = move |request: &mut Request| -> IronResult<Response> {
+        let hex_transaction = move |request: &mut Request| -> IronResult<Response> {
             match request.get::<bodyparser::Struct<TransactionRequest>>() {
                 Ok(Some(transaction)) => {
                     let transaction: Box<Transaction> = transaction.into();
-                    let hash = HashApi::hex_string(transaction.raw().body().to_vec());
-                    let response_data = json!(TransactionHashResponse { hash });
+                    let hex = Self::hex_string(transaction.raw().body().to_vec());
+                    let response_data = json!(HexResponse { hex });
                     let ok_res = self_.ok_response(&response_data);
                     let mut res = ok_res.unwrap();
                     res.headers.set(AccessControlAllowOrigin::Any);
@@ -79,7 +79,7 @@ impl Api for HashApi {
         };
 
         let self_ = self.clone();
-        let hash_offer = move |request: &mut Request| -> IronResult<Response> {
+        let hex_tx_offer = move |request: &mut Request| -> IronResult<Response> {
             match request.get::<bodyparser::Struct<TransactionRequest>>() {
                 Ok(Some(transaction)) => {
                     let transaction: Box<Transaction> = transaction.into();
@@ -104,8 +104,8 @@ impl Api for HashApi {
                         },
                         _ => vec![],
                     };
-                    let hash = HashApi::hex_string(vec_hash);
-                    let response_data = json!(TransactionHashResponse { hash });
+                    let hex = Self::hex_string(vec_hash);
+                    let response_data = json!(HexResponse { hex });
                     let ok_res = self_.ok_response(&response_data);
                     let mut res = ok_res.unwrap();
                     res.headers.set(AccessControlAllowOrigin::Any);
@@ -115,7 +115,7 @@ impl Api for HashApi {
                 Err(e) => Err(ApiError::IncorrectRequest(Box::new(e)))?,
             }
         };
-        router.post("/v1/hash", hash_transaction, "hash_transaction");
-        router.post("/v1/hash/offer", hash_offer, "hash_offer");
+        router.post("/v1/hex/transactions", hex_transaction, "hash_transaction");
+        router.post("/v1/hex/transactions/offer", hex_tx_offer, "hash_offer");
     }
 }
