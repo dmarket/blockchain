@@ -7,7 +7,7 @@ use serde_json;
 
 use currency::{Service, SERVICE_ID};
 use currency::assets::AssetBundle;
-use currency::transactions::components::{FeeStrategy, ThirdPartyFees, Intermediary};
+use currency::transactions::components::{FeeStrategy, ThirdPartyFees, Intermediary, FeesCalculator, FeesTable};
 use currency::error::Error;
 use currency::status;
 use currency::wallet;
@@ -48,7 +48,55 @@ message! {
     }
 }
 
+impl FeesCalculator for ExchangeIntermediary {
+    fn get_fees(&self, view: &mut Fork) -> Result<FeesTable, Error> {
+        let offer = self.offer();
+        let genesis_fee = Configuration::extract(view).fees().exchange();
+        let fees = ThirdPartyFees::new_exchange(
+            &*view,
+            offer
+                .sender_assets()
+                .into_iter()
+                .chain(offer.recipient_assets().into_iter()),
+        )?;
+        let fee_strategy =
+            FeeStrategy::try_from(offer.fee_strategy()).expect("fee strategy must be valid");
+
+        let mut fees_table = FeesTable::new();
+
+        let payers = self.get_payers(&fee_strategy, genesis_fee)?;
+        for (payer_key, fee) in payers {
+            if Service::genesis_wallet() != payer_key {
+                fees_table.insert(payer_key, fee);
+            }
+        }
+
+        for (receiver_key, fee) in fees.0 {
+            let payers = self.get_payers(&fee_strategy, fee)?;
+            
+            for (payer_key, fee) in payers {
+                if payer_key != receiver_key {
+                    *fees_table.entry(payer_key).or_insert(0) += fee;
+                }
+            }
+        }
+
+        Ok(fees_table)
+    }
+}
+
 impl ExchangeIntermediary {
+    fn get_payers(&self, fee_strategy: &FeeStrategy, fee: u64) -> Result<Vec<(PublicKey, u64)>, Error> {
+        let offer = self.offer();
+        match *fee_strategy {
+            FeeStrategy::Recipient => Ok(vec![(*offer.recipient(), fee)]),
+            FeeStrategy::Sender => Ok(vec![(*offer.sender(), fee)]),
+            FeeStrategy::RecipientAndSender => Ok(vec![(*offer.sender(), fee/2), 
+                                                    (*offer.recipient(), fee/2)]),
+            FeeStrategy::Intermediary => Ok(vec![(*offer.intermediary().wallet(), fee)]),
+        }
+    }
+
     /// Get raw bytes of the offer.
     pub fn offer_raw(&self) -> Vec<u8> {
         self.offer().raw

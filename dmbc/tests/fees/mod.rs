@@ -5,3 +5,4 @@ pub mod transfer;
 pub mod trade;
 pub mod trade_intermediary;
 pub mod exchange;
+pub mod exchnage_intermediary;

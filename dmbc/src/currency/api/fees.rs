@@ -21,7 +21,7 @@ use currency::api::error::ApiError;
 use currency::error::Error;
 use currency::transactions::components::FeesCalculator;
 use currency::transactions::{AddAssets, DeleteAssets, Exchange,
-                             ExchangeIntermediary, Mine, Trade,
+                             ExchangeIntermediary, Trade,
                              TradeIntermediary, Transfer};
 
 #[derive(Clone)]
@@ -38,8 +38,7 @@ pub enum FeesRequest {
     Trade(Trade),
     TradeIntermediary(TradeIntermediary),
     Exchange(Exchange),
-    // ExchangeIntermediary(ExchangeIntermediary),
-    // Mine(Mine),
+    ExchangeIntermediary(ExchangeIntermediary),
 }
 
 impl Into<Box<FeesCalculator>> for FeesRequest {
@@ -51,8 +50,7 @@ impl Into<Box<FeesCalculator>> for FeesRequest {
             FeesRequest::Trade(trans) => Box::new(trans),
             FeesRequest::TradeIntermediary(trans) => Box::new(trans),
             FeesRequest::Exchange(trans) => Box::new(trans),
-            // FeesRequest::ExchangeIntermediary(trans) => Box::new(trans),
-            // FeesRequest::Mine(trans) => Box::new(trans),
+            FeesRequest::ExchangeIntermediary(trans) => Box::new(trans),
         }
     }
 }
