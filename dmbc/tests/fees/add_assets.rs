@@ -30,12 +30,12 @@ fn fees_for_add_assets() {
         .build();
 
     let meta_data = "asset";
-    let meta_asset = MetaAsset::new(&receiver_key, meta_data, amount, fees.clone());
+    let meta_asset = MetaAsset::new(&receiver_key, meta_data, amount, fees);
 
     let tx_add_assets = transaction::Builder::new()
         .keypair(public_key, secret_key)
         .tx_add_assets()
-        .add_asset_value(meta_asset.clone())
+        .add_asset_value(meta_asset)
         .seed(85)
         .build();
 

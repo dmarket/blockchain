@@ -36,10 +36,10 @@ fn fees_for_trade_recipient() {
     let asset = AssetBundle::from_data(meta_data, units, &creator_pub_key);
 
     let tx_trade = transaction::Builder::new()
-        .keypair(buyer_public_key, buyer_secret_key.clone())
+        .keypair(buyer_public_key, buyer_secret_key)
         .tx_trade_assets()
         .add_asset_value(TradeAsset::from_bundle(asset, price_per_unit))
-        .seller(seller_public_key, seller_secret_key.clone())
+        .seller(seller_public_key, seller_secret_key)
         .fee_strategy(FeeStrategy::Recipient)
         .seed(12)
         .build();
@@ -77,10 +77,10 @@ fn fees_for_trade_sender() {
     let asset = AssetBundle::from_data(meta_data, units, &creator_pub_key);
 
     let tx_trade = transaction::Builder::new()
-        .keypair(buyer_public_key, buyer_secret_key.clone())
+        .keypair(buyer_public_key, buyer_secret_key)
         .tx_trade_assets()
         .add_asset_value(TradeAsset::from_bundle(asset, price_per_unit))
-        .seller(seller_public_key, seller_secret_key.clone())
+        .seller(seller_public_key, seller_secret_key)
         .fee_strategy(FeeStrategy::Sender)
         .seed(12)
         .build();
@@ -118,10 +118,10 @@ fn fees_for_trade_recipient_and_sender() {
     let asset = AssetBundle::from_data(meta_data, units, &creator_pub_key);
 
     let tx_trade = transaction::Builder::new()
-        .keypair(buyer_public_key, buyer_secret_key.clone())
+        .keypair(buyer_public_key, buyer_secret_key)
         .tx_trade_assets()
         .add_asset_value(TradeAsset::from_bundle(asset, price_per_unit))
-        .seller(seller_public_key, seller_secret_key.clone())
+        .seller(seller_public_key, seller_secret_key)
         .fee_strategy(FeeStrategy::RecipientAndSender)
         .seed(12)
         .build();
@@ -154,10 +154,10 @@ fn fees_for_trade_recipient_and_sender_creator() {
     let (buyer_public_key, buyer_secret_key) = WalletMiner::new().mine(&mut testkit);
 
     let tx_trade = transaction::Builder::new()
-        .keypair(buyer_public_key, buyer_secret_key.clone())
+        .keypair(buyer_public_key, buyer_secret_key)
         .tx_trade_assets()
         .add_asset(&meta_data, units, price_per_unit)
-        .seller(seller_public_key, seller_secret_key.clone())
+        .seller(seller_public_key, seller_secret_key)
         .fee_strategy(FeeStrategy::RecipientAndSender)
         .seed(12)
         .build();
@@ -191,10 +191,10 @@ fn fees_for_trade_invalid_transaction() {
     let (buyer_public_key, buyer_secret_key) = WalletMiner::new().mine(&mut testkit);
 
     let tx_trade = transaction::Builder::new()
-        .keypair(buyer_public_key, buyer_secret_key.clone())
+        .keypair(buyer_public_key, buyer_secret_key)
         .tx_trade_assets()
         .add_asset(&meta_data, units, price_per_unit)
-        .seller(seller_public_key, seller_secret_key.clone())
+        .seller(seller_public_key, seller_secret_key)
         .fee_strategy(FeeStrategy::Intermediary)
         .seed(12)
         .build();
@@ -223,10 +223,10 @@ fn fees_for_trade_asset_not_found() {
     let (buyer_public_key, buyer_secret_key) = WalletMiner::new().mine(&mut testkit);
 
     let tx_trade = transaction::Builder::new()
-        .keypair(buyer_public_key, buyer_secret_key.clone())
+        .keypair(buyer_public_key, buyer_secret_key)
         .tx_trade_assets()
         .add_asset(&meta_data, units, price_per_unit)
-        .seller(seller_public_key, seller_secret_key.clone())
+        .seller(seller_public_key, seller_secret_key)
         .fee_strategy(FeeStrategy::Intermediary)
         .seed(12)
         .build();
