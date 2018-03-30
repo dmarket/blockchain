@@ -4,3 +4,4 @@ pub mod delete_assets;
 pub mod transfer;
 pub mod trade;
 pub mod trade_intermediary;
+pub mod exchange;

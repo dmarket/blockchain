@@ -37,7 +37,7 @@ pub enum FeesRequest {
     DeleteAssets(DeleteAssets),
     Trade(Trade),
     TradeIntermediary(TradeIntermediary),
-    // Exchange(Exchange),
+    Exchange(Exchange),
     // ExchangeIntermediary(ExchangeIntermediary),
     // Mine(Mine),
 }
@@ -50,7 +50,7 @@ impl Into<Box<FeesCalculator>> for FeesRequest {
             FeesRequest::DeleteAssets(trans) => Box::new(trans),
             FeesRequest::Trade(trans) => Box::new(trans),
             FeesRequest::TradeIntermediary(trans) => Box::new(trans),
-            // FeesRequest::Exchange(trans) => Box::new(trans),
+            FeesRequest::Exchange(trans) => Box::new(trans),
             // FeesRequest::ExchangeIntermediary(trans) => Box::new(trans),
             // FeesRequest::Mine(trans) => Box::new(trans),
         }
