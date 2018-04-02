@@ -258,3 +258,7 @@ impl ThirdPartyFees {
         Ok(updated_wallets)
     }
 }
+
+pub trait FeesCalculator {
+    fn calculate_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error>;
+}

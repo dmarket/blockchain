@@ -15,7 +15,7 @@ use serde_json;
 pub const ASSET_ID_LEN: usize = 16;
 
 /// An identifier for an asset.
-#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, Serialize, Deserialize)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct AssetId(pub [u8; ASSET_ID_LEN]);
 
 impl AssetId {
@@ -204,5 +204,11 @@ impl ToString for AssetId {
             assetid_hex += &*byte_hex;
         }
         assetid_hex
+    }
+}
+
+impl fmt::Debug for AssetId {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "AssetId({})", self.to_string())
     }
 }
