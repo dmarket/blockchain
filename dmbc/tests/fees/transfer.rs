@@ -1,7 +1,8 @@
+use std::collections::HashMap;
+
 use dmbc::currency::api::fees::FeesResponseBody;
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::configuration::TransactionFees;
-use dmbc::currency::transactions::components::FeesTable;
 use dmbc::currency::assets::AssetBundle;
 use dmbc::currency::error::Error;
 
@@ -34,7 +35,7 @@ fn fees_for_transfer() {
         .build();
 
     let response = post_fee(&api, &tx_transfer);
-    let mut expected = FeesTable::new();
+    let mut expected = HashMap::new();
     let expected_fee = transaction_fee + amount * tax;
     expected.insert(sender_pub_key, expected_fee);
 
@@ -65,7 +66,7 @@ fn fees_for_transfer_sender_is_creator() {
         .build();
 
     let response = post_fee(&api, &tx_transfer);
-    let mut expected = FeesTable::new();
+    let mut expected = HashMap::new();
     expected.insert(sender_key, transaction_fee);
 
     assert_eq!(Ok(Ok(FeesResponseBody{fees: expected})), response);

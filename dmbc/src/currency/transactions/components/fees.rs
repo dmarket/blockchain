@@ -41,9 +41,8 @@ impl FeeStrategy {
     }
 }
 
-pub type FeesTable = HashMap<PublicKey, u64>;
 /// Transaction fees.
-pub struct ThirdPartyFees(pub FeesTable);
+pub struct ThirdPartyFees(pub HashMap<PublicKey, u64>);
 
 impl ThirdPartyFees {
     /// Create `ThirdPartyFees` for an `add_assets` transaction.
@@ -261,5 +260,5 @@ impl ThirdPartyFees {
 }
 
 pub trait FeesCalculator {
-    fn calculate_fees(&self, view: &mut Fork) -> Result<FeesTable, Error>;
+    fn calculate_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error>;
 }

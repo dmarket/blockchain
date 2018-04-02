@@ -1,7 +1,8 @@
+use std::collections::HashMap;
+
 use dmbc::currency::api::fees::FeesResponseBody;
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::configuration::TransactionFees;
-use dmbc::currency::transactions::components::FeesTable;
 
 use fees::test_api::*;
 
@@ -23,7 +24,7 @@ fn fees_for_delete_assets() {
         .build();
 
     let response = post_fee(&api, &tx_delete_assets);
-    let mut expected = FeesTable::new();
+    let mut expected = HashMap::new();
     expected.insert(public_key, transaction_fee);
 
     assert_eq!(Ok(Ok(FeesResponseBody{fees: expected})), response);

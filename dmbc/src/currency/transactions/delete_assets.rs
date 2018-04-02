@@ -12,7 +12,7 @@ use currency::assets::AssetBundle;
 use currency::wallet;
 use currency::error::Error;
 use currency::status;
-use currency::transactions::components::{FeesCalculator, FeesTable};
+use currency::transactions::components::FeesCalculator;
 use currency::configuration::Configuration;
 
 /// Transaction ID.
@@ -32,10 +32,10 @@ message! {
 }
 
 impl FeesCalculator for DeleteAssets {
-    fn calculate_fees(&self, view: &mut Fork) -> Result<FeesTable, Error> {
+    fn calculate_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error> {
         let tx_fee = Configuration::extract(view).fees().delete_assets();
 
-        let mut fees_table = FeesTable::new();
+        let mut fees_table = HashMap::new();
         if Service::genesis_wallet() != *self.pub_key() {
             fees_table.insert(*self.pub_key(), tx_fee);
         }

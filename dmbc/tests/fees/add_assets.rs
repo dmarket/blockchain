@@ -1,9 +1,10 @@
+use std::collections::HashMap;
+
 use dmbc::currency::api::fees::FeesResponseBody;
 use dmbc::currency::assets::MetaAsset;
 use dmbc::currency::transactions::builders::fee;
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::configuration::TransactionFees;
-use dmbc::currency::transactions::components::FeesTable;
 
 use fees::test_api::*;
 
@@ -36,7 +37,7 @@ fn fees_for_add_assets() {
         .build();
 
     let response = post_fee(&api, &tx_add_assets);
-    let mut expected = FeesTable::new();
+    let mut expected = HashMap::new();
     expected.insert(public_key, transaction_fee + amount * per_asset_fee);
 
     assert_eq!(Ok(Ok(FeesResponseBody{fees: expected})), response);

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use exonum::crypto;
 use exonum::crypto::{PublicKey, Signature};
 use exonum::blockchain::Transaction;
@@ -7,7 +9,7 @@ use serde_json;
 
 use currency::{Service, SERVICE_ID};
 use currency::assets::AssetBundle;
-use currency::transactions::components::{FeeStrategy, ThirdPartyFees, Intermediary, FeesCalculator, FeesTable};
+use currency::transactions::components::{FeeStrategy, ThirdPartyFees, Intermediary, FeesCalculator};
 use currency::error::Error;
 use currency::status;
 use currency::wallet;
@@ -49,7 +51,7 @@ message! {
 }
 
 impl FeesCalculator for ExchangeIntermediary {
-    fn calculate_fees(&self, view: &mut Fork) -> Result<FeesTable, Error> {
+    fn calculate_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error> {
         let offer = self.offer();
         let genesis_fee = Configuration::extract(view).fees().exchange();
         let fees = ThirdPartyFees::new_exchange(
@@ -62,7 +64,7 @@ impl FeesCalculator for ExchangeIntermediary {
         let fee_strategy =
             FeeStrategy::try_from(offer.fee_strategy()).expect("fee strategy must be valid");
 
-        let mut fees_table = FeesTable::new();
+        let mut fees_table = HashMap::new();
 
         let payers = self.payers(&fee_strategy, genesis_fee)?;
         for (payer_key, fee) in payers {

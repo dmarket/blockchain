@@ -1,7 +1,9 @@
+use std::collections::HashMap;
+
 use dmbc::currency::api::fees::FeesResponseBody;
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::configuration::TransactionFees;
-use dmbc::currency::transactions::components::{FeesTable, FeeStrategy};
+use dmbc::currency::transactions::components::FeeStrategy;
 use dmbc::currency::assets::AssetBundle;
 use dmbc::currency::error::Error;
 
@@ -50,7 +52,7 @@ fn fees_for_exchange_intermediary_recipient() {
         .build();
 
     let response = post_fee(&api, &tx_exchange_assets);
-    let mut expected = FeesTable::new();
+    let mut expected = HashMap::new();
     let expected_fee = transaction_fee + tax * units * 4;
     expected.insert(recipient_public_key, expected_fee);
 
@@ -100,7 +102,7 @@ fn fees_for_exchange_intermediary_sender() {
         .build();
 
     let response = post_fee(&api, &tx_exchange_assets);
-    let mut expected = FeesTable::new();
+    let mut expected = HashMap::new();
     let expected_fee = transaction_fee + tax * units * 4;
     expected.insert(sender_public_key, expected_fee);
 
@@ -150,7 +152,7 @@ fn fees_for_exchange_intermediary_recipient_and_sender() {
         .build();
 
     let response = post_fee(&api, &tx_exchange_assets);
-    let mut expected = FeesTable::new();
+    let mut expected = HashMap::new();
     let expected_fee = transaction_fee/2 + tax * units * 2;
     expected.insert(sender_public_key, expected_fee);
     expected.insert(recipient_public_key, expected_fee);
@@ -201,7 +203,7 @@ fn fees_for_exchange_intermediary_intermediary() {
         .build();
 
     let response = post_fee(&api, &tx_exchange_assets);
-    let mut expected = FeesTable::new();
+    let mut expected = HashMap::new();
     let expected_fee = transaction_fee + tax * units * 4;
     expected.insert(intermediary_public_key, expected_fee);
 
@@ -249,7 +251,7 @@ fn fees_for_exchange_intermediary_recipient_and_sender_creator() {
         .build();
 
     let response = post_fee(&api, &tx_exchange_assets);
-    let mut expected = FeesTable::new();
+    let mut expected = HashMap::new();
     let expected_sender_fee = transaction_fee/2;
     let expected_recipient_fee = transaction_fee/2 + tax * units * 2;
     expected.insert(sender_public_key, expected_sender_fee);

@@ -1,7 +1,9 @@
+use std::collections::HashMap;
+
 use dmbc::currency::api::fees::FeesResponseBody;
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::configuration::TransactionFees;
-use dmbc::currency::transactions::components::{FeesTable, FeeStrategy};
+use dmbc::currency::transactions::components::FeeStrategy;
 use dmbc::currency::assets::{AssetBundle, TradeAsset};
 use dmbc::currency::error::Error;
 
@@ -41,7 +43,7 @@ fn fees_for_trade_recipient() {
         .build();
 
     let response = post_fee(&api, &tx_trade);
-    let mut expected = FeesTable::new();
+    let mut expected = HashMap::new();
     let expected_fee = transaction_fee + tax;
     expected.insert(buyer_public_key, expected_fee);
 
@@ -82,7 +84,7 @@ fn fees_for_trade_sender() {
         .build();
 
     let response = post_fee(&api, &tx_trade);
-    let mut expected = FeesTable::new();
+    let mut expected = HashMap::new();
     let expected_fee = transaction_fee + tax;
     expected.insert(seller_public_key, expected_fee);
 
@@ -123,7 +125,7 @@ fn fees_for_trade_recipient_and_sender() {
         .build();
 
     let response = post_fee(&api, &tx_trade);
-    let mut expected = FeesTable::new();
+    let mut expected = HashMap::new();
     let expected_fee = transaction_fee/2 + tax/2;
     expected.insert(seller_public_key, expected_fee);
     expected.insert(buyer_public_key, expected_fee);
@@ -159,7 +161,7 @@ fn fees_for_trade_recipient_and_sender_creator() {
         .build();
 
     let response = post_fee(&api, &tx_trade);
-    let mut expected = FeesTable::new();
+    let mut expected = HashMap::new();
     let expected_fee_buyer = transaction_fee/2 + tax/2;
     let expected_fee_seller = transaction_fee/2;
     expected.insert(seller_public_key, expected_fee_seller);
@@ -196,7 +198,7 @@ fn fees_for_trade_invalid_transaction() {
         .build();
 
     let response = post_fee(&api, &tx_trade);
-    let mut expected = FeesTable::new();
+    let mut expected = HashMap::new();
     let expected_fee = transaction_fee + tax;
     expected.insert(buyer_public_key, expected_fee);
 
@@ -228,7 +230,7 @@ fn fees_for_trade_asset_not_found() {
         .build();
 
     let response = post_fee(&api, &tx_trade);
-    let mut expected = FeesTable::new();
+    let mut expected = HashMap::new();
     let expected_fee = transaction_fee + tax;
     expected.insert(buyer_public_key, expected_fee);
 
