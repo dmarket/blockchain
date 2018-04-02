@@ -70,7 +70,7 @@ impl Api for FeesApi {
                 Ok(Some(request)) => {
                     let calculator: Box<FeesCalculator> = request.into();
                     let view = &mut self_.blockchain.fork();
-                    match calculator.get_fees(view) {
+                    match calculator.calculate_fees(view) {
                         Ok(fees) => Ok(Ok(FeesResponseBody{ fees })),
                         Err(e) => Ok(Err(e)),
                     }

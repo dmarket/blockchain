@@ -33,7 +33,7 @@ message!{
 }
 
 impl FeesCalculator for AddAssets {
-    fn get_fees(&self, view: &mut Fork) -> Result<FeesTable, Error> {
+    fn calculate_fees(&self, view: &mut Fork) -> Result<FeesTable, Error> {
         let genesis_fee = Configuration::extract(view).fees().add_assets();
         let fees = ThirdPartyFees::new_add_assets(&view, self.meta_assets())?;   
 

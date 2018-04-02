@@ -32,7 +32,7 @@ message! {
 }
 
 impl FeesCalculator for DeleteAssets {
-    fn get_fees(&self, view: &mut Fork) -> Result<FeesTable, Error> {
+    fn calculate_fees(&self, view: &mut Fork) -> Result<FeesTable, Error> {
         let tx_fee = Configuration::extract(view).fees().delete_assets();
 
         let mut fees_table = FeesTable::new();

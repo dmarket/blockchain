@@ -32,7 +32,7 @@ message! {
 }
 
 impl FeesCalculator for Transfer {
-    fn get_fees(&self, view: &mut Fork) -> Result<FeesTable, Error> {
+    fn calculate_fees(&self, view: &mut Fork) -> Result<FeesTable, Error> {
         let genesis_fee = Configuration::extract(view).fees().transfer();
         let fees = ThirdPartyFees::new_transfer(&*view,self.assets())?;
 

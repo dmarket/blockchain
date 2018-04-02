@@ -46,7 +46,7 @@ message! {
 }
 
 impl FeesCalculator for TradeIntermediary {
-    fn get_fees(&self, view: &mut Fork) -> Result<FeesTable, Error> {
+    fn calculate_fees(&self, view: &mut Fork) -> Result<FeesTable, Error> {
         let offer = self.offer();
         let genesis_fee = Configuration::extract(view).fees().trade();
         let fees = ThirdPartyFees::new_trade(&*view, &offer.assets())?;
