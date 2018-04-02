@@ -78,13 +78,14 @@ impl FeesCalculator for Trade {
 impl Trade {
     fn payers(&self, fee_strategy: &FeeStrategy, fee: u64) -> Result<Vec<(PublicKey, u64)>, Error> {
         let offer = self.offer();
-        match *fee_strategy {
-            FeeStrategy::Recipient => Ok(vec![(*offer.buyer(), fee)]),
-            FeeStrategy::Sender => Ok(vec![(*offer.seller(), fee)]),
-            FeeStrategy::RecipientAndSender => Ok(vec![(*offer.seller(), fee/2), 
-                                                    (*offer.buyer(), fee/2)]),
+        let payers = match *fee_strategy {
+            FeeStrategy::Recipient => vec![(*offer.buyer(), fee)],
+            FeeStrategy::Sender => vec![(*offer.seller(), fee)],
+            FeeStrategy::RecipientAndSender => vec![(*offer.seller(), fee/2), 
+                                                    (*offer.buyer(), fee/2)],
             FeeStrategy::Intermediary => return Err(Error::InvalidTransaction),
-        }
+        };
+        Ok(payers)
     }
 
     /// Raw bytes of the offer.

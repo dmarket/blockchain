@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use exonum::crypto::PublicKey;
 use exonum::blockchain::Transaction;
 use exonum::storage::Fork;
@@ -6,7 +8,7 @@ use serde_json;
 
 use currency::{Service, SERVICE_ID};
 use currency::assets::AssetBundle;
-use currency::transactions::components::{FeesCalculator, ThirdPartyFees, FeesTable};
+use currency::transactions::components::{FeesCalculator, ThirdPartyFees};
 use currency::error::Error;
 use currency::status;
 use currency::wallet;
@@ -32,11 +34,11 @@ message! {
 }
 
 impl FeesCalculator for Transfer {
-    fn calculate_fees(&self, view: &mut Fork) -> Result<FeesTable, Error> {
+    fn calculate_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error> {
         let genesis_fee = Configuration::extract(view).fees().transfer();
         let fees = ThirdPartyFees::new_transfer(&*view,self.assets())?;
 
-        let mut fees_table = FeesTable::new();
+        let mut fees_table = HashMap::new();
         if Service::genesis_wallet() != *self.from() {
             fees_table.insert(*self.from(), genesis_fee);
         }

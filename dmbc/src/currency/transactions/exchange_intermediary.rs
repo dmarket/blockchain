@@ -88,13 +88,14 @@ impl FeesCalculator for ExchangeIntermediary {
 impl ExchangeIntermediary {
     fn payers(&self, fee_strategy: &FeeStrategy, fee: u64) -> Result<Vec<(PublicKey, u64)>, Error> {
         let offer = self.offer();
-        match *fee_strategy {
-            FeeStrategy::Recipient => Ok(vec![(*offer.recipient(), fee)]),
-            FeeStrategy::Sender => Ok(vec![(*offer.sender(), fee)]),
-            FeeStrategy::RecipientAndSender => Ok(vec![(*offer.sender(), fee/2), 
-                                                    (*offer.recipient(), fee/2)]),
-            FeeStrategy::Intermediary => Ok(vec![(*offer.intermediary().wallet(), fee)]),
-        }
+        let payers = match *fee_strategy {
+            FeeStrategy::Recipient => vec![(*offer.recipient(), fee)],
+            FeeStrategy::Sender => vec![(*offer.sender(), fee)],
+            FeeStrategy::RecipientAndSender => vec![(*offer.sender(), fee/2), 
+                                                    (*offer.recipient(), fee/2)],
+            FeeStrategy::Intermediary => vec![(*offer.intermediary().wallet(), fee)],
+        };
+        Ok(payers)
     }
 
     /// Get raw bytes of the offer.
