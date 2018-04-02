@@ -54,7 +54,7 @@ impl FeesCalculator for Trade {
 
         let mut fees_table = FeesTable::new();
 
-        let payers = self.get_payers(&fee_strategy, genesis_fee)?;
+        let payers = self.payers(&fee_strategy, genesis_fee)?;
         for (payer_key, fee) in payers {
             if Service::genesis_wallet() != payer_key {
                 fees_table.insert(payer_key, fee);
@@ -62,7 +62,7 @@ impl FeesCalculator for Trade {
         }
 
         for (receiver_key, fee) in fees.0 {
-            let payers = self.get_payers(&fee_strategy, fee)?;
+            let payers = self.payers(&fee_strategy, fee)?;
             
             for (payer_key, fee) in payers {
                 if payer_key != receiver_key {
@@ -76,7 +76,7 @@ impl FeesCalculator for Trade {
 }
 
 impl Trade {
-    fn get_payers(&self, fee_strategy: &FeeStrategy, fee: u64) -> Result<Vec<(PublicKey, u64)>, Error> {
+    fn payers(&self, fee_strategy: &FeeStrategy, fee: u64) -> Result<Vec<(PublicKey, u64)>, Error> {
         let offer = self.offer();
         match *fee_strategy {
             FeeStrategy::Recipient => Ok(vec![(*offer.buyer(), fee)]),
