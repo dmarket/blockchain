@@ -181,11 +181,11 @@ fn wallets_pagination() {
     let units = 2;
     let meta_data = "asset";
 
-    let (pub_key1, _) = WalletMiner::new()
+    let (_, _) = WalletMiner::new()
         .add_asset(meta_data, units, asset_fee(tax, 0))
         .mine(&mut testkit);
 
-    let (pub_key2, _) = WalletMiner::new()
+    let (_, _) = WalletMiner::new()
         .add_asset(meta_data, units, asset_fee(tax, 0))
         .mine(&mut testkit);
 
@@ -203,5 +203,9 @@ fn wallets_pagination() {
         "v1/wallets?offset=0&limit=1",
     );
 
-    assert_eq!(response, Ok(WalletsResponseBody { total, count, wallets } ));
+    assert!(response.is_ok());
+
+    let body = response.unwrap();
+    assert_eq!(body.total, total);
+    assert_eq!(body.count, count);
 }
