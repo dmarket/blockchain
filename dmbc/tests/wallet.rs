@@ -2,6 +2,8 @@ extern crate dmbc;
 extern crate exonum;
 extern crate exonum_testkit;
 
+use std::collections::HashMap;
+
 use exonum::crypto;
 use exonum::crypto::{PublicKey, SecretKey};
 use exonum_testkit::{ApiKind, TestKit, TestKitApi, TestKitBuilder};
@@ -10,7 +12,7 @@ use exonum::messages::Message;
 
 use dmbc::currency::Service;
 use dmbc::currency::SERVICE_NAME;
-use dmbc::currency::api::wallet::WalletResponse;
+use dmbc::currency::api::wallet::{WalletResponse, WalletsResponse, WalletInfo, WalletsResponseBody};
 use dmbc::currency::assets::{Fees, MetaAsset, AssetBundle};
 use dmbc::currency::api::transaction::{TxPostResponse, TransactionResponse};
 use dmbc::currency::transactions::builders::fee;
@@ -104,6 +106,15 @@ pub fn asset_fee(t: u64, r: u64) -> Fees {
         .build()
 }
 
+fn genesis_wallet(api: &TestKitApi) -> Wallet {
+    let response: WalletResponse = api.get(
+        ApiKind::Service(SERVICE_NAME),
+        &format!("v1/wallets/{}", Service::genesis_wallet().to_string()),
+    );
+
+    response.unwrap()
+}
+
 #[test]
 fn wallet() {
     let mut testkit = init_testkit();
@@ -125,4 +136,72 @@ fn wallet() {
     let wallet = Wallet::new(100000000, vec![asset]);
 
     assert_eq!(response, Ok(wallet));
+}
+
+#[test]
+fn wallets() {
+    let mut testkit = init_testkit();
+    let api = testkit.api();
+    let tax = 10;
+    let units = 2;
+    let meta_data = "asset";
+
+    let (pub_key1, _) = WalletMiner::new()
+        .add_asset(meta_data, units, asset_fee(tax, 0))
+        .mine(&mut testkit);
+
+    let (pub_key2, _) = WalletMiner::new()
+        .add_asset(meta_data, units, asset_fee(tax, 0))
+        .mine(&mut testkit);
+
+    let genesis_key = Service::genesis_wallet();
+    let genesis = genesis_wallet(&api);
+    let genesis_count_assets = genesis.assets().len() as u64;
+
+    let mut wallets = HashMap::new();
+    wallets.insert(genesis_key, WalletInfo {balance: genesis.balance(), count_assets: genesis_count_assets});
+    wallets.insert(pub_key1, WalletInfo {balance: 100000000, count_assets: 1});
+    wallets.insert(pub_key2, WalletInfo {balance: 100000000, count_assets: 1});
+    let total = wallets.len() as u64;
+    let count = wallets.len() as u64;
+
+    let response: WalletsResponse = api.get(
+        ApiKind::Service(SERVICE_NAME),
+        "v1/wallets",
+    );
+
+    assert_eq!(response, Ok(WalletsResponseBody { total, count, wallets } ));
+}
+
+#[test]
+fn wallets_pagination() {
+    let mut testkit = init_testkit();
+    let api = testkit.api();
+    let tax = 10;
+    let units = 2;
+    let meta_data = "asset";
+
+    let (pub_key1, _) = WalletMiner::new()
+        .add_asset(meta_data, units, asset_fee(tax, 0))
+        .mine(&mut testkit);
+
+    let (pub_key2, _) = WalletMiner::new()
+        .add_asset(meta_data, units, asset_fee(tax, 0))
+        .mine(&mut testkit);
+
+    let genesis_key = Service::genesis_wallet();
+    let genesis = genesis_wallet(&api);
+    let genesis_count_assets = genesis.assets().len() as u64;
+
+    let mut wallets = HashMap::new();
+    wallets.insert(genesis_key, WalletInfo {balance: genesis.balance(), count_assets: genesis_count_assets});
+    let total = 3;
+    let count = wallets.len() as u64;
+
+    let response: WalletsResponse = api.get(
+        ApiKind::Service(SERVICE_NAME),
+        "v1/wallets?offset=0&limit=1",
+    );
+
+    assert_eq!(response, Ok(WalletsResponseBody { total, count, wallets } ));
 }

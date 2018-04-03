@@ -30,10 +30,10 @@ use currency::wallet::Wallet;
 pub struct WalletApi {
     pub blockchain: Blockchain,
 }
-#[derive(Serialize)]
-struct WalletInfo {
-    balance: u64,
-    count_assets: u64,
+#[derive(Serialize, Deserialize, PartialEq, Debug)]
+pub struct WalletInfo {
+    pub balance: u64,
+    pub count_assets: u64,
 }
 
 #[derive(Serialize)]
@@ -43,11 +43,11 @@ struct ExtendedAsset {
     meta_data: AssetInfo,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct WalletsResponseBody {
-    total: u64,
-    count: u64,
-    wallets: HashMap<PublicKey, WalletInfo>,
+    pub total: u64,
+    pub count: u64,
+    pub wallets: HashMap<PublicKey, WalletInfo>,
 }
 
 pub type WalletResponse = Result<Wallet, ApiError>;
