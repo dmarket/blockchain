@@ -12,6 +12,8 @@ use iron::headers::AccessControlAllowOrigin;
 use iron::status;
 use iron::prelude::*;
 use router::Router;
+use prometheus::Counter;
+use lazy_static;
 
 use currency::api::error::ApiError;
 use currency::assets;
@@ -32,10 +34,20 @@ impl AssetApi {
 
 pub type AssetResponse = Result<Option<AssetInfo>, ApiError>;
 
+lazy_static! {
+    static ref INFO_REQUESTS: Counter = register_counter!("dmbc_asset_api_info_requests_total", "AssetInfo requests.").unwrap();
+    static ref INFO_RESPONSES: Counter = register_counter!("dmbc_asset_api_info_responses_total", "AssetInfo response.").unwrap();
+}
+
 impl Api for AssetApi {
     fn wire(&self, router: &mut Router) {
+        lazy_static::initialize(&INFO_REQUESTS);
+        lazy_static::initialize(&INFO_RESPONSES);
+
         let self_ = self.clone();
         let get_owner_for_asset_id = move |req: &mut Request| -> IronResult<Response> {
+            INFO_REQUESTS.inc();
+
             let path = req.url.path();
             let asset_id_str = path.last().unwrap();
             let a: AssetResponse = AssetId::from_hex(&asset_id_str)
@@ -49,6 +61,8 @@ impl Api for AssetApi {
             ));
             res.headers.set(ContentType::json());
             res.headers.set(AccessControlAllowOrigin::Any);
+
+            INFO_RESPONSES.inc();
 
             Ok(res)
         };

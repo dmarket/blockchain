@@ -15,6 +15,8 @@ use hyper::header::ContentType;
 use iron::prelude::*;
 use iron::status as istatus;
 use router::Router;
+use prometheus::Counter;
+use lazy_static;
 
 use currency::api::error::ApiError;
 use currency::status;
@@ -75,10 +77,24 @@ impl TransactionApi {
     }
 }
 
+lazy_static! {
+    static ref POST_REQUESTS: Counter = register_counter!("dmbc_transaction_api_post_requests_total", "Transaction post requests.").unwrap();
+    static ref POST_RESPONSES: Counter = register_counter!("dmbc_transaction_api_post_responses_total", "Transaction post responses.").unwrap();
+    static ref GET_STATUS_REQUESTS: Counter = register_counter!("dmbc_transaction_api_get_status_requests_total", "Transaction status requests.").unwrap();
+    static ref GET_STATUS_RESPONSES: Counter = register_counter!("dmbc_transaction_api_get_status_responses_total", "Transaction status responses.").unwrap();
+}
+
 impl Api for TransactionApi {
     fn wire(&self, router: &mut Router) {
+        lazy_static::initialize(&POST_REQUESTS);
+        lazy_static::initialize(&POST_RESPONSES);
+        lazy_static::initialize(&GET_STATUS_REQUESTS);
+        lazy_static::initialize(&GET_STATUS_RESPONSES);
+
         let self_ = self.clone();
         let transaction = move |req: &mut Request| -> IronResult<Response> {
+            POST_REQUESTS.inc();
+
             let s: TxPostResponse = match req.get::<bodyparser::Struct<TransactionRequest>>() {
                 Ok(Some(transaction)) => {
                     let tx: Box<Transaction> = transaction.into();
@@ -105,12 +121,16 @@ impl Api for TransactionApi {
             res.headers.set(ContentType::json());
             res.headers.set(AccessControlAllowOrigin::Any);
 
+            POST_RESPONSES.inc();
+
             Ok(res)
         };
         // Bind the transaction handler to a specific route.
 
         let self_ = self.clone();
         let get_status = move |request: &mut Request| -> IronResult<Response> {
+            GET_STATUS_REQUESTS.inc();
+
             let path = request.url.path();
             let tx_hash_str = path.last().unwrap();
             let s:StatusResponse = Hash::from_hex(tx_hash_str)
@@ -123,6 +143,8 @@ impl Api for TransactionApi {
             ));
             res.headers.set(ContentType::json());
             res.headers.set(AccessControlAllowOrigin::Any);
+
+            GET_STATUS_RESPONSES.inc();
 
             Ok(res)
         };

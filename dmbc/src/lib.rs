@@ -22,6 +22,10 @@ extern crate serde_json;
 extern crate unicase;
 extern crate uuid;
 extern crate chrono;
+#[macro_use]
+extern crate prometheus;
+#[macro_use]
+extern crate lazy_static;
 
 pub mod config;
 pub mod currency;

@@ -7,6 +7,8 @@ extern crate serde;
 extern crate serde_json;
 extern crate std;
 
+use std::collections::HashMap;
+
 use exonum::api::{Api, ApiError};
 use exonum::blockchain::Blockchain;
 use exonum::crypto::PublicKey;
@@ -14,7 +16,8 @@ use exonum::encoding::serialize::FromHex;
 use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use router::Router;
-use std::collections::HashMap;
+use prometheus::Counter;
+use lazy_static;
 
 use currency::api::ServiceApi;
 use currency::assets::AssetBundle;
@@ -88,11 +91,29 @@ impl WalletApi {
     }
 }
 
+lazy_static! {
+    static ref LIST_REQUESTS: Counter = register_counter!("dmbc_wallet_api_list_requests_total", "Wallet list requests.").unwrap();
+    static ref LIST_RESPONSES: Counter = register_counter!("dmbc_wallet_api_list_responses_total", "Wallet list responses.").unwrap();
+    static ref BALANCE_REQUESTS: Counter = register_counter!("dmbc_wallet_api_balance_requests_total", "Balance requests.").unwrap();
+    static ref BALANCE_RESPONSES: Counter = register_counter!("dmbc_wallet_api_balance_responses_total", "Balance responses.").unwrap();
+    static ref ASSETS_REQUESTS: Counter = register_counter!("dmbc_wallet_api_assets_requests_total", "Wallet asset list requests.").unwrap();
+    static ref ASSETS_RESPONSES: Counter = register_counter!("dmbc_wallet_api_assets_responses_total", "Wallet asset list responses.").unwrap();
+}
+
 impl Api for WalletApi {
     fn wire(&self, router: &mut Router) {
+        lazy_static::initialize(&LIST_REQUESTS);
+        lazy_static::initialize(&LIST_RESPONSES);
+        lazy_static::initialize(&BALANCE_REQUESTS);
+        lazy_static::initialize(&BALANCE_RESPONSES);
+        lazy_static::initialize(&ASSETS_REQUESTS);
+        lazy_static::initialize(&ASSETS_RESPONSES);
+
         // Gets status of the wallet corresponding to the public key.
         let self_ = self.clone();
         let wallet_info = move |req: &mut Request| -> IronResult<Response> {
+            BALANCE_REQUESTS.inc();
+
             let path = req.url.path();
             let wallet_key = path.last().unwrap();
             let public_key = PublicKey::from_hex(wallet_key).map_err(ApiError::FromHex)?;
@@ -100,12 +121,17 @@ impl Api for WalletApi {
             let res = self_.ok_response(&serde_json::to_value(wallet).unwrap());
             let mut res = res.unwrap();
             res.headers.set(AccessControlAllowOrigin::Any);
+
+            BALANCE_RESPONSES.inc();
+
             Ok(res)
         };
 
         // Gets status of all wallets.
         let self_ = self.clone();
         let wallets_info = move |req: &mut Request| -> IronResult<Response> {
+            LIST_REQUESTS.inc();
+
             let (offset, limit) = ServiceApi::pagination_params(req);
             let (wallets, total, count) = self_.pagination_wallets(offset, limit);
             let response_body = json!({
@@ -117,11 +143,16 @@ impl Api for WalletApi {
             let res = self_.ok_response(&serde_json::to_value(response_body).unwrap());
             let mut res = res.unwrap();
             res.headers.set(AccessControlAllowOrigin::Any);
+
+            LIST_RESPONSES.inc();
+
             Ok(res)
         };
 
         let self_ = self.clone();
         let wallet_assets_info = move |req: &mut Request| -> IronResult<Response> {
+            ASSETS_REQUESTS.inc();
+
             let public_key = {
                 let wallet_key = req.extensions
                     .get::<Router>()
@@ -143,6 +174,9 @@ impl Api for WalletApi {
             let res = self_.ok_response(&serde_json::to_value(response_body).unwrap());
             let mut res = res.unwrap();
             res.headers.set(AccessControlAllowOrigin::Any);
+
+            ASSETS_RESPONSES.inc();
+
             Ok(res)
         };
 

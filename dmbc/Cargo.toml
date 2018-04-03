@@ -24,6 +24,8 @@ hyper = "0.10.13"
 unicase = "1.0"
 log = "0.4"
 chrono = "0.4"
+prometheus = "0.3"
+lazy_static = "1.0"
 
 [dev-dependencies]
 exonum-testkit = "0.1"
