@@ -17,7 +17,8 @@ use router::Router;
 use std::collections::HashMap;
 
 use currency::api::ServiceApi;
-use currency::assets::AssetBundle;
+use currency::assets;
+use currency::assets::{AssetBundle, AssetInfo, AssetId};
 use currency::wallet;
 use currency::wallet::Wallet;
 
@@ -29,6 +30,13 @@ pub struct WalletApi {
 struct WalletInfo {
     balance: u64,
     count_assets: u64,
+}
+
+#[derive(Serialize)]
+struct ExtendedAsset {
+    id: AssetId,
+    amount: u64,
+    meta_data: AssetInfo,
 }
 
 impl WalletApi {
@@ -86,6 +94,11 @@ impl WalletApi {
     fn assets(&self, pub_key: &PublicKey) -> Vec<AssetBundle> {
         self.wallet(pub_key).assets()
     }
+
+    fn asset_info(&self, asset_id: &AssetId) -> Option<AssetInfo> {
+        let view = self.blockchain.fork();
+        assets::Schema(view).fetch(asset_id)
+    }
 }
 
 impl Api for WalletApi {
@@ -130,10 +143,25 @@ impl Api for WalletApi {
                     .unwrap();
                 PublicKey::from_hex(wallet_key).map_err(ApiError::FromHex)?
             };
+            let extend_assets = ServiceApi::read_parameter(req, "meta_data", false);
             let assets = self_.assets(&public_key);
             // apply pagination parameters if they exist
             let assets_to_send = ServiceApi::apply_pagination(req, &assets);
-            let assets_list = serde_json::to_value(&assets_to_send).unwrap();
+            let assets_list = if extend_assets {
+                let mut extended_assets = Vec::<ExtendedAsset>::new();
+                for asset in assets_to_send {
+                    if let Some(info) = self_.asset_info(&asset.id()) {
+                        extended_assets.push(ExtendedAsset { 
+                            id: asset.id(), 
+                            amount: asset.amount(), 
+                            meta_data: info 
+                        });
+                    }
+                }
+                serde_json::to_value(&extended_assets).unwrap();
+            } else {
+                serde_json::to_value(&assets_to_send).unwrap();
+            };
             let response_body = json!({
                 "total": assets.len(),
                 "count": assets_to_send.len(),
