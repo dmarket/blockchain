@@ -43,7 +43,16 @@ struct ExtendedAsset {
     meta_data: AssetInfo,
 }
 
+#[derive(Serialize)]
+pub struct WalletsResponseBody {
+    total: u64,
+    count: u64,
+    wallets: HashMap<PublicKey, WalletInfo>,
+}
+
 pub type WalletResponse = Result<Wallet, ApiError>;
+
+pub type WalletsResponse = Result<WalletsResponseBody, ApiError>;
 
 impl WalletApi {
     fn wallet(&self, pub_key: &PublicKey) -> Wallet {
@@ -131,14 +140,14 @@ impl Api for WalletApi {
         let wallets_info = move |req: &mut Request| -> IronResult<Response> {
             let (offset, limit) = ServiceApi::pagination_params(req);
             let (wallets, total, count) = self_.pagination_wallets(offset, limit);
-            let response_body = json!({
-                "total": total,
-                "count": count,
-                "wallets": wallets,
-            });
 
-            let res = self_.ok_response(&serde_json::to_value(response_body).unwrap());
-            let mut res = res.unwrap();
+            let result: WalletsResponse = Ok(WalletsResponseBody {total, count, wallets} );
+
+            let mut res = Response::with((
+                status::Ok,
+                serde_json::to_string_pretty(&result).unwrap(),
+            ));
+            res.headers.set(ContentType::json());
             res.headers.set(AccessControlAllowOrigin::Any);
             Ok(res)
         };
