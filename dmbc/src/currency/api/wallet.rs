@@ -102,13 +102,6 @@ lazy_static! {
 
 impl Api for WalletApi {
     fn wire(&self, router: &mut Router) {
-        lazy_static::initialize(&LIST_REQUESTS);
-        lazy_static::initialize(&LIST_RESPONSES);
-        lazy_static::initialize(&BALANCE_REQUESTS);
-        lazy_static::initialize(&BALANCE_RESPONSES);
-        lazy_static::initialize(&ASSETS_REQUESTS);
-        lazy_static::initialize(&ASSETS_RESPONSES);
-
         // Gets status of the wallet corresponding to the public key.
         let self_ = self.clone();
         let wallet_info = move |req: &mut Request| -> IronResult<Response> {

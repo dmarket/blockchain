@@ -86,11 +86,6 @@ lazy_static! {
 
 impl Api for TransactionApi {
     fn wire(&self, router: &mut Router) {
-        lazy_static::initialize(&POST_REQUESTS);
-        lazy_static::initialize(&POST_RESPONSES);
-        lazy_static::initialize(&GET_STATUS_REQUESTS);
-        lazy_static::initialize(&GET_STATUS_RESPONSES);
-
         let self_ = self.clone();
         let transaction = move |req: &mut Request| -> IronResult<Response> {
             POST_REQUESTS.inc();

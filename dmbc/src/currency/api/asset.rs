@@ -41,9 +41,6 @@ lazy_static! {
 
 impl Api for AssetApi {
     fn wire(&self, router: &mut Router) {
-        lazy_static::initialize(&INFO_REQUESTS);
-        lazy_static::initialize(&INFO_RESPONSES);
-
         let self_ = self.clone();
         let get_owner_for_asset_id = move |req: &mut Request| -> IronResult<Response> {
             INFO_REQUESTS.inc();

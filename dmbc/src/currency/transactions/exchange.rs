@@ -4,6 +4,7 @@ use exonum::blockchain::Transaction;
 use exonum::storage::Fork;
 use exonum::messages::Message;
 use serde_json;
+use prometheus::Counter;
 
 use currency::{Service, SERVICE_ID};
 use currency::assets::AssetBundle;
@@ -137,8 +138,33 @@ impl Exchange {
     }
 }
 
+lazy_static! {
+    static ref VERIFY_COUNT: Counter = register_counter!(
+        "dmbc_transaction_exchange_verify_count",
+        "Times .verify() was called on a transaction."
+    ).unwrap();
+    static ref VERIFY_SUCCESS_COUNT: Counter = register_counter!(
+        "dmbc_transaction_exchange_verify_success_count",
+        "Times verification was successfull on a transaction."
+    ).unwrap();
+    static ref EXECUTE_COUNT: Counter = register_counter!(
+        "dmbc_transaction_exchange_execute_count",
+        "Transactions executed."
+    ).unwrap();
+    static ref EXECUTE_SUCCESS_COUNT: Counter = register_counter!(
+        "dmbc_transaction_exchange_execute_success_count",
+        "Times transaction execution reported a success."
+    ).unwrap();
+    static ref EXECUTE_FINISH_COUNT: Counter = register_counter!(
+        "dmbc_transaction_exchange_execute_finish_count",
+        "Times transaction has finished executing without panicking."
+    ).unwrap();
+}
+
 impl Transaction for Exchange {
     fn verify(&self) -> bool {
+        VERIFY_COUNT.inc();
+
         let offer = self.offer();
 
         let wallets_ok = offer.sender() != offer.recipient();
@@ -154,13 +180,27 @@ impl Transaction for Exchange {
         let recipient_ok = self.verify_signature(offer.recipient());
         let sender_ok = crypto::verify(self.sender_signature(), &offer.raw, offer.sender());
 
-        wallets_ok && fee_strategy_ok && recipient_ok && sender_ok
+        if wallets_ok && fee_strategy_ok && recipient_ok && sender_ok {
+            VERIFY_SUCCESS_COUNT.inc();
+            true
+        } else {
+            false
+        }
 
     }
 
     fn execute(&self, view: &mut Fork) {
+        EXECUTE_COUNT.inc();
+
         let result = self.process(view);
+
+        if let &Ok(_) = &result {
+            EXECUTE_SUCCESS_COUNT.inc();
+        }
+
         status::Schema(view).store(self.hash(), result);
+
+        EXECUTE_FINISH_COUNT.inc();
     }
 
     fn info(&self) -> serde_json::Value {
