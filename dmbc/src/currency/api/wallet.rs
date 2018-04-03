@@ -26,6 +26,8 @@ use currency::assets::{AssetBundle, AssetInfo, AssetId};
 use currency::wallet;
 use currency::wallet::Wallet;
 
+pub const PARAMETER_META_DATA_KEY: &str = "meta_data";
+
 #[derive(Clone)]
 pub struct WalletApi {
     pub blockchain: Blockchain,
@@ -36,11 +38,17 @@ pub struct WalletInfo {
     pub count_assets: u64,
 }
 
-#[derive(Serialize)]
-struct ExtendedAsset {
-    id: AssetId,
-    amount: u64,
-    meta_data: AssetInfo,
+#[derive(Serialize, Deserialize, PartialEq, Debug)]
+pub struct ExtendedAsset {
+    pub id: AssetId,
+    pub amount: u64,
+    pub meta_data: Option<AssetInfo>,
+}
+
+impl ExtendedAsset {
+    pub fn from_asset(asset: &AssetBundle, info: Option<AssetInfo>) -> Self {
+        ExtendedAsset { id: asset.id(), amount: asset.amount(), meta_data: info }
+    }
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
@@ -50,9 +58,18 @@ pub struct WalletsResponseBody {
     pub wallets: HashMap<PublicKey, WalletInfo>,
 }
 
+#[derive(Serialize, Deserialize, PartialEq, Debug)]
+pub struct WalletAssetsResponseBody {
+    pub total: u64,
+    pub count: u64,
+    pub assets: Vec<ExtendedAsset>,
+}
+
 pub type WalletResponse = Result<Wallet, ApiError>;
 
 pub type WalletsResponse = Result<WalletsResponseBody, ApiError>;
+
+pub type WalletAssetsResponse = Result<WalletAssetsResponseBody, ApiError>;
 
 impl WalletApi {
     fn wallet(&self, pub_key: &PublicKey) -> Wallet {
@@ -162,33 +179,35 @@ impl Api for WalletApi {
                     .unwrap();
                 PublicKey::from_hex(wallet_key).map_err(ExonumApiError::FromHex)?
             };
-            let extend_assets = ServiceApi::read_parameter(req, "meta_data", false);
+            let extend_assets = ServiceApi::read_parameter(req, PARAMETER_META_DATA_KEY, false);
             let assets = self_.assets(&public_key);
             // apply pagination parameters if they exist
             let assets_to_send = ServiceApi::apply_pagination(req, &assets);
             let assets_list = if extend_assets {
                 let mut extended_assets = Vec::<ExtendedAsset>::new();
                 for asset in assets_to_send {
-                    if let Some(info) = self_.asset_info(&asset.id()) {
-                        extended_assets.push(ExtendedAsset { 
-                            id: asset.id(), 
-                            amount: asset.amount(), 
-                            meta_data: info 
-                        });
-                    }
+                    let info = self_.asset_info(&asset.id());
+                    extended_assets.push(ExtendedAsset::from_asset(asset, info));
                 }
-                serde_json::to_value(&extended_assets).unwrap();
+                extended_assets
             } else {
-                serde_json::to_value(&assets_to_send).unwrap();
+                assets_to_send
+                    .into_iter()
+                    .map(|a| ExtendedAsset::from_asset(a, None))
+                    .collect()
             };
-            let response_body = json!({
-                "total": assets.len(),
-                "count": assets_to_send.len(),
-                "assets": assets_list,
+
+            let result: WalletAssetsResponse = Ok(WalletAssetsResponseBody {
+                total: assets.len() as u64,
+                count: assets_to_send.len() as u64,
+                assets: assets_list 
             });
 
-            let res = self_.ok_response(&serde_json::to_value(response_body).unwrap());
-            let mut res = res.unwrap();
+            let mut res = Response::with((
+                status::Ok,
+                serde_json::to_string_pretty(&result).unwrap(),
+            ));
+            res.headers.set(ContentType::json());
             res.headers.set(AccessControlAllowOrigin::Any);
             Ok(res)
         };

@@ -12,8 +12,10 @@ use exonum::messages::Message;
 
 use dmbc::currency::Service;
 use dmbc::currency::SERVICE_NAME;
-use dmbc::currency::api::wallet::{WalletResponse, WalletsResponse, WalletInfo, WalletsResponseBody};
-use dmbc::currency::assets::{Fees, MetaAsset, AssetBundle};
+use dmbc::currency::api::wallet::{WalletResponse, WalletsResponse, WalletInfo, 
+                                WalletsResponseBody, WalletAssetsResponse, WalletAssetsResponseBody, ExtendedAsset};
+use dmbc::currency::api::wallet;
+use dmbc::currency::assets::{Fees, MetaAsset, AssetBundle, AssetInfo};
 use dmbc::currency::api::transaction::{TxPostResponse, TransactionResponse};
 use dmbc::currency::transactions::builders::fee;
 use dmbc::currency::transactions::builders::transaction;
@@ -189,14 +191,8 @@ fn wallets_pagination() {
         .add_asset(meta_data, units, asset_fee(tax, 0))
         .mine(&mut testkit);
 
-    let genesis_key = Service::genesis_wallet();
-    let genesis = genesis_wallet(&api);
-    let genesis_count_assets = genesis.assets().len() as u64;
-
-    let mut wallets = HashMap::new();
-    wallets.insert(genesis_key, WalletInfo {balance: genesis.balance(), count_assets: genesis_count_assets});
     let total = 3;
-    let count = wallets.len() as u64;
+    let count = 1;
 
     let response: WalletsResponse = api.get(
         ApiKind::Service(SERVICE_NAME),
@@ -208,4 +204,65 @@ fn wallets_pagination() {
     let body = response.unwrap();
     assert_eq!(body.total, total);
     assert_eq!(body.count, count);
+}
+
+#[test]
+fn wallet_assets() {
+    let mut testkit = init_testkit();
+    let api = testkit.api();
+    let tax = 10;
+    let units = 2;
+    let meta_data0 = "asset0";
+    let meta_data1 = "asset1";
+    let meta_data2 = "asset2";
+
+    let (pub_key, _) = WalletMiner::new()
+        .add_asset(meta_data0, units, asset_fee(tax, 0))
+        .add_asset(meta_data1, units, asset_fee(tax, 0))
+        .add_asset(meta_data2, units, asset_fee(tax, 0))
+        .mine(&mut testkit);
+
+    let response: WalletAssetsResponse = api.get(
+        ApiKind::Service(SERVICE_NAME),
+        &format!("v1/wallets/{}/assets", pub_key.to_string()),
+    );
+
+    let asset0 = AssetBundle::from_data(meta_data0, units, &pub_key);
+    let asset1 = AssetBundle::from_data(meta_data1, units, &pub_key);
+    let asset2 = AssetBundle::from_data(meta_data2, units, &pub_key);
+
+    let assets = vec![ExtendedAsset::from_asset(&asset0, None),
+                        ExtendedAsset::from_asset(&asset1, None),
+                        ExtendedAsset::from_asset(&asset2, None)];
+    let total = assets.len() as u64;
+    let count = assets.len() as u64;
+
+    assert_eq!(response, Ok(WalletAssetsResponseBody { total, count, assets }));
+}
+
+#[test]
+fn wallet_assets_meta_data() {
+    let mut testkit = init_testkit();
+    let api = testkit.api();
+    let tax = 10;
+    let units = 2;
+    let meta_data = "asset";
+
+    let (pub_key, _) = WalletMiner::new()
+        .add_asset(meta_data, units, asset_fee(tax, 0))
+        .mine(&mut testkit);
+
+    let response: WalletAssetsResponse = api.get(
+        ApiKind::Service(SERVICE_NAME),
+        &format!("v1/wallets/{}/assets?{}=true", pub_key.to_string(), wallet::PARAMETER_META_DATA_KEY),
+    );
+
+    let asset = AssetBundle::from_data(meta_data, units, &pub_key);
+    let info = AssetInfo::new(&pub_key, units, asset_fee(tax, 0));
+
+    let assets = vec![ExtendedAsset::from_asset(&asset, Some(info))];
+    let total = assets.len() as u64;
+    let count = assets.len() as u64;
+
+    assert_eq!(response, Ok(WalletAssetsResponseBody { total, count, assets }));
 }
