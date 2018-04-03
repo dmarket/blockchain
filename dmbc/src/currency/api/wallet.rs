@@ -7,16 +7,20 @@ extern crate serde;
 extern crate serde_json;
 extern crate std;
 
-use exonum::api::{Api, ApiError};
+use std::collections::HashMap;
+
+use exonum::api::{Api, ApiError as ExonumApiError};
 use exonum::blockchain::Blockchain;
 use exonum::crypto::PublicKey;
 use exonum::encoding::serialize::FromHex;
 use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
+use iron::status;
 use router::Router;
-use std::collections::HashMap;
+use hyper::header::ContentType;
 
 use currency::api::ServiceApi;
+use currency::api::error::ApiError;
 use currency::assets;
 use currency::assets::{AssetBundle, AssetInfo, AssetId};
 use currency::wallet;
@@ -38,6 +42,8 @@ struct ExtendedAsset {
     amount: u64,
     meta_data: AssetInfo,
 }
+
+pub type WalletResponse = Result<Wallet, ApiError>;
 
 impl WalletApi {
     fn wallet(&self, pub_key: &PublicKey) -> Wallet {
@@ -108,10 +114,14 @@ impl Api for WalletApi {
         let wallet_info = move |req: &mut Request| -> IronResult<Response> {
             let path = req.url.path();
             let wallet_key = path.last().unwrap();
-            let public_key = PublicKey::from_hex(wallet_key).map_err(ApiError::FromHex)?;
-            let wallet = self_.wallet(&public_key);
-            let res = self_.ok_response(&serde_json::to_value(wallet).unwrap());
-            let mut res = res.unwrap();
+            let public_key = PublicKey::from_hex(wallet_key).map_err(ExonumApiError::FromHex)?;
+            let result: WalletResponse = Ok(self_.wallet(&public_key));
+
+            let mut res = Response::with((
+                status::Ok,
+                serde_json::to_string_pretty(&result).unwrap(),
+            ));
+            res.headers.set(ContentType::json());
             res.headers.set(AccessControlAllowOrigin::Any);
             Ok(res)
         };
@@ -141,7 +151,7 @@ impl Api for WalletApi {
                     .unwrap()
                     .find("pub_key")
                     .unwrap();
-                PublicKey::from_hex(wallet_key).map_err(ApiError::FromHex)?
+                PublicKey::from_hex(wallet_key).map_err(ExonumApiError::FromHex)?
             };
             let extend_assets = ServiceApi::read_parameter(req, "meta_data", false);
             let assets = self_.assets(&public_key);
