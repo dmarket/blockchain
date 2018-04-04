@@ -7,6 +7,7 @@ pub mod wallet;
 pub mod hex;
 pub mod error;
 pub mod assets_intern;
+pub mod fees;
 extern crate params;
 
 use exonum::api::Api;
@@ -27,6 +28,7 @@ use self::params::{FromValue, Params};
 use self::transaction::TransactionApi;
 use self::wallet::WalletApi;
 use self::assets_intern::AssetInternApi;
+use self::fees::FeesApi;
 
 const PARAMETER_OFFSET_KEY: &str = "offset";
 const PARAMETER_LIMIT_KEY: &str = "limit";
@@ -116,6 +118,11 @@ impl Api for ServiceApi {
         api.wire(router);
 
         let api = AssetInternApi {};
+        api.wire(router);
+
+        let api = FeesApi { 
+            blockchain: self.clone().blockchain,
+        };
         api.wire(router);
 
         let send_option = move |_request: &mut Request| -> IronResult<Response> {
