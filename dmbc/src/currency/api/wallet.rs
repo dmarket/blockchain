@@ -1,11 +1,4 @@
-extern crate bodyparser;
-extern crate exonum;
-extern crate iron;
-extern crate params;
-extern crate router;
-extern crate serde;
 extern crate serde_json;
-extern crate std;
 
 use std::collections::HashMap;
 
@@ -49,6 +42,8 @@ impl ExtendedAsset {
     pub fn from_asset(asset: &AssetBundle, info: Option<AssetInfo>) -> Self {
         ExtendedAsset { id: asset.id(), amount: asset.amount(), meta_data: info }
     }
+
+    
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
@@ -146,11 +141,8 @@ impl Api for WalletApi {
                 Err(_) => Err(ApiError::IncorrectRequest)
             };
 
-            let status_code = result.clone().err().map(|e| e.to_status()).unwrap_or(status::Ok);
-            println!("{}", status_code);
-
             let mut res = Response::with((
-                status_code,
+                result.clone().err().map(|e| e.to_status()).unwrap_or(status::Ok),
                 serde_json::to_string_pretty(&result).unwrap(),
             ));
             res.headers.set(ContentType::json());
