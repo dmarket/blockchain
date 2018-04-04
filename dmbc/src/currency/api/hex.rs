@@ -50,9 +50,9 @@ impl Into<Box<Transaction>> for TransactionRequest {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(PartialEq, Eq, Serialize, Deserialize, Clone, Debug)]
 pub struct HexResponse {
-    hex: String,
+    pub hex: String,
 }
 
 pub type HexApiResponse = Result<Option<HexResponse>, ApiError>;
