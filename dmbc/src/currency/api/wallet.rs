@@ -42,8 +42,6 @@ impl ExtendedAsset {
     pub fn from_asset(asset: &AssetBundle, info: Option<AssetInfo>) -> Self {
         ExtendedAsset { id: asset.id(), amount: asset.amount(), meta_data: info }
     }
-
-    
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
