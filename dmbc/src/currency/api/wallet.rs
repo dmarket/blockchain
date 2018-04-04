@@ -134,17 +134,23 @@ impl WalletApi {
 }
 
 impl Api for WalletApi {
+    
     fn wire(&self, router: &mut Router) {
         // Gets status of the wallet corresponding to the public key.
         let self_ = self.clone();
         let wallet_info = move |req: &mut Request| -> IronResult<Response> {
             let path = req.url.path();
             let wallet_key = path.last().unwrap();
-            let public_key = PublicKey::from_hex(wallet_key).map_err(ExonumApiError::FromHex)?;
-            let result: WalletResponse = Ok(self_.wallet(&public_key));
+            let result: WalletResponse = match PublicKey::from_hex(wallet_key) {
+                Ok(public_key) => Ok(self_.wallet(&public_key)),
+                Err(_) => Err(ApiError::IncorrectRequest)
+            };
+
+            let status_code = result.clone().err().map(|e| e.to_status()).unwrap_or(status::Ok);
+            println!("{}", status_code);
 
             let mut res = Response::with((
-                status::Ok,
+                status_code,
                 serde_json::to_string_pretty(&result).unwrap(),
             ));
             res.headers.set(ContentType::json());

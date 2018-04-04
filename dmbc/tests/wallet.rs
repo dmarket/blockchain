@@ -266,3 +266,26 @@ fn wallet_assets_meta_data() {
 
     assert_eq!(response, Ok(WalletAssetsResponseBody { total, count, assets }));
 }
+
+#[test]
+fn wallet_invalid_public_key() {
+    let mut testkit = init_testkit();
+    let api = testkit.api();
+    let tax = 10;
+    let units = 2;
+    let meta_data = "asset";
+
+    let (pub_key, _) = WalletMiner::new()
+        .add_asset(meta_data, units, asset_fee(tax, 0))
+        .mine(&mut testkit);
+
+    let response: WalletResponse = api.get(
+        ApiKind::Service(SERVICE_NAME),
+        "v1/wallets/invalidkey",
+    );
+
+    let asset = AssetBundle::from_data(meta_data, units, &pub_key);
+    let wallet = Wallet::new(100000000, vec![asset]);
+
+    assert_eq!(response, Ok(wallet));
+}
