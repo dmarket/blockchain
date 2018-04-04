@@ -285,6 +285,20 @@ fn wallet_invalid_public_key() {
     assert_eq!(Some(ApiError::IncorrectRequest.to_status()), status);
     let body = response::extract_body_to_string(iron_response);
     let iron_body_response: WalletResponse = serde_json::from_str(&body).unwrap();
-    assert_eq!(Err(ApiError::IncorrectRequest), iron_body_response);
+    assert_eq!(Err(ApiError::WalletHexInvalid), iron_body_response);
+}
 
+#[test]
+fn wallet_assets_invalid_public_key() {
+    let testkit = init_testkit();
+    let api = testkit.api();
+
+    let url = format!("http://localhost:3000/{}/{}", "api/services/cryptocurrency", "v1/wallets/invalidpubkey/assets");
+    let res = request::get(&url, Headers::new(), api.public_mount());
+    let iron_response = res.unwrap();
+    let status = iron_response.status;
+    assert_eq!(Some(ApiError::IncorrectRequest.to_status()), status);
+    let body = response::extract_body_to_string(iron_response);
+    let iron_body_response: WalletAssetsResponse = serde_json::from_str(&body).unwrap();
+    assert_eq!(Err(ApiError::WalletHexInvalid), iron_body_response);
 }

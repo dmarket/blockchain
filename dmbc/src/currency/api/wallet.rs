@@ -136,7 +136,7 @@ impl Api for WalletApi {
             let wallet_key = path.last().unwrap();
             let result: WalletResponse = match PublicKey::from_hex(wallet_key) {
                 Ok(public_key) => Ok(self_.wallet(&public_key)),
-                Err(_) => Err(ApiError::IncorrectRequest)
+                Err(_) => Err(ApiError::WalletHexInvalid)
             };
 
             let mut res = Response::with((
