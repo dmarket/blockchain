@@ -1,8 +1,14 @@
 extern crate dmbc;
 extern crate exonum;
 extern crate exonum_testkit;
+extern crate iron;
+extern crate iron_test;
+extern crate serde_json;
+extern crate hyper;
 
 use std::collections::HashMap;
+use iron::headers::Headers;
+use iron_test::{request, response};
 
 use exonum::crypto;
 use exonum::crypto::{PublicKey, SecretKey};
@@ -20,7 +26,7 @@ use dmbc::currency::api::transaction::{TxPostResponse, TransactionResponse};
 use dmbc::currency::transactions::builders::fee;
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::wallet::Wallet;
-
+use dmbc::currency::api::error::ApiError;
 
 pub fn init_testkit() -> TestKit {
     TestKitBuilder::validator()
@@ -269,23 +275,16 @@ fn wallet_assets_meta_data() {
 
 #[test]
 fn wallet_invalid_public_key() {
-    let mut testkit = init_testkit();
+    let testkit = init_testkit();
     let api = testkit.api();
-    let tax = 10;
-    let units = 2;
-    let meta_data = "asset";
 
-    let (pub_key, _) = WalletMiner::new()
-        .add_asset(meta_data, units, asset_fee(tax, 0))
-        .mine(&mut testkit);
+    let url = format!("http://localhost:3000/{}/{}", "api/services/cryptocurrency", "v1/wallets/invalidpubkey");
+    let res = request::get(&url, Headers::new(), api.public_mount());
+    let iron_response = res.unwrap();
+    let status = iron_response.status;
+    assert_eq!(Some(ApiError::IncorrectRequest.to_status()), status);
+    let body = response::extract_body_to_string(iron_response);
+    let iron_body_response: WalletResponse = serde_json::from_str(&body).unwrap();
+    assert_eq!(Err(ApiError::IncorrectRequest), iron_body_response);
 
-    let response: WalletResponse = api.get(
-        ApiKind::Service(SERVICE_NAME),
-        "v1/wallets/invalidkey",
-    );
-
-    let asset = AssetBundle::from_data(meta_data, units, &pub_key);
-    let wallet = Wallet::new(100000000, vec![asset]);
-
-    assert_eq!(response, Ok(wallet));
 }
