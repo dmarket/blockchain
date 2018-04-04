@@ -7,6 +7,7 @@ extern crate serde_json;
 extern crate hyper;
 
 pub mod hex;
+pub mod wallet;
 
 use exonum::crypto;
 use exonum::crypto::{PublicKey, SecretKey};
@@ -18,8 +19,10 @@ use dmbc::currency::Service;
 use dmbc::currency::SERVICE_NAME;
 use dmbc::currency::assets::{Fees, MetaAsset};
 use dmbc::currency::api::transaction::{TxPostResponse, TransactionResponse};
+use dmbc::currency::api::wallet::WalletResponse;
 use dmbc::currency::transactions::builders::fee;
 use dmbc::currency::transactions::builders::transaction;
+use dmbc::currency::wallet::Wallet;
 
 pub const TEST_KIT_SERVICE_URL: &str =
     "http://localhost:3000/api/services/cryptocurrency";
@@ -108,4 +111,13 @@ pub fn asset_fee(t: u64, r: u64) -> Fees {
         .exchange(t, r)
         .transfer(t, r)
         .build()
+}
+
+fn genesis_wallet(api: &TestKitApi) -> Wallet {
+    let response: WalletResponse = api.get(
+        ApiKind::Service(SERVICE_NAME),
+        &format!("v1/wallets/{}", Service::genesis_wallet().to_string()),
+    );
+
+    response.unwrap()
 }
