@@ -2,7 +2,7 @@ extern crate serde_json;
 
 use std::collections::HashMap;
 
-use exonum::api::{Api, ApiError as ExonumApiError};
+use exonum::api::Api;
 use exonum::blockchain::Blockchain;
 use exonum::crypto::PublicKey;
 use exonum::encoding::serialize::FromHex;
@@ -31,7 +31,7 @@ pub struct WalletInfo {
     pub count_assets: u64,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct ExtendedAsset {
     pub id: AssetId,
     pub amount: u64,
@@ -51,7 +51,7 @@ pub struct WalletsResponseBody {
     pub wallets: HashMap<PublicKey, WalletInfo>,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct WalletAssetsResponseBody {
     pub total: u64,
     pub count: u64,
@@ -167,40 +167,44 @@ impl Api for WalletApi {
 
         let self_ = self.clone();
         let wallet_assets_info = move |req: &mut Request| -> IronResult<Response> {
-            let public_key = {
+            let public_key_result = {
                 let wallet_key = req.extensions
                     .get::<Router>()
                     .unwrap()
                     .find("pub_key")
                     .unwrap();
-                PublicKey::from_hex(wallet_key).map_err(ExonumApiError::FromHex)?
+                PublicKey::from_hex(wallet_key)
             };
-            let extend_assets = ServiceApi::read_parameter(req, PARAMETER_META_DATA_KEY, false);
-            let assets = self_.assets(&public_key);
-            // apply pagination parameters if they exist
-            let assets_to_send = ServiceApi::apply_pagination(req, &assets);
-            let assets_list = if extend_assets {
-                let mut extended_assets = Vec::<ExtendedAsset>::new();
-                for asset in assets_to_send {
-                    let info = self_.asset_info(&asset.id());
-                    extended_assets.push(ExtendedAsset::from_asset(asset, info));
-                }
-                extended_assets
-            } else {
-                assets_to_send
-                    .into_iter()
-                    .map(|a| ExtendedAsset::from_asset(a, None))
-                    .collect()
+            let result: WalletAssetsResponse = match public_key_result {
+                Ok(public_key) => {
+                    let extend_assets = ServiceApi::read_parameter(req, PARAMETER_META_DATA_KEY, false);
+                    let assets = self_.assets(&public_key);
+                    // apply pagination parameters if they exist
+                    let assets_to_send = ServiceApi::apply_pagination(req, &assets);
+                    let assets_list = if extend_assets {
+                        let mut extended_assets = Vec::<ExtendedAsset>::new();
+                        for asset in assets_to_send {
+                            let info = self_.asset_info(&asset.id());
+                            extended_assets.push(ExtendedAsset::from_asset(asset, info));
+                        }
+                        extended_assets
+                    } else {
+                        assets_to_send
+                            .into_iter()
+                            .map(|a| ExtendedAsset::from_asset(a, None))
+                            .collect()
+                    };
+                    Ok(WalletAssetsResponseBody {
+                        total: assets.len() as u64,
+                        count: assets_to_send.len() as u64,
+                        assets: assets_list 
+                    })
+                },
+                Err(_) => Err(ApiError::WalletHexInvalid)
             };
-
-            let result: WalletAssetsResponse = Ok(WalletAssetsResponseBody {
-                total: assets.len() as u64,
-                count: assets_to_send.len() as u64,
-                assets: assets_list 
-            });
 
             let mut res = Response::with((
-                status::Ok,
+                result.clone().err().map(|e| e.to_status()).unwrap_or(status::Ok),
                 serde_json::to_string_pretty(&result).unwrap(),
             ));
             res.headers.set(ContentType::json());
