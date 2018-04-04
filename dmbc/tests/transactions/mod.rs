@@ -10,6 +10,7 @@ use dmbc::currency::assets::AssetId;
 use dmbc::currency::wallet::Wallet;
 use dmbc::currency::api::transaction::{TransactionResponse, StatusResponse, TxPostResponse};
 use dmbc::currency::api::asset::AssetResponse;
+use dmbc::currency::api::wallet::WalletResponse;
 use dmbc::currency::configuration::{Configuration, TransactionFees};
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::assets::{Fees, MetaAsset};
@@ -33,10 +34,12 @@ pub fn init_testkit() -> TestKit {
 }
 
 pub fn get_wallet(api: &TestKitApi, pub_key: &PublicKey) -> Wallet {
-    api.get(
+    let response: WalletResponse = api.get(
         ApiKind::Service(SERVICE_NAME),
         &format!("v1/wallets/{}", pub_key.to_string()),
-    )
+    );
+
+    response.unwrap()
 }
 
 pub fn get_status(api: &TestKitApi, tx_hash: &Hash) -> StatusResponse {
