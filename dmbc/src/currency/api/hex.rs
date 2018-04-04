@@ -5,16 +5,19 @@ extern crate router;
 extern crate serde;
 extern crate serde_json;
 
-use exonum::api::{Api, ApiError};
+use exonum::api::Api;
 use exonum::blockchain::Transaction;
 use iron::headers::AccessControlAllowOrigin;
+use hyper::header::ContentType;
 use iron::prelude::*;
+use iron::status as istatus;
 use router::Router;
 
 use currency::transactions::{AddAssets, DeleteAssets, Exchange,
                              ExchangeIntermediary, Mine, Trade,
                              TradeIntermediary, Transfer, EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID,
                              TRADE_ID, TRADE_INTERMEDIARY_ID};
+use currency::api::error::ApiError;
 
 #[derive(Clone)]
 pub struct HexApi {}
@@ -47,10 +50,12 @@ impl Into<Box<Transaction>> for TransactionRequest {
     }
 }
 
-#[derive(Serialize, Deserialize)]
-struct HexResponse {
+#[derive(Serialize, Deserialize, Clone)]
+pub struct HexResponse {
     hex: String,
 }
+
+pub type HexApiResponse = Result<Option<HexResponse>, ApiError>;
 
 impl HexApi {
     pub fn hex_string(bytes: Vec<u8>) -> String {
@@ -61,59 +66,72 @@ impl HexApi {
 
 impl Api for HexApi {
     fn wire(&self, router: &mut Router) {
-        let self_ = self.clone();
         let hex_transaction = move |request: &mut Request| -> IronResult<Response> {
-            match request.get::<bodyparser::Struct<TransactionRequest>>() {
+            let body: HexApiResponse = match request.get::<bodyparser::Struct<TransactionRequest>>() {
                 Ok(Some(transaction)) => {
-                    let transaction: Box<Transaction> = transaction.into();
-                    let hex = Self::hex_string(transaction.raw().body().to_vec());
-                    let response_data = json!(HexResponse { hex });
-                    let ok_res = self_.ok_response(&response_data);
-                    let mut res = ok_res.unwrap();
-                    res.headers.set(AccessControlAllowOrigin::Any);
-                    Ok(res)
-                }
-                Ok(None) => Err(ApiError::IncorrectRequest("Empty request body".into()))?,
-                Err(e) => Err(ApiError::IncorrectRequest(Box::new(e)))?,
-            }
+                    let tx: Box<Transaction> = transaction.into();
+                    let hex = Self::hex_string(tx.raw().body().to_vec());
+                    Ok(Some(HexResponse{hex}))
+                },
+                Ok(None) => Err(ApiError::EmptyRequestBody),
+                Err(_) => Err(ApiError::IncorrectRequest),
+            };
+
+            let mut res = Response::with((
+                body.clone().err().map(|e| e.to_status()).unwrap_or(istatus::Ok),
+                serde_json::to_string_pretty(&body).unwrap(),
+            ));
+            res.headers.set(ContentType::json());
+            res.headers.set(AccessControlAllowOrigin::Any);
+
+            Ok(res)
         };
 
-        let self_ = self.clone();
         let hex_tx_offer = move |request: &mut Request| -> IronResult<Response> {
-            match request.get::<bodyparser::Struct<TransactionRequest>>() {
+            let body: HexApiResponse = match request.get::<bodyparser::Struct<TransactionRequest>>() {
                 Ok(Some(transaction)) => {
                     let transaction: Box<Transaction> = transaction.into();
                     let raw_ = transaction.raw().clone();
 
-                    let vec_hash = match transaction.raw().message_type() {
+                    let vec_hash:Option<Vec<u8>> = match transaction.raw().message_type() {
                         EXCHANGE_ID => match Exchange::from_raw(raw_) {
-                            Ok(exchange) => exchange.offer_raw(),
-                            Err(_) => vec![],
+                            Ok(exchange) => Some(exchange.offer_raw()),
+                            Err(_) => None,
                         },
                         EXCHANGE_INTERMEDIARY_ID => match ExchangeIntermediary::from_raw(raw_) {
-                            Ok(exchange) => exchange.offer_raw(),
-                            Err(_) => vec![],
+                            Ok(exchange) => Some(exchange.offer_raw()),
+                            Err(_) => None,
                         },
                         TRADE_ID => match Trade::from_raw(raw_) {
-                            Ok(trade) => trade.offer_raw(),
-                            Err(_) => vec![],
+                            Ok(trade) => Some(trade.offer_raw()),
+                            Err(_) => None,
                         },
                         TRADE_INTERMEDIARY_ID => match TradeIntermediary::from_raw(raw_) {
-                            Ok(trade) => trade.offer_raw(),
-                            Err(_) => vec![],
+                            Ok(trade) => Some(trade.offer_raw()),
+                            Err(_) => None,
                         },
-                        _ => vec![],
+                        _ => None,
                     };
-                    let hex = Self::hex_string(vec_hash);
-                    let response_data = json!(HexResponse { hex });
-                    let ok_res = self_.ok_response(&response_data);
-                    let mut res = ok_res.unwrap();
-                    res.headers.set(AccessControlAllowOrigin::Any);
-                    Ok(res)
-                }
-                Ok(None) => Err(ApiError::IncorrectRequest("Empty request body".into()))?,
-                Err(e) => Err(ApiError::IncorrectRequest(Box::new(e)))?,
-            }
+                    match vec_hash {
+                        Some(vec) => {
+                            let hex = Self::hex_string(vec);
+                            Ok(Some(HexResponse{hex}))
+                        },
+                        None => Ok(None)
+                    }
+                },
+                Ok(None) => Err(ApiError::EmptyRequestBody),
+                Err(_) => Err(ApiError::IncorrectRequest),
+            };
+
+            let mut res = Response::with((
+                body.clone().err().map(|e| e.to_status()).unwrap_or(istatus::Ok),
+                serde_json::to_string_pretty(&body).unwrap(),
+            ));
+            res.headers.set(ContentType::json());
+            res.headers.set(AccessControlAllowOrigin::Any);
+
+            Ok(res)
         };
         router.post("/v1/hex/transactions", hex_transaction, "hash_transaction");
         router.post("/v1/hex/transactions/offer", hex_tx_offer, "hash_offer");
