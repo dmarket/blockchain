@@ -82,6 +82,17 @@ impl ServiceApi {
         }
     }
 
+    pub fn read_parameter<T>(req: &mut Request, parameter_key: &str, default_value: T) -> T 
+    where T: FromValue
+    {
+        let parameters = req.get_ref::<Params>().unwrap();
+        if let Some(parameter) = parameters.get(parameter_key) {
+            return FromValue::from_value(parameter).unwrap_or(default_value)
+        }
+
+        default_value
+    }
+
     pub fn add_option_headers(headers: &mut Headers) {
         headers.set(AccessControlAllowOrigin::Any);
         headers.set(AccessControlAllowHeaders(vec![

@@ -26,4 +26,7 @@ log = "0.4"
 chrono = "0.4"
 
 [dev-dependencies]
-exonum-testkit = "0.1"
+exonum-testkit = "0.1.1"
+
+[dev-dependencies.iron-test]
+version = "0.6.0"
