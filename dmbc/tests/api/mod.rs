@@ -8,6 +8,7 @@ extern crate hyper;
 
 pub mod hex;
 pub mod wallet;
+pub mod assets_intern;
 
 use exonum::crypto;
 use exonum::crypto::{PublicKey, SecretKey};
