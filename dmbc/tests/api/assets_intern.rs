@@ -150,3 +150,30 @@ fn assets_intern_batch_ids() {
     assert_eq!(status, StatusCode::Ok);
     assert_eq!(response, Ok(AssetIdBatchResponseBody { assets: response_map }));
 }
+
+#[test]
+fn assets_intern_batch_ids_invalid_public_key() {
+    let testkit = init_testkit();
+    let api = testkit.api();
+
+    let meta_data0 = "asset0";
+    let meta_data1 = "asset1";
+    let assets = vec![meta_data0.to_string(), meta_data1.to_string()];
+
+    let mut assets_map = HashMap::new();
+    assets_map.insert("InvalidPublicKey".to_string(), assets);
+
+    let request_body = serde_json::to_string(&AssetIdBatchRequest { assets: assets_map }).unwrap();
+
+    let url = format!("{}{}", TEST_KIT_SERVICE_URL, "/v1/assets/intern");
+    let mut headers = Headers::new();
+    headers.set(ContentType::json());
+    let response = request::post(&url, headers, &request_body, api.public_mount()).unwrap();
+
+    let status = response.status.unwrap();
+    let body = response::extract_body_to_string(response);
+    let response: AssetIdBatchResponse = serde_json::from_str(&body).unwrap();
+
+    assert_eq!(status, StatusCode::BadRequest);
+    assert_eq!(response, Err(ApiError::WalletHexInvalid));
+}
