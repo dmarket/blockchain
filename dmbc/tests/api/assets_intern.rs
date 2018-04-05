@@ -22,7 +22,7 @@ fn assets_intern_id_from_meta() {
 
     let response: AssetIdResponse = api.get(
         ApiKind::Service(SERVICE_NAME),
-        &format!("/v1/assets/intern/{}/{}", pub_key.to_string(), meta_data),
+        &format!("/v1/intern/assets/{}/{}", pub_key.to_string(), meta_data),
     );
 
     let id = AssetId::from_data(meta_data, &pub_key);
@@ -36,7 +36,7 @@ fn assets_intern_id_from_meta() {
 fn assets_intern_id_from_meta_invalid_public_key() {
     let testkit = init_testkit();
     let api = testkit.api();
-    let url = format!("{}{}", TEST_KIT_SERVICE_URL, "/v1/assets/intern/invalidpublickey/meta_dummy");
+    let url = format!("{}{}", TEST_KIT_SERVICE_URL, "/v1/intern/assets/invalidpublickey/meta_dummy");
     let mut headers = Headers::new();
     headers.set(ContentType::json());
 
@@ -64,7 +64,7 @@ fn assets_intern_ids_from_meta() {
     
     let request_body = serde_json::to_string(&AssetIdRequest { assets }).unwrap();
 
-    let url = format!("{}{}{}", TEST_KIT_SERVICE_URL, "/v1/assets/intern/", pub_key.to_string());
+    let url = format!("{}{}{}", TEST_KIT_SERVICE_URL, "/v1/intern/assets/", pub_key.to_string());
     let mut headers = Headers::new();
     headers.set(ContentType::json());
     let response = request::post(&url, headers, &request_body, api.public_mount()).unwrap();
@@ -92,7 +92,7 @@ fn assets_intern_ids_from_meta_invalid_public_key() {
     
     let request_body = serde_json::to_string(&AssetIdRequest { assets }).unwrap();
 
-    let url = format!("{}{}", TEST_KIT_SERVICE_URL, "/v1/assets/intern/invalidpublickey");
+    let url = format!("{}{}", TEST_KIT_SERVICE_URL, "/v1/intern/assets/invalidpublickey");
     let mut headers = Headers::new();
     headers.set(ContentType::json());
     let response = request::post(&url, headers, &request_body, api.public_mount()).unwrap();
@@ -122,7 +122,7 @@ fn assets_intern_batch_ids() {
 
     let request_body = serde_json::to_string(&AssetIdBatchRequest { assets: assets_map }).unwrap();
 
-    let url = format!("{}{}", TEST_KIT_SERVICE_URL, "/v1/assets/intern");
+    let url = format!("{}{}", TEST_KIT_SERVICE_URL, "/v1/intern/assets");
     let mut headers = Headers::new();
     headers.set(ContentType::json());
     let response = request::post(&url, headers, &request_body, api.public_mount()).unwrap();
@@ -165,7 +165,7 @@ fn assets_intern_batch_ids_invalid_public_key() {
 
     let request_body = serde_json::to_string(&AssetIdBatchRequest { assets: assets_map }).unwrap();
 
-    let url = format!("{}{}", TEST_KIT_SERVICE_URL, "/v1/assets/intern");
+    let url = format!("{}{}", TEST_KIT_SERVICE_URL, "/v1/intern/assets");
     let mut headers = Headers::new();
     headers.set(ContentType::json());
     let response = request::post(&url, headers, &request_body, api.public_mount()).unwrap();
