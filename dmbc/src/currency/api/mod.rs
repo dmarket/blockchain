@@ -4,7 +4,7 @@
 pub mod transaction;
 pub mod asset;
 pub mod wallet;
-pub mod hash;
+pub mod hex;
 pub mod error;
 pub mod assets_intern;
 pub mod fees;
@@ -23,7 +23,7 @@ use std::cmp;
 use unicase::UniCase;
 
 use self::asset::AssetApi;
-use self::hash::HashApi;
+use self::hex::HexApi;
 use self::params::{FromValue, Params};
 use self::transaction::TransactionApi;
 use self::wallet::WalletApi;
@@ -125,7 +125,7 @@ impl Api for ServiceApi {
         };
         api.wire(router);
 
-        let api = HashApi {};
+        let api = HexApi {};
         api.wire(router);
 
         let api = AssetInternApi {};
