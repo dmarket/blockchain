@@ -6,7 +6,7 @@ use exonum::storage::Fork;
 use exonum::messages::Message;
 use serde_json;
 
-use currency::{Service, SERVICE_ID};
+use currency::SERVICE_ID;
 use currency::assets;
 use currency::assets::AssetBundle;
 use currency::wallet;
@@ -33,10 +33,11 @@ message! {
 
 impl FeesCalculator for DeleteAssets {
     fn calculate_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error> {
-        let tx_fee = Configuration::extract(view).fees().delete_assets();
+        let genesis_fees = Configuration::extract(view).fees();
+        let tx_fee = genesis_fees.delete_assets();
 
         let mut fees_table = HashMap::new();
-        if Service::genesis_wallet() != *self.pub_key() {
+        if genesis_fees.recipient() != self.pub_key() {
             fees_table.insert(*self.pub_key(), tx_fee);
         }
         Ok(fees_table)
@@ -47,15 +48,15 @@ impl DeleteAssets {
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
         info!("Processing tx: {:?}", self);
 
-        let genesis_fee = Configuration::extract(view).fees().delete_assets();
+        let genesis_fees = Configuration::extract(&*view).fees();
 
-        let genesis_pub = Service::genesis_wallet();
+        let genesis_pub = genesis_fees.recipient();
         let creator_pub = self.pub_key();
 
         let mut genesis = wallet::Schema(&*view).fetch(&genesis_pub);
         let mut creator = wallet::Schema(&*view).fetch(&creator_pub);
 
-        wallet::move_coins(&mut creator, &mut genesis, genesis_fee)?;
+        wallet::move_coins(&mut creator, &mut genesis, genesis_fees.delete_assets())?;
 
         wallet::Schema(&mut*view).store(&genesis_pub, genesis);
         wallet::Schema(&mut*view).store(&creator_pub, creator.clone());

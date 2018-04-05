@@ -58,7 +58,7 @@ impl ThirdPartyFees {
             .into_iter()
             .map(|meta| meta.amount() * per_asset)
             .sum();
-        let to_third_party = Some((Service::genesis_wallet(), assets_fee))
+        let to_third_party = Some((Service::genesis_wallet(view), assets_fee))
             .into_iter()
             .collect();
 

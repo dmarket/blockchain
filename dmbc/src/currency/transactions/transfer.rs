@@ -6,7 +6,7 @@ use exonum::storage::Fork;
 use exonum::messages::Message;
 use serde_json;
 
-use currency::{Service, SERVICE_ID};
+use currency::SERVICE_ID;
 use currency::assets::AssetBundle;
 use currency::transactions::components::{FeesCalculator, ThirdPartyFees};
 use currency::error::Error;
@@ -35,12 +35,12 @@ message! {
 
 impl FeesCalculator for Transfer {
     fn calculate_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error> {
-        let genesis_fee = Configuration::extract(view).fees().transfer();
+        let genesis_fees = Configuration::extract(view).fees();
         let fees = ThirdPartyFees::new_transfer(&*view,self.assets())?;
 
         let mut fees_table = HashMap::new();
-        if Service::genesis_wallet() != *self.from() {
-            fees_table.insert(*self.from(), genesis_fee);
+        if genesis_fees.recipient() != self.from() {
+            fees_table.insert(*self.from(), genesis_fees.transfer());
         }
 
         for (pub_key, fee) in fees.0 {
@@ -56,16 +56,16 @@ impl FeesCalculator for Transfer {
 
 impl Transfer {
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
-        let genesis_fee = Configuration::extract(view).fees().transfer();
+        let genesis_fees = Configuration::extract(view).fees();
 
-        let mut genesis = wallet::Schema(&*view).fetch(&Service::genesis_wallet());
+        let mut genesis = wallet::Schema(&*view).fetch(genesis_fees.recipient());
 
         // Collect the blockchain fee. Execution shall not continue if this fails.
         let mut wallet_from = wallet::Schema(&*view).fetch(self.from());
-        wallet::move_coins(&mut wallet_from, &mut genesis, genesis_fee)?;
+        wallet::move_coins(&mut wallet_from, &mut genesis, genesis_fees.trade())?;
 
         wallet::Schema(&mut *view).store(self.from(), wallet_from);
-        wallet::Schema(&mut *view).store(&Service::genesis_wallet(), genesis);
+        wallet::Schema(&mut *view).store(genesis_fees.recipient(), genesis);
 
         let fees = ThirdPartyFees::new_transfer(&*view,self.assets())?;
 
