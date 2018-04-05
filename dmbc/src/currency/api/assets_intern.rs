@@ -18,7 +18,6 @@ use hyper::header::ContentType;
 
 use currency::api::error::ApiError;
 use currency::assets::AssetId;
-use currency::error::Error;
 
 #[derive(Clone)]
 pub struct AssetInternApi {
@@ -39,14 +38,14 @@ pub struct AssetIdBatchRequest {
     pub assets: HashMap<String, Vec<String>>,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct AssetIdBatchResponseBody {
     pub assets: HashMap<String, HashMap<String, String>>,
 }
 
 pub type AssetIdResponse = Result<AssetIdResponseBody, ApiError>;
 
-pub type AssetIdBatchResponse = Result<Result<AssetIdBatchResponseBody, Error>, ApiError>;
+pub type AssetIdBatchResponse = Result<AssetIdBatchResponseBody, ApiError>;
 
 impl Api for AssetInternApi {
     fn wire(&self, router: &mut Router) {
@@ -144,7 +143,7 @@ impl Api for AssetInternApi {
                         assets_batch.insert(key, assets);
                     }
                     match invalid_hex {
-                        false => Ok(Ok(AssetIdBatchResponseBody { assets: assets_batch })),
+                        false => Ok(AssetIdBatchResponseBody { assets: assets_batch }),
                         true => Err(ApiError::WalletHexInvalid)
                     }
                 },
@@ -152,15 +151,8 @@ impl Api for AssetInternApi {
                 Err(_) => Err(ApiError::IncorrectRequest),
             };
 
-            let status_code =
-                result.clone()
-                    .ok()
-                    .map(|r|
-                        r.err().map(|_| status::BadRequest).unwrap_or(status::Created))
-                    .unwrap_or(status::BadRequest);
-
             let mut res = Response::with((
-                status_code,
+                result.clone().err().map(|e| e.to_status()).unwrap_or(status::Ok),
                 serde_json::to_string_pretty(&result).unwrap(),
             ));
             res.headers.set(ContentType::json());
