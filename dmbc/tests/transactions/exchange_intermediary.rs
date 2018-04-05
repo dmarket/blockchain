@@ -30,7 +30,7 @@ const INTER_COMMISSION:u64 = 100;
 fn exchange_i_assets() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, BC_FEE, 0, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, BC_FEE, 0, 0));
 
     let (sender_pk, sender_sk) = mine_wallet(&mut testkit);
     let (recipient_pk, recipient_sk) = mine_wallet(&mut testkit);
@@ -156,7 +156,7 @@ fn exchange_i_assets() {
 fn exchange_i_assets_creator_is_sender() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, BC_FEE, 0, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, BC_FEE, 0, 0));
 
     let (sender_pk, sender_sk) = mine_wallet(&mut testkit);
     let (recipient_pk, recipient_sk) = mine_wallet(&mut testkit);
@@ -242,7 +242,7 @@ fn exchange_i_assets_creator_is_sender() {
 fn exchange_i_assets_creator_is_intermediary() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, BC_FEE, 0, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, BC_FEE, 0, 0));
 
     let (sender_pk, sender_sk) = mine_wallet(&mut testkit);
     let (recipient_pk, recipient_sk) = mine_wallet(&mut testkit);
@@ -328,7 +328,7 @@ fn exchange_i_assets_creator_is_intermediary() {
 fn exchange_i_assets_payer_fee_intermediary() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, BC_FEE, 0, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, BC_FEE, 0, 0));
 
     let (sender_pk, sender_sk) = mine_wallet(&mut testkit);
     let (recipient_pk, recipient_sk) = mine_wallet(&mut testkit);

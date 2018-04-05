@@ -19,7 +19,7 @@ fn fees_for_trade_recipient() {
     let price_per_unit = 1000;
     let meta_data = "asset";
 
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 0, transaction_fee, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0));
     
     let (creator_pub_key, _) = WalletMiner::new()
         .add_asset(meta_data, units, asset_fee(tax, 0))
@@ -60,7 +60,7 @@ fn fees_for_trade_sender() {
     let price_per_unit = 1000;
     let meta_data = "asset";
 
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 0, transaction_fee, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0));
     
     let (creator_pub_key, _) = WalletMiner::new()
         .add_asset(meta_data, units, asset_fee(tax, 0))
@@ -101,7 +101,7 @@ fn fees_for_trade_recipient_and_sender() {
     let price_per_unit = 1000;
     let meta_data = "asset";
 
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 0, transaction_fee, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0));
     
     let (creator_pub_key, _) = WalletMiner::new()
         .add_asset(meta_data, units, asset_fee(tax, 0))
@@ -143,7 +143,7 @@ fn fees_for_trade_recipient_and_sender_creator() {
     let price_per_unit = 1000;
     let meta_data = "asset";
 
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 0, transaction_fee, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0));
     
     let (seller_public_key, seller_secret_key) = WalletMiner::new()
         .add_asset(meta_data, units, asset_fee(tax, 0))
@@ -180,7 +180,7 @@ fn fees_for_trade_invalid_transaction() {
     let price_per_unit = 1000;
     let meta_data = "asset";
 
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 0, transaction_fee, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0));
 
     let (seller_public_key, seller_secret_key) = WalletMiner::new()
         .add_asset(meta_data, units, asset_fee(tax, 0))
@@ -215,7 +215,7 @@ fn fees_for_trade_asset_not_found() {
     let price_per_unit = 1000;
     let meta_data = "asset";
 
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 0, transaction_fee, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0));
 
     let (seller_public_key, seller_secret_key) = WalletMiner::new().mine(&mut testkit);
     let (buyer_public_key, buyer_secret_key) = WalletMiner::new().mine(&mut testkit);

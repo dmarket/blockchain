@@ -25,6 +25,36 @@ encoding_struct! {
     }
 }
 
+impl TransactionFees {
+    pub fn with_default_key(
+        add_assets: u64,
+        add_assets_per_entry: u64,
+        delete_assets: u64,
+        exchange: u64,
+        trade: u64,
+        transfer: u64,
+    ) -> Self {
+        TransactionFees::new(
+            &PublicKey::from_hex(GENESIS_WALLET_PUB_KEY).unwrap(),
+            add_assets,
+            add_assets_per_entry,
+            delete_assets,
+            exchange,
+            trade,
+            transfer,
+        )
+    }
+}
+
+impl Default for TransactionFees {
+    fn default() -> Self {
+        TransactionFees::new(
+            &PublicKey::from_hex(GENESIS_WALLET_PUB_KEY).unwrap(),
+            0, 0, 0, 0, 0, 0,
+        )
+    }
+}
+
 encoding_struct! {
     /// Currency service configuration.
     #[derive(Eq, PartialOrd, Ord)]
@@ -41,12 +71,7 @@ pub const GENESIS_WALLET_PUB_KEY: &str =
 
 impl Default for Configuration {
     fn default() -> Configuration {
-        Configuration::new(
-            TransactionFees::new(
-                &PublicKey::from_hex(GENESIS_WALLET_PUB_KEY).unwrap(),
-                0, 0, 0, 0, 0, 0,
-            )
-        )
+        Configuration::new(TransactionFees::default())
     }
 }
 

@@ -27,7 +27,7 @@ fn exchange_fee(t: u64) -> Fees {
 fn exchange_assets() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 1000, 0, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 1000, 0, 0));
 
     let (sender_pk, sender_sk) = mine_wallet(&mut testkit);
     let (recipient_pk, recipient_sk) = mine_wallet(&mut testkit);
@@ -131,7 +131,7 @@ fn exchange_assets() {
 fn exchange_asset_fee_strategy() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 1000, 0, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 1000, 0, 0));
 
     let (sender_pk, sender_sk) = mine_wallet(&mut testkit);
     let (recipient_pk, recipient_sk) = mine_wallet(&mut testkit);
@@ -274,7 +274,7 @@ fn exchange_asset_fee_strategy() {
 fn exchange_asset_insufficient_funds_fee_asset_very_big() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 1000, 0, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 1000, 0, 0));
 
     let (sender_pk, sender_sk) = mine_wallet(&mut testkit);
     let (recipient_pk, recipient_sk) = mine_wallet(&mut testkit);
@@ -348,7 +348,7 @@ fn exchange_asset_insufficient_funds_fee_asset_very_big() {
 fn exchange_asset_insufficient_funds_bc_fee_big() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, DMC_1 + 1, 0, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, DMC_1 + 1, 0, 0));
 
     let (sender_pk, sender_sk) = mine_wallet(&mut testkit);
     let (recipient_pk, recipient_sk) = mine_wallet(&mut testkit);
@@ -416,7 +416,7 @@ fn exchange_asset_insufficient_funds_bc_fee_big() {
 fn exchange_asset_insufficient_fee_strategy_recip_and_send() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 1000, 0, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 1000, 0, 0));
 
     let (sender_pk, sender_sk) = mine_wallet(&mut testkit);
     let (recipient_pk, recipient_sk) = mine_wallet(&mut testkit);
@@ -487,7 +487,7 @@ fn exchange_asset_insufficient_fee_strategy_recip_and_send() {
 fn exchange_asset_send_value() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 1000, 0, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 1000, 0, 0));
 
     let (sender_pk, sender_sk) = mine_wallet(&mut testkit);
     let (recipient_pk, recipient_sk) = mine_wallet(&mut testkit);
@@ -577,7 +577,7 @@ fn exchange_asset_send_value() {
 fn exchange_asset_send_value_and_assets() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 100, 0, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 100, 0, 0));
 
     let (sender_pk, sender_sk) = mine_wallet(&mut testkit);
     let (recipient_pk, recipient_sk) = mine_wallet(&mut testkit);
