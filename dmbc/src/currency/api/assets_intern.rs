@@ -126,25 +126,28 @@ impl Api for AssetInternApi {
         let get_asset_id_batch = move |req: &mut Request| -> IronResult<Response> {
             let result: AssetIdBatchResponse = match req.get::<bodyparser::Struct<AssetIdBatchRequest>>() {
                 Ok(Some(request)) => {
-                    let mut assets_batch = HashMap::<String, HashMap<String, String>>::new();
-                    let mut invalid_hex = false;
-                    for (key, assets_data) in request.assets {
-                        let public_key = PublicKey::from_hex(key.clone());
-                        if public_key.is_err() {
-                            invalid_hex = true;
-                            break;
-                        }
 
-                        let mut assets = HashMap::<String, String>::new();
-                        for asset in assets_data {
-                            let id = AssetId::from_data(&asset, &public_key.unwrap());
-                            assets.insert(asset, id.to_string());
+                    fn create_batch(assets: &HashMap<String, Vec<String>>) -> Option<HashMap<String, HashMap<String, String>>>{
+                        let mut assets_batch = HashMap::new();
+                        for (key, assets_data) in assets {
+                            let public_key = PublicKey::from_hex(key.clone());
+                            if public_key.is_err() {
+                                return None;
+                            }
+
+                            let mut assets = HashMap::<String, String>::new();
+                            for asset in assets_data {
+                                let id = AssetId::from_data(&asset, &public_key.unwrap());
+                                assets.insert(asset.to_string(), id.to_string());
+                            }
+                            assets_batch.insert(key.to_string(), assets);
                         }
-                        assets_batch.insert(key, assets);
+                        Some(assets_batch)
                     }
-                    match invalid_hex {
-                        false => Ok(AssetIdBatchResponseBody { assets: assets_batch }),
-                        true => Err(ApiError::WalletHexInvalid)
+
+                    match create_batch(&request.assets) {
+                        Some(assets) => Ok(AssetIdBatchResponseBody { assets }),
+                        None => Err(ApiError::WalletHexInvalid)
                     }
                 },
                 Ok(None) => Err(ApiError::EmptyRequestBody),
