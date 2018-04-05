@@ -29,7 +29,7 @@ pub struct AssetIdRequest {
     pub assets: Vec<String>,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, PartialEq, Debug)]
 pub struct AssetIdResponseBody {
     pub assets: HashMap<String, String>,
 }
@@ -44,7 +44,7 @@ pub struct AssetIdBatchResponseBody {
     pub assets: HashMap<String, HashMap<String, String>>,
 }
 
-pub type AssetIdResponse = Result<Result<AssetIdResponseBody, Error>, ApiError>;
+pub type AssetIdResponse = Result<AssetIdResponseBody, ApiError>;
 
 pub type AssetIdBatchResponse = Result<Result<AssetIdBatchResponseBody, Error>, ApiError>;
 
@@ -72,20 +72,13 @@ impl Api for AssetInternApi {
                     let id = AssetId::from_data(meta_data, &public_key);
                     let mut assets = HashMap::<String, String>::new();
                     assets.insert(meta_data.to_string(), id.to_string());
-                    Ok(Ok(AssetIdResponseBody { assets }))
+                    Ok(AssetIdResponseBody { assets })
                 },
                 Err(_) => Err(ApiError::WalletHexInvalid)
             };
 
-            let status_code =
-                result.clone()
-                    .ok()
-                    .map(|r|
-                        r.err().map(|_| status::BadRequest).unwrap_or(status::Created))
-                    .unwrap_or(status::BadRequest);
-
             let mut res = Response::with((
-                status_code,
+                result.clone().err().map(|e| e.to_status()).unwrap_or(status::Ok),
                 serde_json::to_string_pretty(&result).unwrap(),
             ));
             res.headers.set(ContentType::json());
@@ -112,7 +105,7 @@ impl Api for AssetInternApi {
                                 let id = AssetId::from_data(&asset, &public_key);
                                 assets.insert(asset, id.to_string());
                             }
-                            Ok(Ok(AssetIdResponseBody { assets }))
+                            Ok(AssetIdResponseBody { assets })
                         },
                         Ok(None) => Err(ApiError::EmptyRequestBody),
                         Err(_) => Err(ApiError::IncorrectRequest),
@@ -121,15 +114,8 @@ impl Api for AssetInternApi {
                 Err(_) => Err(ApiError::WalletHexInvalid)
             };
 
-            let status_code =
-                result.clone()
-                    .ok()
-                    .map(|r|
-                        r.err().map(|_| status::BadRequest).unwrap_or(status::Created))
-                    .unwrap_or(status::BadRequest);
-
             let mut res = Response::with((
-                status_code,
+                result.clone().err().map(|e| e.to_status()).unwrap_or(status::Ok),
                 serde_json::to_string_pretty(&result).unwrap(),
             ));
             res.headers.set(ContentType::json());
