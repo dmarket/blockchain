@@ -75,6 +75,7 @@ impl AddAssets {
         let mut infos: HashMap<AssetId, AssetInfo> = HashMap::new();
 
         let key = self.pub_key();
+        let tx_hash = self.hash();
 
         for meta in self.meta_assets() {
             let id = AssetId::from_data(meta.data(), key);
