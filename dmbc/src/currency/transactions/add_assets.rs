@@ -75,7 +75,6 @@ impl AddAssets {
         let mut infos: HashMap<AssetId, AssetInfo> = HashMap::new();
 
         let key = self.pub_key();
-        let tx_hash = self.hash();
 
         for meta in self.meta_assets() {
             let id = AssetId::from_data(meta.data(), key);
@@ -87,10 +86,11 @@ impl AddAssets {
             match infos.entry(id) {
                 Entry::Occupied(entry) => {
                     let info = entry.into_mut();
-                    *info = info.clone().merge(meta.to_info(key))?;
+                    *info = info.clone().merge(meta.to_info(key, &info.origin()))?;
                 }
                 Entry::Vacant(entry) => {
-                    let new_info = meta.to_info(key);
+                    let origin = self.hash();
+                    let new_info = meta.to_info(key, &origin);
                     let info = match assets::Schema(&*view).fetch(&id) {
                         Some(info) => info.merge(new_info)?,
                         None => new_info,

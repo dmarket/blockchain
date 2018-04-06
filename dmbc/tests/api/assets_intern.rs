@@ -18,7 +18,7 @@ fn assets_intern_id_from_meta() {
     let api = testkit.api();
     let meta_data = "asset";
 
-    let (pub_key, _) = WalletMiner::new().mine(&mut testkit);
+    let (pub_key, _, _) = WalletMiner::new().mine(&mut testkit);
 
     let response: AssetIdResponse = api.get(
         ApiKind::Service(SERVICE_NAME),
@@ -54,7 +54,7 @@ fn assets_intern_id_from_meta_invalid_public_key() {
 fn assets_intern_ids_from_meta() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    let (pub_key, _) = WalletMiner::new().mine(&mut testkit);
+    let (pub_key, _, _) = WalletMiner::new().mine(&mut testkit);
 
     let meta_data0 = "asset0";
     let meta_data1 = "asset1";
@@ -109,8 +109,8 @@ fn assets_intern_ids_from_meta_invalid_public_key() {
 fn assets_intern_batch_ids() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    let (pub_key0, _) = WalletMiner::new().mine(&mut testkit);
-    let (pub_key1, _) = WalletMiner::new().mine(&mut testkit);
+    let (pub_key0, _, _) = WalletMiner::new().mine(&mut testkit);
+    let (pub_key1, _, _) = WalletMiner::new().mine(&mut testkit);
 
     let meta_data0 = "asset0";
     let meta_data1 = "asset1";

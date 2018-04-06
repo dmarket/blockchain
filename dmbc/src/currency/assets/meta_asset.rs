@@ -1,4 +1,4 @@
-use exonum::crypto::PublicKey;
+use exonum::crypto::{PublicKey, Hash};
 
 use currency::assets::{AssetBundle, AssetId, AssetInfo, Fees};
 
@@ -23,8 +23,8 @@ impl MetaAsset {
     }
 
     /// Create an `AssetInfo` from this `MetaAsset`.
-    pub fn to_info(&self, creator: &PublicKey) -> AssetInfo {
-        AssetInfo::new(creator, self.amount(), self.fees())
+    pub fn to_info(&self, creator: &PublicKey, origin: &Hash) -> AssetInfo {
+        AssetInfo::new(creator, origin, self.amount(), self.fees())
     }
 
     /// Create an `AssetBundle` from this `MetaAsset`.

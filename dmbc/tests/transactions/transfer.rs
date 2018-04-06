@@ -38,6 +38,7 @@ fn transfer() {
         .seed(85)
         .build();
 
+    let tx_hash = tx_add_assets.hash();
     post_tx(&api, &tx_add_assets);
     testkit.create_block();
 
@@ -45,7 +46,7 @@ fn transfer() {
     assert_eq!(Ok(Ok(())), s);
 
     let bc_asset_info = get_asset_info(&api, &asset_id).unwrap().unwrap();
-    assert_eq!(meta_asset.to_info(&public_key), bc_asset_info);
+    assert_eq!(meta_asset.to_info(&public_key, &tx_hash), bc_asset_info);
 
     let mining_wallet = get_wallet(&api, &public_key);
     assert_eq!(vec![meta_asset.to_bundle(asset_id.clone())], mining_wallet.assets());

@@ -44,7 +44,8 @@ fn delete_assets() {
         .add_asset_value(meta_asset.clone())
         .seed(85)
         .build();
-
+    
+    let tx_hash = tx_add_assets.hash();
     post_tx(&api, &tx_add_assets);
     testkit.create_block();
 
@@ -52,7 +53,7 @@ fn delete_assets() {
     assert_eq!(Ok(Ok(())), s);
 
     let bc_asset_info = get_asset_info(&api, &asset_id).unwrap().unwrap();
-    assert_eq!(meta_asset.to_info(&public_key), bc_asset_info);
+    assert_eq!(meta_asset.to_info(&public_key, &tx_hash), bc_asset_info);
 
     let mining_wallet = get_wallet(&api, &public_key);
     assert_eq!(vec![meta_asset.to_bundle(asset_id.clone())], mining_wallet.assets());
@@ -65,6 +66,7 @@ fn delete_assets() {
         .seed(5)
         .build();
 
+    let tx_hash = tx_add_assets.hash();
     post_tx(&api, &tx_delete_assets);
     testkit.create_block();
 
@@ -72,7 +74,7 @@ fn delete_assets() {
     assert_eq!(Ok(Ok(())), s);
 
     let bc_asset_info = get_asset_info(&api, &asset_id).unwrap().unwrap();
-    let a = AssetInfo::new(&public_key, 1, fees.clone());
+    let a = AssetInfo::new(&public_key, &tx_hash, 1, fees.clone());
     assert_eq!(a, bc_asset_info);
 
     let mining_wallet = get_wallet(&api, &public_key);

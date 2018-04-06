@@ -49,6 +49,8 @@ fn add_assets() {
         .add_asset_value(meta_asset_receiver.clone())
         .seed(85)
         .build();
+    
+    let tx_hash = tx_add_assets.hash();
 
     post_tx(&api, &tx_add_assets);
 
@@ -68,7 +70,7 @@ fn add_assets() {
     assert_eq!(vec![asset.clone()], receiver_wallet.assets());
 
     let bc_asset_info = get_asset_info(&api, &asset.id()).unwrap();
-    assert_eq!(Some(meta_asset_receiver.to_info(&public_key)), bc_asset_info);
+    assert_eq!(Some(meta_asset_receiver.to_info(&public_key, &tx_hash)), bc_asset_info);
 
 
 
@@ -79,6 +81,8 @@ fn add_assets() {
         .add_asset_value(meta_asset_receiver.clone())
         .seed(86)
         .build();
+
+    let tx_hash = tx_add_assets.hash();
 
     post_tx(&api, &tx_add_assets);
 
@@ -99,7 +103,7 @@ fn add_assets() {
     assert_eq!(vec![asset.clone()], receiver_wallet.assets());
 
     let bc_asset_info = get_asset_info(&api, &asset.id()).unwrap().unwrap();
-    assert_eq!(meta_asset_receiver.to_info(&public_key).creator(), bc_asset_info.creator());
+    assert_eq!(meta_asset_receiver.to_info(&public_key, &tx_hash).creator(), bc_asset_info.creator());
     assert_eq!(3 + 3, bc_asset_info.amount());
 
 
@@ -112,6 +116,8 @@ fn add_assets() {
         .add_asset_value(meta_asset.clone())
         .seed(87)
         .build();
+
+    let tx_hash = tx_add_assets.hash();
 
     post_tx(&api, &tx_add_assets);
 
@@ -127,7 +133,7 @@ fn add_assets() {
     assert_eq!(current_balance, mining_wallet.balance());
 
     let bc_asset_info = get_asset_info(&api, &asset.id()).unwrap().unwrap();
-    assert_eq!(meta_asset.to_info(&public_key).creator(), bc_asset_info.creator());
+    assert_eq!(meta_asset.to_info(&public_key, &tx_hash).creator(), bc_asset_info.creator());
     assert_eq!(3 + 3 + 5, bc_asset_info.amount());
 
     // Майним уже замайненный ассет. Оставляем его на кошельке майнера.
@@ -143,6 +149,8 @@ fn add_assets() {
         .seed(88)
         .build();
 
+    let tx_hash = tx_add_assets.hash();
+
     post_tx(&api, &tx_add_assets);
 
     testkit.create_block();
@@ -151,7 +159,7 @@ fn add_assets() {
     assert_eq!(Ok(Ok(())), s);
 
     let bc_asset_info = get_asset_info(&api, &asset.id()).unwrap().unwrap();
-    assert_eq!(meta_asset.to_info(&public_key).creator(), bc_asset_info.creator());
+    assert_eq!(meta_asset.to_info(&public_key, &tx_hash).creator(), bc_asset_info.creator());
     assert_eq!(3 + 3 + 5 + 1 + 2, bc_asset_info.amount());
 
     let mining_wallet = get_wallet(&api, &public_key);
@@ -184,6 +192,7 @@ fn add_assets() {
         .seed(99)
         .build();
 
+    let tx_hash = tx_add_assets.hash();
     post_tx(&api, &tx_add_assets);
 
     testkit.create_block();
@@ -205,7 +214,7 @@ fn add_assets() {
     assert_eq!(assets, receiver_wallet.assets());
 
     let bc_asset_info = get_asset_info(&api, &asset_id2).unwrap().unwrap();
-    assert_eq!(meta_asset_receiver2.to_info(&public_key), bc_asset_info);
+    assert_eq!(meta_asset_receiver2.to_info(&public_key, &tx_hash), bc_asset_info);
 
 
 
@@ -219,6 +228,7 @@ fn add_assets() {
         .seed(97)
         .build();
 
+    let tx_hash = tx_add_assets.hash();
     post_tx(&api, &tx_add_assets);
 
     testkit.create_block();
@@ -236,7 +246,7 @@ fn add_assets() {
     assert_eq!(current_balance, mining_wallet.balance());
 
     let bc_asset_info = get_asset_info(&api, &asset_id2).unwrap().unwrap();
-    assert_eq!(meta_asset2.to_info(&public_key).creator(), bc_asset_info.creator());
+    assert_eq!(meta_asset2.to_info(&public_key, &tx_hash).creator(), bc_asset_info.creator());
     assert_eq!(4 + 7, bc_asset_info.amount());
 
     // Майним уже замайненный ассет. Оставляем его на кошельке майнера.
@@ -252,6 +262,7 @@ fn add_assets() {
         .seed(93)
         .build();
 
+    let tx_hash = tx_add_assets.hash();
     post_tx(&api, &tx_add_assets);
 
     testkit.create_block();
@@ -260,7 +271,7 @@ fn add_assets() {
     assert_eq!(Ok(Ok(())), s);
 
     let bc_asset_info = get_asset_info(&api, &asset_id2).unwrap().unwrap();
-    assert_eq!(meta_asset2.to_info(&public_key).creator(), bc_asset_info.creator());
+    assert_eq!(meta_asset2.to_info(&public_key, &tx_hash).creator(), bc_asset_info.creator());
     assert_eq!(4 + 7 + 2 + 1, bc_asset_info.amount());
 
     let mining_wallet = get_wallet(&api, &public_key);
@@ -315,6 +326,7 @@ fn add_assets_with_different_fees() {
         .seed(85)
         .build();
 
+    let tx_hash = tx_add_assets.hash();
     post_tx(&api, &tx_add_assets);
 
     testkit.create_block();
@@ -331,7 +343,7 @@ fn add_assets_with_different_fees() {
     assert_eq!(current_balance , mining_wallet.balance());
 
     let bc_asset_info = get_asset_info(&api, &asset_id).unwrap().unwrap();
-    assert_eq!(meta_asset.to_info(&public_key), bc_asset_info);
+    assert_eq!(meta_asset.to_info(&public_key, &tx_hash), bc_asset_info);
 
     let fees2 = fee::Builder::new()
         .trade(20, 10)
@@ -348,6 +360,7 @@ fn add_assets_with_different_fees() {
         .seed(85)
         .build();
 
+    let tx_hash = tx_add_assets.hash();
     post_tx(&api, &tx_add_assets);
 
     testkit.create_block();
@@ -364,7 +377,7 @@ fn add_assets_with_different_fees() {
     assert_eq!(current_balance , mining_wallet.balance());
 
     let bc_asset_info = get_asset_info(&api, &asset_id).unwrap().unwrap();
-    assert_eq!(meta_asset.to_info(&public_key), bc_asset_info);
+    assert_eq!(meta_asset.to_info(&public_key, &tx_hash), bc_asset_info);
 }
 
 #[test]
@@ -440,6 +453,7 @@ fn add_assets_to_empty_wallet_without_meta_info() {
         .seed(85)
         .build();
 
+    let tx_hash = tx_add_assets.hash();
     post_tx(&api, &tx_add_assets);
     testkit.create_block();
 
@@ -447,7 +461,7 @@ fn add_assets_to_empty_wallet_without_meta_info() {
     assert_eq!(Ok(Ok(())), s);
 
     let bc_asset_info = get_asset_info(&api, &asset_id).unwrap().unwrap();
-    assert_eq!(meta_asset.to_info(&public_key), bc_asset_info);
+    assert_eq!(meta_asset.to_info(&public_key, &tx_hash), bc_asset_info);
 
     let mining_wallet = get_wallet(&api, &public_key);
     let assets: Vec<AssetBundle> = vec![
@@ -481,6 +495,7 @@ fn add_assets_to_empty_wallet_with_exist_meta_info() {
         .seed(85)
         .build();
 
+    let tx_hash = tx_add_assets.hash();
     post_tx(&api, &tx_add_assets);
     testkit.create_block();
 
@@ -488,7 +503,7 @@ fn add_assets_to_empty_wallet_with_exist_meta_info() {
     assert_eq!(Ok(Ok(())), s);
 
     let bc_asset_info = get_asset_info(&api, &asset_id).unwrap().unwrap();
-    assert_eq!(meta_asset.to_info(&public_key), bc_asset_info);
+    assert_eq!(meta_asset.to_info(&public_key, &tx_hash), bc_asset_info);
 
     let mining_wallet = get_wallet(&api, &public_key);
     let empty_assets: Vec<AssetBundle> = vec![];
@@ -508,6 +523,7 @@ fn add_assets_to_empty_wallet_with_exist_meta_info() {
         .seed(85)
         .build();
 
+    let tx_hash = tx_add_assets.hash();
     post_tx(&api, &tx_add_assets);
     testkit.create_block();
 
@@ -515,7 +531,7 @@ fn add_assets_to_empty_wallet_with_exist_meta_info() {
     assert_eq!(Ok(Ok(())), s);
 
     let bc_asset_info = get_asset_info(&api, &asset_id).unwrap().unwrap();
-    assert_eq!(meta_asset.to_info(&public_key).creator(), bc_asset_info.creator());
+    assert_eq!(meta_asset.to_info(&public_key, &tx_hash).creator(), bc_asset_info.creator());
     assert_eq!(2, bc_asset_info.amount());
 
     let mining_wallet = get_wallet(&api, &public_key);
