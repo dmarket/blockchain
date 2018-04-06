@@ -14,8 +14,6 @@
 /var/db/*
 !/var/db/.gitkeep
 
-/var/keys/*
-#!/var/keys/.gitkeep
 /var/discovery/
 #!/var/discovery/.gitkeep
 
