@@ -17,7 +17,7 @@ use currency::wallet;
 use currency::wallet::Wallet;
 use currency::status;
 use currency::transactions::{AddAssets, DeleteAssets, Exchange,
-                             ExchangeIntermediary, Mine, Trade,
+                             ExchangeIntermediary, Mine, Trade, Transfer, TRANSFER_ID,
                              TradeIntermediary, ADD_ASSETS_ID, DELETE_ASSETS_ID,
                              EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID, MINE_ID,
                              TRADE_ID, TRADE_INTERMEDIARY_ID};
@@ -66,6 +66,7 @@ impl blockchain::Service for Service {
             MINE_ID => Box::new(Mine::from_raw(raw)?),
             TRADE_ID => Box::new(Trade::from_raw(raw)?),
             TRADE_INTERMEDIARY_ID => Box::new(TradeIntermediary::from_raw(raw)?),
+            TRANSFER_ID => Box::new(Transfer::from_raw(raw)?),
             _ => {
                 return Err(encoding::Error::IncorrectMessageType {
                     message_type: raw.message_type(),
