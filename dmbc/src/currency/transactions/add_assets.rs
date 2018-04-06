@@ -136,6 +136,6 @@ impl Transaction for AddAssets {
     }
 
     fn info(&self) -> serde_json::Value {
-        json!({})
+        json!(self)
     }
 }

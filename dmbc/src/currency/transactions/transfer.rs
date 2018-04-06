@@ -119,6 +119,6 @@ impl Transaction for Transfer {
     }
 
     fn info(&self) -> serde_json::Value {
-        json!({})
+        json!(self)
     }
 }

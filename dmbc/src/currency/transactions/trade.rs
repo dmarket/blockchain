@@ -216,6 +216,6 @@ impl Transaction for Trade {
     }
 
     fn info(&self) -> serde_json::Value {
-        json!({})
+        json!(self)
     }
 }
