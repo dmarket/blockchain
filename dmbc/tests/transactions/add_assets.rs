@@ -360,7 +360,7 @@ fn add_assets_with_different_fees() {
         .seed(85)
         .build();
 
-    let tx_hash = tx_add_assets.hash();
+    // let tx_hash = tx_add_assets.hash();
     post_tx(&api, &tx_add_assets);
 
     testkit.create_block();
