@@ -43,7 +43,7 @@ impl Service {
     /// Genesis wallet public key.
     pub fn genesis_wallet<S: AsRef<Snapshot>>(view: S) -> PublicKey {
         let config = Configuration::extract(view.as_ref());
-        PublicKey::from_hex(config.fees().recipient()).unwrap()
+        *config.fees().recipient()
     }
 }
 
@@ -108,3 +108,4 @@ impl blockchain::Service for Service {
         serde_json::to_value(Configuration::default()).unwrap()
     }
 }
+
