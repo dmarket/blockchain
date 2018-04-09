@@ -5,7 +5,6 @@ extern crate exonum_testkit;
 use exonum::crypto;
 use exonum::messages::Message;
 
-use dmbc::currency::Service;
 use dmbc::currency::assets::{AssetBundle, Fees};
 use dmbc::currency::transactions::builders::fee;
 use dmbc::currency::transactions::builders::transaction;
@@ -13,6 +12,7 @@ use dmbc::currency::configuration::TransactionFees;
 use dmbc::currency::transactions::components::FeeStrategy;
 use dmbc::currency::error::Error;
 
+use common;
 use transactions::*;
 
 fn exchange_fee(t: u64) -> Fees {
@@ -193,7 +193,7 @@ fn exchange_asset_fee_strategy() {
     assert_eq!(a, recipient_wallet.assets());
     assert_eq!(recipient_balance, recipient_wallet.balance());
 
-    let genesis_wallet = get_wallet(&api, &Service::genesis_wallet());
+    let genesis_wallet = get_wallet(&api, &common::default_genesis_wallet());
     assert_eq!(genesis_balance, genesis_wallet.balance());
 
     let creator_wallet = get_wallet(&api, &creator_pk);
@@ -228,7 +228,7 @@ fn exchange_asset_fee_strategy() {
     assert_eq!(e, recipient_wallet.assets());
     assert_eq!(recipient_balance, recipient_wallet.balance());
 
-    let genesis_wallet = get_wallet(&api, &Service::genesis_wallet());
+    let genesis_wallet = get_wallet(&api, &common::default_genesis_wallet());
     assert_eq!(genesis_balance, genesis_wallet.balance());
 
     let creator_wallet = get_wallet(&api, &creator_pk);
@@ -263,7 +263,7 @@ fn exchange_asset_fee_strategy() {
     assert_eq!(a, recipient_wallet.assets());
     assert_eq!(recipient_balance, recipient_wallet.balance());
 
-    let genesis_wallet = get_wallet(&api, &Service::genesis_wallet());
+    let genesis_wallet = get_wallet(&api, &common::default_genesis_wallet());
     assert_eq!(genesis_balance, genesis_wallet.balance());
 
     let creator_wallet = get_wallet(&api, &creator_pk);
@@ -337,7 +337,7 @@ fn exchange_asset_insufficient_funds_fee_asset_very_big() {
     assert_eq!(e, recipient_wallet.assets());
     assert_eq!(recipient_balance, recipient_wallet.balance());
 
-    let genesis_wallet = get_wallet(&api, &Service::genesis_wallet());
+    let genesis_wallet = get_wallet(&api, &common::default_genesis_wallet());
     assert_eq!(genesis_balance, genesis_wallet.balance());
 
     let creator_wallet = get_wallet(&api, &creator_pk);
@@ -405,7 +405,7 @@ fn exchange_asset_insufficient_funds_bc_fee_big() {
     assert_eq!(e, recipient_wallet.assets());
     assert_eq!(recipient_balance, recipient_wallet.balance());
 
-    let genesis_wallet = get_wallet(&api, &Service::genesis_wallet());
+    let genesis_wallet = get_wallet(&api, &common::default_genesis_wallet());
     assert_eq!(genesis_balance, genesis_wallet.balance());
 
     let creator_wallet = get_wallet(&api, &creator_pk);
@@ -476,7 +476,7 @@ fn exchange_asset_insufficient_fee_strategy_recip_and_send() {
     assert_eq!(e, recipient_wallet.assets());
     assert_eq!(recipient_balance, recipient_wallet.balance());
 
-    let genesis_wallet = get_wallet(&api, &Service::genesis_wallet());
+    let genesis_wallet = get_wallet(&api, &common::default_genesis_wallet());
     assert_eq!(genesis_balance, genesis_wallet.balance());
 
     let creator_wallet = get_wallet(&api, &creator_pk);
@@ -514,7 +514,7 @@ fn exchange_asset_send_value() {
     let status = get_status(&api, &tx_exchange_assets.hash());
     let sender_wallet = get_wallet(&api, &sender_pk);
     let recipient_wallet = get_wallet(&api, &recipient_pk);
-    let genesis_wallet = get_wallet(&api, &Service::genesis_wallet());
+    let genesis_wallet = get_wallet(&api, &common::default_genesis_wallet());
 
     assert_eq!(Ok(Ok(())), status);
     assert_eq!(sender_balance, sender_wallet.balance());
@@ -541,7 +541,7 @@ fn exchange_asset_send_value() {
     let status = get_status(&api, &tx_exchange_assets.hash());
     let sender_wallet = get_wallet(&api, &sender_pk);
     let recipient_wallet = get_wallet(&api, &recipient_pk);
-    let genesis_wallet = get_wallet(&api, &Service::genesis_wallet());
+    let genesis_wallet = get_wallet(&api, &common::default_genesis_wallet());
 
     assert_eq!(Ok(Ok(())), status);
     assert_eq!(sender_balance, sender_wallet.balance());
@@ -564,7 +564,7 @@ fn exchange_asset_send_value() {
     let status = get_status(&api, &tx_exchange_assets.hash());
     let sender_wallet = get_wallet(&api, &sender_pk);
     let recipient_wallet = get_wallet(&api, &recipient_pk);
-    let genesis_wallet = get_wallet(&api, &Service::genesis_wallet());
+    let genesis_wallet = get_wallet(&api, &common::default_genesis_wallet());
 
     assert_eq!(Ok(Err(Error::InsufficientFunds)), status);
     assert_eq!(sender_balance, sender_wallet.balance());
@@ -623,7 +623,7 @@ fn exchange_asset_send_value_and_assets() {
     let sender_wallet = get_wallet(&api, &sender_pk);
     let recipient_wallet = get_wallet(&api, &recipient_pk);
     let creator_wallet = get_wallet(&api, &creator_pk);
-    let genesis_wallet = get_wallet(&api, &Service::genesis_wallet());
+    let genesis_wallet = get_wallet(&api, &common::default_genesis_wallet());
 
     assert_eq!(Ok(Ok(())), status);
     assert_eq!(sender_balance, sender_wallet.balance());
@@ -656,7 +656,7 @@ fn exchange_asset_send_value_and_assets() {
     let sender_wallet = get_wallet(&api, &sender_pk);
     let recipient_wallet = get_wallet(&api, &recipient_pk);
     let creator_wallet = get_wallet(&api, &creator_pk);
-    let genesis_wallet = get_wallet(&api, &Service::genesis_wallet());
+    let genesis_wallet = get_wallet(&api, &common::default_genesis_wallet());
 
     assert_eq!(Ok(Ok(())), status);
     assert_eq!(sender_balance, sender_wallet.balance());
@@ -689,7 +689,7 @@ fn exchange_asset_send_value_and_assets() {
     let sender_wallet = get_wallet(&api, &sender_pk);
     let recipient_wallet = get_wallet(&api, &recipient_pk);
     let creator_wallet = get_wallet(&api, &creator_pk);
-    let genesis_wallet = get_wallet(&api, &Service::genesis_wallet());
+    let genesis_wallet = get_wallet(&api, &common::default_genesis_wallet());
 
     assert_eq!(Ok(Ok(())), status);
     assert_eq!(sender_balance, sender_wallet.balance());

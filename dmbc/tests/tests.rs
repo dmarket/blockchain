@@ -10,3 +10,5 @@ pub mod configuration;
 pub mod transactions;
 pub mod fees;
 pub mod api;
+pub mod common;
+
