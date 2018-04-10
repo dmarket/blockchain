@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
 use dmbc::currency::api::fees::FeesResponseBody;
-use dmbc::currency::transactions::builders::transaction;
-use dmbc::currency::configuration::TransactionFees;
 use dmbc::currency::assets::AssetBundle;
+use dmbc::currency::configuration::TransactionFees;
 use dmbc::currency::error::Error;
+use dmbc::currency::transactions::builders::transaction;
 
 use fees::test_api::*;
 
@@ -15,7 +15,10 @@ fn fees_for_transfer() {
     let transaction_fee = 1000;
     let amount = 2;
     let tax = 10;
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee),
+    );
 
     let meta_data = "asset";
     let (creator_key, _) = WalletMiner::new()
@@ -39,7 +42,7 @@ fn fees_for_transfer() {
     let expected_fee = transaction_fee + amount * tax;
     expected.insert(sender_pub_key, expected_fee);
 
-    assert_eq!(Ok(Ok(FeesResponseBody{fees: expected})), response);
+    assert_eq!(Ok(Ok(FeesResponseBody { fees: expected })), response);
 }
 
 #[test]
@@ -49,14 +52,17 @@ fn fees_for_transfer_sender_is_creator() {
     let transaction_fee = 1000;
     let amount = 2;
     let tax = 10;
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee),
+    );
 
     let meta_data = "asset";
     let (sender_key, secret_key) = WalletMiner::new()
         .add_asset(meta_data, amount, asset_fee(tax, 0))
         .mine(&mut testkit);
     let (recipient_key, _) = WalletMiner::new().mine_empty(&mut testkit);
-        
+
     let tx_transfer = transaction::Builder::new()
         .keypair(sender_key, secret_key)
         .tx_transfer()
@@ -69,7 +75,7 @@ fn fees_for_transfer_sender_is_creator() {
     let mut expected = HashMap::new();
     expected.insert(sender_key, transaction_fee);
 
-    assert_eq!(Ok(Ok(FeesResponseBody{fees: expected})), response);
+    assert_eq!(Ok(Ok(FeesResponseBody { fees: expected })), response);
 }
 
 #[test]
@@ -78,12 +84,15 @@ fn fees_for_transfer_asset_not_found() {
     let api = testkit.api();
     let transaction_fee = 1000;
     let amount = 2;
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee),
+    );
 
     let meta_data = "asset";
     let (sender_key, secret_key) = WalletMiner::new().mine_empty(&mut testkit);
     let (recipient_key, _) = WalletMiner::new().mine_empty(&mut testkit);
-        
+
     let tx_transfer = transaction::Builder::new()
         .keypair(sender_key, secret_key)
         .tx_transfer()

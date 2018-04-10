@@ -28,7 +28,9 @@ fn default_service_configuration() {
 fn proposed_service_configuration() {
     let mut testkit = TestKitBuilder::auditor().with_validators(3).create();
 
-    let configuration = Configuration::new(TransactionFees::with_default_key(100, 2, 100, 100, 100, 100));
+    let configuration = Configuration::new(TransactionFees::with_default_key(
+        100, 2, 100, 100, 100, 100,
+    ));
     let cfg_change_height = Height(5);
     let proposal = {
         let mut cfg = testkit.configuration_change_proposal();

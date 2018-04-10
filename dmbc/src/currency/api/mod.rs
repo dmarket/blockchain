@@ -1,14 +1,14 @@
 // TODO: currency service API documentation.
 #![allow(missing_docs)]
 
-pub mod transaction;
 pub mod asset;
-pub mod wallet;
-pub mod hex;
-pub mod error;
 pub mod assets_intern;
-pub mod metrics;
+pub mod error;
 pub mod fees;
+pub mod hex;
+pub mod metrics;
+pub mod transaction;
+pub mod wallet;
 extern crate params;
 
 use exonum::api::Api;
@@ -24,13 +24,13 @@ use std::cmp;
 use unicase::UniCase;
 
 use self::asset::AssetApi;
+use self::assets_intern::AssetInternApi;
+use self::fees::FeesApi;
 use self::hex::HexApi;
+use self::metrics::MetricsApi;
 use self::params::{FromValue, Params};
 use self::transaction::TransactionApi;
 use self::wallet::WalletApi;
-use self::assets_intern::AssetInternApi;
-use self::metrics::MetricsApi;
-use self::fees::FeesApi;
 
 const PARAMETER_OFFSET_KEY: &str = "offset";
 const PARAMETER_LIMIT_KEY: &str = "limit";
@@ -69,7 +69,7 @@ impl ServiceApi {
         elements
     }
 
-    pub fn pagination_params(req: &mut Request) -> (u64, u64){
+    pub fn pagination_params(req: &mut Request) -> (u64, u64) {
         let parameters = req.get_ref::<Params>().unwrap();
         let offset_parameter = parameters.get(PARAMETER_OFFSET_KEY);
         let limit_parameter = parameters.get(PARAMETER_LIMIT_KEY);
@@ -84,12 +84,13 @@ impl ServiceApi {
         }
     }
 
-    pub fn read_parameter<T>(req: &mut Request, parameter_key: &str, default_value: T) -> T 
-    where T: FromValue
+    pub fn read_parameter<T>(req: &mut Request, parameter_key: &str, default_value: T) -> T
+    where
+        T: FromValue,
     {
         let parameters = req.get_ref::<Params>().unwrap();
         if let Some(parameter) = parameters.get(parameter_key) {
-            return FromValue::from_value(parameter).unwrap_or(default_value)
+            return FromValue::from_value(parameter).unwrap_or(default_value);
         }
 
         default_value
@@ -97,9 +98,9 @@ impl ServiceApi {
 
     pub fn add_option_headers(headers: &mut Headers) {
         headers.set(AccessControlAllowOrigin::Any);
-        headers.set(AccessControlAllowHeaders(vec![
-            UniCase("content-type".to_owned()),
-        ]));
+        headers.set(AccessControlAllowHeaders(vec![UniCase(
+            "content-type".to_owned(),
+        )]));
         headers.set(AccessControlAllowMethods(vec![
             Method::Get,
             Method::Post,
@@ -136,7 +137,7 @@ impl Api for ServiceApi {
         let api = MetricsApi {};
         api.wire(router);
 
-        let api = FeesApi { 
+        let api = FeesApi {
             blockchain: self.clone().blockchain,
         };
         api.wire(router);

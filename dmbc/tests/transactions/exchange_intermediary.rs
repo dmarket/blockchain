@@ -6,11 +6,11 @@ use exonum::crypto;
 use exonum::messages::Message;
 
 use dmbc::currency::assets::{AssetBundle, Fees};
+use dmbc::currency::configuration::TransactionFees;
+use dmbc::currency::error::Error;
 use dmbc::currency::transactions::builders::fee;
 use dmbc::currency::transactions::builders::transaction;
-use dmbc::currency::configuration::TransactionFees;
 use dmbc::currency::transactions::components::FeeStrategy;
-use dmbc::currency::error::Error;
 
 use common;
 use transactions::*;
@@ -23,14 +23,17 @@ fn exchange_fee(t: u64) -> Fees {
         .build()
 }
 
-const BC_FEE:u64 = 1000;
-const INTER_COMMISSION:u64 = 100;
+const BC_FEE: u64 = 1000;
+const INTER_COMMISSION: u64 = 100;
 
 #[test]
 fn exchange_i_assets() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, BC_FEE, 0, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, BC_FEE, 0, 0),
+    );
 
     let (sender_pk, sender_sk) = mine_wallet(&mut testkit);
     let (recipient_pk, recipient_sk) = mine_wallet(&mut testkit);
@@ -103,7 +106,7 @@ fn exchange_i_assets() {
         .recipient_add_asset_value(AssetBundle::from_data("asset6", 4, &creator_pk))
         .build();
 
-    let assets_fee = 6*1 + 10*2 + 5*3 + 2*4 + 5*5 + 6*7;
+    let assets_fee = 6 * 1 + 10 * 2 + 5 * 3 + 2 * 4 + 5 * 5 + 6 * 7;
 
     sender_balance = sender_balance - (BC_FEE + INTER_COMMISSION + assets_fee) / 2;
     recipient_balance = recipient_balance - (BC_FEE + INTER_COMMISSION + assets_fee) / 2;
@@ -113,7 +116,6 @@ fn exchange_i_assets() {
 
     post_tx(&api, &tx_exchange_assets);
     testkit.create_block();
-
 
     let status = get_status(&api, &tx_exchange_assets.hash());
     let sender_wallet = get_wallet(&api, &sender_pk);
@@ -156,7 +158,10 @@ fn exchange_i_assets() {
 fn exchange_i_assets_creator_is_sender() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, BC_FEE, 0, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, BC_FEE, 0, 0),
+    );
 
     let (sender_pk, sender_sk) = mine_wallet(&mut testkit);
     let (recipient_pk, recipient_sk) = mine_wallet(&mut testkit);
@@ -180,11 +185,17 @@ fn exchange_i_assets_creator_is_sender() {
     assert_eq!(Ok(Ok(())), s);
 
     let sender_wallet = get_wallet(&api, &sender_pk);
-    assert_eq!(vec![AssetBundle::from_data("asset1", 10, &sender_pk),], sender_wallet.assets());
+    assert_eq!(
+        vec![AssetBundle::from_data("asset1", 10, &sender_pk)],
+        sender_wallet.assets()
+    );
     assert_eq!(DMC_1, sender_wallet.balance());
 
     let recipient_wallet = get_wallet(&api, &recipient_pk);
-    assert_eq!(vec![AssetBundle::from_data("asset6", 5, &sender_pk), ], recipient_wallet.assets());
+    assert_eq!(
+        vec![AssetBundle::from_data("asset6", 5, &sender_pk)],
+        recipient_wallet.assets()
+    );
     assert_eq!(DMC_1, recipient_wallet.balance());
 
     let tx_exchange_assets = transaction::Builder::new()
@@ -198,7 +209,7 @@ fn exchange_i_assets_creator_is_sender() {
         .recipient_add_asset_value(AssetBundle::from_data("asset6", 4, &sender_pk))
         .build();
 
-    let assets_fee = 6*1 + 6*4;
+    let assets_fee = 6 * 1 + 6 * 4;
 
     sender_balance = sender_balance - (BC_FEE + INTER_COMMISSION + assets_fee) / 2 + assets_fee;
     recipient_balance = recipient_balance - (BC_FEE + INTER_COMMISSION + assets_fee) / 2;
@@ -207,7 +218,6 @@ fn exchange_i_assets_creator_is_sender() {
 
     post_tx(&api, &tx_exchange_assets);
     testkit.create_block();
-
 
     let status = get_status(&api, &tx_exchange_assets.hash());
     let sender_wallet = get_wallet(&api, &sender_pk);
@@ -242,7 +252,10 @@ fn exchange_i_assets_creator_is_sender() {
 fn exchange_i_assets_creator_is_intermediary() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, BC_FEE, 0, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, BC_FEE, 0, 0),
+    );
 
     let (sender_pk, sender_sk) = mine_wallet(&mut testkit);
     let (recipient_pk, recipient_sk) = mine_wallet(&mut testkit);
@@ -266,11 +279,17 @@ fn exchange_i_assets_creator_is_intermediary() {
     assert_eq!(Ok(Ok(())), s);
 
     let sender_wallet = get_wallet(&api, &sender_pk);
-    assert_eq!(vec![AssetBundle::from_data("asset1", 10, &intermediary_pk), ], sender_wallet.assets());
+    assert_eq!(
+        vec![AssetBundle::from_data("asset1", 10, &intermediary_pk)],
+        sender_wallet.assets()
+    );
     assert_eq!(DMC_1, sender_wallet.balance());
 
     let recipient_wallet = get_wallet(&api, &recipient_pk);
-    assert_eq!(vec![AssetBundle::from_data("asset6", 5, &intermediary_pk), ], recipient_wallet.assets());
+    assert_eq!(
+        vec![AssetBundle::from_data("asset6", 5, &intermediary_pk)],
+        recipient_wallet.assets()
+    );
     assert_eq!(DMC_1, recipient_wallet.balance());
 
     let tx_exchange_assets = transaction::Builder::new()
@@ -284,16 +303,15 @@ fn exchange_i_assets_creator_is_intermediary() {
         .recipient_add_asset_value(AssetBundle::from_data("asset6", 4, &intermediary_pk))
         .build();
 
-    let assets_fee = 6*1 + 6*4;
+    let assets_fee = 6 * 1 + 6 * 4;
 
-    sender_balance = sender_balance - (BC_FEE + INTER_COMMISSION + assets_fee) / 2 ;
+    sender_balance = sender_balance - (BC_FEE + INTER_COMMISSION + assets_fee) / 2;
     recipient_balance = recipient_balance - (BC_FEE + INTER_COMMISSION + assets_fee) / 2;
     intermediary_balance += INTER_COMMISSION + assets_fee;
     genesis_balance += BC_FEE;
 
     post_tx(&api, &tx_exchange_assets);
     testkit.create_block();
-
 
     let status = get_status(&api, &tx_exchange_assets.hash());
     let sender_wallet = get_wallet(&api, &sender_pk);
@@ -328,7 +346,10 @@ fn exchange_i_assets_creator_is_intermediary() {
 fn exchange_i_assets_payer_fee_intermediary() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, BC_FEE, 0, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, BC_FEE, 0, 0),
+    );
 
     let (sender_pk, sender_sk) = mine_wallet(&mut testkit);
     let (recipient_pk, recipient_sk) = mine_wallet(&mut testkit);
@@ -352,11 +373,17 @@ fn exchange_i_assets_payer_fee_intermediary() {
     assert_eq!(Ok(Ok(())), s);
 
     let sender_wallet = get_wallet(&api, &sender_pk);
-    assert_eq!(vec![AssetBundle::from_data("asset1", 10, &intermediary_pk), ], sender_wallet.assets());
+    assert_eq!(
+        vec![AssetBundle::from_data("asset1", 10, &intermediary_pk)],
+        sender_wallet.assets()
+    );
     assert_eq!(DMC_1, sender_wallet.balance());
 
     let recipient_wallet = get_wallet(&api, &recipient_pk);
-    assert_eq!(vec![AssetBundle::from_data("asset6", 5, &intermediary_pk), ], recipient_wallet.assets());
+    assert_eq!(
+        vec![AssetBundle::from_data("asset6", 5, &intermediary_pk)],
+        recipient_wallet.assets()
+    );
     assert_eq!(DMC_1, recipient_wallet.balance());
 
     let tx_exchange_assets = transaction::Builder::new()
@@ -384,8 +411,14 @@ fn exchange_i_assets_payer_fee_intermediary() {
     assert_eq!(recipient_balance, recipient_wallet.balance());
     assert_eq!(genesis_balance, genesis_wallet.balance());
     assert_eq!(intermediary_balance, intermediary_wallet.balance());
-    assert_eq!(vec![AssetBundle::from_data("asset1", 10, &intermediary_pk), ], sender_wallet.assets());
-    assert_eq!(vec![AssetBundle::from_data("asset6", 5, &intermediary_pk), ], recipient_wallet.assets());
+    assert_eq!(
+        vec![AssetBundle::from_data("asset1", 10, &intermediary_pk)],
+        sender_wallet.assets()
+    );
+    assert_eq!(
+        vec![AssetBundle::from_data("asset6", 5, &intermediary_pk)],
+        recipient_wallet.assets()
+    );
 
     let mine_1_dmc = transaction::Builder::new()
         .keypair(intermediary_pk, intermediary_sk.clone())
@@ -468,7 +501,7 @@ fn exchange_i_assets_payer_fee_intermediary() {
         .seed(333)
         .build();
 
-    let assets_fee = 6*1 + 6*4;
+    let assets_fee = 6 * 1 + 6 * 4;
 
     post_tx(&api, &tx_exchange_assets);
     testkit.create_block();
@@ -510,5 +543,4 @@ fn exchange_i_assets_payer_fee_intermediary() {
         ],
         recipient_wallet.assets()
     );
-
 }

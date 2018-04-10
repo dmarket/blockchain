@@ -1,7 +1,7 @@
 extern crate exonum;
 
-use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::assets::MetaAsset;
+use dmbc::currency::transactions::builders::transaction;
 use Wallet;
 
 use transaction::serialize;

@@ -1,18 +1,17 @@
 use exonum::crypto;
 use exonum::crypto::{PublicKey, SecretKey};
-use exonum_testkit::{ApiKind, TestKit, TestKitApi, TestKitBuilder};
 use exonum::encoding::serialize::reexport::Serialize;
 use exonum::messages::Message;
+use exonum_testkit::{ApiKind, TestKit, TestKitApi, TestKitBuilder};
 
-use dmbc::currency::configuration::{Configuration, TransactionFees};
-use dmbc::currency::Service;
-use dmbc::currency::SERVICE_NAME;
-use dmbc::currency::api::transaction::{TxPostResponse, TransactionResponse};
 use dmbc::currency::api::fees::FeesResponse;
+use dmbc::currency::api::transaction::{TransactionResponse, TxPostResponse};
+use dmbc::currency::assets::{Fees, MetaAsset};
+use dmbc::currency::configuration::{Configuration, TransactionFees};
 use dmbc::currency::transactions::builders::fee;
 use dmbc::currency::transactions::builders::transaction;
-use dmbc::currency::assets::{Fees, MetaAsset};
-
+use dmbc::currency::Service;
+use dmbc::currency::SERVICE_NAME;
 
 pub fn init_testkit() -> TestKit {
     TestKitBuilder::validator()
@@ -35,25 +34,24 @@ pub fn set_configuration(testkit: &mut TestKit, fees: TransactionFees) {
 }
 
 pub fn post_tx<T>(api: &TestKitApi, tx: &T)
-    where T:Message + Serialize
+where
+    T: Message + Serialize,
 {
-    let tx_response:TxPostResponse = api.post(
-        ApiKind::Service(SERVICE_NAME),
-        "v1/transactions",
-        &tx
-    );
+    let tx_response: TxPostResponse =
+        api.post(ApiKind::Service(SERVICE_NAME), "v1/transactions", &tx);
 
-    assert_eq!(tx_response, Ok(Ok(TransactionResponse{tx_hash:tx.hash()})));
+    assert_eq!(
+        tx_response,
+        Ok(Ok(TransactionResponse { tx_hash: tx.hash() }))
+    );
 }
 
 pub fn post_fee<T>(api: &TestKitApi, tx: &T) -> FeesResponse
-    where T:Message + Serialize
+where
+    T: Message + Serialize,
 {
-    let response: FeesResponse = api.post(
-        ApiKind::Service(SERVICE_NAME),
-        "/v1/fees/transactions",
-        &tx
-    );
+    let response: FeesResponse =
+        api.post(ApiKind::Service(SERVICE_NAME), "/v1/fees/transactions", &tx);
 
     response
 }
@@ -107,9 +105,9 @@ impl WalletMiner {
 
         if !self.assets.is_empty() {
             let mut tx_add_assets_builder = transaction::Builder::new()
-            .keypair(self.public_key, self.secret_key.clone())
-            .tx_add_assets()
-            .seed(85);
+                .keypair(self.public_key, self.secret_key.clone())
+                .tx_add_assets()
+                .seed(85);
 
             for asset in self.assets {
                 tx_add_assets_builder = tx_add_assets_builder.add_asset_value(asset);
@@ -122,5 +120,5 @@ impl WalletMiner {
         }
 
         (self.public_key, self.secret_key)
-    }   
+    }
 }

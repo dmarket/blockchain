@@ -3,8 +3,8 @@
 use exonum::crypto::Hash;
 use exonum::storage::{Fork, MapIndex, Snapshot};
 
-use currency::SERVICE_NAME;
 use currency::error::Error;
+use currency::SERVICE_NAME;
 
 /// Schema for accessing transaction statuses.
 #[derive(Clone, Debug)]

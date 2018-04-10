@@ -10,18 +10,17 @@ use std::collections::HashMap;
 use exonum::api::Api;
 use exonum::crypto::PublicKey;
 use exonum::encoding::serialize::FromHex;
+use hyper::header::ContentType;
 use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use iron::status;
 use router::Router;
-use hyper::header::ContentType;
 
 use currency::api::error::ApiError;
 use currency::assets::AssetId;
 
 #[derive(Clone)]
-pub struct AssetInternApi {
-}
+pub struct AssetInternApi {}
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct AssetIdRequest {
@@ -49,7 +48,6 @@ pub type AssetIdBatchResponse = Result<AssetIdBatchResponseBody, ApiError>;
 
 impl Api for AssetInternApi {
     fn wire(&self, router: &mut Router) {
-
         let get_asset_id = move |req: &mut Request| -> IronResult<Response> {
             let public_key_result = {
                 let wallet_key = req.extensions
@@ -72,12 +70,16 @@ impl Api for AssetInternApi {
                     let mut assets = HashMap::<String, String>::new();
                     assets.insert(meta_data.to_string(), id.to_string());
                     Ok(AssetIdResponseBody { assets })
-                },
-                Err(_) => Err(ApiError::WalletHexInvalid)
+                }
+                Err(_) => Err(ApiError::WalletHexInvalid),
             };
 
             let mut res = Response::with((
-                result.clone().err().map(|e| e.to_status()).unwrap_or(status::Ok),
+                result
+                    .clone()
+                    .err()
+                    .map(|e| e.to_status())
+                    .unwrap_or(status::Ok),
                 serde_json::to_string_pretty(&result).unwrap(),
             ));
             res.headers.set(ContentType::json());
@@ -96,25 +98,27 @@ impl Api for AssetInternApi {
                 PublicKey::from_hex(wallet_key)
             };
             let result: AssetIdResponse = match public_key_result {
-                Ok(public_key) => {
-                    match req.get::<bodyparser::Struct<AssetIdRequest>>() {
-                        Ok(Some(request)) => {
-                            let mut assets = HashMap::<String, String>::new();
-                            for asset in request.assets {
-                                let id = AssetId::from_data(&asset, &public_key);
-                                assets.insert(asset, id.to_string());
-                            }
-                            Ok(AssetIdResponseBody { assets })
-                        },
-                        Ok(None) => Err(ApiError::EmptyRequestBody),
-                        Err(_) => Err(ApiError::IncorrectRequest),
+                Ok(public_key) => match req.get::<bodyparser::Struct<AssetIdRequest>>() {
+                    Ok(Some(request)) => {
+                        let mut assets = HashMap::<String, String>::new();
+                        for asset in request.assets {
+                            let id = AssetId::from_data(&asset, &public_key);
+                            assets.insert(asset, id.to_string());
+                        }
+                        Ok(AssetIdResponseBody { assets })
                     }
+                    Ok(None) => Err(ApiError::EmptyRequestBody),
+                    Err(_) => Err(ApiError::IncorrectRequest),
                 },
-                Err(_) => Err(ApiError::WalletHexInvalid)
+                Err(_) => Err(ApiError::WalletHexInvalid),
             };
 
             let mut res = Response::with((
-                result.clone().err().map(|e| e.to_status()).unwrap_or(status::Ok),
+                result
+                    .clone()
+                    .err()
+                    .map(|e| e.to_status())
+                    .unwrap_or(status::Ok),
                 serde_json::to_string_pretty(&result).unwrap(),
             ));
             res.headers.set(ContentType::json());
@@ -124,10 +128,12 @@ impl Api for AssetInternApi {
         };
 
         let get_asset_id_batch = move |req: &mut Request| -> IronResult<Response> {
-            let result: AssetIdBatchResponse = match req.get::<bodyparser::Struct<AssetIdBatchRequest>>() {
+            let result: AssetIdBatchResponse = match req.get::<bodyparser::Struct<AssetIdBatchRequest>>(
+            ) {
                 Ok(Some(request)) => {
-
-                    fn create_batch(assets: &HashMap<String, Vec<String>>) -> Option<HashMap<String, HashMap<String, String>>>{
+                    fn create_batch(
+                        assets: &HashMap<String, Vec<String>>,
+                    ) -> Option<HashMap<String, HashMap<String, String>>> {
                         let mut assets_batch = HashMap::new();
                         for (key, assets_data) in assets {
                             let public_key = PublicKey::from_hex(key.clone());
@@ -147,15 +153,19 @@ impl Api for AssetInternApi {
 
                     match create_batch(&request.assets) {
                         Some(assets) => Ok(AssetIdBatchResponseBody { assets }),
-                        None => Err(ApiError::WalletHexInvalid)
+                        None => Err(ApiError::WalletHexInvalid),
                     }
-                },
+                }
                 Ok(None) => Err(ApiError::EmptyRequestBody),
                 Err(_) => Err(ApiError::IncorrectRequest),
             };
 
             let mut res = Response::with((
-                result.clone().err().map(|e| e.to_status()).unwrap_or(status::Ok),
+                result
+                    .clone()
+                    .err()
+                    .map(|e| e.to_status())
+                    .unwrap_or(status::Ok),
                 serde_json::to_string_pretty(&result).unwrap(),
             ));
             res.headers.set(ContentType::json());
@@ -176,10 +186,6 @@ impl Api for AssetInternApi {
             "assets_ids_for_key",
         );
 
-        router.post(
-            "/v1/intern/assets",
-            get_asset_id_batch,
-            "assets_ids_batch"
-        );
+        router.post("/v1/intern/assets", get_asset_id_batch, "assets_ids_batch");
     }
 }

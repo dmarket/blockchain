@@ -1,19 +1,19 @@
 use std::collections::HashMap;
 
-use exonum::crypto::PublicKey;
 use exonum::blockchain::Transaction;
-use exonum::storage::Fork;
+use exonum::crypto::PublicKey;
 use exonum::messages::Message;
-use serde_json;
+use exonum::storage::Fork;
 use prometheus::{Counter, Histogram};
+use serde_json;
 
-use currency::SERVICE_ID;
 use currency::assets::AssetBundle;
-use currency::transactions::components::{FeesCalculator, ThirdPartyFees};
+use currency::configuration::Configuration;
 use currency::error::Error;
 use currency::status;
+use currency::transactions::components::{FeesCalculator, ThirdPartyFees};
 use currency::wallet;
-use currency::configuration::Configuration;
+use currency::SERVICE_ID;
 
 /// Transaction ID.
 pub const TRANSFER_ID: u16 = 200;
@@ -37,7 +37,7 @@ message! {
 impl FeesCalculator for Transfer {
     fn calculate_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error> {
         let genesis_fees = Configuration::extract(view).fees();
-        let fees = ThirdPartyFees::new_transfer(&*view,self.assets())?;
+        let fees = ThirdPartyFees::new_transfer(&*view, self.assets())?;
 
         let mut fees_table = HashMap::new();
         if genesis_fees.recipient() != self.from() {
@@ -49,7 +49,6 @@ impl FeesCalculator for Transfer {
                 *fees_table.entry(*self.from()).or_insert(0) += fee;
             }
         }
-
 
         Ok(fees_table)
     }
@@ -68,7 +67,7 @@ impl Transfer {
         wallet::Schema(&mut *view).store(self.from(), wallet_from);
         wallet::Schema(&mut *view).store(genesis_fees.recipient(), genesis);
 
-        let fees = ThirdPartyFees::new_transfer(&*view,self.assets())?;
+        let fees = ThirdPartyFees::new_transfer(&*view, self.assets())?;
 
         // Operations bellow must either all succeed, or return an error without
         // saving anything to the database.

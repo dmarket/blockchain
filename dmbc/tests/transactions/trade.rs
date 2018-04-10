@@ -4,10 +4,10 @@ extern crate exonum_testkit;
 
 use exonum::messages::Message;
 
-use dmbc::currency::transactions::builders::fee;
 use dmbc::currency::configuration::TransactionFees;
-use dmbc::currency::transactions::components::FeeStrategy;
 use dmbc::currency::error::Error;
+use dmbc::currency::transactions::builders::fee;
+use dmbc::currency::transactions::components::FeeStrategy;
 
 use transactions::*;
 
@@ -24,7 +24,10 @@ fn trade() {
     let mut testkit = init_testkit();
     let api = testkit.api();
     let transaction_trade_fee = 100;
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, transaction_trade_fee, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, 0, transaction_trade_fee, 0),
+    );
 
     let meta_data = "asset";
     let (seller_public_key, seller_secret_key) = WalletMiner::new()
@@ -65,7 +68,10 @@ fn trade_fee_strategy() {
     let units = 2;
     let price_per_unit = 1000;
     let trade_tax = 50;
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, transaction_trade_fee, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, 0, transaction_trade_fee, 0),
+    );
 
     // Recipient pays
     let meta_data = "asset";
@@ -133,7 +139,7 @@ fn trade_fee_strategy() {
 
     assert!(seller_wallet.assets().is_empty());
     assert_eq!(seller_wallet.balance(), seller_expected_balance);
-    
+
     assert!(!buyer_wallet.assets().is_empty());
     assert_eq!(buyer_wallet.balance(), buyer_expected_balance);
 
@@ -162,12 +168,14 @@ fn trade_fee_strategy() {
     let seller_wallet = get_wallet(&api, &seller_public_key);
     let buyer_wallet = get_wallet(&api, &buyer_public_key);
 
-    let seller_expected_balance = DMC_1 + units * price_per_unit + trade_tax / 2 - transaction_trade_fee / 2;
-    let buyer_expected_balance = DMC_1 - units * price_per_unit - trade_tax / 2 - transaction_trade_fee / 2;
+    let seller_expected_balance =
+        DMC_1 + units * price_per_unit + trade_tax / 2 - transaction_trade_fee / 2;
+    let buyer_expected_balance =
+        DMC_1 - units * price_per_unit - trade_tax / 2 - transaction_trade_fee / 2;
 
     assert!(seller_wallet.assets().is_empty());
     assert_eq!(seller_wallet.balance(), seller_expected_balance);
-    
+
     assert!(!buyer_wallet.assets().is_empty());
     assert_eq!(buyer_wallet.balance(), buyer_expected_balance);
 }
@@ -177,7 +185,10 @@ fn trade_insuffisient_funds() {
     let mut testkit = init_testkit();
     let api = testkit.api();
     let transaction_trade_fee = 100;
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, transaction_trade_fee, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, 0, transaction_trade_fee, 0),
+    );
 
     let meta_data = "asset";
     let (seller_public_key, seller_secret_key) = WalletMiner::new()
@@ -210,11 +221,13 @@ fn trade_assets_not_found() {
     let mut testkit = init_testkit();
     let api = testkit.api();
     let transaction_trade_fee = 100;
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, transaction_trade_fee, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, 0, transaction_trade_fee, 0),
+    );
 
     let meta_data = "asset";
-    let (seller_public_key, seller_secret_key) = WalletMiner::new()
-        .mine(&mut testkit);
+    let (seller_public_key, seller_secret_key) = WalletMiner::new().mine(&mut testkit);
 
     let (buyer_public_key, buyer_secret_key) = WalletMiner::new().mine(&mut testkit);
 
@@ -242,7 +255,10 @@ fn trade_insuffisient_assets() {
     let mut testkit = init_testkit();
     let api = testkit.api();
     let transaction_trade_fee = 100;
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, transaction_trade_fee, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, 0, transaction_trade_fee, 0),
+    );
 
     let meta_data = "asset";
     let (seller_public_key, seller_secret_key) = WalletMiner::new()
@@ -270,13 +286,15 @@ fn trade_insuffisient_assets() {
     assert_eq!(Ok(Err(Error::InsufficientAssets)), s);
 }
 
-
 #[test]
 fn trade_insuffisient_funds_for_execution() {
     let mut testkit = init_testkit();
     let api = testkit.api();
     let transaction_trade_fee = 100;
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, transaction_trade_fee, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, 0, transaction_trade_fee, 0),
+    );
 
     let meta_data = "asset";
     let (seller_public_key, seller_secret_key) = WalletMiner::new().mine_empty();

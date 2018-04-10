@@ -5,10 +5,10 @@ extern crate exonum_testkit;
 use exonum::crypto;
 use exonum::messages::Message;
 
-use dmbc::currency::assets::{MetaAsset, AssetId};
-use dmbc::currency::transactions::builders::fee;
+use dmbc::currency::assets::{AssetId, MetaAsset};
 use dmbc::currency::configuration::TransactionFees;
 use dmbc::currency::error::Error;
+use dmbc::currency::transactions::builders::fee;
 
 use transactions::*;
 
@@ -16,7 +16,10 @@ use transactions::*;
 fn transfer() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, 0, 100));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, 0, 0, 100),
+    );
 
     let (public_key, secret_key) = mine_wallet(&mut testkit);
     let (recipient_key, _) = crypto::gen_keypair();
@@ -49,7 +52,10 @@ fn transfer() {
     assert_eq!(meta_asset.to_info(&public_key, &tx_hash), bc_asset_info);
 
     let mining_wallet = get_wallet(&api, &public_key);
-    assert_eq!(vec![meta_asset.to_bundle(asset_id.clone())], mining_wallet.assets());
+    assert_eq!(
+        vec![meta_asset.to_bundle(asset_id.clone())],
+        mining_wallet.assets()
+    );
 
     let tx_transfer = transaction::Builder::new()
         .keypair(public_key, secret_key.clone())
@@ -58,7 +64,7 @@ fn transfer() {
         .recipient(recipient_key)
         .seed(42)
         .build();
-        
+
     post_tx(&api, &tx_transfer);
     testkit.create_block();
 
@@ -67,7 +73,7 @@ fn transfer() {
 
     let recipient_wallet = get_wallet(&api, &recipient_key);
     assert!(!recipient_wallet.assets().is_empty());
-    
+
     let sender_wallet = get_wallet(&api, &public_key);
     assert!(sender_wallet.assets().is_empty());
 }
@@ -76,7 +82,10 @@ fn transfer() {
 fn tranfer_asset_not_found() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, 0, 100));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, 0, 0, 100),
+    );
 
     let (public_key, secret_key) = mine_wallet(&mut testkit);
     let (recipient_key, _) = crypto::gen_keypair();
@@ -90,7 +99,7 @@ fn tranfer_asset_not_found() {
         .recipient(recipient_key)
         .seed(42)
         .build();
-        
+
     post_tx(&api, &tx_transfer);
     testkit.create_block();
 
@@ -103,7 +112,10 @@ fn tranfer_insufficient_funds() {
     let mut testkit = init_testkit();
     let api = testkit.api();
 
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, 0, 100));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, 0, 0, 100),
+    );
 
     let (public_key, secret_key) = crypto::gen_keypair();
     let (recipient_key, _) = crypto::gen_keypair();
@@ -117,7 +129,7 @@ fn tranfer_insufficient_funds() {
         .recipient(recipient_key)
         .seed(42)
         .build();
-        
+
     post_tx(&api, &tx_transfer);
     testkit.create_block();
 

@@ -19,9 +19,9 @@ extern crate serde;
 extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
+extern crate chrono;
 extern crate unicase;
 extern crate uuid;
-extern crate chrono;
 #[macro_use]
 extern crate prometheus;
 #[macro_use]

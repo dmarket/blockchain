@@ -4,14 +4,14 @@ extern crate exonum_testkit;
 
 use exonum::messages::Message;
 
-use dmbc::currency::transactions::builders::fee;
 use dmbc::currency::configuration::TransactionFees;
-use dmbc::currency::transactions::components::FeeStrategy;
 use dmbc::currency::error::Error;
+use dmbc::currency::transactions::builders::fee;
+use dmbc::currency::transactions::components::FeeStrategy;
 
 use transactions::*;
 
-fn get_trade_fee(t: u64, r:u64) -> Fees {
+fn get_trade_fee(t: u64, r: u64) -> Fees {
     fee::Builder::new()
         .trade(t, r)
         .exchange(0, 0)
@@ -24,7 +24,10 @@ fn trade_interemedary() {
     let mut testkit = init_testkit();
     let api = testkit.api();
     let transaction_trade_fee = 100;
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, transaction_trade_fee, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, 0, transaction_trade_fee, 0),
+    );
 
     let meta_data = "asset";
     let (seller_public_key, seller_secret_key) = WalletMiner::new()
@@ -69,7 +72,10 @@ fn trade_intermediary_fee_strategy() {
     let trade_tax = 0;
     let trade_ratio = 1;
 
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0),
+    );
 
     // Recipient pays
     let meta_data = "asset";
@@ -101,7 +107,7 @@ fn trade_intermediary_fee_strategy() {
     let seller_wallet = get_wallet(&api, &seller_public_key);
     let buyer_wallet = get_wallet(&api, &buyer_public_key);
     let intermediary_wallet = get_wallet(&api, &intermediary_public_key);
-    
+
     let asset_price = units * price_per_unit;
     let trade_fee = trade_tax + asset_price / trade_ratio;
     let seller_expected_balance = DMC_1 + asset_price + trade_fee;
@@ -153,7 +159,7 @@ fn trade_intermediary_fee_strategy() {
 
     assert!(seller_wallet.assets().is_empty());
     assert_eq!(seller_wallet.balance(), seller_expected_balance);
-    
+
     assert!(!buyer_wallet.assets().is_empty());
     assert_eq!(buyer_wallet.balance(), buyer_expected_balance);
 
@@ -191,13 +197,15 @@ fn trade_intermediary_fee_strategy() {
 
     let asset_price = units * price_per_unit;
     let trade_fee = trade_tax + asset_price / trade_ratio;
-    let seller_expected_balance = DMC_1 + asset_price + trade_fee/2 - transaction_fee/2 - commission/2;
-    let buyer_expected_balance = DMC_1 - asset_price - trade_fee/2 - transaction_fee/2 - commission/2;
+    let seller_expected_balance =
+        DMC_1 + asset_price + trade_fee / 2 - transaction_fee / 2 - commission / 2;
+    let buyer_expected_balance =
+        DMC_1 - asset_price - trade_fee / 2 - transaction_fee / 2 - commission / 2;
     let intermediary_expected_balance = commission;
 
     assert!(seller_wallet.assets().is_empty());
     assert_eq!(seller_wallet.balance(), seller_expected_balance);
-    
+
     assert!(!buyer_wallet.assets().is_empty());
     assert_eq!(buyer_wallet.balance(), buyer_expected_balance);
 
@@ -241,7 +249,7 @@ fn trade_intermediary_fee_strategy() {
 
     assert!(seller_wallet.assets().is_empty());
     assert_eq!(seller_wallet.balance(), seller_expected_balance);
-    
+
     assert!(!buyer_wallet.assets().is_empty());
     assert_eq!(buyer_wallet.balance(), buyer_expected_balance);
 
@@ -259,7 +267,10 @@ fn trade_interemedary_insufficient_funds() {
     let trade_tax = 0;
     let trade_ratio = 1;
 
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0),
+    );
 
     // Sender pays
     let meta_data = "asset";
@@ -368,7 +379,10 @@ fn trade_interemedary_assets_not_found() {
     let price_per_unit = 1000;
     let commission = 50;
 
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0),
+    );
 
     // Sender pays
     let meta_data = "asset";
@@ -407,7 +421,10 @@ fn trade_interemedary_insufficient_assets() {
     let trade_tax = 0;
     let trade_ratio = 1;
 
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0),
+    );
 
     // Sender pays
     let meta_data = "asset";

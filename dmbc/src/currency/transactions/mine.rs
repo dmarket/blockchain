@@ -1,15 +1,15 @@
-use exonum::crypto::PublicKey;
 use exonum::blockchain::Transaction;
-use exonum::storage::Fork;
+use exonum::crypto::PublicKey;
 use exonum::messages::Message;
-use serde_json;
+use exonum::storage::Fork;
 use prometheus::{Counter, Histogram};
+use serde_json;
 
-use currency::SERVICE_ID;
 use currency::error::Error;
+use currency::status;
 use currency::wallet;
 use currency::wallet::Wallet;
-use currency::status;
+use currency::SERVICE_ID;
 
 /// Transaction ID.
 pub const MINE_ID: u16 = 700;

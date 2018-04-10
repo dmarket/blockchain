@@ -1,20 +1,20 @@
 use std::collections::HashMap;
 
+use exonum::blockchain::Transaction;
 use exonum::crypto;
 use exonum::crypto::{PublicKey, Signature};
-use exonum::blockchain::Transaction;
-use exonum::storage::Fork;
 use exonum::messages::Message;
-use serde_json;
+use exonum::storage::Fork;
 use prometheus::{Counter, Histogram};
+use serde_json;
 
-use currency::{Service, SERVICE_ID};
 use currency::assets::AssetBundle;
-use currency::transactions::components::{FeeStrategy, ThirdPartyFees, Intermediary, FeesCalculator};
+use currency::configuration::Configuration;
 use currency::error::Error;
 use currency::status;
+use currency::transactions::components::{FeeStrategy, FeesCalculator, Intermediary, ThirdPartyFees};
 use currency::wallet;
-use currency::configuration::Configuration;
+use currency::{Service, SERVICE_ID};
 
 /// Transaction ID.
 pub const EXCHANGE_INTERMEDIARY_ID: u16 = 602;
@@ -76,7 +76,7 @@ impl FeesCalculator for ExchangeIntermediary {
 
         for (receiver_key, fee) in fees.0 {
             let payers = self.payers(&fee_strategy, fee)?;
-            
+
             for (payer_key, fee) in payers {
                 if payer_key != receiver_key {
                     *fees_table.entry(payer_key).or_insert(0) += fee;
@@ -94,8 +94,9 @@ impl ExchangeIntermediary {
         let payers = match *fee_strategy {
             FeeStrategy::Recipient => vec![(*offer.recipient(), fee)],
             FeeStrategy::Sender => vec![(*offer.sender(), fee)],
-            FeeStrategy::RecipientAndSender => vec![(*offer.sender(), fee/2), 
-                                                    (*offer.recipient(), fee/2)],
+            FeeStrategy::RecipientAndSender => {
+                vec![(*offer.sender(), fee / 2), (*offer.recipient(), fee / 2)]
+            }
             FeeStrategy::Intermediary => vec![(*offer.intermediary().wallet(), fee)],
         };
         Ok(payers)
@@ -179,9 +180,7 @@ impl ExchangeIntermediary {
             FeeStrategy::RecipientAndSender => {
                 fees.collect2(view, offer.sender(), offer.recipient())?
             }
-            FeeStrategy::Intermediary => {
-                fees.collect(view, offer.intermediary().wallet())?
-            }
+            FeeStrategy::Intermediary => fees.collect(view, offer.intermediary().wallet())?,
         };
 
         // Process the main transaction.
@@ -286,4 +285,3 @@ impl Transaction for ExchangeIntermediary {
         json!(self)
     }
 }
-

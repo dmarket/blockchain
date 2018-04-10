@@ -7,9 +7,9 @@ use exonum::storage::StorageValue;
 use currency;
 use currency::assets::{AssetBundle, AssetId, Fees, MetaAsset, TradeAsset};
 use currency::transactions::add_assets::AddAssets;
+use currency::transactions::components::{FeeStrategy, Intermediary};
 use currency::transactions::delete_assets::DeleteAssets;
 use currency::transactions::exchange::{Exchange, ExchangeOffer};
-use currency::transactions::components::{FeeStrategy, Intermediary};
 use currency::transactions::exchange_intermediary::{ExchangeIntermediary,
                                                     ExchangeOfferIntermediary};
 use currency::transactions::mine::Mine;
@@ -78,7 +78,10 @@ impl Builder {
     }
 
     pub fn protocol_version(self, protocol_version: u8) -> Self {
-        Builder { protocol_version, ..self }
+        Builder {
+            protocol_version,
+            ..self
+        }
     }
 
     pub fn service_id(self, service_id: u16) -> Self {
@@ -280,7 +283,6 @@ impl ExchangeBuilder {
         }
     }
 
-
     pub fn sender_add_asset(self, name: &str, count: u64) -> Self {
         let asset = AssetBundle::from_data(name, count, &self.sender.unwrap());
         self.sender_add_asset_value(asset)
@@ -336,7 +338,8 @@ impl ExchangeBuilder {
             self.recipient_assets,
             self.fee_strategy as u8,
         );
-        let sender_signature = crypto::sign(&offer.clone().into_bytes(), &self.sender_secret.unwrap());
+        let sender_signature =
+            crypto::sign(&offer.clone().into_bytes(), &self.sender_secret.unwrap());
         Exchange::new(
             offer,
             self.seed,
@@ -423,10 +426,7 @@ impl ExchangeIntermediaryBuilder {
     }
 
     pub fn commission(self, commission: u64) -> Self {
-        ExchangeIntermediaryBuilder {
-            commission,
-            ..self
-        }
+        ExchangeIntermediaryBuilder { commission, ..self }
     }
 
     pub fn sender_key_pair(self, public_key: PublicKey, secret_key: SecretKey) -> Self {
@@ -480,7 +480,10 @@ impl ExchangeIntermediaryBuilder {
             self.recipient_assets,
             self.fee_strategy as u8,
         );
-        let sender_signature = crypto::sign(&offer.clone().into_bytes(), &self.sender_secret_key.unwrap());
+        let sender_signature = crypto::sign(
+            &offer.clone().into_bytes(),
+            &self.sender_secret_key.unwrap(),
+        );
         let intermediary_signature = crypto::sign(
             &offer.clone().into_bytes(),
             &self.intermediary_secret_key.unwrap(),
@@ -540,7 +543,7 @@ impl TradeBuilder {
         TradeBuilder {
             meta,
             seller_public: None,
-            seller_secret: None, 
+            seller_secret: None,
             assets: Vec::new(),
             data_for_assets: Vec::new(),
             fee_strategy: FeeStrategy::Recipient,
@@ -587,10 +590,10 @@ impl TradeBuilder {
         }
 
         let offer = TradeOffer::new(
-            &self.meta.public_key, 
-            &self.seller_public.unwrap(), 
-            self.assets, 
-            self.fee_strategy as u8
+            &self.meta.public_key,
+            &self.seller_public.unwrap(),
+            self.assets,
+            self.fee_strategy as u8,
         );
         let signature = crypto::sign(&offer.clone().into_bytes(), &self.seller_secret.unwrap());
         Trade::new(offer, self.seed, &signature, &self.meta.secret_key)
@@ -704,7 +707,8 @@ impl TradeIntermediaryBuilder {
             self.assets,
             self.fee_strategy as u8,
         );
-        let seller_signature = crypto::sign(&offer.clone().into_bytes(), &self.seller_secret.unwrap());
+        let seller_signature =
+            crypto::sign(&offer.clone().into_bytes(), &self.seller_secret.unwrap());
         let intermediary_signature = crypto::sign(
             &offer.clone().into_bytes(),
             &self.intermediary_secret_key.unwrap(),
@@ -807,15 +811,14 @@ mod test {
     use currency::assets::{AssetBundle, MetaAsset, TradeAsset};
 
     use currency::transactions::add_assets::AddAssets;
+    use currency::transactions::components::{FeeStrategy, Intermediary};
     use currency::transactions::delete_assets::DeleteAssets;
     use currency::transactions::exchange::{Exchange, ExchangeOffer};
-    use currency::transactions::components::{FeeStrategy, Intermediary};
     use currency::transactions::exchange_intermediary::{ExchangeIntermediary,
                                                         ExchangeOfferIntermediary};
     use currency::transactions::mine::Mine;
     use currency::transactions::trade::{Trade, TradeOffer};
-    use currency::transactions::trade_intermediary::{TradeIntermediary,
-                                                     TradeOfferIntermediary};
+    use currency::transactions::trade_intermediary::{TradeIntermediary, TradeOfferIntermediary};
     use currency::transactions::transfer::Transfer;
 
     use currency::transactions::builders::fee;
@@ -961,8 +964,7 @@ mod test {
             1,
         );
         let sender_signature = crypto::sign(&offer.clone().into_bytes(), &sender_sk);
-        let intermediary_signature =
-            crypto::sign(&offer.clone().into_bytes(), &intermediary_sk);
+        let intermediary_signature = crypto::sign(&offer.clone().into_bytes(), &intermediary_sk);
         let equivalent = ExchangeIntermediary::new(
             offer,
             1,
@@ -1004,7 +1006,12 @@ mod test {
             .seed(1)
             .build();
 
-        let offer = TradeOffer::new(&public_key, &seller_public, vec![trade_asset], FeeStrategy::Recipient as u8);
+        let offer = TradeOffer::new(
+            &public_key,
+            &seller_public,
+            vec![trade_asset],
+            FeeStrategy::Recipient as u8,
+        );
         let signature = crypto::sign(&offer.clone().into_bytes(), &seller_secret);
         let equivalent = Trade::new(offer, 1, &signature, &secret_key);
 
@@ -1031,14 +1038,13 @@ mod test {
             .build();
 
         let intermediary = Intermediary::new(&intermediary_public_key, 40);
-        let offer =
-            TradeOfferIntermediary::new(
-                intermediary, 
-                &buyer_public_key, 
-                &seller_public_key, 
-                vec![trade_asset], 
-                FeeStrategy::Recipient as u8
-            );
+        let offer = TradeOfferIntermediary::new(
+            intermediary,
+            &buyer_public_key,
+            &seller_public_key,
+            vec![trade_asset],
+            FeeStrategy::Recipient as u8,
+        );
         let seller_signature = crypto::sign(&offer.clone().into_bytes(), &seller_secret_key);
         let intermediary_signature =
             crypto::sign(&offer.clone().into_bytes(), &intermediary_secret_key);

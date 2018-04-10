@@ -8,7 +8,7 @@ pub mod status;
 pub mod transactions;
 pub mod wallet;
 
-mod service;
 mod nats;
+mod service;
 
 pub use currency::service::{Service, SERVICE_ID, SERVICE_NAME};

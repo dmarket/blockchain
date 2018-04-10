@@ -1,4 +1,4 @@
-use exonum::crypto::{PublicKey, Hash};
+use exonum::crypto::{Hash, PublicKey};
 
 use currency::assets::Fees;
 use currency::error::Error;
@@ -39,9 +39,9 @@ impl AssetInfo {
     }
 
     /// Decreases amount of assets
-    /// 
+    ///
     /// # Errors
-    /// Returns an `InsufficientAssets` error if requested amount is bigger 
+    /// Returns an `InsufficientAssets` error if requested amount is bigger
     /// than `AssetInfo` contains.
     pub fn decrease(self, amount: u64) -> Result<Self, Error> {
         if self.amount() < amount {
@@ -52,7 +52,7 @@ impl AssetInfo {
             self.creator(),
             self.origin(),
             self.amount() - amount,
-            self.fees()
+            self.fees(),
         ))
     }
 }

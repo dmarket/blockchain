@@ -2,10 +2,10 @@
 
 use serde_json;
 
+use exonum::blockchain::Schema;
 use exonum::crypto::PublicKey;
 use exonum::encoding::serialize::FromHex;
 use exonum::storage::Snapshot;
-use exonum::blockchain::Schema;
 
 use currency;
 
@@ -50,7 +50,12 @@ impl Default for TransactionFees {
     fn default() -> Self {
         TransactionFees::new(
             &PublicKey::from_hex(GENESIS_WALLET_PUB_KEY).unwrap(),
-            0, 0, 0, 0, 0, 0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
         )
     }
 }

@@ -1,6 +1,6 @@
+use std::fs::File;
 use std::io;
 use std::io::{Read, Write};
-use std::fs::File;
 use std::path::Path;
 
 use exonum::crypto;
@@ -40,4 +40,3 @@ fn slurp<P: AsRef<Path>>(filename: P) -> io::Result<String> {
         .and_then(|mut file| file.read_to_string(&mut out))
         .map(move |_| out)
 }
-

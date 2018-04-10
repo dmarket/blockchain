@@ -1,34 +1,33 @@
 extern crate dmbc;
 extern crate exonum;
 extern crate exonum_testkit;
+extern crate hyper;
 extern crate iron;
 extern crate iron_test;
 extern crate serde_json;
-extern crate hyper;
 
+pub mod assets_intern;
 pub mod hex;
 pub mod wallet;
-pub mod assets_intern;
 
 use exonum::crypto;
-use exonum::crypto::{PublicKey, SecretKey, Hash};
-use exonum_testkit::{ApiKind, TestKit, TestKitApi, TestKitBuilder};
+use exonum::crypto::{Hash, PublicKey, SecretKey};
 use exonum::encoding::serialize::reexport::Serialize;
 use exonum::messages::Message;
+use exonum_testkit::{ApiKind, TestKit, TestKitApi, TestKitBuilder};
 
-use dmbc::currency::Service;
-use dmbc::currency::SERVICE_NAME;
-use dmbc::currency::assets::{Fees, MetaAsset};
-use dmbc::currency::api::transaction::{TxPostResponse, TransactionResponse};
+use dmbc::currency::api::transaction::{TransactionResponse, TxPostResponse};
 use dmbc::currency::api::wallet::WalletResponse;
+use dmbc::currency::assets::{Fees, MetaAsset};
 use dmbc::currency::transactions::builders::fee;
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::wallet::Wallet;
+use dmbc::currency::Service;
+use dmbc::currency::SERVICE_NAME;
 
 use common;
 
-pub const TEST_KIT_SERVICE_URL: &str =
-    "http://localhost:3000/api/services/cryptocurrency";
+pub const TEST_KIT_SERVICE_URL: &str = "http://localhost:3000/api/services/cryptocurrency";
 
 pub fn init_testkit() -> TestKit {
     TestKitBuilder::validator()
@@ -38,15 +37,16 @@ pub fn init_testkit() -> TestKit {
 }
 
 pub fn post_tx<T>(api: &TestKitApi, tx: &T)
-    where T:Message + Serialize
+where
+    T: Message + Serialize,
 {
-    let tx_response:TxPostResponse = api.post(
-        ApiKind::Service(SERVICE_NAME),
-        "v1/transactions",
-        &tx
-    );
+    let tx_response: TxPostResponse =
+        api.post(ApiKind::Service(SERVICE_NAME), "v1/transactions", &tx);
 
-    assert_eq!(tx_response, Ok(Ok(TransactionResponse{tx_hash:tx.hash()})));
+    assert_eq!(
+        tx_response,
+        Ok(Ok(TransactionResponse { tx_hash: tx.hash() }))
+    );
 }
 
 pub struct WalletMiner {
@@ -121,7 +121,10 @@ pub fn asset_fee(t: u64, r: u64) -> Fees {
 fn genesis_wallet(api: &TestKitApi) -> Wallet {
     let response: WalletResponse = api.get(
         ApiKind::Service(SERVICE_NAME),
-        &format!("v1/wallets/{}", common::default_genesis_wallet().to_string()),
+        &format!(
+            "v1/wallets/{}",
+            common::default_genesis_wallet().to_string()
+        ),
     );
 
     response.unwrap()

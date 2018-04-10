@@ -11,17 +11,16 @@ use exonum::api::Api;
 use exonum::blockchain::Blockchain;
 use exonum::crypto::PublicKey;
 // use exonum::encoding::serialize::FromHex;
+use hyper::header::ContentType;
 use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use iron::status;
 use router::Router;
-use hyper::header::ContentType;
 
 use currency::api::error::ApiError;
 use currency::error::Error;
 use currency::transactions::components::FeesCalculator;
-use currency::transactions::{AddAssets, DeleteAssets, Exchange,
-                             ExchangeIntermediary, Trade,
+use currency::transactions::{AddAssets, DeleteAssets, Exchange, ExchangeIntermediary, Trade,
                              TradeIntermediary, Transfer};
 
 #[derive(Clone)]
@@ -71,25 +70,26 @@ impl Api for FeesApi {
                     let calculator: Box<FeesCalculator> = request.into();
                     let view = &mut self_.blockchain.fork();
                     match calculator.calculate_fees(view) {
-                        Ok(fees) => Ok(Ok(FeesResponseBody{ fees })),
+                        Ok(fees) => Ok(Ok(FeesResponseBody { fees })),
                         Err(e) => Ok(Err(e)),
                     }
-                },
+                }
                 Ok(None) => Err(ApiError::EmptyRequestBody),
                 Err(_) => Err(ApiError::IncorrectRequest),
             };
 
-            let status_code =
-                result.clone()
-                    .ok()
-                    .map(|r|
-                        r.err().map(|_| status::BadRequest).unwrap_or(status::Created))
-                    .unwrap_or(status::BadRequest);
+            let status_code = result
+                .clone()
+                .ok()
+                .map(|r| {
+                    r.err()
+                        .map(|_| status::BadRequest)
+                        .unwrap_or(status::Created)
+                })
+                .unwrap_or(status::BadRequest);
 
-            let mut res = Response::with((
-                status_code,
-                serde_json::to_string_pretty(&result).unwrap(),
-            ));
+            let mut res =
+                Response::with((status_code, serde_json::to_string_pretty(&result).unwrap()));
             res.headers.set(ContentType::json());
             res.headers.set(AccessControlAllowOrigin::Any);
 

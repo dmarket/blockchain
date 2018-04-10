@@ -1,28 +1,27 @@
-use iron::Handler;
-use router::Router;
 use exonum::api::Api;
 use exonum::blockchain;
 use exonum::blockchain::{ApiContext, ServiceContext, Transaction};
 use exonum::crypto::PublicKey;
 use exonum::encoding;
+use exonum::encoding::serialize::FromHex;
 use exonum::messages::RawTransaction;
 use exonum::storage::Fork;
 use exonum::storage::Snapshot;
-use exonum::encoding::serialize::FromHex;
+use iron::Handler;
+use router::Router;
 
-use config;
 use super::nats;
+use config;
 use currency::api::ServiceApi;
 use currency::configuration;
 use currency::configuration::Configuration;
+use currency::status;
+use currency::transactions::{AddAssets, DeleteAssets, Exchange, ExchangeIntermediary, Mine, Trade,
+                             TradeIntermediary, Transfer, ADD_ASSETS_ID, DELETE_ASSETS_ID,
+                             EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID, MINE_ID, TRADE_ID,
+                             TRADE_INTERMEDIARY_ID, TRANSFER_ID};
 use currency::wallet;
 use currency::wallet::Wallet;
-use currency::status;
-use currency::transactions::{AddAssets, DeleteAssets, Exchange,
-                             ExchangeIntermediary, Mine, Trade, Transfer, TRANSFER_ID,
-                             TradeIntermediary, ADD_ASSETS_ID, DELETE_ASSETS_ID,
-                             EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID, MINE_ID,
-                             TRADE_ID, TRADE_INTERMEDIARY_ID};
 use serde_json;
 
 /// Service identifier.
@@ -109,4 +108,3 @@ impl blockchain::Service for Service {
         serde_json::to_value(Configuration::default()).unwrap()
     }
 }
-

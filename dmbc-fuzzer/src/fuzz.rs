@@ -10,9 +10,9 @@ extern crate dmbc;
 mod fuzz_data;
 
 use std::error::Error;
+use std::fs::File;
 use std::io;
 use std::io::Read;
-use std::fs::File;
 use std::panic;
 use std::panic::AssertUnwindSafe;
 use std::process;
@@ -22,12 +22,12 @@ use exonum::crypto::SecretKey;
 use exonum::messages::{MessageBuffer, RawMessage};
 use exonum_testkit::TestKitBuilder;
 
-use dmbc::currency::Service;
-use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::transactions::builders::fee;
-use dmbc::currency::transactions::{AddAssets, DeleteAssets, Exchange, Mine, Trade,
-                                   Transfer, ADD_ASSETS_ID, DELETE_ASSETS_ID,
-                                   EXCHANGE_ID, MINE_ID, TRADE_ID, TRANSFER_ID};
+use dmbc::currency::transactions::builders::transaction;
+use dmbc::currency::transactions::{AddAssets, DeleteAssets, Exchange, Mine, Trade, Transfer,
+                                   ADD_ASSETS_ID, DELETE_ASSETS_ID, EXCHANGE_ID, MINE_ID,
+                                   TRADE_ID, TRANSFER_ID};
+use dmbc::currency::Service;
 
 use fuzz_data::FuzzData;
 

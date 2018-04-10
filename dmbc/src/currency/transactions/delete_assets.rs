@@ -1,20 +1,20 @@
 use std::collections::HashMap;
 
-use exonum::crypto::PublicKey;
 use exonum::blockchain::Transaction;
-use exonum::storage::Fork;
+use exonum::crypto::PublicKey;
 use exonum::messages::Message;
-use serde_json;
+use exonum::storage::Fork;
 use prometheus::{Counter, Histogram};
+use serde_json;
 
-use currency::SERVICE_ID;
 use currency::assets;
 use currency::assets::AssetBundle;
-use currency::wallet;
+use currency::configuration::Configuration;
 use currency::error::Error;
 use currency::status;
 use currency::transactions::components::FeesCalculator;
-use currency::configuration::Configuration;
+use currency::wallet;
+use currency::SERVICE_ID;
 
 /// Transaction ID.
 pub const DELETE_ASSETS_ID: u16 = 400;
@@ -59,8 +59,8 @@ impl DeleteAssets {
 
         wallet::move_coins(&mut creator, &mut genesis, genesis_fees.delete_assets())?;
 
-        wallet::Schema(&mut*view).store(&genesis_pub, genesis);
-        wallet::Schema(&mut*view).store(&creator_pub, creator.clone());
+        wallet::Schema(&mut *view).store(&genesis_pub, genesis);
+        wallet::Schema(&mut *view).store(&creator_pub, creator.clone());
 
         let mut infos = HashMap::new();
 
@@ -79,10 +79,10 @@ impl DeleteAssets {
 
         creator.remove_assets(self.assets())?;
 
-        wallet::Schema(&mut*view).store(creator_pub, creator);
+        wallet::Schema(&mut *view).store(creator_pub, creator);
 
         for (id, info) in infos {
-            assets::Schema(&mut*view).store(&id, info);
+            assets::Schema(&mut *view).store(&id, info);
         }
 
         Ok(())

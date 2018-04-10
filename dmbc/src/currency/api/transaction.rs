@@ -10,17 +10,16 @@ use exonum::blockchain::{Blockchain, Transaction};
 use exonum::crypto::Hash;
 use exonum::encoding::serialize::FromHex;
 use exonum::node::{ApiSender, TransactionSend};
-use iron::headers::AccessControlAllowOrigin;
 use hyper::header::ContentType;
+use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use iron::status as istatus;
-use router::Router;
 use prometheus::Counter;
+use router::Router;
 
 use currency::api::error::ApiError;
 use currency::status;
-use currency::transactions::{AddAssets, DeleteAssets, Exchange,
-                             ExchangeIntermediary, Mine, Trade,
+use currency::transactions::{AddAssets, DeleteAssets, Exchange, ExchangeIntermediary, Mine, Trade,
                              TradeIntermediary, Transfer};
 
 use currency::error::Error;
@@ -77,10 +76,22 @@ impl TransactionApi {
 }
 
 lazy_static! {
-    static ref POST_REQUESTS: Counter = register_counter!("dmbc_transaction_api_post_requests_total", "Transaction post requests.").unwrap();
-    static ref POST_RESPONSES: Counter = register_counter!("dmbc_transaction_api_post_responses_total", "Transaction post responses.").unwrap();
-    static ref GET_STATUS_REQUESTS: Counter = register_counter!("dmbc_transaction_api_get_status_requests_total", "Transaction status requests.").unwrap();
-    static ref GET_STATUS_RESPONSES: Counter = register_counter!("dmbc_transaction_api_get_status_responses_total", "Transaction status responses.").unwrap();
+    static ref POST_REQUESTS: Counter = register_counter!(
+        "dmbc_transaction_api_post_requests_total",
+        "Transaction post requests."
+    ).unwrap();
+    static ref POST_RESPONSES: Counter = register_counter!(
+        "dmbc_transaction_api_post_responses_total",
+        "Transaction post responses."
+    ).unwrap();
+    static ref GET_STATUS_REQUESTS: Counter = register_counter!(
+        "dmbc_transaction_api_get_status_requests_total",
+        "Transaction status requests."
+    ).unwrap();
+    static ref GET_STATUS_RESPONSES: Counter = register_counter!(
+        "dmbc_transaction_api_get_status_responses_total",
+        "Transaction status responses."
+    ).unwrap();
 }
 
 impl Api for TransactionApi {
@@ -94,24 +105,23 @@ impl Api for TransactionApi {
                     let tx: Box<Transaction> = transaction.into();
                     let tx_hash = tx.hash();
                     match self_.channel.send(tx) {
-                        Ok(_) =>  Ok(Ok(TransactionResponse {tx_hash})),
+                        Ok(_) => Ok(Ok(TransactionResponse { tx_hash })),
                         Err(_) => Ok(Err(Error::UnableToVerifyTransaction)),
                     }
                 }
                 Ok(None) => Err(ApiError::EmptyRequestBody),
                 Err(_) => Err(ApiError::IncorrectRequest),
             };
-            let ss =
-                s.clone()
-                    .ok()
-                    .map(|r|
-                        r.err().map(|_| istatus::BadRequest).unwrap_or(istatus::Created))
-                    .unwrap_or(istatus::BadRequest);
+            let ss = s.clone()
+                .ok()
+                .map(|r| {
+                    r.err()
+                        .map(|_| istatus::BadRequest)
+                        .unwrap_or(istatus::Created)
+                })
+                .unwrap_or(istatus::BadRequest);
 
-            let mut res = Response::with((
-                ss,
-                serde_json::to_string_pretty(&s).unwrap(),
-            ));
+            let mut res = Response::with((ss, serde_json::to_string_pretty(&s).unwrap()));
             res.headers.set(ContentType::json());
             res.headers.set(AccessControlAllowOrigin::Any);
 
@@ -127,12 +137,19 @@ impl Api for TransactionApi {
 
             let path = request.url.path();
             let tx_hash_str = path.last().unwrap();
-            let s:StatusResponse = Hash::from_hex(tx_hash_str)
-                .map_err(|_|{ ApiError::TransactionHashInvalid})
-                .and_then(|tx_hash| self_.get_status(&tx_hash).ok_or(ApiError::TransactionNotFound));
+            let s: StatusResponse = Hash::from_hex(tx_hash_str)
+                .map_err(|_| ApiError::TransactionHashInvalid)
+                .and_then(|tx_hash| {
+                    self_
+                        .get_status(&tx_hash)
+                        .ok_or(ApiError::TransactionNotFound)
+                });
 
             let mut res = Response::with((
-                s.clone().err().map(|e| e.to_status()).unwrap_or(istatus::Ok),
+                s.clone()
+                    .err()
+                    .map(|e| e.to_status())
+                    .unwrap_or(istatus::Ok),
                 serde_json::to_string_pretty(&s).unwrap(),
             ));
             res.headers.set(ContentType::json());
@@ -144,6 +161,10 @@ impl Api for TransactionApi {
         };
 
         router.post("/v1/transactions", transaction, "transaction");
-        router.get("/v1/transactions/:hash", get_status, "get_transaction_status");
+        router.get(
+            "/v1/transactions/:hash",
+            get_status,
+            "get_transaction_status",
+        );
     }
 }

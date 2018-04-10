@@ -1,8 +1,8 @@
-use exonum::storage::{Fork, MapIndex, Snapshot};
 use exonum::crypto::PublicKey;
+use exonum::storage::{Fork, MapIndex, Snapshot};
 
-use currency::SERVICE_NAME;
 use currency::wallet::Wallet;
+use currency::SERVICE_NAME;
 
 /// The schema for accessing wallets data.
 pub struct Schema<S>(pub S)

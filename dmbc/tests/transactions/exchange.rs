@@ -6,11 +6,11 @@ use exonum::crypto;
 use exonum::messages::Message;
 
 use dmbc::currency::assets::{AssetBundle, Fees};
+use dmbc::currency::configuration::TransactionFees;
+use dmbc::currency::error::Error;
 use dmbc::currency::transactions::builders::fee;
 use dmbc::currency::transactions::builders::transaction;
-use dmbc::currency::configuration::TransactionFees;
 use dmbc::currency::transactions::components::FeeStrategy;
-use dmbc::currency::error::Error;
 
 use common;
 use transactions::*;
@@ -27,7 +27,10 @@ fn exchange_fee(t: u64) -> Fees {
 fn exchange_assets() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 1000, 0, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, 1000, 0, 0),
+    );
 
     let (sender_pk, sender_sk) = mine_wallet(&mut testkit);
     let (recipient_pk, recipient_sk) = mine_wallet(&mut testkit);
@@ -92,7 +95,7 @@ fn exchange_assets() {
         .recipient_add_asset_value(AssetBundle::from_data("asset5", 5, &creator_pk))
         .recipient_add_asset_value(AssetBundle::from_data("asset6", 4, &creator_pk))
         .build();
-    let assets_fee = 6*1 + 10*2 + 5*3 + 2*4 + 5*5 + 6*7;
+    let assets_fee = 6 * 1 + 10 * 2 + 5 * 3 + 2 * 4 + 5 * 5 + 6 * 7;
 
     post_tx(&api, &tx_exchange_assets);
     testkit.create_block();
@@ -131,7 +134,10 @@ fn exchange_assets() {
 fn exchange_asset_fee_strategy() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 1000, 0, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, 1000, 0, 0),
+    );
 
     let (sender_pk, sender_sk) = mine_wallet(&mut testkit);
     let (recipient_pk, recipient_sk) = mine_wallet(&mut testkit);
@@ -154,7 +160,7 @@ fn exchange_asset_fee_strategy() {
     let s = get_status(&api, &tx_add_assets.hash());
     assert_eq!(Ok(Ok(())), s);
 
-    let e:Vec<AssetBundle> = Vec::new();
+    let e: Vec<AssetBundle> = Vec::new();
     let a = vec![asset.clone()];
 
     let sender_wallet = get_wallet(&api, &sender_pk);
@@ -181,7 +187,6 @@ fn exchange_asset_fee_strategy() {
     genesis_balance += 1000;
     creator_balance += 10;
 
-
     let s = get_status(&api, &tx_exchange_assets.hash());
     assert_eq!(Ok(Ok(())), s);
 
@@ -199,7 +204,6 @@ fn exchange_asset_fee_strategy() {
     let creator_wallet = get_wallet(&api, &creator_pk);
     assert_eq!(creator_balance, creator_wallet.balance());
 
-
     let tx_exchange_assets = transaction::Builder::new()
         .keypair(recipient_pk, recipient_sk.clone())
         .tx_exchange()
@@ -215,7 +219,6 @@ fn exchange_asset_fee_strategy() {
     sender_balance -= 1000 + 10;
     genesis_balance += 1000;
     creator_balance += 10;
-
 
     let s = get_status(&api, &tx_exchange_assets.hash());
     assert_eq!(Ok(Ok(())), s);
@@ -251,7 +254,6 @@ fn exchange_asset_fee_strategy() {
     genesis_balance += 1000;
     creator_balance += 10;
 
-
     let s = get_status(&api, &tx_exchange_assets.hash());
     assert_eq!(Ok(Ok(())), s);
 
@@ -274,7 +276,10 @@ fn exchange_asset_fee_strategy() {
 fn exchange_asset_insufficient_funds_fee_asset_very_big() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 1000, 0, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, 1000, 0, 0),
+    );
 
     let (sender_pk, sender_sk) = mine_wallet(&mut testkit);
     let (recipient_pk, recipient_sk) = mine_wallet(&mut testkit);
@@ -299,7 +304,7 @@ fn exchange_asset_insufficient_funds_fee_asset_very_big() {
     let s = get_status(&api, &tx_add_assets.hash());
     assert_eq!(Ok(Ok(())), s);
 
-    let e:Vec<AssetBundle> = Vec::new();
+    let e: Vec<AssetBundle> = Vec::new();
     let a = vec![asset1.clone(), asset2.clone()];
 
     let sender_wallet = get_wallet(&api, &sender_pk);
@@ -348,7 +353,10 @@ fn exchange_asset_insufficient_funds_fee_asset_very_big() {
 fn exchange_asset_insufficient_funds_bc_fee_big() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, DMC_1 + 1, 0, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, DMC_1 + 1, 0, 0),
+    );
 
     let (sender_pk, sender_sk) = mine_wallet(&mut testkit);
     let (recipient_pk, recipient_sk) = mine_wallet(&mut testkit);
@@ -371,7 +379,7 @@ fn exchange_asset_insufficient_funds_bc_fee_big() {
     let s = get_status(&api, &tx_add_assets.hash());
     assert_eq!(Ok(Ok(())), s);
 
-    let e:Vec<AssetBundle> = Vec::new();
+    let e: Vec<AssetBundle> = Vec::new();
     let a = vec![asset.clone()];
 
     let sender_wallet = get_wallet(&api, &sender_pk);
@@ -416,7 +424,10 @@ fn exchange_asset_insufficient_funds_bc_fee_big() {
 fn exchange_asset_insufficient_fee_strategy_recip_and_send() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 1000, 0, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, 1000, 0, 0),
+    );
 
     let (sender_pk, sender_sk) = mine_wallet(&mut testkit);
     let (recipient_pk, recipient_sk) = mine_wallet(&mut testkit);
@@ -439,7 +450,7 @@ fn exchange_asset_insufficient_fee_strategy_recip_and_send() {
     let s = get_status(&api, &tx_add_assets.hash());
     assert_eq!(Ok(Ok(())), s);
 
-    let e:Vec<AssetBundle> = Vec::new();
+    let e: Vec<AssetBundle> = Vec::new();
     let a = vec![asset.clone()];
 
     let sender_wallet = get_wallet(&api, &sender_pk);
@@ -487,7 +498,10 @@ fn exchange_asset_insufficient_fee_strategy_recip_and_send() {
 fn exchange_asset_send_value() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 1000, 0, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, 1000, 0, 0),
+    );
 
     let (sender_pk, sender_sk) = mine_wallet(&mut testkit);
     let (recipient_pk, recipient_sk) = mine_wallet(&mut testkit);
@@ -521,7 +535,6 @@ fn exchange_asset_send_value() {
     assert_eq!(recipient_balance, recipient_wallet.balance());
     assert_eq!(genesis_balance, genesis_wallet.balance());
 
-
     let tx_exchange_assets = transaction::Builder::new()
         .keypair(sender_pk, sender_sk.clone())
         .tx_exchange()
@@ -534,8 +547,8 @@ fn exchange_asset_send_value() {
     post_tx(&api, &tx_exchange_assets);
     testkit.create_block();
 
-    sender_balance = sender_balance + DMC_1 - (1000 / 2);           //  199998000
-    recipient_balance = recipient_balance - DMC_1 - (1000 / 2);     //  0
+    sender_balance = sender_balance + DMC_1 - (1000 / 2); //  199998000
+    recipient_balance = recipient_balance - DMC_1 - (1000 / 2); //  0
     genesis_balance += 1000;
 
     let status = get_status(&api, &tx_exchange_assets.hash());
@@ -570,14 +583,16 @@ fn exchange_asset_send_value() {
     assert_eq!(sender_balance, sender_wallet.balance());
     assert_eq!(recipient_balance, recipient_wallet.balance());
     assert_eq!(genesis_balance, genesis_wallet.balance());
-
 }
 
 #[test]
 fn exchange_asset_send_value_and_assets() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 100, 0, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, 100, 0, 0),
+    );
 
     let (sender_pk, sender_sk) = mine_wallet(&mut testkit);
     let (recipient_pk, recipient_sk) = mine_wallet(&mut testkit);
@@ -614,7 +629,7 @@ fn exchange_asset_send_value_and_assets() {
     post_tx(&api, &tx_exchange_assets);
     testkit.create_block();
 
-    sender_balance = sender_balance - 1000 - ((100 + 10) / 2) ;
+    sender_balance = sender_balance - 1000 - ((100 + 10) / 2);
     recipient_balance = recipient_balance + 1000 - ((100 + 10) / 2);
     genesis_balance += 100;
     creator_balance += 10;
@@ -630,8 +645,14 @@ fn exchange_asset_send_value_and_assets() {
     assert_eq!(recipient_balance, recipient_wallet.balance());
     assert_eq!(creator_balance, creator_wallet.balance());
     assert_eq!(genesis_balance, genesis_wallet.balance());
-    assert_eq!(vec![AssetBundle::from_data("asset1", 3, &creator_pk)], sender_wallet.assets());
-    assert_eq!(vec![AssetBundle::from_data("asset1", 1, &creator_pk)], recipient_wallet.assets());
+    assert_eq!(
+        vec![AssetBundle::from_data("asset1", 3, &creator_pk)],
+        sender_wallet.assets()
+    );
+    assert_eq!(
+        vec![AssetBundle::from_data("asset1", 1, &creator_pk)],
+        recipient_wallet.assets()
+    );
 
     let tx_exchange_assets = transaction::Builder::new()
         .keypair(recipient_pk, recipient_sk.clone())
@@ -663,8 +684,14 @@ fn exchange_asset_send_value_and_assets() {
     assert_eq!(recipient_balance, recipient_wallet.balance());
     assert_eq!(creator_balance, creator_wallet.balance());
     assert_eq!(genesis_balance, genesis_wallet.balance());
-    assert_eq!(vec![AssetBundle::from_data("asset1", 2, &creator_pk)], sender_wallet.assets());
-    assert_eq!(vec![AssetBundle::from_data("asset1", 2, &creator_pk)], recipient_wallet.assets());
+    assert_eq!(
+        vec![AssetBundle::from_data("asset1", 2, &creator_pk)],
+        sender_wallet.assets()
+    );
+    assert_eq!(
+        vec![AssetBundle::from_data("asset1", 2, &creator_pk)],
+        recipient_wallet.assets()
+    );
 
     let tx_exchange_assets = transaction::Builder::new()
         .keypair(recipient_pk, recipient_sk.clone())
@@ -696,6 +723,12 @@ fn exchange_asset_send_value_and_assets() {
     assert_eq!(recipient_balance, recipient_wallet.balance());
     assert_eq!(creator_balance, creator_wallet.balance());
     assert_eq!(genesis_balance, genesis_wallet.balance());
-    assert_eq!(vec![AssetBundle::from_data("asset1", 1, &creator_pk)], sender_wallet.assets());
-    assert_eq!(vec![AssetBundle::from_data("asset1", 3, &creator_pk)], recipient_wallet.assets());
+    assert_eq!(
+        vec![AssetBundle::from_data("asset1", 1, &creator_pk)],
+        sender_wallet.assets()
+    );
+    assert_eq!(
+        vec![AssetBundle::from_data("asset1", 3, &creator_pk)],
+        recipient_wallet.assets()
+    );
 }

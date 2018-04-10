@@ -8,7 +8,7 @@ extern crate serde_json;
 extern crate log;
 extern crate env_logger;
 
-use dmbc::currency::assets::{AssetId, AssetBundle};
+use dmbc::currency::assets::{AssetBundle, AssetId};
 use dmbc::currency::wallet::Wallet as EvoWallet;
 //use dmbc::service::builders::fee;
 //use dmbc::service::builders::transaction;
@@ -21,10 +21,9 @@ use std::collections::HashMap;
 use std::thread::sleep;
 use std::time::Duration;
 
-
+mod asset;
 mod node_client;
 mod transaction;
-mod asset;
 
 use asset::meta_asset::generate_meta_assets;
 use transaction::add_asset::create_add_asset_tx;
@@ -46,7 +45,7 @@ impl Wallet {
             public,
             secret,
             assets: empty_assets,
-            balance: 0
+            balance: 0,
         }
     }
 
@@ -57,7 +56,7 @@ impl Wallet {
             public: pk,
             secret: sk,
             assets: empty_assets,
-            balance: 0
+            balance: 0,
         }
     }
 }
@@ -78,7 +77,7 @@ pub struct Bot {
 
 impl Bot {
     pub fn new(ec: EvoClient) -> Self {
-        Bot{
+        Bot {
             ec,
             wallets: HashMap::new(),
             pending: HashMap::new(),
@@ -87,14 +86,16 @@ impl Bot {
 
     pub fn run(&mut self) {
         loop {
-//            let wallets = self.ec.wallets();
-//            println!("{}", wallets);
-//            sleep(Duration::new(1, 0));
-//
-            let _pk = PublicKey::from_hex("d6ac63f875899a6972bff988da73282ba887fdc59605f126882b9284ec1977c3").unwrap();
-//            let wallets = self.ec.wallet(pk);
-//            println!("{}", wallets);
-//            sleep(Duration::new(1, 0));
+            //            let wallets = self.ec.wallets();
+            //            println!("{}", wallets);
+            //            sleep(Duration::new(1, 0));
+            //
+            let _pk = PublicKey::from_hex(
+                "d6ac63f875899a6972bff988da73282ba887fdc59605f126882b9284ec1977c3",
+            ).unwrap();
+            //            let wallets = self.ec.wallet(pk);
+            //            println!("{}", wallets);
+            //            sleep(Duration::new(1, 0));
 
             self.send_transaction();
 
@@ -104,7 +105,6 @@ impl Bot {
 
             println!("{:?}", self.wallets);
             break;
-
         }
     }
     pub fn send_transaction(&mut self) {
@@ -120,10 +120,10 @@ impl Bot {
     }
 
     pub fn check_pending(&mut self) {
-//        let mut tt = .clone();
+        //        let mut tt = .clone();
         for (tx_hash, wallets) in &self.pending {
             match self.ec.tx_status(tx_hash).as_str() {
-                "Success"|"Fail" => {
+                "Success" | "Fail" => {
                     for wallet in wallets {
                         let wallet_info = self.ec.wallet(wallet.public);
                         let (balance, assets) = data_from_str(wallet_info);
@@ -136,15 +136,11 @@ impl Bot {
                         self.wallets.remove(&new_wallet.public);
                         self.wallets.insert(new_wallet.public, new_wallet);
                     }
-                },
-                _ => {
-                    continue
-                },
+                }
+                _ => continue,
             };
-
         }
     }
-    
 }
 
 fn main() {

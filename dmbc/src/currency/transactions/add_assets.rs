@@ -1,21 +1,21 @@
-use std::collections::HashMap;
 use std::collections::hash_map::Entry;
+use std::collections::HashMap;
 
 use exonum::blockchain::Transaction;
 use exonum::crypto::PublicKey;
-use exonum::storage::Fork;
 use exonum::messages::Message;
-use serde_json;
+use exonum::storage::Fork;
 use prometheus::{Counter, Histogram};
+use serde_json;
 
-use currency::SERVICE_ID;
 use currency::assets;
 use currency::assets::{AssetId, AssetInfo, MetaAsset};
-use currency::wallet;
-use currency::status;
-use currency::error::Error;
-use currency::transactions::components::{ThirdPartyFees, FeesCalculator};
 use currency::configuration::Configuration;
+use currency::error::Error;
+use currency::status;
+use currency::transactions::components::{FeesCalculator, ThirdPartyFees};
+use currency::wallet;
+use currency::SERVICE_ID;
 
 /// Transaction ID.
 pub const ADD_ASSETS_ID: u16 = 300;
@@ -36,7 +36,7 @@ message!{
 impl FeesCalculator for AddAssets {
     fn calculate_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error> {
         let genesis_fees = Configuration::extract(view).fees();
-        let fees = ThirdPartyFees::new_add_assets(&view, self.meta_assets())?;   
+        let fees = ThirdPartyFees::new_add_assets(&view, self.meta_assets())?;
 
         let mut fees_table = HashMap::new();
         if genesis_fees.recipient() != self.pub_key() {
@@ -53,7 +53,6 @@ impl FeesCalculator for AddAssets {
 }
 
 impl AddAssets {
-
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
         info!("Processing tx: {:?}", self);
 
@@ -81,7 +80,8 @@ impl AddAssets {
         for meta in self.meta_assets() {
             let id = AssetId::from_data(meta.data(), key);
 
-            let wallet = wallets.entry(*meta.receiver())
+            let wallet = wallets
+                .entry(*meta.receiver())
                 .or_insert_with(|| wallet::Schema(&*view).fetch(meta.receiver()));
             wallet.add_assets(Some(meta.to_bundle(id)));
 

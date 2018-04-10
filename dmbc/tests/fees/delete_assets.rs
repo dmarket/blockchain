@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use dmbc::currency::api::fees::FeesResponseBody;
-use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::configuration::TransactionFees;
+use dmbc::currency::transactions::builders::transaction;
 
 use fees::test_api::*;
 
@@ -11,7 +11,10 @@ fn fees_for_delete_assets() {
     let mut testkit = init_testkit();
     let api = testkit.api();
     let transaction_fee = 1000;
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, transaction_fee, 0, 0, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, transaction_fee, 0, 0, 0),
+    );
 
     let meta_data = "asset";
     let (public_key, secret_key) = WalletMiner::new().mine_empty(&mut testkit);
@@ -27,5 +30,5 @@ fn fees_for_delete_assets() {
     let mut expected = HashMap::new();
     expected.insert(public_key, transaction_fee);
 
-    assert_eq!(Ok(Ok(FeesResponseBody{fees: expected})), response);
+    assert_eq!(Ok(Ok(FeesResponseBody { fees: expected })), response);
 }

@@ -1,17 +1,17 @@
 use api::*;
-use std::collections::HashMap;
 use iron::headers::Headers;
 use iron_test::{request, response};
+use std::collections::HashMap;
 
 use exonum_testkit::ApiKind;
 
-use dmbc::currency::SERVICE_NAME;
-use dmbc::currency::api::wallet::{WalletResponse, WalletsResponse, WalletInfo, 
-                                WalletsResponseBody, WalletAssetsResponse, WalletAssetsResponseBody, ExtendedAsset};
+use dmbc::currency::api::error::ApiError;
 use dmbc::currency::api::wallet;
+use dmbc::currency::api::wallet::{ExtendedAsset, WalletAssetsResponse, WalletAssetsResponseBody,
+                                  WalletInfo, WalletResponse, WalletsResponse, WalletsResponseBody};
 use dmbc::currency::assets::{AssetBundle, AssetInfo};
 use dmbc::currency::wallet::Wallet;
-use dmbc::currency::api::error::ApiError;
+use dmbc::currency::SERVICE_NAME;
 
 use common;
 
@@ -59,18 +59,40 @@ fn wallets() {
     let genesis_count_assets = genesis.assets().len() as u64;
 
     let mut wallets = HashMap::new();
-    wallets.insert(genesis_key, WalletInfo {balance: genesis.balance(), count_assets: genesis_count_assets});
-    wallets.insert(pub_key1, WalletInfo {balance: 100000000, count_assets: 1});
-    wallets.insert(pub_key2, WalletInfo {balance: 100000000, count_assets: 1});
+    wallets.insert(
+        genesis_key,
+        WalletInfo {
+            balance: genesis.balance(),
+            count_assets: genesis_count_assets,
+        },
+    );
+    wallets.insert(
+        pub_key1,
+        WalletInfo {
+            balance: 100000000,
+            count_assets: 1,
+        },
+    );
+    wallets.insert(
+        pub_key2,
+        WalletInfo {
+            balance: 100000000,
+            count_assets: 1,
+        },
+    );
     let total = wallets.len() as u64;
     let count = wallets.len() as u64;
 
-    let response: WalletsResponse = api.get(
-        ApiKind::Service(SERVICE_NAME),
-        "v1/wallets",
-    );
+    let response: WalletsResponse = api.get(ApiKind::Service(SERVICE_NAME), "v1/wallets");
 
-    assert_eq!(response, Ok(WalletsResponseBody { total, count, wallets } ));
+    assert_eq!(
+        response,
+        Ok(WalletsResponseBody {
+            total,
+            count,
+            wallets
+        })
+    );
 }
 
 #[test]
@@ -129,13 +151,22 @@ fn wallet_assets() {
     let asset1 = AssetBundle::from_data(meta_data1, units, &pub_key);
     let asset2 = AssetBundle::from_data(meta_data2, units, &pub_key);
 
-    let assets = vec![ExtendedAsset::from_asset(&asset0, None),
-                        ExtendedAsset::from_asset(&asset1, None),
-                        ExtendedAsset::from_asset(&asset2, None)];
+    let assets = vec![
+        ExtendedAsset::from_asset(&asset0, None),
+        ExtendedAsset::from_asset(&asset1, None),
+        ExtendedAsset::from_asset(&asset2, None),
+    ];
     let total = assets.len() as u64;
     let count = assets.len() as u64;
 
-    assert_eq!(response, Ok(WalletAssetsResponseBody { total, count, assets }));
+    assert_eq!(
+        response,
+        Ok(WalletAssetsResponseBody {
+            total,
+            count,
+            assets
+        })
+    );
 }
 
 #[test]
@@ -152,7 +183,11 @@ fn wallet_assets_meta_data() {
 
     let response: WalletAssetsResponse = api.get(
         ApiKind::Service(SERVICE_NAME),
-        &format!("v1/wallets/{}/assets?{}=true", pub_key.to_string(), wallet::PARAMETER_META_DATA_KEY),
+        &format!(
+            "v1/wallets/{}/assets?{}=true",
+            pub_key.to_string(),
+            wallet::PARAMETER_META_DATA_KEY
+        ),
     );
 
     let asset = AssetBundle::from_data(meta_data, units, &pub_key);
@@ -162,7 +197,14 @@ fn wallet_assets_meta_data() {
     let total = assets.len() as u64;
     let count = assets.len() as u64;
 
-    assert_eq!(response, Ok(WalletAssetsResponseBody { total, count, assets }));
+    assert_eq!(
+        response,
+        Ok(WalletAssetsResponseBody {
+            total,
+            count,
+            assets
+        })
+    );
 }
 
 #[test]
@@ -170,7 +212,10 @@ fn wallet_invalid_public_key() {
     let testkit = init_testkit();
     let api = testkit.api();
 
-    let url = format!("http://localhost:3000/{}/{}", "api/services/cryptocurrency", "v1/wallets/invalidpubkey");
+    let url = format!(
+        "http://localhost:3000/{}/{}",
+        "api/services/cryptocurrency", "v1/wallets/invalidpubkey"
+    );
     let res = request::get(&url, Headers::new(), api.public_mount());
     let iron_response = res.unwrap();
     let status = iron_response.status;
@@ -185,7 +230,10 @@ fn wallet_assets_invalid_public_key() {
     let testkit = init_testkit();
     let api = testkit.api();
 
-    let url = format!("http://localhost:3000/{}/{}", "api/services/cryptocurrency", "v1/wallets/invalidpubkey/assets");
+    let url = format!(
+        "http://localhost:3000/{}/{}",
+        "api/services/cryptocurrency", "v1/wallets/invalidpubkey/assets"
+    );
     let res = request::get(&url, Headers::new(), api.public_mount());
     let iron_response = res.unwrap();
     let status = iron_response.status;

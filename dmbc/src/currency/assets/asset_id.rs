@@ -1,19 +1,19 @@
-use std::string::ToString;
 use std::error::Error;
 use std::fmt;
+use std::string::ToString;
 
-use serde::{Serialize, Serializer};
 use serde::de::{self, Deserialize, Deserializer, Visitor};
+use serde::{Serialize, Serializer};
 
 use exonum::crypto::PublicKey;
 use exonum::encoding;
-use exonum::encoding::{CheckedOffset, Field, Offset};
-use exonum::encoding::serialize::WriteBufferWrapper;
 use exonum::encoding::serialize::json::ExonumJson;
+use exonum::encoding::serialize::WriteBufferWrapper;
+use exonum::encoding::{CheckedOffset, Field, Offset};
 use exonum::storage::StorageKey;
+use serde_json;
 use uuid;
 use uuid::Uuid;
-use serde_json;
 
 pub const ASSET_ID_LEN: usize = 16;
 
@@ -224,7 +224,8 @@ impl fmt::Debug for AssetId {
 
 impl Serialize for AssetId {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where S: Serializer
+    where
+        S: Serializer,
     {
         let hex_string = self.to_hex();
         serializer.serialize_str(&hex_string)
@@ -233,18 +234,19 @@ impl Serialize for AssetId {
 
 impl<'de> Deserialize<'de> for AssetId {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where D: Deserializer<'de>
+    where
+        D: Deserializer<'de>,
     {
         struct HexVisitor;
 
-        impl<'v> Visitor<'v> for HexVisitor
-        {
+        impl<'v> Visitor<'v> for HexVisitor {
             type Value = AssetId;
-            fn expecting (&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+            fn expecting(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
                 write!(fmt, "expecting str.")
             }
             fn visit_str<E>(self, s: &str) -> Result<Self::Value, E>
-            where E: de::Error
+            where
+                E: de::Error,
             {
                 AssetId::from_hex(s).map_err(|_| de::Error::custom("Invalid hex"))
             }

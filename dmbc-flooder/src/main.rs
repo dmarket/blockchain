@@ -17,9 +17,9 @@ use mio_httpc::{CallBuilder, Httpc, RecvState, Request};
 use rand::Rng;
 use serde::Serialize;
 
-use dmbc::currency::transactions::builders::transaction;
-use dmbc::currency::transactions::builders::fee;
 use dmbc::currency::assets::{AssetBundle, AssetId, MetaAsset, TradeAsset};
+use dmbc::currency::transactions::builders::fee;
+use dmbc::currency::transactions::builders::transaction;
 
 type Wallet = (PublicKey, SecretKey);
 

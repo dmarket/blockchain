@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 
 use dmbc::currency::api::fees::FeesResponseBody;
-use dmbc::currency::transactions::builders::transaction;
-use dmbc::currency::configuration::TransactionFees;
-use dmbc::currency::transactions::components::FeeStrategy;
 use dmbc::currency::assets::{AssetBundle, TradeAsset};
+use dmbc::currency::configuration::TransactionFees;
 use dmbc::currency::error::Error;
+use dmbc::currency::transactions::builders::transaction;
+use dmbc::currency::transactions::components::FeeStrategy;
 
 use fees::test_api::*;
 
@@ -19,8 +19,11 @@ fn fees_for_trade_intermediary_recipient() {
     let price_per_unit = 1000;
     let meta_data = "asset";
 
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0));
-    
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0),
+    );
+
     let (creator_pub_key, _) = WalletMiner::new()
         .add_asset(meta_data, units, asset_fee(tax, 0))
         .mine(&mut testkit);
@@ -46,7 +49,7 @@ fn fees_for_trade_intermediary_recipient() {
     let expected_fee = transaction_fee + tax;
     expected.insert(buyer_public_key, expected_fee);
 
-    assert_eq!(Ok(Ok(FeesResponseBody{fees: expected})), response);
+    assert_eq!(Ok(Ok(FeesResponseBody { fees: expected })), response);
 }
 
 #[test]
@@ -59,8 +62,11 @@ fn fees_for_trade_intermediary_sender() {
     let price_per_unit = 1000;
     let meta_data = "asset";
 
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0));
-    
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0),
+    );
+
     let (creator_pub_key, _) = WalletMiner::new()
         .add_asset(meta_data, units, asset_fee(tax, 0))
         .mine(&mut testkit);
@@ -86,7 +92,7 @@ fn fees_for_trade_intermediary_sender() {
     let expected_fee = transaction_fee + tax;
     expected.insert(seller_public_key, expected_fee);
 
-    assert_eq!(Ok(Ok(FeesResponseBody{fees: expected})), response);
+    assert_eq!(Ok(Ok(FeesResponseBody { fees: expected })), response);
 }
 
 #[test]
@@ -99,8 +105,11 @@ fn fees_for_trade_intermediary_recipient_and_sender() {
     let price_per_unit = 1000;
     let meta_data = "asset";
 
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0));
-    
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0),
+    );
+
     let (creator_pub_key, _) = WalletMiner::new()
         .add_asset(meta_data, units, asset_fee(tax, 0))
         .mine(&mut testkit);
@@ -123,11 +132,11 @@ fn fees_for_trade_intermediary_recipient_and_sender() {
 
     let response = post_fee(&api, &tx_trade);
     let mut expected = HashMap::new();
-    let expected_fee = transaction_fee/2 + tax/2;
+    let expected_fee = transaction_fee / 2 + tax / 2;
     expected.insert(seller_public_key, expected_fee);
     expected.insert(buyer_public_key, expected_fee);
 
-    assert_eq!(Ok(Ok(FeesResponseBody{fees: expected})), response);
+    assert_eq!(Ok(Ok(FeesResponseBody { fees: expected })), response);
 }
 
 #[test]
@@ -140,8 +149,11 @@ fn fees_for_trade_intermediary_intermediary() {
     let price_per_unit = 1000;
     let meta_data = "asset";
 
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0));
-    
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0),
+    );
+
     let (creator_pub_key, _) = WalletMiner::new()
         .add_asset(meta_data, units, asset_fee(tax, 0))
         .mine(&mut testkit);
@@ -167,7 +179,7 @@ fn fees_for_trade_intermediary_intermediary() {
     let expected_fee = transaction_fee + tax;
     expected.insert(intermediary_public_key, expected_fee);
 
-    assert_eq!(Ok(Ok(FeesResponseBody{fees: expected})), response);
+    assert_eq!(Ok(Ok(FeesResponseBody { fees: expected })), response);
 }
 
 #[test]
@@ -180,8 +192,11 @@ fn fees_for_trade_intermediary_recipient_and_sender_creator() {
     let price_per_unit = 1000;
     let meta_data = "asset";
 
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0));
-    
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0),
+    );
+
     let (seller_public_key, seller_secret_key) = WalletMiner::new()
         .add_asset(meta_data, units, asset_fee(tax, 0))
         .mine(&mut testkit);
@@ -200,12 +215,12 @@ fn fees_for_trade_intermediary_recipient_and_sender_creator() {
 
     let response = post_fee(&api, &tx_trade);
     let mut expected = HashMap::new();
-    let expected_seller_fee = transaction_fee/2;
-    let expected_buyer_fee = transaction_fee/2 + tax/2;
+    let expected_seller_fee = transaction_fee / 2;
+    let expected_buyer_fee = transaction_fee / 2 + tax / 2;
     expected.insert(seller_public_key, expected_seller_fee);
     expected.insert(buyer_public_key, expected_buyer_fee);
 
-    assert_eq!(Ok(Ok(FeesResponseBody{fees: expected})), response);
+    assert_eq!(Ok(Ok(FeesResponseBody { fees: expected })), response);
 }
 
 #[test]
@@ -217,8 +232,11 @@ fn fees_for_trade_intermediary_asset_not_found() {
     let price_per_unit = 1000;
     let meta_data = "asset";
 
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0));
-    
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0),
+    );
+
     let (seller_public_key, seller_secret_key) = WalletMiner::new().mine(&mut testkit);
     let (buyer_public_key, buyer_secret_key) = WalletMiner::new().mine(&mut testkit);
     let (intermediary_public_key, intermediary_secret_key) = WalletMiner::new().mine(&mut testkit);

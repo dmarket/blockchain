@@ -4,8 +4,8 @@ use std::net::SocketAddr;
 use std::thread;
 
 use curl::easy::Easy;
-use serde_json;
 use exonum::crypto::PublicKey;
+use serde_json;
 
 use dmbc::config;
 

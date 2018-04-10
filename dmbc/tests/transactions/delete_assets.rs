@@ -5,11 +5,11 @@ extern crate exonum_testkit;
 use exonum::crypto;
 use exonum::messages::Message;
 
-use dmbc::currency::assets::{AssetBundle, MetaAsset, AssetId, AssetInfo};
-use dmbc::currency::transactions::builders::fee;
-use dmbc::currency::transactions::builders::transaction;
+use dmbc::currency::assets::{AssetBundle, AssetId, AssetInfo, MetaAsset};
 use dmbc::currency::configuration::TransactionFees;
 use dmbc::currency::error::Error;
+use dmbc::currency::transactions::builders::fee;
+use dmbc::currency::transactions::builders::transaction;
 
 use transactions::*;
 
@@ -17,7 +17,10 @@ use transactions::*;
 fn delete_assets() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 100, 0, 0, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 100, 0, 0, 0),
+    );
 
     let (public_key, secret_key) = crypto::gen_keypair();
     let mine_1_dmc = transaction::Builder::new()
@@ -44,7 +47,7 @@ fn delete_assets() {
         .add_asset_value(meta_asset.clone())
         .seed(85)
         .build();
-    
+
     let tx_hash = tx_add_assets.hash();
     post_tx(&api, &tx_add_assets);
     testkit.create_block();
@@ -56,7 +59,10 @@ fn delete_assets() {
     assert_eq!(meta_asset.to_info(&public_key, &tx_hash), bc_asset_info);
 
     let mining_wallet = get_wallet(&api, &public_key);
-    assert_eq!(vec![meta_asset.to_bundle(asset_id.clone())], mining_wallet.assets());
+    assert_eq!(
+        vec![meta_asset.to_bundle(asset_id.clone())],
+        mining_wallet.assets()
+    );
 
     //Удаляем ассет в количестве 1
     let tx_delete_assets = transaction::Builder::new()
@@ -109,7 +115,10 @@ fn delete_assets() {
 fn delete_nonexistent_asset() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 100, 0, 0, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 100, 0, 0, 0),
+    );
 
     let (public_key, secret_key) = crypto::gen_keypair();
     let mine_1_dmc = transaction::Builder::new()
@@ -146,7 +155,10 @@ fn delete_nonexistent_asset() {
 fn delete_nonexistent_asset2() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 100, 0, 0, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 100, 0, 0, 0),
+    );
 
     let (public_key, secret_key) = crypto::gen_keypair();
     let mine_1_dmc = transaction::Builder::new()
@@ -179,7 +191,6 @@ fn delete_nonexistent_asset2() {
 
     let s = get_status(&api, &tx_add_assets.hash());
     assert_eq!(Ok(Ok(())), s);
-
 
     //Удаляем ассет.
     let tx_del_assets = transaction::Builder::new()
@@ -205,7 +216,10 @@ fn delete_nonexistent_asset2() {
 fn delete_asset_more_than_on_balance() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 100, 0, 0, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 100, 0, 0, 0),
+    );
 
     let (public_key, secret_key) = crypto::gen_keypair();
     let mine_1_dmc = transaction::Builder::new()
@@ -238,7 +252,6 @@ fn delete_asset_more_than_on_balance() {
 
     let s = get_status(&api, &tx_add_assets.hash());
     assert_eq!(Ok(Ok(())), s);
-
 
     //Удаляем ассет.
     let tx_del_assets = transaction::Builder::new()
@@ -264,7 +277,10 @@ fn delete_asset_more_than_on_balance() {
 fn delete_asset_insufficient_funds() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, DMC_1 + 1, 0, 0, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, DMC_1 + 1, 0, 0, 0),
+    );
 
     let (public_key, secret_key) = crypto::gen_keypair();
     let mine_1_dmc = transaction::Builder::new()
@@ -298,7 +314,6 @@ fn delete_asset_insufficient_funds() {
     let s = get_status(&api, &tx_add_assets.hash());
     assert_eq!(Ok(Ok(())), s);
 
-
     //Удаляем ассет.
     let tx_del_assets = transaction::Builder::new()
         .keypair(public_key, secret_key.clone())
@@ -323,7 +338,10 @@ fn delete_asset_insufficient_funds() {
 fn delete_asset_with_different_creator() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 100, 0, 0, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 100, 0, 0, 0),
+    );
 
     let (creator_pk_key, creator_sk_key) = crypto::gen_keypair();
     let (public_key, secret_key) = crypto::gen_keypair();
@@ -386,7 +404,10 @@ fn delete_asset_with_different_creator() {
 fn delete_2_assets_1_asset_more_than_on_balance() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 100, 0, 0, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 100, 0, 0, 0),
+    );
 
     let (public_key, secret_key) = crypto::gen_keypair();
 
@@ -453,7 +474,10 @@ fn delete_2_assets_1_asset_more_than_on_balance() {
 fn delete_2_assets_1_asset_have_other_creator() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 100, 0, 0, 0));
+    set_configuration(
+        &mut testkit,
+        TransactionFees::with_default_key(0, 0, 100, 0, 0, 0),
+    );
 
     let (creator_pk_key, creator_sk_key) = crypto::gen_keypair();
     let (public_key, secret_key) = crypto::gen_keypair();
@@ -489,7 +513,6 @@ fn delete_2_assets_1_asset_have_other_creator() {
         .add_asset_value(meta_asset.clone())
         .seed(1)
         .build();
-
 
     post_tx(&api, &mine_1_dmc);
     testkit.create_block();

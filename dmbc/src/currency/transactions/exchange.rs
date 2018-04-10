@@ -1,20 +1,20 @@
 use std::collections::HashMap;
 
+use exonum::blockchain::Transaction;
 use exonum::crypto;
 use exonum::crypto::{PublicKey, Signature};
-use exonum::blockchain::Transaction;
-use exonum::storage::Fork;
 use exonum::messages::Message;
-use serde_json;
+use exonum::storage::Fork;
 use prometheus::{Counter, Histogram};
+use serde_json;
 
-use currency::SERVICE_ID;
 use currency::assets::AssetBundle;
-use currency::transactions::components::{FeeStrategy, ThirdPartyFees, FeesCalculator};
+use currency::configuration::Configuration;
 use currency::error::Error;
 use currency::status;
+use currency::transactions::components::{FeeStrategy, FeesCalculator, ThirdPartyFees};
 use currency::wallet;
-use currency::configuration::Configuration;
+use currency::SERVICE_ID;
 
 /// Transaction ID.
 pub const EXCHANGE_ID: u16 = 601;
@@ -73,7 +73,7 @@ impl FeesCalculator for Exchange {
 
         for (receiver_key, fee) in fees.0 {
             let payers = self.payers(&fee_strategy, fee)?;
-            
+
             for (payer_key, fee) in payers {
                 if payer_key != receiver_key {
                     *fees_table.entry(payer_key).or_insert(0) += fee;
@@ -91,8 +91,9 @@ impl Exchange {
         let payers = match *fee_strategy {
             FeeStrategy::Recipient => vec![(*offer.recipient(), fee)],
             FeeStrategy::Sender => vec![(*offer.sender(), fee)],
-            FeeStrategy::RecipientAndSender => vec![(*offer.sender(), fee/2), 
-                                                    (*offer.recipient(), fee/2)],
+            FeeStrategy::RecipientAndSender => {
+                vec![(*offer.sender(), fee / 2), (*offer.recipient(), fee / 2)]
+            }
             FeeStrategy::Intermediary => return Err(Error::InvalidTransaction),
         };
         Ok(payers)
@@ -161,7 +162,9 @@ impl Exchange {
         let mut updated_wallets = match fee_strategy {
             FeeStrategy::Recipient => fees.collect(view, offer.recipient())?,
             FeeStrategy::Sender => fees.collect(view, offer.sender())?,
-            FeeStrategy::RecipientAndSender => fees.collect2(view, offer.sender(), offer.recipient())?,
+            FeeStrategy::RecipientAndSender => {
+                fees.collect2(view, offer.sender(), offer.recipient())?
+            }
             FeeStrategy::Intermediary => unreachable!(),
         };
 
@@ -241,7 +244,6 @@ impl Transaction for Exchange {
         } else {
             false
         }
-
     }
 
     fn execute(&self, view: &mut Fork) {

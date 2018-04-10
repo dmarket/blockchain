@@ -1,20 +1,20 @@
 use std::collections::HashMap;
 
+use exonum::blockchain::Transaction;
 use exonum::crypto;
 use exonum::crypto::{PublicKey, Signature};
-use exonum::blockchain::Transaction;
-use exonum::storage::Fork;
 use exonum::messages::Message;
-use serde_json;
+use exonum::storage::Fork;
 use prometheus::{Counter, Histogram};
+use serde_json;
 
-use currency::SERVICE_ID;
 use currency::assets::TradeAsset;
-use currency::transactions::components::{FeeStrategy, ThirdPartyFees, FeesCalculator};
+use currency::configuration::Configuration;
 use currency::error::Error;
 use currency::status;
+use currency::transactions::components::{FeeStrategy, FeesCalculator, ThirdPartyFees};
 use currency::wallet;
-use currency::configuration::Configuration;
+use currency::SERVICE_ID;
 
 /// Transaction ID.
 pub const TRADE_ID: u16 = 501;
@@ -45,7 +45,6 @@ message! {
 }
 
 impl FeesCalculator for Trade {
-
     fn calculate_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error> {
         let offer = self.offer();
         let genesis_fees = Configuration::extract(view).fees();
@@ -64,7 +63,7 @@ impl FeesCalculator for Trade {
 
         for (receiver_key, fee) in fees.0 {
             let payers = self.payers(&fee_strategy, fee)?;
-            
+
             for (payer_key, fee) in payers {
                 if payer_key != receiver_key {
                     *fees_table.entry(payer_key).or_insert(0) += fee;
@@ -82,8 +81,9 @@ impl Trade {
         let payers = match *fee_strategy {
             FeeStrategy::Recipient => vec![(*offer.buyer(), fee)],
             FeeStrategy::Sender => vec![(*offer.seller(), fee)],
-            FeeStrategy::RecipientAndSender => vec![(*offer.seller(), fee/2), 
-                                                    (*offer.buyer(), fee/2)],
+            FeeStrategy::RecipientAndSender => {
+                vec![(*offer.seller(), fee / 2), (*offer.buyer(), fee / 2)]
+            }
             FeeStrategy::Intermediary => return Err(Error::InvalidTransaction),
         };
         Ok(payers)
@@ -112,14 +112,14 @@ impl Trade {
                 wallet::move_coins(&mut buyer, &mut genesis, genesis_fees.trade())?;
 
                 wallet::Schema(&mut *view).store(offer.buyer(), buyer);
-            },
+            }
             FeeStrategy::Sender => {
                 let mut seller = wallet::Schema(&*view).fetch(offer.seller());
 
                 wallet::move_coins(&mut seller, &mut genesis, genesis_fees.trade())?;
 
                 wallet::Schema(&mut *view).store(offer.seller(), seller);
-            },
+            }
             FeeStrategy::RecipientAndSender => {
                 let mut buyer = wallet::Schema(&*view).fetch(offer.buyer());
                 let mut seller = wallet::Schema(&*view).fetch(offer.seller());
@@ -140,9 +140,10 @@ impl Trade {
         let mut wallet_buyer = wallet::Schema(&*view).fetch(offer.buyer());
         let mut wallet_seller = wallet::Schema(&*view).fetch(offer.seller());
 
-        let total = offer.assets()
+        let total = offer
+            .assets()
             .iter()
-            .map(|asset| {asset.amount() * asset.price()})
+            .map(|asset| asset.amount() * asset.price())
             .sum();
 
         wallet::move_coins(&mut wallet_buyer, &mut wallet_seller, total)
@@ -160,8 +161,8 @@ impl Trade {
                     FeeStrategy::Recipient => fees.collect(view, offer.buyer())?,
                     FeeStrategy::Sender => fees.collect(view, offer.seller())?,
                     FeeStrategy::RecipientAndSender => {
-                    fees.collect2(view, offer.seller(), offer.buyer())?
-                },
+                        fees.collect2(view, offer.seller(), offer.buyer())?
+                    }
                     FeeStrategy::Intermediary => HashMap::<PublicKey, wallet::Wallet>::new(),
                 };
 
@@ -171,7 +172,8 @@ impl Trade {
                 let mut wallet_buyer = updated_wallets
                     .remove(&offer.buyer())
                     .unwrap_or_else(|| wallet::Schema(&*view).fetch(&offer.buyer()));
-                let assets = offer.assets()
+                let assets = offer
+                    .assets()
                     .into_iter()
                     .map(|a| a.to_bundle())
                     .collect::<Vec<_>>();
@@ -234,7 +236,11 @@ impl Transaction for Trade {
             return wallets_ok && fee_strategy_ok;
         }
 
-        let seller_verify_ok = crypto::verify(self.seller_signature(), &self.offer().raw, self.offer().seller());
+        let seller_verify_ok = crypto::verify(
+            self.seller_signature(),
+            &self.offer().raw,
+            self.offer().seller(),
+        );
         let buyer_verify_ok = self.verify_signature(&self.offer().buyer());
 
         if wallets_ok && fee_strategy_ok && buyer_verify_ok && seller_verify_ok {

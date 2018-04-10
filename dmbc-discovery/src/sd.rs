@@ -1,27 +1,27 @@
 use std::collections::HashMap;
 use std::error::Error;
+use std::fs::File;
 use std::io;
 use std::io::{Read, Write};
-use std::fs::File;
 use std::net::SocketAddr;
 use std::sync::{Arc, RwLock};
 use std::time::Duration;
 
-use exonum::blockchain::Block;
 use exonum::blockchain::config::{StoredConfiguration, ValidatorKeys};
+use exonum::blockchain::Block;
 use exonum::crypto::PublicKey;
 use exonum::helpers::Height;
 use exonum_configuration::config_api::{ApiResponseConfigHashInfo, ApiResponseProposePost,
                                        ApiResponseVotePost};
-use futures::{Future, Stream};
 use futures::future;
 use futures::stream;
-use serde_json;
+use futures::{Future, Stream};
 use hyper;
-use hyper::{Body, Method, Request, Response, StatusCode};
+use hyper::client::Client;
 use hyper::header::{ContentLength, ContentType};
 use hyper::server::Service;
-use hyper::client::Client;
+use hyper::{Body, Method, Request, Response, StatusCode};
+use serde_json;
 use tokio_core::reactor::Handle;
 use tokio_timer::Timer;
 use toml;

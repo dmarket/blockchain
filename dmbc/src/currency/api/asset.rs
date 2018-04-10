@@ -9,10 +9,10 @@ use exonum::api::Api;
 use exonum::blockchain::Blockchain;
 use hyper::header::ContentType;
 use iron::headers::AccessControlAllowOrigin;
-use iron::status;
 use iron::prelude::*;
-use router::Router;
+use iron::status;
 use prometheus::Counter;
+use router::Router;
 
 use currency::api::error::ApiError;
 use currency::assets;
@@ -34,8 +34,10 @@ impl AssetApi {
 pub type AssetResponse = Result<Option<AssetInfo>, ApiError>;
 
 lazy_static! {
-    static ref INFO_REQUESTS: Counter = register_counter!("dmbc_asset_api_info_requests_total", "AssetInfo requests.").unwrap();
-    static ref INFO_RESPONSES: Counter = register_counter!("dmbc_asset_api_info_responses_total", "AssetInfo response.").unwrap();
+    static ref INFO_REQUESTS: Counter =
+        register_counter!("dmbc_asset_api_info_requests_total", "AssetInfo requests.").unwrap();
+    static ref INFO_RESPONSES: Counter =
+        register_counter!("dmbc_asset_api_info_responses_total", "AssetInfo response.").unwrap();
 }
 
 impl Api for AssetApi {

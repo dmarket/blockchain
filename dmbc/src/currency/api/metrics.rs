@@ -1,12 +1,12 @@
 use exonum::api::Api;
+use hyper::header::ContentType;
+use hyper::mime::Mime;
 use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use iron::status;
-use router::Router;
-use hyper::header::ContentType;
-use hyper::mime::Mime;
 use prometheus;
 use prometheus::{Encoder, TextEncoder};
+use router::Router;
 
 #[derive(Clone)]
 pub struct MetricsApi {}
@@ -19,12 +19,9 @@ impl Api for MetricsApi {
             let mut buffer = Vec::new();
             encoder.encode(&metric_families, &mut buffer).unwrap();
 
-            let mut res = Response::with(
-                (status::Ok, String::from_utf8(buffer).unwrap())
-            );
-            res.headers.set(
-                ContentType(encoder.format_type().parse::<Mime>().unwrap())
-            );
+            let mut res = Response::with((status::Ok, String::from_utf8(buffer).unwrap()));
+            res.headers
+                .set(ContentType(encoder.format_type().parse::<Mime>().unwrap()));
             res.headers.set(AccessControlAllowOrigin::Any);
 
             Ok(res)

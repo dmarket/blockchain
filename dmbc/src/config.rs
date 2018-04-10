@@ -4,8 +4,8 @@ extern crate toml;
 
 use std::env;
 use std::fs::File;
-use std::io::Error;
 use std::io::prelude::*;
+use std::io::Error;
 use std::net::{SocketAddr, ToSocketAddrs};
 use std::path::Path;
 use std::result::Result;

@@ -1,4 +1,4 @@
-use exonum::crypto::{PublicKey, Hash};
+use exonum::crypto::{Hash, PublicKey};
 
 use currency::assets::{AssetBundle, AssetId, AssetInfo, Fees};
 

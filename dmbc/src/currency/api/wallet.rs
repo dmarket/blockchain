@@ -6,17 +6,17 @@ use exonum::api::Api;
 use exonum::blockchain::Blockchain;
 use exonum::crypto::PublicKey;
 use exonum::encoding::serialize::FromHex;
+use hyper::header::ContentType;
 use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use iron::status;
-use router::Router;
-use hyper::header::ContentType;
 use prometheus::Counter;
+use router::Router;
 
-use currency::api::ServiceApi;
 use currency::api::error::ApiError;
+use currency::api::ServiceApi;
 use currency::assets;
-use currency::assets::{AssetBundle, AssetInfo, AssetId};
+use currency::assets::{AssetBundle, AssetId, AssetInfo};
 use currency::wallet;
 use currency::wallet::Wallet;
 
@@ -41,7 +41,11 @@ pub struct ExtendedAsset {
 
 impl ExtendedAsset {
     pub fn from_asset(asset: &AssetBundle, info: Option<AssetInfo>) -> Self {
-        ExtendedAsset { id: asset.id(), amount: asset.amount(), meta_data: info }
+        ExtendedAsset {
+            id: asset.id(),
+            amount: asset.amount(),
+            meta_data: info,
+        }
     }
 }
 
@@ -76,7 +80,6 @@ impl WalletApi {
         let index = wallet::Schema(view).index();
         let mut result: HashMap<PublicKey, WalletInfo> = HashMap::new();
         for v in index.iter() {
-
             let wi = WalletInfo {
                 balance: v.1.balance(),
                 count_assets: v.1.assets().len() as u64,
@@ -87,15 +90,19 @@ impl WalletApi {
         result
     }
 
-    fn pagination_wallets(&self, offset: u64, limit: u64) -> (HashMap<PublicKey, WalletInfo>, u64, u64){
+    fn pagination_wallets(
+        &self,
+        offset: u64,
+        limit: u64,
+    ) -> (HashMap<PublicKey, WalletInfo>, u64, u64) {
         let view = &mut self.blockchain.fork();
         let idx = wallet::Schema(view).index();
-        let mut total:u64 = 0;
-        let mut count:u64 = 0;
+        let mut total: u64 = 0;
+        let mut count: u64 = 0;
         let mut result: HashMap<PublicKey, WalletInfo> = HashMap::new();
         for v in idx.iter() {
             if total < offset || total >= offset + limit {
-                total+=1;
+                total += 1;
                 continue;
             }
             let wi = WalletInfo {
@@ -103,8 +110,8 @@ impl WalletApi {
                 count_assets: v.1.assets().len() as u64,
             };
             result.insert(v.0, wi);
-            count+=1;
-            total+=1;
+            count += 1;
+            total += 1;
         }
 
         (result, total, count)
@@ -113,7 +120,7 @@ impl WalletApi {
     fn wallets_balance(&self) -> Vec<PublicKey> {
         let view = &mut self.blockchain.fork();
         let index = wallet::Schema(view).index();
-        let wallets = index.into_iter().map(|v|{ v.0 }).collect();
+        let wallets = index.into_iter().map(|v| v.0).collect();
         wallets
     }
 
@@ -128,16 +135,33 @@ impl WalletApi {
 }
 
 lazy_static! {
-    static ref LIST_REQUESTS: Counter = register_counter!("dmbc_wallet_api_list_requests_total", "Wallet list requests.").unwrap();
-    static ref LIST_RESPONSES: Counter = register_counter!("dmbc_wallet_api_list_responses_total", "Wallet list responses.").unwrap();
-    static ref BALANCE_REQUESTS: Counter = register_counter!("dmbc_wallet_api_balance_requests_total", "Balance requests.").unwrap();
-    static ref BALANCE_RESPONSES: Counter = register_counter!("dmbc_wallet_api_balance_responses_total", "Balance responses.").unwrap();
-    static ref ASSETS_REQUESTS: Counter = register_counter!("dmbc_wallet_api_assets_requests_total", "Wallet asset list requests.").unwrap();
-    static ref ASSETS_RESPONSES: Counter = register_counter!("dmbc_wallet_api_assets_responses_total", "Wallet asset list responses.").unwrap();
+    static ref LIST_REQUESTS: Counter = register_counter!(
+        "dmbc_wallet_api_list_requests_total",
+        "Wallet list requests."
+    ).unwrap();
+    static ref LIST_RESPONSES: Counter = register_counter!(
+        "dmbc_wallet_api_list_responses_total",
+        "Wallet list responses."
+    ).unwrap();
+    static ref BALANCE_REQUESTS: Counter = register_counter!(
+        "dmbc_wallet_api_balance_requests_total",
+        "Balance requests."
+    ).unwrap();
+    static ref BALANCE_RESPONSES: Counter = register_counter!(
+        "dmbc_wallet_api_balance_responses_total",
+        "Balance responses."
+    ).unwrap();
+    static ref ASSETS_REQUESTS: Counter = register_counter!(
+        "dmbc_wallet_api_assets_requests_total",
+        "Wallet asset list requests."
+    ).unwrap();
+    static ref ASSETS_RESPONSES: Counter = register_counter!(
+        "dmbc_wallet_api_assets_responses_total",
+        "Wallet asset list responses."
+    ).unwrap();
 }
 
 impl Api for WalletApi {
-    
     fn wire(&self, router: &mut Router) {
         // Gets status of the wallet corresponding to the public key.
         let self_ = self.clone();
@@ -148,11 +172,15 @@ impl Api for WalletApi {
             let wallet_key = path.last().unwrap();
             let result: WalletResponse = match PublicKey::from_hex(wallet_key) {
                 Ok(public_key) => Ok(self_.wallet(&public_key)),
-                Err(_) => Err(ApiError::WalletHexInvalid)
+                Err(_) => Err(ApiError::WalletHexInvalid),
             };
 
             let mut res = Response::with((
-                result.clone().err().map(|e| e.to_status()).unwrap_or(status::Ok),
+                result
+                    .clone()
+                    .err()
+                    .map(|e| e.to_status())
+                    .unwrap_or(status::Ok),
                 serde_json::to_string_pretty(&result).unwrap(),
             ));
             res.headers.set(ContentType::json());
@@ -171,12 +199,14 @@ impl Api for WalletApi {
             let (offset, limit) = ServiceApi::pagination_params(req);
             let (wallets, total, count) = self_.pagination_wallets(offset, limit);
 
-            let result: WalletsResponse = Ok(WalletsResponseBody {total, count, wallets} );
+            let result: WalletsResponse = Ok(WalletsResponseBody {
+                total,
+                count,
+                wallets,
+            });
 
-            let mut res = Response::with((
-                status::Ok,
-                serde_json::to_string_pretty(&result).unwrap(),
-            ));
+            let mut res =
+                Response::with((status::Ok, serde_json::to_string_pretty(&result).unwrap()));
             res.headers.set(ContentType::json());
             res.headers.set(AccessControlAllowOrigin::Any);
 
@@ -199,7 +229,8 @@ impl Api for WalletApi {
             };
             let result: WalletAssetsResponse = match public_key_result {
                 Ok(public_key) => {
-                    let extend_assets = ServiceApi::read_parameter(req, PARAMETER_META_DATA_KEY, false);
+                    let extend_assets =
+                        ServiceApi::read_parameter(req, PARAMETER_META_DATA_KEY, false);
                     let assets = self_.assets(&public_key);
                     // apply pagination parameters if they exist
                     let assets_to_send = ServiceApi::apply_pagination(req, &assets);
@@ -219,14 +250,18 @@ impl Api for WalletApi {
                     Ok(WalletAssetsResponseBody {
                         total: assets.len() as u64,
                         count: assets_to_send.len() as u64,
-                        assets: assets_list 
+                        assets: assets_list,
                     })
-                },
-                Err(_) => Err(ApiError::WalletHexInvalid)
+                }
+                Err(_) => Err(ApiError::WalletHexInvalid),
             };
 
             let mut res = Response::with((
-                result.clone().err().map(|e| e.to_status()).unwrap_or(status::Ok),
+                result
+                    .clone()
+                    .err()
+                    .map(|e| e.to_status())
+                    .unwrap_or(status::Ok),
                 serde_json::to_string_pretty(&result).unwrap(),
             ));
             res.headers.set(ContentType::json());

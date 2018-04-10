@@ -5,13 +5,13 @@ use std::collections::HashMap;
 use exonum::crypto::PublicKey;
 use exonum::storage::{Fork, Snapshot};
 
-use currency::Service;
 use currency::assets;
 use currency::assets::{AssetBundle, MetaAsset, TradeAsset};
-use currency::error::Error;
 use currency::configuration::Configuration;
+use currency::error::Error;
 use currency::wallet;
 use currency::wallet::Wallet;
+use currency::Service;
 
 /// For exchange transactions, determines who shall pay the fees.
 #[repr(u8)]
@@ -172,10 +172,10 @@ impl ThirdPartyFees {
         self.0.values().sum()
     }
 
-    pub fn total_for_wallet(&self, pub_key: &PublicKey ) -> u64 {
+    pub fn total_for_wallet(&self, pub_key: &PublicKey) -> u64 {
         self.0
             .iter()
-            .filter_map(|(key, fee)| if key != pub_key {Some(fee)} else {None} )
+            .filter_map(|(key, fee)| if key != pub_key { Some(fee) } else { None })
             .sum()
     }
 
@@ -190,7 +190,7 @@ impl ThirdPartyFees {
     }
 
     /// Collect fees to third party wallets.
-    /// 
+    ///
     /// Returns a list of wallets modified by fee withdrawal.
     /// This list must usually not be committed or discarded before
     /// the transaction has otherwise successfully executed.
@@ -230,8 +230,8 @@ impl ThirdPartyFees {
     ) -> Result<HashMap<PublicKey, Wallet>, Error> {
         let mut payer_1 = wallet::Schema(&*view).fetch(&payer_key_1);
         let mut payer_2 = wallet::Schema(&*view).fetch(&payer_key_2);
-	
-	    let mut to_third_party = self.0.clone();
+
+        let mut to_third_party = self.0.clone();
 
         if let Some(fee) = to_third_party.remove(payer_key_1) {
             wallet::move_coins(&mut payer_2, &mut payer_1, fee / 2)?;
@@ -240,7 +240,7 @@ impl ThirdPartyFees {
         if let Some(fee) = to_third_party.remove(payer_key_2) {
             wallet::move_coins(&mut payer_1, &mut payer_2, fee / 2)?;
         }
-        
+
         let mut updated_wallets = to_third_party
             .iter()
             .map(|(key, fee)| {

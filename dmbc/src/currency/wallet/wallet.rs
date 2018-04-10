@@ -47,7 +47,7 @@ impl Wallet {
         for to_remove in assets_to_remove {
             if let Some(index) = assets.iter_mut().position(|a| a.id() == to_remove.id()) {
                 let asset = &mut assets[index];
-                
+
                 if asset.amount() < to_remove.amount() {
                     return Err(Error::InsufficientAssets);
                 }
@@ -71,7 +71,7 @@ impl Wallet {
 /// Move funds between wallets.
 ///
 /// # Errors
-/// 
+///
 /// Returns `InsufficientFunds` if the `from` wallet balance is less than `amount`.
 pub fn move_coins(from: &mut Wallet, to: &mut Wallet, amount: u64) -> Result<(), Error> {
     if from.balance() < amount {

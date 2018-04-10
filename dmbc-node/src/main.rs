@@ -11,16 +11,15 @@ extern crate dmbc;
 mod keyfile;
 mod net_config;
 
+use dmbc::config;
+use dmbc::currency::Service;
 use exonum::blockchain;
-use exonum::blockchain::{ConsensusConfig, GenesisConfig, TimeoutAdjusterConfig,
-                         ValidatorKeys};
+use exonum::blockchain::{ConsensusConfig, GenesisConfig, TimeoutAdjusterConfig, ValidatorKeys};
 use exonum::crypto::PublicKey;
 use exonum::encoding::serialize::FromHex;
 use exonum::node::{Node, NodeApiConfig, NodeConfig};
 use exonum::storage::{RocksDB, RocksDBOptions};
 use exonum_configuration::ConfigurationService;
-use dmbc::config;
-use dmbc::currency::Service;
 
 const GENESIS_VALIDATOR_PUBLIC: &str =
     "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f";
@@ -127,7 +126,7 @@ fn main() {
     // Initialize services
     let services: Vec<Box<blockchain::Service>> = vec![
         Box::new(ConfigurationService::new()),
-        Box::new(Service::new())
+        Box::new(Service::new()),
     ];
 
     eprintln!("Launching node. What can possibly go wrong?");
@@ -135,4 +134,3 @@ fn main() {
     let node = Node::new(db, services, node_cfg);
     node.run().unwrap();
 }
-
