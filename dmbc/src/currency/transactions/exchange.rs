@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use exonum::crypto;
 use exonum::crypto::{PublicKey, Signature};
 use exonum::blockchain::Transaction;
@@ -8,7 +10,7 @@ use prometheus::{Counter, Histogram};
 
 use currency::{Service, SERVICE_ID};
 use currency::assets::AssetBundle;
-use currency::transactions::components::{FeeStrategy, ThirdPartyFees};
+use currency::transactions::components::{FeeStrategy, ThirdPartyFees, FeesCalculator};
 use currency::error::Error;
 use currency::status;
 use currency::wallet;
@@ -46,7 +48,56 @@ message! {
     }
 }
 
+impl FeesCalculator for Exchange {
+    fn calculate_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error> {
+        let offer = self.offer();
+        let genesis_fee = Configuration::extract(view).fees().exchange();
+        let fees = ThirdPartyFees::new_exchange(
+            &*view,
+            offer
+                .sender_assets()
+                .into_iter()
+                .chain(offer.recipient_assets().into_iter()),
+        )?;
+        let fee_strategy =
+            FeeStrategy::try_from(offer.fee_strategy()).expect("fee strategy must be valid");
+
+        let mut fees_table = HashMap::new();
+
+        let payers = self.payers(&fee_strategy, genesis_fee)?;
+        for (payer_key, fee) in payers {
+            if Service::genesis_wallet() != payer_key {
+                fees_table.insert(payer_key, fee);
+            }
+        }
+
+        for (receiver_key, fee) in fees.0 {
+            let payers = self.payers(&fee_strategy, fee)?;
+            
+            for (payer_key, fee) in payers {
+                if payer_key != receiver_key {
+                    *fees_table.entry(payer_key).or_insert(0) += fee;
+                }
+            }
+        }
+
+        Ok(fees_table)
+    }
+}
+
 impl Exchange {
+    fn payers(&self, fee_strategy: &FeeStrategy, fee: u64) -> Result<Vec<(PublicKey, u64)>, Error> {
+        let offer = self.offer();
+        let payers = match *fee_strategy {
+            FeeStrategy::Recipient => vec![(*offer.recipient(), fee)],
+            FeeStrategy::Sender => vec![(*offer.sender(), fee)],
+            FeeStrategy::RecipientAndSender => vec![(*offer.sender(), fee/2), 
+                                                    (*offer.recipient(), fee/2)],
+            FeeStrategy::Intermediary => return Err(Error::InvalidTransaction),
+        };
+        Ok(payers)
+    }
+
     /// Get raw bytes of the offer.
     pub fn offer_raw(&self) -> Vec<u8> {
         self.offer().raw
@@ -210,6 +261,6 @@ impl Transaction for Exchange {
     }
 
     fn info(&self) -> serde_json::Value {
-        json!({})
+        json!(self)
     }
 }

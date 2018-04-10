@@ -17,7 +17,7 @@ jobs:
             apt-get -y install unzip cmake make binutils-dev libcurl4-openssl-dev zlib1g-dev libdw-dev libiberty-dev
 
       - run:
-          name: setup nightly
+          name: Setup nightly
           command: |
             rustup default nightly
             rustup update
@@ -68,7 +68,7 @@ jobs:
       - run:
           name: Generate Coverage
           command: |
-            kcov --verify --include-path dmbc target/debug/coverage $(find target/debug -maxdepth 1 -type f -executable -name 'transaction-*')
+            kcov --verify --include-path dmbc target/debug/coverage $(find target/debug -maxdepth 1 -type f -executable -name 'tests-*')
 
       - store_artifacts:
           path: target/debug/coverage

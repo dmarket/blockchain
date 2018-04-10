@@ -1,4 +1,4 @@
-use exonum::crypto::PublicKey;
+use exonum::crypto::{PublicKey, Hash};
 
 use currency::assets::Fees;
 use currency::error::Error;
@@ -6,11 +6,12 @@ use currency::error::Error;
 encoding_struct! {
     /// Information about an asset in the network.
     struct AssetInfo {
-        const SIZE = 48;
+        const SIZE = 80;
 
         field creator: &PublicKey [0  => 32]
-        field amount:  u64        [32 => 40]
-        field fees:    Fees       [40 => 48]
+        field origin:  &Hash      [32 => 64]
+        field amount:  u64        [64 => 72]
+        field fees:    Fees       [72 => 80]
     }
 }
 
@@ -23,6 +24,7 @@ impl AssetInfo {
     pub fn merge(self, other: AssetInfo) -> Result<Self, Error> {
         let fees = self.fees();
         let creator = self.creator();
+        let origin = self.origin();
 
         if fees != other.fees() || creator != other.creator() {
             return Err(Error::InvalidAssetInfo);
@@ -30,6 +32,7 @@ impl AssetInfo {
 
         Ok(AssetInfo::new(
             creator,
+            origin,
             self.amount() + other.amount(),
             fees,
         ))
@@ -47,6 +50,7 @@ impl AssetInfo {
 
         Ok(AssetInfo::new(
             self.creator(),
+            self.origin(),
             self.amount() - amount,
             self.fees()
         ))

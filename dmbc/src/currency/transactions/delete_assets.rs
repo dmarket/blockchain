@@ -13,6 +13,7 @@ use currency::assets::AssetBundle;
 use currency::wallet;
 use currency::error::Error;
 use currency::status;
+use currency::transactions::components::FeesCalculator;
 use currency::configuration::Configuration;
 
 /// Transaction ID.
@@ -28,6 +29,18 @@ message! {
         field pub_key:     &PublicKey       [00 => 32]
         field assets:      Vec<AssetBundle> [32 => 40]
         field seed:        u64              [40 => 48]
+    }
+}
+
+impl FeesCalculator for DeleteAssets {
+    fn calculate_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error> {
+        let tx_fee = Configuration::extract(view).fees().delete_assets();
+
+        let mut fees_table = HashMap::new();
+        if Service::genesis_wallet() != *self.pub_key() {
+            fees_table.insert(*self.pub_key(), tx_fee);
+        }
+        Ok(fees_table)
     }
 }
 
@@ -135,6 +148,6 @@ impl Transaction for DeleteAssets {
     }
 
     fn info(&self) -> serde_json::Value {
-        json!({})
+        json!(self)
     }
 }

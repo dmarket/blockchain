@@ -8,6 +8,7 @@ pub enum ApiError {
     AssetIdHashInvalid,
     EmptyRequestBody,
     IncorrectRequest,
+    WalletHexInvalid,
 }
 
 impl ApiError {
@@ -19,6 +20,7 @@ impl ApiError {
             ApiError::AssetIdHashInvalid => StatusCode::BadRequest,
             ApiError::EmptyRequestBody => StatusCode::BadRequest,
             ApiError::IncorrectRequest => StatusCode::BadRequest,
+            ApiError::WalletHexInvalid => StatusCode::BadRequest,
         }
     }
 }

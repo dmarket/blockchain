@@ -2,6 +2,9 @@ use std::string::ToString;
 use std::error::Error;
 use std::fmt;
 
+use serde::{Serialize, Serializer};
+use serde::de::{self, Deserialize, Deserializer, Visitor};
+
 use exonum::crypto::PublicKey;
 use exonum::encoding;
 use exonum::encoding::{CheckedOffset, Field, Offset};
@@ -15,7 +18,7 @@ use serde_json;
 pub const ASSET_ID_LEN: usize = 16;
 
 /// An identifier for an asset.
-#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, Serialize, Deserialize)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash)]
 pub struct AssetId(pub [u8; ASSET_ID_LEN]);
 
 impl AssetId {
@@ -90,6 +93,18 @@ impl AssetId {
         }
 
         Ok(AssetId(bytes))
+    }
+
+    /// Returns the hex representation of the binary data.
+    /// Lower case letters are used (e.g. f9b4ca).
+    pub fn to_hex(&self) -> String {
+        let mut assetid_hex = "".to_string();
+        let len = self.0.len();
+        for i in 0..len {
+            let byte_hex = format!("{:02x}", self.0[i]);
+            assetid_hex += &*byte_hex;
+        }
+        assetid_hex
     }
 }
 
@@ -197,12 +212,43 @@ impl StorageKey for AssetId {
 
 impl ToString for AssetId {
     fn to_string(&self) -> String {
-        let mut assetid_hex = "".to_string();
-        let len = self.0.len();
-        for i in 0..len {
-            let byte_hex = format!("{:02x}", self.0[i]);
-            assetid_hex += &*byte_hex;
+        self.to_hex()
+    }
+}
+
+impl fmt::Debug for AssetId {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "AssetId({})", self.to_string())
+    }
+}
+
+impl Serialize for AssetId {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where S: Serializer
+    {
+        let hex_string = self.to_hex();
+        serializer.serialize_str(&hex_string)
+    }
+}
+
+impl<'de> Deserialize<'de> for AssetId {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where D: Deserializer<'de>
+    {
+        struct HexVisitor;
+
+        impl<'v> Visitor<'v> for HexVisitor
+        {
+            type Value = AssetId;
+            fn expecting (&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+                write!(fmt, "expecting str.")
+            }
+            fn visit_str<E>(self, s: &str) -> Result<Self::Value, E>
+            where E: de::Error
+            {
+                AssetId::from_hex(s).map_err(|_| de::Error::custom("Invalid hex"))
+            }
         }
-        assetid_hex
+        deserializer.deserialize_str(HexVisitor)
     }
 }

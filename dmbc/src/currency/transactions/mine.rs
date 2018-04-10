@@ -96,6 +96,6 @@ impl Transaction for Mine {
     }
 
     fn info(&self) -> serde_json::Value {
-        json!{[]}
+        json!(self)
     }
 }

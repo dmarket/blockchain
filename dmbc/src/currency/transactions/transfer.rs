@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use exonum::crypto::PublicKey;
 use exonum::blockchain::Transaction;
 use exonum::storage::Fork;
@@ -7,7 +9,7 @@ use prometheus::{Counter, Histogram};
 
 use currency::{Service, SERVICE_ID};
 use currency::assets::AssetBundle;
-use currency::transactions::components::ThirdPartyFees;
+use currency::transactions::components::{FeesCalculator, ThirdPartyFees};
 use currency::error::Error;
 use currency::status;
 use currency::wallet;
@@ -29,6 +31,27 @@ message! {
         field assets:    Vec<AssetBundle> [72 => 80]
         field seed:      u64              [80 => 88]
         field data_info: &str             [88 => 96]
+    }
+}
+
+impl FeesCalculator for Transfer {
+    fn calculate_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error> {
+        let genesis_fee = Configuration::extract(view).fees().transfer();
+        let fees = ThirdPartyFees::new_transfer(&*view,self.assets())?;
+
+        let mut fees_table = HashMap::new();
+        if Service::genesis_wallet() != *self.from() {
+            fees_table.insert(*self.from(), genesis_fee);
+        }
+
+        for (pub_key, fee) in fees.0 {
+            if pub_key != *self.from() {
+                *fees_table.entry(*self.from()).or_insert(0) += fee;
+            }
+        }
+
+
+        Ok(fees_table)
     }
 }
 
@@ -142,6 +165,6 @@ impl Transaction for Transfer {
     }
 
     fn info(&self) -> serde_json::Value {
-        json!({})
+        json!(self)
     }
 }

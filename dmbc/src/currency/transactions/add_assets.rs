@@ -14,7 +14,7 @@ use currency::assets::{AssetId, AssetInfo, MetaAsset};
 use currency::wallet;
 use currency::status;
 use currency::error::Error;
-use currency::transactions::components::ThirdPartyFees;
+use currency::transactions::components::{ThirdPartyFees, FeesCalculator};
 use currency::configuration::Configuration;
 
 /// Transaction ID.
@@ -33,7 +33,27 @@ message!{
     }
 }
 
+impl FeesCalculator for AddAssets {
+    fn calculate_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error> {
+        let genesis_fee = Configuration::extract(view).fees().add_assets();
+        let fees = ThirdPartyFees::new_add_assets(&view, self.meta_assets())?;   
+
+        let mut fees_table = HashMap::new();
+        if Service::genesis_wallet() != *self.pub_key() {
+            fees_table.insert(*self.pub_key(), genesis_fee);
+        }
+
+        for (pub_key, fee) in fees.0 {
+            if pub_key != *self.pub_key() {
+                *fees_table.entry(*self.pub_key()).or_insert(0) += fee;
+            }
+        }
+        Ok(fees_table)
+    }
+}
+
 impl AddAssets {
+
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
         info!("Processing tx: {:?}", self);
 
@@ -67,10 +87,11 @@ impl AddAssets {
             match infos.entry(id) {
                 Entry::Occupied(entry) => {
                     let info = entry.into_mut();
-                    *info = info.clone().merge(meta.to_info(key))?;
+                    *info = info.clone().merge(meta.to_info(key, &info.origin()))?;
                 }
                 Entry::Vacant(entry) => {
-                    let new_info = meta.to_info(key);
+                    let origin = self.hash();
+                    let new_info = meta.to_info(key, &origin);
                     let info = match assets::Schema(&*view).fetch(&id) {
                         Some(info) => info.merge(new_info)?,
                         None => new_info,
@@ -159,6 +180,6 @@ impl Transaction for AddAssets {
     }
 
     fn info(&self) -> serde_json::Value {
-        json!({})
+        json!(self)
     }
 }

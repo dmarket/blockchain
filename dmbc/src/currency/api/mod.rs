@@ -4,10 +4,11 @@
 pub mod transaction;
 pub mod asset;
 pub mod wallet;
-pub mod hash;
+pub mod hex;
 pub mod error;
 pub mod assets_intern;
 pub mod metrics;
+pub mod fees;
 extern crate params;
 
 use exonum::api::Api;
@@ -23,12 +24,13 @@ use std::cmp;
 use unicase::UniCase;
 
 use self::asset::AssetApi;
-use self::hash::HashApi;
+use self::hex::HexApi;
 use self::params::{FromValue, Params};
 use self::transaction::TransactionApi;
 use self::wallet::WalletApi;
 use self::assets_intern::AssetInternApi;
 use self::metrics::MetricsApi;
+use self::fees::FeesApi;
 
 const PARAMETER_OFFSET_KEY: &str = "offset";
 const PARAMETER_LIMIT_KEY: &str = "limit";
@@ -82,6 +84,17 @@ impl ServiceApi {
         }
     }
 
+    pub fn read_parameter<T>(req: &mut Request, parameter_key: &str, default_value: T) -> T 
+    where T: FromValue
+    {
+        let parameters = req.get_ref::<Params>().unwrap();
+        if let Some(parameter) = parameters.get(parameter_key) {
+            return FromValue::from_value(parameter).unwrap_or(default_value)
+        }
+
+        default_value
+    }
+
     pub fn add_option_headers(headers: &mut Headers) {
         headers.set(AccessControlAllowOrigin::Any);
         headers.set(AccessControlAllowHeaders(vec![
@@ -114,13 +127,18 @@ impl Api for ServiceApi {
         };
         api.wire(router);
 
-        let api = HashApi {};
+        let api = HexApi {};
         api.wire(router);
 
         let api = AssetInternApi {};
         api.wire(router);
 
         let api = MetricsApi {};
+        api.wire(router);
+
+        let api = FeesApi { 
+            blockchain: self.clone().blockchain,
+        };
         api.wire(router);
 
         let send_option = move |_request: &mut Request| -> IronResult<Response> {

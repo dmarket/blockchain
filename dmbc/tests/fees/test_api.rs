@@ -1,71 +1,24 @@
 use exonum::crypto;
-use exonum::crypto::{PublicKey, SecretKey, Hash};
+use exonum::crypto::{PublicKey, SecretKey};
 use exonum_testkit::{ApiKind, TestKit, TestKitApi, TestKitBuilder};
 use exonum::encoding::serialize::reexport::Serialize;
 use exonum::messages::Message;
 
+use dmbc::currency::configuration::{Configuration, TransactionFees};
 use dmbc::currency::Service;
 use dmbc::currency::SERVICE_NAME;
-use dmbc::currency::assets::AssetId;
-use dmbc::currency::wallet::Wallet;
-use dmbc::currency::api::transaction::{TransactionResponse, StatusResponse, TxPostResponse};
-use dmbc::currency::api::asset::AssetResponse;
-use dmbc::currency::api::wallet::WalletResponse;
-use dmbc::currency::configuration::{Configuration, TransactionFees};
+use dmbc::currency::api::transaction::{TxPostResponse, TransactionResponse};
+use dmbc::currency::api::fees::FeesResponse;
+use dmbc::currency::transactions::builders::fee;
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::assets::{Fees, MetaAsset};
 
-pub mod mine;
-pub mod add_assets;
-pub mod delete_assets;
-pub mod transfer;
-pub mod exchange;
-pub mod exchange_intermediary;
-pub mod trade;
-pub mod trade_intermediary;
-
-pub const DMC_1:u64 = 1_00_000_000;
 
 pub fn init_testkit() -> TestKit {
     TestKitBuilder::validator()
         .with_validators(4)
         .with_service(Service::new())
         .create()
-}
-
-pub fn get_wallet(api: &TestKitApi, pub_key: &PublicKey) -> Wallet {
-    let response: WalletResponse = api.get(
-        ApiKind::Service(SERVICE_NAME),
-        &format!("v1/wallets/{}", pub_key.to_string()),
-    );
-
-    response.unwrap()
-}
-
-pub fn get_status(api: &TestKitApi, tx_hash: &Hash) -> StatusResponse {
-    api.get(
-        ApiKind::Service(SERVICE_NAME),
-        &format!("v1/transactions/{}", tx_hash.to_string()),
-    )
-}
-
-pub fn get_asset_info(api: &TestKitApi, asset_id: &AssetId) -> AssetResponse {
-    api.get(
-        ApiKind::Service(SERVICE_NAME),
-        &format!("/v1/assets/{}", asset_id.to_string()),
-    )
-}
-
-pub fn post_tx<T>(api: &TestKitApi, tx: &T)
-    where T:Message + Serialize
-{
-    let tx_response:TxPostResponse = api.post(
-        ApiKind::Service(SERVICE_NAME),
-        "v1/transactions",
-        &tx
-    );
-
-    assert_eq!(tx_response, Ok(Ok(TransactionResponse{tx_hash:tx.hash()})));
 }
 
 pub fn set_configuration(testkit: &mut TestKit, fees: TransactionFees) {
@@ -81,18 +34,36 @@ pub fn set_configuration(testkit: &mut TestKit, fees: TransactionFees) {
     testkit.create_block();
 }
 
-fn mine_wallet(testkit: &mut TestKit,) -> (PublicKey, SecretKey) {
-    let (pk, sk) = crypto::gen_keypair();
+pub fn post_tx<T>(api: &TestKitApi, tx: &T)
+    where T:Message + Serialize
+{
+    let tx_response:TxPostResponse = api.post(
+        ApiKind::Service(SERVICE_NAME),
+        "v1/transactions",
+        &tx
+    );
 
-    let mine_1_dmc = transaction::Builder::new()
-        .keypair(pk, sk.clone())
-        .tx_mine()
-        .build();
+    assert_eq!(tx_response, Ok(Ok(TransactionResponse{tx_hash:tx.hash()})));
+}
 
-    post_tx(&testkit.api(), &mine_1_dmc);
-    testkit.create_block();
+pub fn post_fee<T>(api: &TestKitApi, tx: &T) -> FeesResponse
+    where T:Message + Serialize
+{
+    let response: FeesResponse = api.post(
+        ApiKind::Service(SERVICE_NAME),
+        "/v1/fees/transactions",
+        &tx
+    );
 
-    (pk, sk)
+    response
+}
+
+pub fn asset_fee(t: u64, r: u64) -> Fees {
+    fee::Builder::new()
+        .trade(t, r)
+        .exchange(t, r)
+        .transfer(t, r)
+        .build()
 }
 
 pub struct WalletMiner {
@@ -102,7 +73,7 @@ pub struct WalletMiner {
 }
 
 impl WalletMiner {
-    fn new() -> Self {
+    pub fn new() -> Self {
         let (public_key, secret_key) = crypto::gen_keypair();
         WalletMiner {
             public_key,
@@ -121,7 +92,7 @@ impl WalletMiner {
         self
     }
 
-    pub fn mine_empty(self) -> (PublicKey, SecretKey) {
+    pub fn mine_empty(self, _testkit: &mut TestKit) -> (PublicKey, SecretKey) {
         (self.public_key, self.secret_key)
     }
 
@@ -151,7 +122,5 @@ impl WalletMiner {
         }
 
         (self.public_key, self.secret_key)
-    }
-
-    
+    }   
 }
