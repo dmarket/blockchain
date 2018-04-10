@@ -23,7 +23,7 @@ fn wallet() {
     let units = 2;
     let meta_data = "asset";
 
-    let (pub_key, _) = WalletMiner::new()
+    let (pub_key, _, _) = WalletMiner::new()
         .add_asset(meta_data, units, asset_fee(tax, 0))
         .mine(&mut testkit);
 
@@ -46,11 +46,11 @@ fn wallets() {
     let units = 2;
     let meta_data = "asset";
 
-    let (pub_key1, _) = WalletMiner::new()
+    let (pub_key1, _, _) = WalletMiner::new()
         .add_asset(meta_data, units, asset_fee(tax, 0))
         .mine(&mut testkit);
 
-    let (pub_key2, _) = WalletMiner::new()
+    let (pub_key2, _, _) = WalletMiner::new()
         .add_asset(meta_data, units, asset_fee(tax, 0))
         .mine(&mut testkit);
 
@@ -81,11 +81,11 @@ fn wallets_pagination() {
     let units = 2;
     let meta_data = "asset";
 
-    let (_, _) = WalletMiner::new()
+    let (_, _, _) = WalletMiner::new()
         .add_asset(meta_data, units, asset_fee(tax, 0))
         .mine(&mut testkit);
 
-    let (_, _) = WalletMiner::new()
+    let (_, _, _) = WalletMiner::new()
         .add_asset(meta_data, units, asset_fee(tax, 0))
         .mine(&mut testkit);
 
@@ -114,7 +114,7 @@ fn wallet_assets() {
     let meta_data1 = "asset1";
     let meta_data2 = "asset2";
 
-    let (pub_key, _) = WalletMiner::new()
+    let (pub_key, _, _) = WalletMiner::new()
         .add_asset(meta_data0, units, asset_fee(tax, 0))
         .add_asset(meta_data1, units, asset_fee(tax, 0))
         .add_asset(meta_data2, units, asset_fee(tax, 0))
@@ -146,7 +146,7 @@ fn wallet_assets_meta_data() {
     let units = 2;
     let meta_data = "asset";
 
-    let (pub_key, _) = WalletMiner::new()
+    let (pub_key, _, hash) = WalletMiner::new()
         .add_asset(meta_data, units, asset_fee(tax, 0))
         .mine(&mut testkit);
 
@@ -156,7 +156,7 @@ fn wallet_assets_meta_data() {
     );
 
     let asset = AssetBundle::from_data(meta_data, units, &pub_key);
-    let info = AssetInfo::new(&pub_key, units, asset_fee(tax, 0));
+    let info = AssetInfo::new(&pub_key, &hash.unwrap(), units, asset_fee(tax, 0));
 
     let assets = vec![ExtendedAsset::from_asset(&asset, Some(info))];
     let total = assets.len() as u64;

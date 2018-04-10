@@ -11,7 +11,7 @@ pub mod wallet;
 pub mod assets_intern;
 
 use exonum::crypto;
-use exonum::crypto::{PublicKey, SecretKey};
+use exonum::crypto::{PublicKey, SecretKey, Hash};
 use exonum_testkit::{ApiKind, TestKit, TestKitApi, TestKitBuilder};
 use exonum::encoding::serialize::reexport::Serialize;
 use exonum::messages::Message;
@@ -77,7 +77,8 @@ impl WalletMiner {
         (self.public_key, self.secret_key)
     }
 
-    pub fn mine(self, testkit: &mut TestKit) -> (PublicKey, SecretKey) {
+    pub fn mine(self, testkit: &mut TestKit) -> (PublicKey, SecretKey, Option<Hash>) {
+        let mut hash: Option<Hash> = None;
         let mine_1_dmc = transaction::Builder::new()
             .keypair(self.public_key, self.secret_key.clone())
             .tx_mine()
@@ -100,9 +101,10 @@ impl WalletMiner {
 
             post_tx(&testkit.api(), &tx_add_assets);
             testkit.create_block();
+            hash = Some(tx_add_assets.hash());
         }
 
-        (self.public_key, self.secret_key)
+        (self.public_key, self.secret_key, hash)
     }
 }
 

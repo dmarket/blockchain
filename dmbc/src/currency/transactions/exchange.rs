@@ -215,6 +215,6 @@ impl Transaction for Exchange {
     }
 
     fn info(&self) -> serde_json::Value {
-        json!({})
+        json!(self)
     }
 }

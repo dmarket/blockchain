@@ -102,6 +102,6 @@ impl Transaction for DeleteAssets {
     }
 
     fn info(&self) -> serde_json::Value {
-        json!({})
+        json!(self)
     }
 }

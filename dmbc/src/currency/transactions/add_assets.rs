@@ -86,10 +86,11 @@ impl AddAssets {
             match infos.entry(id) {
                 Entry::Occupied(entry) => {
                     let info = entry.into_mut();
-                    *info = info.clone().merge(meta.to_info(key))?;
+                    *info = info.clone().merge(meta.to_info(key, &info.origin()))?;
                 }
                 Entry::Vacant(entry) => {
-                    let new_info = meta.to_info(key);
+                    let origin = self.hash();
+                    let new_info = meta.to_info(key, &origin);
                     let info = match assets::Schema(&*view).fetch(&id) {
                         Some(info) => info.merge(new_info)?,
                         None => new_info,
@@ -136,6 +137,6 @@ impl Transaction for AddAssets {
     }
 
     fn info(&self) -> serde_json::Value {
-        json!({})
+        json!(self)
     }
 }
