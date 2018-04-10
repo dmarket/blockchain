@@ -13,7 +13,6 @@ use iron::status;
 use iron::prelude::*;
 use router::Router;
 use prometheus::Counter;
-use lazy_static;
 
 use currency::api::error::ApiError;
 use currency::assets;

@@ -17,7 +17,6 @@ use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use router::Router;
 use prometheus::Counter;
-use lazy_static;
 
 use currency::api::ServiceApi;
 use currency::assets::AssetBundle;

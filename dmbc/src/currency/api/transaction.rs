@@ -16,7 +16,6 @@ use iron::prelude::*;
 use iron::status as istatus;
 use router::Router;
 use prometheus::Counter;
-use lazy_static;
 
 use currency::api::error::ApiError;
 use currency::status;

@@ -4,7 +4,7 @@ use exonum::blockchain::Transaction;
 use exonum::storage::Fork;
 use exonum::messages::Message;
 use serde_json;
-use prometheus::Counter;
+use prometheus::{Counter, Histogram};
 
 use currency::{Service, SERVICE_ID};
 use currency::assets::AssetBundle;
@@ -178,6 +178,10 @@ lazy_static! {
         "dmbc_transaction_exchange_intermediary_execute_finish_count",
         "Times transaction has finished executing without panicking."
     ).unwrap();
+    static ref EXECUTE_DURATION: Histogram = register_histogram!(
+        "dmbc_transaction_exchange_intermediary_execute_duration_seconds",
+        "Duration of transaction execution."
+    ).unwrap();
 }
 
 impl Transaction for ExchangeIntermediary {
@@ -213,6 +217,7 @@ impl Transaction for ExchangeIntermediary {
 
     fn execute(&self, view: &mut Fork) {
         EXECUTE_COUNT.inc();
+        let timer = EXECUTE_DURATION.start_timer();
 
         let result = self.process(view);
 
@@ -222,6 +227,7 @@ impl Transaction for ExchangeIntermediary {
 
         status::Schema(view).store(self.hash(), result);
 
+        timer.observe_duration();
         EXECUTE_FINISH_COUNT.inc();
     }
 
