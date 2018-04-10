@@ -62,7 +62,7 @@ impl Transfer {
 
         // Collect the blockchain fee. Execution shall not continue if this fails.
         let mut wallet_from = wallet::Schema(&*view).fetch(self.from());
-        wallet::move_coins(&mut wallet_from, &mut genesis, genesis_fees.trade())?;
+        wallet::move_coins(&mut wallet_from, &mut genesis, genesis_fees.transfer())?;
 
         wallet::Schema(&mut *view).store(self.from(), wallet_from);
         wallet::Schema(&mut *view).store(genesis_fees.recipient(), genesis);

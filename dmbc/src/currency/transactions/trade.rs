@@ -54,7 +54,7 @@ impl FeesCalculator for Trade {
 
         let mut fees_table = HashMap::new();
 
-        let payers = self.payers(&fee_strategy, genesis_fees.exchange())?;
+        let payers = self.payers(&fee_strategy, genesis_fees.trade())?;
         for (payer_key, fee) in payers {
             if genesis_fees.recipient() != &payer_key {
                 fees_table.insert(payer_key, fee);
