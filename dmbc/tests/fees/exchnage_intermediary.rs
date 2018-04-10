@@ -21,7 +21,7 @@ fn fees_for_exchange_intermediary_recipient() {
     let meta_data2 = "asset2";
     let meta_data3 = "asset3";
 
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, transaction_fee, 0, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0));
 
     let (creator_pub_key, _) = WalletMiner::new()
         .add_asset(meta_data0, units, asset_fee(tax, 0))
@@ -71,7 +71,7 @@ fn fees_for_exchange_intermediary_sender() {
     let meta_data2 = "asset2";
     let meta_data3 = "asset3";
 
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, transaction_fee, 0, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0));
 
     let (creator_pub_key, _) = WalletMiner::new()
         .add_asset(meta_data0, units, asset_fee(tax, 0))
@@ -121,7 +121,7 @@ fn fees_for_exchange_intermediary_recipient_and_sender() {
     let meta_data2 = "asset2";
     let meta_data3 = "asset3";
 
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, transaction_fee, 0, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0));
 
     let (creator_pub_key, _) = WalletMiner::new()
         .add_asset(meta_data0, units, asset_fee(tax, 0))
@@ -172,7 +172,7 @@ fn fees_for_exchange_intermediary_intermediary() {
     let meta_data2 = "asset2";
     let meta_data3 = "asset3";
 
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, transaction_fee, 0, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0));
 
     let (creator_pub_key, _) = WalletMiner::new()
         .add_asset(meta_data0, units, asset_fee(tax, 0))
@@ -222,7 +222,7 @@ fn fees_for_exchange_intermediary_recipient_and_sender_creator() {
     let meta_data2 = "asset2";
     let meta_data3 = "asset3";
 
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, transaction_fee, 0, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0));
 
     let (sender_public_key, sender_secret_key) = WalletMiner::new()
         .add_asset(meta_data0, units, asset_fee(tax, 0))
@@ -271,7 +271,7 @@ fn fees_for_exchange_intermediary_asset_not_found() {
     let meta_data2 = "asset2";
     let meta_data3 = "asset3";
 
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, transaction_fee, 0, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0));
 
     let (sender_public_key, sender_secret_key) = WalletMiner::new().mine(&mut testkit);
     let (recipient_public_key, recipient_secret_key) = WalletMiner::new().mine(&mut testkit);

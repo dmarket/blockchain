@@ -7,11 +7,13 @@ use exonum::crypto::PublicKey;
 use exonum::encoding;
 use exonum::messages::RawTransaction;
 use exonum::storage::Fork;
+use exonum::storage::Snapshot;
 use exonum::encoding::serialize::FromHex;
 
 use config;
 use super::nats;
 use currency::api::ServiceApi;
+use currency::configuration;
 use currency::configuration::Configuration;
 use currency::wallet;
 use currency::wallet::Wallet;
@@ -29,10 +31,6 @@ pub const SERVICE_ID: u16 = 2;
 /// Name of the cryptocurrency service.
 pub const SERVICE_NAME: &str = "cryptocurrency";
 
-/// Hexadecimal representation of the public key for genesis wallet.
-pub const GENESIS_WALLET_PUB_KEY: &str =
-    "36a05e418393fb4b23819753f6e6dd51550ce030d53842c43dd1349857a96a61";
-
 /// Service data.
 pub struct Service();
 
@@ -43,8 +41,9 @@ impl Service {
     }
 
     /// Genesis wallet public key.
-    pub fn genesis_wallet() -> PublicKey {
-        PublicKey::from_hex(GENESIS_WALLET_PUB_KEY).unwrap()
+    pub fn genesis_wallet<S: AsRef<Snapshot>>(view: S) -> PublicKey {
+        let config = Configuration::extract(view.as_ref());
+        *config.fees().recipient()
     }
 }
 
@@ -103,10 +102,11 @@ impl blockchain::Service for Service {
     }
 
     fn initialize(&self, fork: &mut Fork) -> serde_json::Value {
-        let genesis_wallet = Service::genesis_wallet();
+        let genesis_wallet = PublicKey::from_hex(configuration::GENESIS_WALLET_PUB_KEY).unwrap();
         let wallet = Wallet::new(137_000_000_00000000, Vec::new());
         wallet::Schema(fork).store(&genesis_wallet, wallet);
 
         serde_json::to_value(Configuration::default()).unwrap()
     }
 }
+

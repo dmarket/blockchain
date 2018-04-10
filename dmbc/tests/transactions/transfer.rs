@@ -16,7 +16,7 @@ use transactions::*;
 fn transfer() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 0, 0, 100));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, 0, 100));
 
     let (public_key, secret_key) = mine_wallet(&mut testkit);
     let (recipient_key, _) = crypto::gen_keypair();
@@ -76,7 +76,7 @@ fn transfer() {
 fn tranfer_asset_not_found() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 0, 0, 100));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, 0, 100));
 
     let (public_key, secret_key) = mine_wallet(&mut testkit);
     let (recipient_key, _) = crypto::gen_keypair();
@@ -103,7 +103,7 @@ fn tranfer_insufficient_funds() {
     let mut testkit = init_testkit();
     let api = testkit.api();
 
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 0, 0, 100));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, 0, 100));
 
     let (public_key, secret_key) = crypto::gen_keypair();
     let (recipient_key, _) = crypto::gen_keypair();

@@ -8,7 +8,7 @@ use exonum::messages::Message;
 use serde_json;
 use prometheus::{Counter, Histogram};
 
-use currency::{Service, SERVICE_ID};
+use currency::SERVICE_ID;
 use currency::assets::AssetBundle;
 use currency::transactions::components::{FeeStrategy, ThirdPartyFees, FeesCalculator};
 use currency::error::Error;
@@ -51,7 +51,7 @@ message! {
 impl FeesCalculator for Exchange {
     fn calculate_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error> {
         let offer = self.offer();
-        let genesis_fee = Configuration::extract(view).fees().exchange();
+        let genesis_fees = Configuration::extract(view).fees();
         let fees = ThirdPartyFees::new_exchange(
             &*view,
             offer
@@ -64,9 +64,9 @@ impl FeesCalculator for Exchange {
 
         let mut fees_table = HashMap::new();
 
-        let payers = self.payers(&fee_strategy, genesis_fee)?;
+        let payers = self.payers(&fee_strategy, genesis_fees.exchange())?;
         for (payer_key, fee) in payers {
-            if Service::genesis_wallet() != payer_key {
+            if genesis_fees.recipient() != &payer_key {
                 fees_table.insert(payer_key, fee);
             }
         }
@@ -106,28 +106,28 @@ impl Exchange {
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
         info!("Processing tx: {:?}", self);
 
-        let genesis_fee = Configuration::extract(view).fees().exchange();
+        let genesis_fees = Configuration::extract(view).fees();
 
         let offer = self.offer();
 
         let fee_strategy =
             FeeStrategy::try_from(offer.fee_strategy()).expect("fee strategy must be valid");
 
-        let mut genesis = wallet::Schema(&*view).fetch(&Service::genesis_wallet());
+        let mut genesis = wallet::Schema(&*view).fetch(genesis_fees.recipient());
 
         // Collect the blockchain fee. Execution shall not continue if this fails.
         match fee_strategy {
             FeeStrategy::Recipient => {
                 let mut recipient = wallet::Schema(&*view).fetch(offer.recipient());
 
-                wallet::move_coins(&mut recipient, &mut genesis, genesis_fee)?;
+                wallet::move_coins(&mut recipient, &mut genesis, genesis_fees.exchange())?;
 
                 wallet::Schema(&mut *view).store(offer.recipient(), recipient);
             }
             FeeStrategy::Sender => {
                 let mut sender = wallet::Schema(&*view).fetch(offer.sender());
 
-                wallet::move_coins(&mut sender, &mut genesis, genesis_fee)?;
+                wallet::move_coins(&mut sender, &mut genesis, genesis_fees.exchange())?;
 
                 wallet::Schema(&mut *view).store(offer.sender(), sender);
             }
@@ -135,8 +135,8 @@ impl Exchange {
                 let mut recipient = wallet::Schema(&*view).fetch(offer.recipient());
                 let mut sender = wallet::Schema(&*view).fetch(offer.sender());
 
-                wallet::move_coins(&mut recipient, &mut genesis, genesis_fee / 2)?;
-                wallet::move_coins(&mut sender, &mut genesis, genesis_fee / 2)?;
+                wallet::move_coins(&mut recipient, &mut genesis, genesis_fees.exchange() / 2)?;
+                wallet::move_coins(&mut sender, &mut genesis, genesis_fees.exchange() / 2)?;
 
                 wallet::Schema(&mut *view).store(offer.sender(), sender);
                 wallet::Schema(&mut *view).store(offer.recipient(), recipient);
@@ -144,7 +144,7 @@ impl Exchange {
             FeeStrategy::Intermediary => return Err(Error::InvalidTransaction),
         }
 
-        wallet::Schema(&mut *view).store(&Service::genesis_wallet(), genesis);
+        wallet::Schema(&mut *view).store(genesis_fees.recipient(), genesis);
 
         let fees = ThirdPartyFees::new_exchange(
             &*view,

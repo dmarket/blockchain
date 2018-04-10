@@ -8,7 +8,7 @@ use exonum::messages::Message;
 use serde_json;
 use prometheus::{Counter, Histogram};
 
-use currency::{Service, SERVICE_ID};
+use currency::SERVICE_ID;
 use currency::assets;
 use currency::assets::{AssetId, AssetInfo, MetaAsset};
 use currency::wallet;
@@ -35,12 +35,12 @@ message!{
 
 impl FeesCalculator for AddAssets {
     fn calculate_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error> {
-        let genesis_fee = Configuration::extract(view).fees().add_assets();
+        let genesis_fees = Configuration::extract(view).fees();
         let fees = ThirdPartyFees::new_add_assets(&view, self.meta_assets())?;   
 
         let mut fees_table = HashMap::new();
-        if Service::genesis_wallet() != *self.pub_key() {
-            fees_table.insert(*self.pub_key(), genesis_fee);
+        if genesis_fees.recipient() != self.pub_key() {
+            fees_table.insert(*self.pub_key(), genesis_fees.add_assets());
         }
 
         for (pub_key, fee) in fees.0 {
@@ -57,9 +57,10 @@ impl AddAssets {
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
         info!("Processing tx: {:?}", self);
 
-        let tx_fee = Configuration::extract(view).fees().add_assets();
+        let genesis_fees = Configuration::extract(&*view).fees();
+        let tx_fee = genesis_fees.add_assets();
 
-        let genesis_pub = Service::genesis_wallet();
+        let genesis_pub = genesis_fees.recipient();
         let creator_pub = self.pub_key();
 
         let mut genesis = wallet::Schema(&*view).fetch(&genesis_pub);

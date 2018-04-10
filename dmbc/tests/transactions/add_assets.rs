@@ -18,7 +18,7 @@ fn add_assets() {
     let mut testkit = init_testkit();
     let api = testkit.api();
 
-    set_configuration(&mut testkit, TransactionFees::new(10, 1, 0, 0, 0, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(10, 1, 0, 0, 0, 0));
 
     let (public_key, secret_key) = crypto::gen_keypair();
     let (receiver_key, _) = crypto::gen_keypair();
@@ -296,7 +296,7 @@ fn add_assets_with_different_fees() {
     let mut testkit = init_testkit();
     let api = testkit.api();
 
-    set_configuration(&mut testkit, TransactionFees::new(10, 1, 0, 0, 0, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(10, 1, 0, 0, 0, 0));
 
     let (public_key, secret_key) = crypto::gen_keypair();
 
@@ -385,7 +385,7 @@ fn add_assets_insufficient_funds() {
     let mut testkit = init_testkit();
     let api = testkit.api();
 
-    set_configuration(&mut testkit, TransactionFees::new(10, 1_00_000_000, 0, 0, 0, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(10, 1_00_000_000, 0, 0, 0, 0));
 
     let (public_key, secret_key) = crypto::gen_keypair();
 

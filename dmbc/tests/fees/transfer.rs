@@ -15,7 +15,7 @@ fn fees_for_transfer() {
     let transaction_fee = 1000;
     let amount = 2;
     let tax = 10;
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 0, 0, transaction_fee));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee));
 
     let meta_data = "asset";
     let (creator_key, _) = WalletMiner::new()
@@ -49,7 +49,7 @@ fn fees_for_transfer_sender_is_creator() {
     let transaction_fee = 1000;
     let amount = 2;
     let tax = 10;
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 0, 0, transaction_fee));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee));
 
     let meta_data = "asset";
     let (sender_key, secret_key) = WalletMiner::new()
@@ -78,7 +78,7 @@ fn fees_for_transfer_asset_not_found() {
     let api = testkit.api();
     let transaction_fee = 1000;
     let amount = 2;
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 0, 0, transaction_fee));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee));
 
     let meta_data = "asset";
     let (sender_key, secret_key) = WalletMiner::new().mine_empty(&mut testkit);

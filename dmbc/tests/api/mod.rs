@@ -25,6 +25,8 @@ use dmbc::currency::transactions::builders::fee;
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::wallet::Wallet;
 
+use common;
+
 pub const TEST_KIT_SERVICE_URL: &str =
     "http://localhost:3000/api/services/cryptocurrency";
 
@@ -119,7 +121,7 @@ pub fn asset_fee(t: u64, r: u64) -> Fees {
 fn genesis_wallet(api: &TestKitApi) -> Wallet {
     let response: WalletResponse = api.get(
         ApiKind::Service(SERVICE_NAME),
-        &format!("v1/wallets/{}", Service::genesis_wallet().to_string()),
+        &format!("v1/wallets/{}", common::default_genesis_wallet().to_string()),
     );
 
     response.unwrap()

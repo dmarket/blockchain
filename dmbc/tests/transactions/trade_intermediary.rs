@@ -24,7 +24,7 @@ fn trade_interemedary() {
     let mut testkit = init_testkit();
     let api = testkit.api();
     let transaction_trade_fee = 100;
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 0, transaction_trade_fee, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, transaction_trade_fee, 0));
 
     let meta_data = "asset";
     let (seller_public_key, seller_secret_key) = WalletMiner::new()
@@ -69,7 +69,7 @@ fn trade_intermediary_fee_strategy() {
     let trade_tax = 0;
     let trade_ratio = 1;
 
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 0, transaction_fee, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0));
 
     // Recipient pays
     let meta_data = "asset";
@@ -259,7 +259,7 @@ fn trade_interemedary_insufficient_funds() {
     let trade_tax = 0;
     let trade_ratio = 1;
 
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 0, transaction_fee, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0));
 
     // Sender pays
     let meta_data = "asset";
@@ -368,7 +368,7 @@ fn trade_interemedary_assets_not_found() {
     let price_per_unit = 1000;
     let commission = 50;
 
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 0, transaction_fee, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0));
 
     // Sender pays
     let meta_data = "asset";
@@ -407,7 +407,7 @@ fn trade_interemedary_insufficient_assets() {
     let trade_tax = 0;
     let trade_ratio = 1;
 
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, 0, transaction_fee, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0));
 
     // Sender pays
     let meta_data = "asset";

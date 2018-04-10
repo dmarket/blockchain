@@ -5,7 +5,6 @@ use iron_test::{request, response};
 
 use exonum_testkit::ApiKind;
 
-use dmbc::currency::Service;
 use dmbc::currency::SERVICE_NAME;
 use dmbc::currency::api::wallet::{WalletResponse, WalletsResponse, WalletInfo, 
                                 WalletsResponseBody, WalletAssetsResponse, WalletAssetsResponseBody, ExtendedAsset};
@@ -14,6 +13,7 @@ use dmbc::currency::assets::{AssetBundle, AssetInfo};
 use dmbc::currency::wallet::Wallet;
 use dmbc::currency::api::error::ApiError;
 
+use common;
 
 #[test]
 fn wallet() {
@@ -54,7 +54,7 @@ fn wallets() {
         .add_asset(meta_data, units, asset_fee(tax, 0))
         .mine(&mut testkit);
 
-    let genesis_key = Service::genesis_wallet();
+    let genesis_key = common::default_genesis_wallet();
     let genesis = genesis_wallet(&api);
     let genesis_count_assets = genesis.assets().len() as u64;
 

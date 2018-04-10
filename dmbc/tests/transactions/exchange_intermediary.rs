@@ -5,7 +5,6 @@ extern crate exonum_testkit;
 use exonum::crypto;
 use exonum::messages::Message;
 
-use dmbc::currency::Service;
 use dmbc::currency::assets::{AssetBundle, Fees};
 use dmbc::currency::transactions::builders::fee;
 use dmbc::currency::transactions::builders::transaction;
@@ -13,6 +12,7 @@ use dmbc::currency::configuration::TransactionFees;
 use dmbc::currency::transactions::components::FeeStrategy;
 use dmbc::currency::error::Error;
 
+use common;
 use transactions::*;
 
 fn exchange_fee(t: u64) -> Fees {
@@ -30,7 +30,7 @@ const INTER_COMMISSION:u64 = 100;
 fn exchange_i_assets() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, BC_FEE, 0, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, BC_FEE, 0, 0));
 
     let (sender_pk, sender_sk) = mine_wallet(&mut testkit);
     let (recipient_pk, recipient_sk) = mine_wallet(&mut testkit);
@@ -119,7 +119,7 @@ fn exchange_i_assets() {
     let sender_wallet = get_wallet(&api, &sender_pk);
     let recipient_wallet = get_wallet(&api, &recipient_pk);
     let creator_wallet = get_wallet(&api, &creator_pk);
-    let genesis_wallet = get_wallet(&api, &Service::genesis_wallet());
+    let genesis_wallet = get_wallet(&api, &common::default_genesis_wallet());
     let intermediary_wallet = get_wallet(&api, &intermediary_pk);
 
     assert_eq!(Ok(Ok(())), status);
@@ -156,7 +156,7 @@ fn exchange_i_assets() {
 fn exchange_i_assets_creator_is_sender() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, BC_FEE, 0, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, BC_FEE, 0, 0));
 
     let (sender_pk, sender_sk) = mine_wallet(&mut testkit);
     let (recipient_pk, recipient_sk) = mine_wallet(&mut testkit);
@@ -212,7 +212,7 @@ fn exchange_i_assets_creator_is_sender() {
     let status = get_status(&api, &tx_exchange_assets.hash());
     let sender_wallet = get_wallet(&api, &sender_pk);
     let recipient_wallet = get_wallet(&api, &recipient_pk);
-    let genesis_wallet = get_wallet(&api, &Service::genesis_wallet());
+    let genesis_wallet = get_wallet(&api, &common::default_genesis_wallet());
     let intermediary_wallet = get_wallet(&api, &intermediary_pk);
 
     assert_eq!(Ok(Ok(())), status);
@@ -242,7 +242,7 @@ fn exchange_i_assets_creator_is_sender() {
 fn exchange_i_assets_creator_is_intermediary() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, BC_FEE, 0, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, BC_FEE, 0, 0));
 
     let (sender_pk, sender_sk) = mine_wallet(&mut testkit);
     let (recipient_pk, recipient_sk) = mine_wallet(&mut testkit);
@@ -298,7 +298,7 @@ fn exchange_i_assets_creator_is_intermediary() {
     let status = get_status(&api, &tx_exchange_assets.hash());
     let sender_wallet = get_wallet(&api, &sender_pk);
     let recipient_wallet = get_wallet(&api, &recipient_pk);
-    let genesis_wallet = get_wallet(&api, &Service::genesis_wallet());
+    let genesis_wallet = get_wallet(&api, &common::default_genesis_wallet());
     let intermediary_wallet = get_wallet(&api, &intermediary_pk);
 
     assert_eq!(Ok(Ok(())), status);
@@ -328,7 +328,7 @@ fn exchange_i_assets_creator_is_intermediary() {
 fn exchange_i_assets_payer_fee_intermediary() {
     let mut testkit = init_testkit();
     let api = testkit.api();
-    set_configuration(&mut testkit, TransactionFees::new(0, 0, 0, BC_FEE, 0, 0));
+    set_configuration(&mut testkit, TransactionFees::with_default_key(0, 0, 0, BC_FEE, 0, 0));
 
     let (sender_pk, sender_sk) = mine_wallet(&mut testkit);
     let (recipient_pk, recipient_sk) = mine_wallet(&mut testkit);
@@ -376,7 +376,7 @@ fn exchange_i_assets_payer_fee_intermediary() {
     let status = get_status(&api, &tx_exchange_assets.hash());
     let sender_wallet = get_wallet(&api, &sender_pk);
     let recipient_wallet = get_wallet(&api, &recipient_pk);
-    let genesis_wallet = get_wallet(&api, &Service::genesis_wallet());
+    let genesis_wallet = get_wallet(&api, &common::default_genesis_wallet());
     let intermediary_wallet = get_wallet(&api, &intermediary_pk);
 
     assert_eq!(Ok(Err(Error::InsufficientFunds)), status);
@@ -416,7 +416,7 @@ fn exchange_i_assets_payer_fee_intermediary() {
     let status = get_status(&api, &tx_exchange_assets.hash());
     let sender_wallet = get_wallet(&api, &sender_pk);
     let recipient_wallet = get_wallet(&api, &recipient_pk);
-    let genesis_wallet = get_wallet(&api, &Service::genesis_wallet());
+    let genesis_wallet = get_wallet(&api, &common::default_genesis_wallet());
     let intermediary_wallet = get_wallet(&api, &intermediary_pk);
 
     assert_eq!(Ok(Ok(())), status);
@@ -479,7 +479,7 @@ fn exchange_i_assets_payer_fee_intermediary() {
     let status = get_status(&api, &tx_exchange_assets.hash());
     let sender_wallet = get_wallet(&api, &sender_pk);
     let recipient_wallet = get_wallet(&api, &recipient_pk);
-    let genesis_wallet = get_wallet(&api, &Service::genesis_wallet());
+    let genesis_wallet = get_wallet(&api, &common::default_genesis_wallet());
     let intermediary_wallet = get_wallet(&api, &intermediary_pk);
     let creator_wallet = get_wallet(&api, &creator_pk);
 
