@@ -11,3 +11,4 @@ pub mod common;
 pub mod configuration;
 pub mod fees;
 pub mod transactions;
+pub mod evo_testkit;
