@@ -3,6 +3,7 @@ use exonum::crypto::{self, PublicKey};
 use exonum::storage::Error;
 use exonum_testkit::{TestKit as ExonumTestKit, TestKitBuilder, ApiKind};
 
+use dmbc::currency::configuration::Configuration;
 use dmbc::currency::{SERVICE_NAME, Service};
 use dmbc::currency::assets::AssetBundle;
 use dmbc::currency::api::wallet::WalletResponse;
@@ -12,6 +13,8 @@ pub trait EvoTestKit {
     fn create_wallet(&mut self, pub_key: &PublicKey, balance: u64) -> Result<Wallet, Error>;
 
     fn add_assets(&mut self, pub_key: &PublicKey, assets: Vec<AssetBundle>) -> Result<(), Error>;
+
+    fn set_configuration(&mut self, configuration: Configuration);
 }
 
 impl EvoTestKit for ExonumTestKit {
@@ -36,6 +39,18 @@ impl EvoTestKit for ExonumTestKit {
         blockchain.merge(fork.into_patch())?;
 
         Ok(())
+    }
+
+    fn set_configuration(&mut self, configuration: Configuration) {
+        let cfg_change_height = self.height().next();
+        let proposal = {
+            let mut cfg = self.configuration_change_proposal();
+            cfg.set_service_config(&SERVICE_NAME, configuration);
+            cfg.set_actual_from(cfg_change_height);
+            cfg
+        };
+        self.commit_configuration_change(proposal);
+        self.create_block();
     }
 }
 
