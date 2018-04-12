@@ -18,6 +18,7 @@ fn fees_for_trade_intermediary_recipient() {
     let units = 2;
     let price_per_unit = 1000;
     let meta_data = "asset";
+    let commission = 40;
 
     set_configuration(
         &mut testkit,
@@ -40,13 +41,14 @@ fn fees_for_trade_intermediary_recipient() {
         .add_asset_value(TradeAsset::from_bundle(asset, price_per_unit))
         .seller(seller_public_key, seller_secret_key)
         .intermediary_key_pair(intermediary_public_key, intermediary_secret_key)
+        .commission(commission)
         .fee_strategy(FeeStrategy::Recipient)
         .seed(12)
         .build();
 
     let response = post_fee(&api, &tx_trade);
     let mut expected = HashMap::new();
-    let expected_fee = transaction_fee + tax;
+    let expected_fee = transaction_fee + tax + commission;
     expected.insert(buyer_public_key, expected_fee);
 
     assert_eq!(Ok(Ok(FeesResponseBody { fees: expected })), response);
@@ -60,6 +62,7 @@ fn fees_for_trade_intermediary_sender() {
     let tax = 10;
     let units = 2;
     let price_per_unit = 1000;
+    let commission = 40;
     let meta_data = "asset";
 
     set_configuration(
@@ -83,13 +86,14 @@ fn fees_for_trade_intermediary_sender() {
         .add_asset_value(TradeAsset::from_bundle(asset, price_per_unit))
         .seller(seller_public_key, seller_secret_key)
         .intermediary_key_pair(intermediary_public_key, intermediary_secret_key)
+        .commission(commission)
         .fee_strategy(FeeStrategy::Sender)
         .seed(12)
         .build();
 
     let response = post_fee(&api, &tx_trade);
     let mut expected = HashMap::new();
-    let expected_fee = transaction_fee + tax;
+    let expected_fee = transaction_fee + tax + commission;
     expected.insert(seller_public_key, expected_fee);
 
     assert_eq!(Ok(Ok(FeesResponseBody { fees: expected })), response);
@@ -103,6 +107,7 @@ fn fees_for_trade_intermediary_recipient_and_sender() {
     let tax = 10;
     let units = 2;
     let price_per_unit = 1000;
+    let commission = 40;
     let meta_data = "asset";
 
     set_configuration(
@@ -126,13 +131,14 @@ fn fees_for_trade_intermediary_recipient_and_sender() {
         .add_asset_value(TradeAsset::from_bundle(asset, price_per_unit))
         .seller(seller_public_key, seller_secret_key)
         .intermediary_key_pair(intermediary_public_key, intermediary_secret_key)
+        .commission(commission)
         .fee_strategy(FeeStrategy::RecipientAndSender)
         .seed(12)
         .build();
 
     let response = post_fee(&api, &tx_trade);
     let mut expected = HashMap::new();
-    let expected_fee = transaction_fee / 2 + tax / 2;
+    let expected_fee = transaction_fee / 2 + tax / 2 + commission / 2;
     expected.insert(seller_public_key, expected_fee);
     expected.insert(buyer_public_key, expected_fee);
 
@@ -147,6 +153,7 @@ fn fees_for_trade_intermediary_intermediary() {
     let tax = 10;
     let units = 2;
     let price_per_unit = 1000;
+    let commission = 40;
     let meta_data = "asset";
 
     set_configuration(
@@ -170,6 +177,7 @@ fn fees_for_trade_intermediary_intermediary() {
         .add_asset_value(TradeAsset::from_bundle(asset, price_per_unit))
         .seller(seller_public_key, seller_secret_key)
         .intermediary_key_pair(intermediary_public_key, intermediary_secret_key)
+        .commission(commission)
         .fee_strategy(FeeStrategy::Intermediary)
         .seed(12)
         .build();
@@ -190,6 +198,7 @@ fn fees_for_trade_intermediary_recipient_and_sender_creator() {
     let tax = 10;
     let units = 2;
     let price_per_unit = 1000;
+    let commission = 40;
     let meta_data = "asset";
 
     set_configuration(
@@ -209,14 +218,15 @@ fn fees_for_trade_intermediary_recipient_and_sender_creator() {
         .add_asset(meta_data, units, price_per_unit)
         .seller(seller_public_key, seller_secret_key)
         .intermediary_key_pair(intermediary_public_key, intermediary_secret_key)
+        .commission(commission)
         .fee_strategy(FeeStrategy::RecipientAndSender)
         .seed(12)
         .build();
 
     let response = post_fee(&api, &tx_trade);
     let mut expected = HashMap::new();
-    let expected_seller_fee = transaction_fee / 2;
-    let expected_buyer_fee = transaction_fee / 2 + tax / 2;
+    let expected_seller_fee = transaction_fee / 2 + commission / 2;
+    let expected_buyer_fee = transaction_fee / 2 + tax / 2 + commission / 2;
     expected.insert(seller_public_key, expected_seller_fee);
     expected.insert(buyer_public_key, expected_buyer_fee);
 
