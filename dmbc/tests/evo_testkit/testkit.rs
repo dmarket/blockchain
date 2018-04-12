@@ -14,16 +14,16 @@ use exonum::encoding::serialize::reexport::{Serialize, Deserialize};
 
 use dmbc::currency::configuration::Configuration;
 use dmbc::currency::{SERVICE_NAME, Service};
-use dmbc::currency::assets::AssetBundle;
 use dmbc::currency::api::wallet::WalletResponse;
 use dmbc::currency::wallet::{self, Wallet};
+use dmbc::currency::assets::{self, AssetBundle, AssetInfo};
 use dmbc::currency::api::transaction::{TxPostResponse, TransactionResponse};
 use dmbc::currency::api::fees::FeesResponse;
 
 pub trait EvoTestKit {
     fn create_wallet(&mut self, pub_key: &PublicKey, balance: u64) -> Result<Wallet, Error>;
 
-    fn add_assets(&mut self, pub_key: &PublicKey, assets: Vec<AssetBundle>) -> Result<(), Error>;
+    fn add_assets(&mut self, pub_key: &PublicKey, assets: Vec<AssetBundle>, infos: Vec<AssetInfo>) -> Result<(), Error>;
 
     fn set_configuration(&mut self, configuration: Configuration);
 }
@@ -40,12 +40,16 @@ impl EvoTestKit for ExonumTestKit {
         Ok(wallet)
     }
 
-    fn add_assets(&mut self, pub_key: &PublicKey, assets: Vec<AssetBundle>) -> Result<(), Error> {
+    fn add_assets(&mut self, pub_key: &PublicKey, assets: Vec<AssetBundle>, infos: Vec<AssetInfo>) -> Result<(), Error> {
         let blockchain = self.blockchain_mut();
         let mut fork = blockchain.fork();
         let wallet = wallet::Schema(&fork).fetch(&pub_key);
-        let wallet = Wallet::new(wallet.balance(), assets);
+        let wallet = Wallet::new(wallet.balance(), assets.clone());
         wallet::Schema(&mut fork).store(&pub_key, wallet);
+
+        for (asset, info) in assets.into_iter().zip(infos.into_iter()) {
+            assets::Schema(&mut fork).store(&asset.id(), info);
+        }
 
         blockchain.merge(fork.into_patch())?;
 
