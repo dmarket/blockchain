@@ -20,6 +20,7 @@ fn fees_for_exchange_intermediary_recipient() {
     let meta_data1 = "asset1";
     let meta_data2 = "asset2";
     let meta_data3 = "asset3";
+    let commission = 40;
 
     set_configuration(
         &mut testkit,
@@ -47,6 +48,7 @@ fn fees_for_exchange_intermediary_recipient() {
         .tx_exchange_with_intermediary()
         .sender_key_pair(sender_public_key, sender_secret_key)
         .intermediary_key_pair(intermediary_public_key, intermediary_secret_key)
+        .commission(commission)
         .fee_strategy(FeeStrategy::Recipient)
         .sender_add_asset_value(asset0)
         .sender_add_asset_value(asset1)
@@ -56,7 +58,7 @@ fn fees_for_exchange_intermediary_recipient() {
 
     let response = post_fee(&api, &tx_exchange_assets);
     let mut expected = HashMap::new();
-    let expected_fee = transaction_fee + tax * units * 4;
+    let expected_fee = transaction_fee + tax * units * 4 + commission;
     expected.insert(recipient_public_key, expected_fee);
 
     assert_eq!(Ok(Ok(FeesResponseBody { fees: expected })), response);
@@ -73,6 +75,7 @@ fn fees_for_exchange_intermediary_sender() {
     let meta_data1 = "asset1";
     let meta_data2 = "asset2";
     let meta_data3 = "asset3";
+    let commission = 40;
 
     set_configuration(
         &mut testkit,
@@ -100,6 +103,7 @@ fn fees_for_exchange_intermediary_sender() {
         .tx_exchange_with_intermediary()
         .sender_key_pair(sender_public_key, sender_secret_key)
         .intermediary_key_pair(intermediary_public_key, intermediary_secret_key)
+        .commission(commission)
         .fee_strategy(FeeStrategy::Sender)
         .sender_add_asset_value(asset0)
         .sender_add_asset_value(asset1)
@@ -109,7 +113,7 @@ fn fees_for_exchange_intermediary_sender() {
 
     let response = post_fee(&api, &tx_exchange_assets);
     let mut expected = HashMap::new();
-    let expected_fee = transaction_fee + tax * units * 4;
+    let expected_fee = transaction_fee + tax * units * 4 + commission;
     expected.insert(sender_public_key, expected_fee);
 
     assert_eq!(Ok(Ok(FeesResponseBody { fees: expected })), response);
@@ -126,6 +130,7 @@ fn fees_for_exchange_intermediary_recipient_and_sender() {
     let meta_data1 = "asset1";
     let meta_data2 = "asset2";
     let meta_data3 = "asset3";
+    let commission = 40;
 
     set_configuration(
         &mut testkit,
@@ -153,6 +158,7 @@ fn fees_for_exchange_intermediary_recipient_and_sender() {
         .tx_exchange_with_intermediary()
         .sender_key_pair(sender_public_key, sender_secret_key)
         .intermediary_key_pair(intermediary_public_key, intermediary_secret_key)
+        .commission(commission)
         .fee_strategy(FeeStrategy::RecipientAndSender)
         .sender_add_asset_value(asset0)
         .sender_add_asset_value(asset1)
@@ -162,7 +168,7 @@ fn fees_for_exchange_intermediary_recipient_and_sender() {
 
     let response = post_fee(&api, &tx_exchange_assets);
     let mut expected = HashMap::new();
-    let expected_fee = transaction_fee / 2 + tax * units * 2;
+    let expected_fee = transaction_fee / 2 + tax * units * 2 + commission / 2;
     expected.insert(sender_public_key, expected_fee);
     expected.insert(recipient_public_key, expected_fee);
 
@@ -180,6 +186,7 @@ fn fees_for_exchange_intermediary_intermediary() {
     let meta_data1 = "asset1";
     let meta_data2 = "asset2";
     let meta_data3 = "asset3";
+    let commission = 40;
 
     set_configuration(
         &mut testkit,
@@ -207,6 +214,7 @@ fn fees_for_exchange_intermediary_intermediary() {
         .tx_exchange_with_intermediary()
         .sender_key_pair(sender_public_key, sender_secret_key)
         .intermediary_key_pair(intermediary_public_key, intermediary_secret_key)
+        .commission(commission)
         .fee_strategy(FeeStrategy::Intermediary)
         .sender_add_asset_value(asset0)
         .sender_add_asset_value(asset1)
@@ -233,6 +241,7 @@ fn fees_for_exchange_intermediary_recipient_and_sender_creator() {
     let meta_data1 = "asset1";
     let meta_data2 = "asset2";
     let meta_data3 = "asset3";
+    let commission = 40;
 
     set_configuration(
         &mut testkit,
@@ -258,6 +267,7 @@ fn fees_for_exchange_intermediary_recipient_and_sender_creator() {
         .tx_exchange_with_intermediary()
         .sender_key_pair(sender_public_key, sender_secret_key)
         .intermediary_key_pair(intermediary_public_key, intermediary_secret_key)
+        .commission(commission)
         .fee_strategy(FeeStrategy::RecipientAndSender)
         .sender_add_asset_value(asset0)
         .sender_add_asset_value(asset1)
@@ -267,8 +277,8 @@ fn fees_for_exchange_intermediary_recipient_and_sender_creator() {
 
     let response = post_fee(&api, &tx_exchange_assets);
     let mut expected = HashMap::new();
-    let expected_sender_fee = transaction_fee / 2;
-    let expected_recipient_fee = transaction_fee / 2 + tax * units * 2;
+    let expected_sender_fee = transaction_fee / 2 + commission / 2;
+    let expected_recipient_fee = transaction_fee / 2 + tax * units * 2 + commission / 2;
     expected.insert(sender_public_key, expected_sender_fee);
     expected.insert(recipient_public_key, expected_recipient_fee);
 

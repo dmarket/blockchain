@@ -52,7 +52,11 @@ impl FeesCalculator for TradeIntermediary {
     fn calculate_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error> {
         let offer = self.offer();
         let genesis_fees = Configuration::extract(view).fees();
-        let fees = ThirdPartyFees::new_trade(&*view, &offer.assets())?;
+        let mut fees = ThirdPartyFees::new_trade(&*view, &offer.assets())?;
+        fees.add_fee(
+            offer.intermediary().wallet(),
+            offer.intermediary().commission()
+        );
         let fee_strategy =
             FeeStrategy::try_from(offer.fee_strategy()).expect("fee strategy must be valid");
 
