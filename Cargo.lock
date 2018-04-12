@@ -359,7 +359,7 @@ dependencies = [
  "log 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "nats 0.2.0 (git+https://github.com/jedisct1/rust-nats?rev=21919e5)",
  "params 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "prometheus 0.3.13 (registry+https://github.com/rust-lang/crates.io-index)",
+ "prometheus 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "router 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.37 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.37 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1358,7 +1358,7 @@ dependencies = [
 
 [[package]]
 name = "prometheus"
-version = "0.3.13"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "cfg-if 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2309,7 +2309,7 @@ dependencies = [
 "checksum plugin 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)" = "1a6a0dc3910bc8db877ffed8e457763b317cf880df4ae19109b9f77d277cf6e0"
 "checksum podio 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "780fb4b6698bbf9cf2444ea5d22411cef2953f0824b98f33cf454ec5615645bd"
 "checksum proc-macro2 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)" = "a01eb4338ef7c116cbe3b2913a6ef9f10b0a711aa6a162af184ea81fab38ea72"
-"checksum prometheus 0.3.13 (registry+https://github.com/rust-lang/crates.io-index)" = "f4486295ffde3354d0a4833e3e6d0b85237b7f0c4391e5f23f0590fbd522d1ff"
+"checksum prometheus 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "b7c2c1d09ac80fbff9c373c725c29e8f674448ad3e369eb6bf443ec12e67c7c7"
 "checksum protobuf 1.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "40e2484e639dcae0985fc483ad76ce7ad78ee5aa092751d7d538f0b20d76486b"
 "checksum quick-error 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "7ac990ab4e038dd8481a5e3fd00641067fcfc674ad663f3222752ed5284e05d4"
 "checksum quick-error 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "eda5fe9b71976e62bc81b781206aaa076401769b2143379d3eb2118388babac4"

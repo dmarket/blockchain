@@ -11,7 +11,7 @@ use hyper::header::ContentType;
 use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use iron::status;
-use prometheus::Counter;
+use prometheus::IntCounter;
 use router::Router;
 
 use currency::api::error::ApiError;
@@ -34,10 +34,10 @@ impl AssetApi {
 pub type AssetResponse = Result<Option<AssetInfo>, ApiError>;
 
 lazy_static! {
-    static ref INFO_REQUESTS: Counter =
-        register_counter!("dmbc_asset_api_info_requests_total", "AssetInfo requests.").unwrap();
-    static ref INFO_RESPONSES: Counter =
-        register_counter!("dmbc_asset_api_info_responses_total", "AssetInfo response.").unwrap();
+    static ref INFO_REQUESTS: IntCounter =
+        register_int_counter!("dmbc_asset_api_info_requests_total", "AssetInfo requests.").unwrap();
+    static ref INFO_RESPONSES: IntCounter =
+        register_int_counter!("dmbc_asset_api_info_responses_total", "AssetInfo response.").unwrap();
 }
 
 impl Api for AssetApi {

@@ -14,7 +14,7 @@ use hyper::header::ContentType;
 use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use iron::status as istatus;
-use prometheus::Counter;
+use prometheus::IntCounter;
 use router::Router;
 
 use currency::api::error::ApiError;
@@ -76,19 +76,19 @@ impl TransactionApi {
 }
 
 lazy_static! {
-    static ref POST_REQUESTS: Counter = register_counter!(
+    static ref POST_REQUESTS: IntCounter = register_int_counter!(
         "dmbc_transaction_api_post_requests_total",
         "Transaction post requests."
     ).unwrap();
-    static ref POST_RESPONSES: Counter = register_counter!(
+    static ref POST_RESPONSES: IntCounter = register_int_counter!(
         "dmbc_transaction_api_post_responses_total",
         "Transaction post responses."
     ).unwrap();
-    static ref GET_STATUS_REQUESTS: Counter = register_counter!(
+    static ref GET_STATUS_REQUESTS: IntCounter = register_int_counter!(
         "dmbc_transaction_api_get_status_requests_total",
         "Transaction status requests."
     ).unwrap();
-    static ref GET_STATUS_RESPONSES: Counter = register_counter!(
+    static ref GET_STATUS_RESPONSES: IntCounter = register_int_counter!(
         "dmbc_transaction_api_get_status_responses_total",
         "Transaction status responses."
     ).unwrap();

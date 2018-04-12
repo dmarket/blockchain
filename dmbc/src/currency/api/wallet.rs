@@ -10,7 +10,7 @@ use hyper::header::ContentType;
 use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use iron::status;
-use prometheus::Counter;
+use prometheus::IntCounter;
 use router::Router;
 
 use currency::api::error::ApiError;
@@ -135,27 +135,27 @@ impl WalletApi {
 }
 
 lazy_static! {
-    static ref LIST_REQUESTS: Counter = register_counter!(
+    static ref LIST_REQUESTS: IntCounter = register_int_counter!(
         "dmbc_wallet_api_list_requests_total",
         "Wallet list requests."
     ).unwrap();
-    static ref LIST_RESPONSES: Counter = register_counter!(
+    static ref LIST_RESPONSES: IntCounter = register_int_counter!(
         "dmbc_wallet_api_list_responses_total",
         "Wallet list responses."
     ).unwrap();
-    static ref BALANCE_REQUESTS: Counter = register_counter!(
+    static ref BALANCE_REQUESTS: IntCounter = register_int_counter!(
         "dmbc_wallet_api_balance_requests_total",
         "Balance requests."
     ).unwrap();
-    static ref BALANCE_RESPONSES: Counter = register_counter!(
+    static ref BALANCE_RESPONSES: IntCounter = register_int_counter!(
         "dmbc_wallet_api_balance_responses_total",
         "Balance responses."
     ).unwrap();
-    static ref ASSETS_REQUESTS: Counter = register_counter!(
+    static ref ASSETS_REQUESTS: IntCounter = register_int_counter!(
         "dmbc_wallet_api_assets_requests_total",
         "Wallet asset list requests."
     ).unwrap();
-    static ref ASSETS_RESPONSES: Counter = register_counter!(
+    static ref ASSETS_RESPONSES: IntCounter = register_int_counter!(
         "dmbc_wallet_api_assets_responses_total",
         "Wallet asset list responses."
     ).unwrap();

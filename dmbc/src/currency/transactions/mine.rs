@@ -2,7 +2,7 @@ use exonum::blockchain::Transaction;
 use exonum::crypto::PublicKey;
 use exonum::messages::Message;
 use exonum::storage::Fork;
-use prometheus::{Counter, Histogram};
+use prometheus::{IntCounter, Histogram};
 use serde_json;
 
 use currency::error::Error;
@@ -37,23 +37,23 @@ impl Mine {
 }
 
 lazy_static! {
-    static ref VERIFY_COUNT: Counter = register_counter!(
+    static ref VERIFY_COUNT: IntCounter = register_int_counter!(
         "dmbc_transaction_mine_verify_count",
         "Times .verify() was called on a transaction."
     ).unwrap();
-    static ref VERIFY_SUCCESS_COUNT: Counter = register_counter!(
+    static ref VERIFY_SUCCESS_COUNT: IntCounter = register_int_counter!(
         "dmbc_transaction_mine_verify_success_count",
         "Times verification was successfull on a transaction."
     ).unwrap();
-    static ref EXECUTE_COUNT: Counter = register_counter!(
+    static ref EXECUTE_COUNT: IntCounter = register_int_counter!(
         "dmbc_transaction_mine_execute_count",
         "Transactions executed."
     ).unwrap();
-    static ref EXECUTE_SUCCESS_COUNT: Counter = register_counter!(
+    static ref EXECUTE_SUCCESS_COUNT: IntCounter = register_int_counter!(
         "dmbc_transaction_mine_execute_success_count",
         "Times transaction execution reported a success."
     ).unwrap();
-    static ref EXECUTE_FINISH_COUNT: Counter = register_counter!(
+    static ref EXECUTE_FINISH_COUNT: IntCounter = register_int_counter!(
         "dmbc_transaction_mine_execute_finish_count",
         "Times transaction has finished executing without panicking."
     ).unwrap();
