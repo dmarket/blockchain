@@ -1,4 +1,3 @@
-
 extern crate serde_json;
 
 use mount::Mount;
@@ -21,6 +20,8 @@ use dmbc::currency::api::transaction::{TxPostResponse, TransactionResponse};
 use dmbc::currency::api::fees::FeesResponse;
 
 pub trait EvoTestKit {
+    fn default() -> Self;
+
     fn create_wallet(&mut self, pub_key: &PublicKey, balance: u64) -> Result<Wallet, Error>;
 
     fn add_assets(&mut self, pub_key: &PublicKey, assets: Vec<AssetBundle>, infos: Vec<AssetInfo>) -> Result<(), Error>;
@@ -29,6 +30,13 @@ pub trait EvoTestKit {
 }
 
 impl EvoTestKit for ExonumTestKit {
+    fn default() -> Self {
+        TestKitBuilder::validator()
+            .with_validators(4)
+            .with_service(Service::new())
+            .create()
+    }
+
     fn create_wallet(&mut self, pub_key: &PublicKey, balance: u64) -> Result<Wallet, Error> {
         let blockchain = self.blockchain_mut();
         let mut fork = blockchain.fork();

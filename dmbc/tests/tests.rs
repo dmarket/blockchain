@@ -5,11 +5,9 @@ extern crate hyper;
 extern crate iron;
 extern crate iron_test;
 extern crate serde_json;
-extern crate mount;
 
 pub mod api;
 pub mod common;
 pub mod configuration;
 pub mod fees;
 pub mod transactions;
-pub mod evo_testkit;

@@ -6,7 +6,6 @@ extern crate iron;
 extern crate iron_test;
 extern crate serde_json;
 
-pub mod assets_intern;
 pub mod hex;
 pub mod wallet;
 
