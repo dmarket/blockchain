@@ -29,7 +29,7 @@ pub struct WalletApi {
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct WalletInfo {
     pub balance: u64,
-    pub count_assets: u64,
+    pub assets_count: u64,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -82,7 +82,7 @@ impl WalletApi {
         for v in index.iter() {
             let wi = WalletInfo {
                 balance: v.1.balance(),
-                count_assets: v.1.assets().len() as u64,
+                assets_count: v.1.assets().len() as u64,
             };
             result.insert(v.0, wi);
         }
@@ -107,7 +107,7 @@ impl WalletApi {
             }
             let wi = WalletInfo {
                 balance: v.1.balance(),
-                count_assets: v.1.assets().len() as u64,
+                assets_count: v.1.assets().len() as u64,
             };
             result.insert(v.0, wi);
             count += 1;
