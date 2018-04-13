@@ -6,8 +6,8 @@ extern crate iron;
 extern crate iron_test;
 extern crate serde_json;
 
-pub mod api;
 pub mod common;
+pub mod api;
 pub mod configuration;
 pub mod fees;
 pub mod transactions;

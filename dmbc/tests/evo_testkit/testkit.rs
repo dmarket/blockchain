@@ -6,25 +6,34 @@ use iron_test::{request, response};
 use iron::headers::{ContentType, Headers};
 
 use exonum::crypto::{self, PublicKey};
-use exonum::storage::Error;
 use exonum::messages::Message;
 use exonum_testkit::{TestKit as ExonumTestKit, TestKitBuilder, TestKitApi as ExonumTestKitApi};
+use exonum::encoding::serialize::FromHex;
 use exonum::encoding::serialize::reexport::{Serialize, Deserialize};
 
 use dmbc::currency::configuration::Configuration;
 use dmbc::currency::{SERVICE_NAME, Service};
 use dmbc::currency::api::wallet::WalletResponse;
 use dmbc::currency::wallet::{self, Wallet};
-use dmbc::currency::assets::{self, AssetBundle, AssetInfo};
+use dmbc::currency::assets::{self, AssetBundle, AssetInfo, Fees, MetaAsset, AssetId};
+use dmbc::currency::transactions::builders::fee;
 use dmbc::currency::api::transaction::{TxPostResponse, TransactionResponse};
 use dmbc::currency::api::fees::FeesResponse;
+use dmbc::currency::configuration::GENESIS_WALLET_PUB_KEY;
 
 pub trait EvoTestKit {
     fn default() -> Self;
 
-    fn create_wallet(&mut self, pub_key: &PublicKey, balance: u64) -> Result<Wallet, Error>;
+    fn create_wallet(&mut self, pub_key: &PublicKey, balance: u64) -> Wallet;
 
-    fn add_assets(&mut self, pub_key: &PublicKey, assets: Vec<AssetBundle>, infos: Vec<AssetInfo>) -> Result<(), Error>;
+    fn add_asset(
+        &mut self, meta_data: &str, 
+        units: u64, 
+        fees: Fees, 
+        creator: &PublicKey
+    );
+
+    fn add_assets(&mut self, pub_key: &PublicKey, assets: Vec<AssetBundle>, infos: Vec<AssetInfo>);
 
     fn set_configuration(&mut self, configuration: Configuration);
 }
@@ -37,18 +46,29 @@ impl EvoTestKit for ExonumTestKit {
             .create()
     }
 
-    fn create_wallet(&mut self, pub_key: &PublicKey, balance: u64) -> Result<Wallet, Error> {
+    fn create_wallet(&mut self, pub_key: &PublicKey, balance: u64) -> Wallet {
         let blockchain = self.blockchain_mut();
         let mut fork = blockchain.fork();
         let wallet = Wallet::new(balance, vec![]);
         wallet::Schema(&mut fork).store(&pub_key, wallet.clone());
 
-        blockchain.merge(fork.into_patch())?;
+        assert!(blockchain.merge(fork.into_patch()).is_ok());
 
-        Ok(wallet)
+        wallet
     }
 
-    fn add_assets(&mut self, pub_key: &PublicKey, assets: Vec<AssetBundle>, infos: Vec<AssetInfo>) -> Result<(), Error> {
+    fn add_asset(
+        &mut self, 
+        meta_data: &str, 
+        units: u64, 
+        fees: Fees, 
+        creator: &PublicKey
+    ) {
+        let (asset, info) = create_asset(meta_data, units, fees, &creator);
+        self.add_assets(&creator, vec![asset], vec![info]);
+    }
+
+    fn add_assets(&mut self, pub_key: &PublicKey, assets: Vec<AssetBundle>, infos: Vec<AssetInfo>) {
         let blockchain = self.blockchain_mut();
         let mut fork = blockchain.fork();
         let wallet = wallet::Schema(&fork).fetch(&pub_key);
@@ -59,9 +79,7 @@ impl EvoTestKit for ExonumTestKit {
             assets::Schema(&mut fork).store(&asset.id(), info);
         }
 
-        blockchain.merge(fork.into_patch())?;
-
-        Ok(())
+        assert!(blockchain.merge(fork.into_patch()).is_ok());
     }
 
     fn set_configuration(&mut self, configuration: Configuration) {
@@ -179,17 +197,41 @@ impl EvoTestKitApi for ExonumTestKitApi {
     }
 }
 
+pub fn asset_fees(t: u64, r: u64) -> Fees {
+    fee::Builder::new()
+        .trade(t, r)
+        .exchange(t, r)
+        .transfer(t, r)
+        .build()
+}
+
+pub fn create_asset(
+    meta_data: &str, 
+    units: u64, 
+    fees: Fees, 
+    creator: &PublicKey
+) -> (AssetBundle, AssetInfo) 
+{
+    let (receiver, _) = crypto::gen_keypair();
+    let meta_asset = MetaAsset::new(&receiver, meta_data, units, fees);
+    let id = AssetId::from_data(meta_data, creator);
+    let asset = meta_asset.to_bundle(id);
+    let info = meta_asset.to_info(creator, &crypto::hash(meta_data.as_bytes()));
+
+    (asset, info)
+}
+
+pub fn default_genesis_key() -> PublicKey {
+    PublicKey::from_hex(GENESIS_WALLET_PUB_KEY).unwrap()
+}
+
 #[test]
 fn name() {
-    let mut testkit = TestKitBuilder::validator()
-        .with_validators(4)
-        .with_service(Service::new())
-        .create();
+    let mut testkit = ExonumTestKit::default();
     let api = testkit.api();
 
     let (pub_key, _) = crypto::gen_keypair();
-
-    let wallet = testkit.create_wallet(&pub_key, 100000).unwrap();
+    let wallet = testkit.create_wallet(&pub_key, 100000);
 
     let equivalent = api.wallet(&pub_key);
     assert_eq!(wallet, equivalent);

@@ -30,8 +30,7 @@ fn intern_assets_id_from_meta() {
     let meta_data = "asset";
 
     let (pub_key, _) = crypto::gen_keypair();
-
-    assert!(testkit.create_wallet(&pub_key, balance).is_ok());
+    testkit.create_wallet(&pub_key, balance);
 
     let (status, response): (StatusCode, AssetIdResponse) = api.get_with_status(
         &format!("/v1/intern/assets/{}/{}", pub_key.to_string(), meta_data),
