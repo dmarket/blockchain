@@ -103,11 +103,14 @@ pub trait EvoTestKitApi {
     fn get_with_status<D>(&self, endpoint: &str) -> (StatusCode, D)
     where for<'de> D: Deserialize<'de>;
 
-    fn post_internal_with_status<T, D>(mount: &Mount, endpoint: &str, data: &T) -> (StatusCode, D) 
-    where T: Serialize, for<'de> D: Deserialize<'de>;
-
     fn post_with_status<T, D>(&self, endpoint: &str, transaction: &T) -> (StatusCode, D)
     where T: Serialize, for<'de> D: Deserialize<'de>;
+
+    fn post_raw_with_status<D>(&self, endpoint: &str, body: &str) -> (StatusCode, D)
+    where for <'de> D: Deserialize<'de>;
+
+    fn post_raw_with_status2<D>(&self, endpoint: &str, headers: Headers, body: &str) -> (StatusCode, D)
+    where for <'de> D: Deserialize<'de>;
 
     fn wallet(&self, pub_key: &PublicKey) -> Wallet;
 
@@ -120,10 +123,10 @@ pub trait EvoTestKitApi {
 
 impl EvoTestKitApi for ExonumTestKitApi {
 
-    fn get_internal_with_status<D>(mount: &Mount, url: &str) -> (StatusCode, D) 
+    fn get_internal_with_status<D>(mount: &Mount, endpoint: &str) -> (StatusCode, D) 
     where for <'de> D: Deserialize<'de>
     {
-        let url = format!("http://localhost:3000/{}", url);
+        let url = format!("http://localhost:3000/api/services/{}/{}", SERVICE_NAME, endpoint);
         let response = request::get(&url, Headers::new(), mount).unwrap();
         let status = response.status.unwrap();
         let body = response::extract_body_to_string(response);
@@ -135,14 +138,14 @@ impl EvoTestKitApi for ExonumTestKitApi {
     {
         ExonumTestKitApi::get_internal_with_status(
             self.public_mount(),
-            &format!("api/services/{}/{}", SERVICE_NAME, endpoint), 
+            endpoint, 
         )
-    } 
+    }
 
-    fn post_internal_with_status<T, D>(mount: &Mount, endpoint: &str, data: &T) -> (StatusCode, D) 
-    where T: Serialize, for<'de> D: Deserialize<'de>
+    fn post_raw_with_status<D>(&self, endpoint: &str, body: &str) -> (StatusCode, D)
+    where for <'de> D: Deserialize<'de> 
     {
-        let url = format!("http://localhost:3000/{}", endpoint);
+        let url = format!("http://localhost:3000/api/services/{}/{}", SERVICE_NAME, endpoint);
         let response = request::post(
             &url,
             {
@@ -150,8 +153,23 @@ impl EvoTestKitApi for ExonumTestKitApi {
                 headers.set(ContentType::json());
                 headers
             },
-            &serde_json::to_string(&data).expect("Cannot serialize data to JSON"),
-            mount,
+            &body,
+            self.public_mount(),
+        ).expect("Cannot send data");
+        let status = response.status.unwrap();
+        let body = response::extract_body_to_string(response);
+        (status, serde_json::from_str(&body).unwrap())
+    }
+
+    fn post_raw_with_status2<D>(&self, endpoint: &str, headers: Headers, body: &str) -> (StatusCode, D)
+    where for <'de> D: Deserialize<'de>
+    {
+        let url = format!("http://localhost:3000/api/services/{}/{}", SERVICE_NAME, endpoint);
+        let response = request::post(
+            &url,
+            headers,
+            &body,
+            self.public_mount(),
         ).expect("Cannot send data");
         let status = response.status.unwrap();
         let body = response::extract_body_to_string(response);
@@ -163,10 +181,9 @@ impl EvoTestKitApi for ExonumTestKitApi {
         T: Serialize,
         for<'de> D: Deserialize<'de>,
     {
-        ExonumTestKitApi::post_internal_with_status(
-            &self.public_mount(),
-            &format!("api/services/{}/{}", SERVICE_NAME, endpoint),
-            transaction,
+        self.post_raw_with_status(
+            endpoint,
+            &serde_json::to_string(&transaction).expect("Cannot serialize data to JSON"),
         )
     }
 
