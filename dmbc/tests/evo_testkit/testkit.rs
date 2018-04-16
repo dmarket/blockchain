@@ -61,8 +61,14 @@ impl EvoTestKit for ExonumTestKit {
     fn add_assets(&mut self, pub_key: &PublicKey, assets: Vec<AssetBundle>, infos: Vec<AssetInfo>) {
         let blockchain = self.blockchain_mut();
         let mut fork = blockchain.fork();
-        let wallet = wallet::Schema(&fork).fetch(&pub_key);
-        let wallet = Wallet::new(wallet.balance(), assets.clone());
+        let mut wallet = wallet::Schema(&fork).fetch(&pub_key);
+        let wallet = Wallet::new(
+            wallet.balance(),
+            { 
+                wallet.add_assets(assets.clone());
+                wallet.assets()
+            }
+        );
         wallet::Schema(&mut fork).store(&pub_key, wallet);
 
         for (asset, info) in assets.into_iter().zip(infos.into_iter()) {
