@@ -84,7 +84,7 @@ impl Api for FeesApi {
                 .map(|r| {
                     r.err()
                         .map(|_| status::BadRequest)
-                        .unwrap_or(status::Created)
+                        .unwrap_or(status::Ok)
                 })
                 .unwrap_or(status::BadRequest);
 
