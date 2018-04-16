@@ -13,7 +13,6 @@ use exonum::encoding::serialize::reexport::{Serialize, Deserialize};
 
 use dmbc::currency::configuration::Configuration;
 use dmbc::currency::{SERVICE_NAME, Service};
-use dmbc::currency::api::wallet::WalletResponse;
 use dmbc::currency::wallet::{self, Wallet};
 use dmbc::currency::assets::{self, AssetBundle, AssetInfo, Fees, MetaAsset, AssetId};
 use dmbc::currency::transactions::builders::fee;
@@ -36,6 +35,8 @@ pub trait EvoTestKit {
     fn add_assets(&mut self, pub_key: &PublicKey, assets: Vec<AssetBundle>, infos: Vec<AssetInfo>);
 
     fn set_configuration(&mut self, configuration: Configuration);
+
+    fn fetch_wallet(&mut self, pub_key: &PublicKey) -> Wallet;
 }
 
 impl EvoTestKit for ExonumTestKit {
@@ -93,6 +94,12 @@ impl EvoTestKit for ExonumTestKit {
         self.commit_configuration_change(proposal);
         self.create_block();
     }
+
+    fn fetch_wallet(&mut self, pub_key: &PublicKey) -> Wallet {
+        let blockchain = self.blockchain_mut();
+        let fork = blockchain.fork();
+        wallet::Schema(&fork).fetch(&pub_key)
+    }
 }
 
 
@@ -111,8 +118,6 @@ pub trait EvoTestKitApi {
 
     fn post_raw_with_status2<D>(&self, endpoint: &str, headers: Headers, body: &str) -> (StatusCode, D)
     where for <'de> D: Deserialize<'de>;
-
-    fn wallet(&self, pub_key: &PublicKey) -> Wallet;
 
     fn post_tx<T>(&self, tx: &T) 
     where T: Message + Serialize; 
@@ -187,15 +192,6 @@ impl EvoTestKitApi for ExonumTestKitApi {
         )
     }
 
-    fn wallet(&self, pub_key: &PublicKey) -> Wallet {
-        let (status, response): (StatusCode, WalletResponse) = self.get_with_status(
-            &format!("v1/wallets/{}", pub_key.to_string()),
-        );
-
-        assert_eq!(status, StatusCode::Ok);
-        response.unwrap()
-    }
-
     fn post_tx<T>(&self, tx: &T) 
     where T: Message + Serialize 
     {
@@ -240,16 +236,4 @@ pub fn create_asset(
 
 pub fn default_genesis_key() -> PublicKey {
     PublicKey::from_hex(GENESIS_WALLET_PUB_KEY).unwrap()
-}
-
-#[test]
-fn name() {
-    let mut testkit = ExonumTestKit::default();
-    let api = testkit.api();
-
-    let (pub_key, _) = crypto::gen_keypair();
-    let wallet = testkit.create_wallet(&pub_key, 100000);
-
-    let equivalent = api.wallet(&pub_key);
-    assert_eq!(wallet, equivalent);
 }

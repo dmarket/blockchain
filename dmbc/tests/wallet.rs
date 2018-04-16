@@ -67,7 +67,7 @@ fn wallets() {
     testkit.add_assets(&pub_key2, vec![asset.clone()], vec![info]);
 
     let genesis_key = default_genesis_key();
-    let genesis = api.wallet(&genesis_key);
+    let genesis = testkit.fetch_wallet(&genesis_key);
     let genesis_count_assets = genesis.assets().len() as u64;
 
     let mut wallets = HashMap::new();
