@@ -8,5 +8,4 @@ extern crate serde_json;
 
 pub mod common;
 pub mod configuration;
-pub mod fees;
 pub mod transactions;
