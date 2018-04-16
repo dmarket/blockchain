@@ -29,7 +29,6 @@ fn fees_for_exchange_intermediary_recipient() {
     let transaction_fee = 1000;
     let tax = 10;
     let units = 2;
-    let balance = 100_000_000;
     let meta_data0 = "asset0";
     let meta_data1 = "asset1";
     let meta_data2 = "asset2";
@@ -42,10 +41,6 @@ fn fees_for_exchange_intermediary_recipient() {
     let (sender_public_key, sender_secret_key) = crypto::gen_keypair();
     let (recipient_public_key, recipient_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
-
-    testkit.create_wallet(&sender_public_key, balance);
-    testkit.create_wallet(&recipient_public_key, balance);  
-    testkit.create_wallet(&intermediary_public_key, balance);
 
     let (asset0, info0) = create_asset(meta_data0, units, asset_fees(tax, 0), &creator_pub_key);
     let (asset1, info1) = create_asset(meta_data1, units, asset_fees(tax, 0), &creator_pub_key);
@@ -92,7 +87,6 @@ fn fees_for_exchange_intermediary_sender() {
     let transaction_fee = 1000;
     let tax = 10;
     let units = 2;
-    let balance = 100_000_000;
     let meta_data0 = "asset0";
     let meta_data1 = "asset1";
     let meta_data2 = "asset2";
@@ -105,10 +99,6 @@ fn fees_for_exchange_intermediary_sender() {
     let (sender_public_key, sender_secret_key) = crypto::gen_keypair();
     let (recipient_public_key, recipient_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
-
-    testkit.create_wallet(&sender_public_key, balance);
-    testkit.create_wallet(&recipient_public_key, balance);  
-    testkit.create_wallet(&intermediary_public_key, balance);
 
     let (asset0, info0) = create_asset(meta_data0, units, asset_fees(tax, 0), &creator_pub_key);
     let (asset1, info1) = create_asset(meta_data1, units, asset_fees(tax, 0), &creator_pub_key);
@@ -155,7 +145,6 @@ fn fees_for_exchange_intermediary_recipient_and_sender() {
     let transaction_fee = 1000;
     let tax = 10;
     let units = 2;
-    let balance = 100_000_000;
     let meta_data0 = "asset0";
     let meta_data1 = "asset1";
     let meta_data2 = "asset2";
@@ -168,10 +157,6 @@ fn fees_for_exchange_intermediary_recipient_and_sender() {
     let (sender_public_key, sender_secret_key) = crypto::gen_keypair();
     let (recipient_public_key, recipient_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
-
-    testkit.create_wallet(&sender_public_key, balance);
-    testkit.create_wallet(&recipient_public_key, balance);  
-    testkit.create_wallet(&intermediary_public_key, balance);
 
     let (asset0, info0) = create_asset(meta_data0, units, asset_fees(tax, 0), &creator_pub_key);
     let (asset1, info1) = create_asset(meta_data1, units, asset_fees(tax, 0), &creator_pub_key);
@@ -219,7 +204,6 @@ fn fees_for_exchange_intermediary_intermediary() {
     let transaction_fee = 1000;
     let tax = 10;
     let units = 2;
-    let balance = 100_000_000;
     let meta_data0 = "asset0";
     let meta_data1 = "asset1";
     let meta_data2 = "asset2";
@@ -232,10 +216,6 @@ fn fees_for_exchange_intermediary_intermediary() {
     let (sender_public_key, sender_secret_key) = crypto::gen_keypair();
     let (recipient_public_key, recipient_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
-
-    testkit.create_wallet(&sender_public_key, balance);
-    testkit.create_wallet(&recipient_public_key, balance);  
-    testkit.create_wallet(&intermediary_public_key, balance);
 
     let (asset0, info0) = create_asset(meta_data0, units, asset_fees(tax, 0), &creator_pub_key);
     let (asset1, info1) = create_asset(meta_data1, units, asset_fees(tax, 0), &creator_pub_key);
@@ -282,7 +262,6 @@ fn fees_for_exchange_intermediary_recipient_and_sender_creator() {
     let transaction_fee = 1000;
     let tax = 10;
     let units = 2;
-    let balance = 100_000_000;
     let meta_data0 = "asset0";
     let meta_data1 = "asset1";
     let meta_data2 = "asset2";
@@ -294,10 +273,6 @@ fn fees_for_exchange_intermediary_recipient_and_sender_creator() {
     let (sender_public_key, sender_secret_key) = crypto::gen_keypair();
     let (recipient_public_key, recipient_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
-
-    testkit.create_wallet(&sender_public_key, balance);
-    testkit.create_wallet(&recipient_public_key, balance);  
-    testkit.create_wallet(&intermediary_public_key, balance);
 
     let (asset0, info0) = create_asset(meta_data0, units, asset_fees(tax, 0), &sender_public_key);
     let (asset1, info1) = create_asset(meta_data1, units, asset_fees(tax, 0), &sender_public_key);
@@ -346,7 +321,6 @@ fn fees_for_exchange_intermediary_asset_not_found() {
     let transaction_fee = 1000;
     let tax = 10;
     let units = 2;
-    let balance = 100_000_000;
     let meta_data0 = "asset0";
     let meta_data1 = "asset1";
     let meta_data2 = "asset2";
@@ -359,10 +333,6 @@ fn fees_for_exchange_intermediary_asset_not_found() {
     let (sender_public_key, sender_secret_key) = crypto::gen_keypair();
     let (recipient_public_key, recipient_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
-
-    testkit.create_wallet(&sender_public_key, balance);
-    testkit.create_wallet(&recipient_public_key, balance);  
-    testkit.create_wallet(&intermediary_public_key, balance);
 
     let (asset0, _) = create_asset(meta_data0, units, asset_fees(tax, 0), &creator_pub_key);
     let (asset1, _) = create_asset(meta_data1, units, asset_fees(tax, 0), &creator_pub_key);

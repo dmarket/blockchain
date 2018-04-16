@@ -31,7 +31,7 @@ fn wallet() {
     let meta_data = "asset";
 
     let (pub_key, _) = crypto::gen_keypair();
-    testkit.create_wallet(&pub_key, balance);
+    testkit.store_wallet(&pub_key, Wallet::new(balance, vec![]));
 
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &pub_key);
     testkit.add_assets(&pub_key, vec![asset.clone()], vec![info]);
@@ -56,13 +56,13 @@ fn wallets() {
     let meta_data = "asset";
 
     let (pub_key1, _) = crypto::gen_keypair();
-    testkit.create_wallet(&pub_key1, balance);
+    testkit.store_wallet(&pub_key1, Wallet::new(balance, vec![]));
 
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &pub_key1);
     testkit.add_assets(&pub_key1, vec![asset.clone()], vec![info]);
 
     let (pub_key2, _) = crypto::gen_keypair();
-    testkit.create_wallet(&pub_key2, balance);
+    testkit.store_wallet(&pub_key2, Wallet::new(balance, vec![]));
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &pub_key2);
     testkit.add_assets(&pub_key2, vec![asset.clone()], vec![info]);
 
@@ -119,11 +119,11 @@ fn wallets_pagination() {
     let meta_data = "asset";
 
     let (pub_key, _) = crypto::gen_keypair();
-    testkit.create_wallet(&pub_key, 0);
+    testkit.store_wallet(&pub_key, Wallet::new_empty());
     testkit.add_asset(meta_data, units, asset_fees(tax, 0), &pub_key);
 
     let (pub_key, _) = crypto::gen_keypair();
-    testkit.create_wallet(&pub_key, 0);
+    testkit.store_wallet(&pub_key, Wallet::new_empty());
     testkit.add_asset(meta_data, units, asset_fees(tax, 0), &pub_key);
 
     let total = 3;
@@ -156,7 +156,7 @@ fn wallet_assets() {
     let (asset1, info1) = create_asset(meta_data1, units, asset_fees(tax, 0), &pub_key);
     let (asset2, info2) = create_asset(meta_data2, units, asset_fees(tax, 0), &pub_key);
 
-    testkit.create_wallet(&pub_key, 0);
+    testkit.store_wallet(&pub_key, Wallet::new_empty());
     testkit.add_assets(
         &pub_key, 
         vec![asset0.clone(), asset1.clone(), asset2.clone()], 
@@ -197,7 +197,7 @@ fn wallet_assets_meta_data() {
     let (pub_key, _) = crypto::gen_keypair();
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &pub_key);
 
-    testkit.create_wallet(&pub_key, 0);
+    testkit.store_wallet(&pub_key, Wallet::new_empty());
     testkit.add_assets(&pub_key, vec![asset.clone()], vec![info.clone()]);
 
     let (status, response): (StatusCode, WalletAssetsResponse) = api.get_with_status(

@@ -32,7 +32,6 @@ fn fees_for_trade_recipient() {
     let units = 2;
     let price_per_unit = 1000;
     let meta_data = "asset";
-    let balance = 100_000_000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0);
 
     testkit.set_configuration(Configuration::new(config_fees));
@@ -40,9 +39,6 @@ fn fees_for_trade_recipient() {
     let (creator_pub_key, _) = crypto::gen_keypair();
     let (seller_public_key, seller_secret_key) = crypto::gen_keypair();
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
-
-    testkit.create_wallet(&seller_public_key, balance);
-    testkit.create_wallet(&buyer_public_key, balance);
 
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &creator_pub_key);
     testkit.add_assets(&creator_pub_key, vec![asset.clone()], vec![info]);
@@ -74,7 +70,6 @@ fn fees_for_trade_sender() {
     let units = 2;
     let price_per_unit = 1000;
     let meta_data = "asset";
-    let balance = 100_000_000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0);
 
     testkit.set_configuration(Configuration::new(config_fees));
@@ -82,9 +77,6 @@ fn fees_for_trade_sender() {
     let (creator_pub_key, _) = crypto::gen_keypair();
     let (seller_public_key, seller_secret_key) = crypto::gen_keypair();
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
-
-    testkit.create_wallet(&seller_public_key, balance);
-    testkit.create_wallet(&buyer_public_key, balance);
 
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &creator_pub_key);
     testkit.add_assets(&creator_pub_key, vec![asset.clone()], vec![info]);
@@ -116,7 +108,6 @@ fn fees_for_trade_recipient_and_sender() {
     let units = 2;
     let price_per_unit = 1000;
     let meta_data = "asset";
-    let balance = 100_000_000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0);
 
     testkit.set_configuration(Configuration::new(config_fees));
@@ -124,9 +115,6 @@ fn fees_for_trade_recipient_and_sender() {
     let (creator_pub_key, _) = crypto::gen_keypair();
     let (seller_public_key, seller_secret_key) = crypto::gen_keypair();
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
-
-    testkit.create_wallet(&seller_public_key, balance);
-    testkit.create_wallet(&buyer_public_key, balance);
 
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &creator_pub_key);
     testkit.add_assets(&creator_pub_key, vec![asset.clone()], vec![info]);
@@ -159,16 +147,12 @@ fn fees_for_trade_recipient_and_sender_creator() {
     let units = 2;
     let price_per_unit = 1000;
     let meta_data = "asset";
-    let balance = 100_000_000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0);
 
     testkit.set_configuration(Configuration::new(config_fees));
 
     let (seller_public_key, seller_secret_key) = crypto::gen_keypair();
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
-
-    testkit.create_wallet(&seller_public_key, balance);
-    testkit.create_wallet(&buyer_public_key, balance);
 
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &seller_public_key);
     testkit.add_assets(&seller_public_key, vec![asset.clone()], vec![info]);
@@ -202,17 +186,13 @@ fn fees_for_trade_invalid_transaction() {
     let units = 2;
     let price_per_unit = 1000;
     let meta_data = "asset";
-    let balance = 100_000_000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0);
 
     testkit.set_configuration(Configuration::new(config_fees));
 
     let (creator_pub_key, _) = crypto::gen_keypair();
     let (seller_public_key, seller_secret_key) = crypto::gen_keypair();
-    let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
-
-    testkit.create_wallet(&seller_public_key, balance);
-    testkit.create_wallet(&buyer_public_key, balance);
+    let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();;
 
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &creator_pub_key);
     testkit.add_assets(&creator_pub_key, vec![asset.clone()], vec![info]);
@@ -241,7 +221,6 @@ fn fees_for_trade_asset_not_found() {
     let units = 2;
     let price_per_unit = 1000;
     let meta_data = "asset";
-    let balance = 100_000_000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0);
 
     testkit.set_configuration(Configuration::new(config_fees));
@@ -250,8 +229,6 @@ fn fees_for_trade_asset_not_found() {
     let (seller_public_key, seller_secret_key) = crypto::gen_keypair();
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
 
-    testkit.create_wallet(&seller_public_key, balance);
-    testkit.create_wallet(&buyer_public_key, balance);
 
     let (asset, _) = create_asset(meta_data, units, asset_fees(tax, 0), &creator_pub_key);
 

@@ -23,8 +23,6 @@ use dmbc::currency::configuration::GENESIS_WALLET_PUB_KEY;
 pub trait EvoTestKit {
     fn default() -> Self;
 
-    fn create_wallet(&mut self, pub_key: &PublicKey, balance: u64) -> Wallet;
-
     fn add_asset(
         &mut self, meta_data: &str, 
         units: u64, 
@@ -37,6 +35,8 @@ pub trait EvoTestKit {
     fn set_configuration(&mut self, configuration: Configuration);
 
     fn fetch_wallet(&mut self, pub_key: &PublicKey) -> Wallet;
+
+    fn store_wallet(&mut self, pub_key: &PublicKey, wallet: Wallet);
 }
 
 impl EvoTestKit for ExonumTestKit {
@@ -45,17 +45,6 @@ impl EvoTestKit for ExonumTestKit {
             .with_validators(4)
             .with_service(Service::new())
             .create()
-    }
-
-    fn create_wallet(&mut self, pub_key: &PublicKey, balance: u64) -> Wallet {
-        let blockchain = self.blockchain_mut();
-        let mut fork = blockchain.fork();
-        let wallet = Wallet::new(balance, vec![]);
-        wallet::Schema(&mut fork).store(&pub_key, wallet.clone());
-
-        assert!(blockchain.merge(fork.into_patch()).is_ok());
-
-        wallet
     }
 
     fn add_asset(
@@ -99,6 +88,15 @@ impl EvoTestKit for ExonumTestKit {
         let blockchain = self.blockchain_mut();
         let fork = blockchain.fork();
         wallet::Schema(&fork).fetch(&pub_key)
+    }
+
+    fn store_wallet(&mut self, pub_key: &PublicKey, wallet: Wallet) {
+        let blockchain = self.blockchain_mut();
+        let mut fork = blockchain.fork();
+
+        wallet::Schema(&mut fork).store(&pub_key, wallet);
+
+        assert!(blockchain.merge(fork.into_patch()).is_ok());
     }
 }
 

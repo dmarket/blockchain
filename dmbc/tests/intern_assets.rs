@@ -24,13 +24,11 @@ use dmbc::currency::assets::AssetId;
 
 #[test]
 fn intern_assets_id_from_meta() {
-    let mut testkit = TestKit::default();
+    let testkit = TestKit::default();
     let api = testkit.api();
-    let balance = 1000;
     let meta_data = "asset";
 
     let (pub_key, _) = crypto::gen_keypair();
-    testkit.create_wallet(&pub_key, balance);
 
     let (status, response): (StatusCode, AssetIdResponse) = api.get_with_status(
         &format!("/v1/intern/assets/{}/{}", pub_key.to_string(), meta_data),
