@@ -13,8 +13,7 @@ use std::collections::HashMap;
 
 use hyper::status::StatusCode;
 use exonum::crypto;
-use exonum_testkit::TestKit;
-use evo_testkit::{EvoTestKit, EvoTestKitApi, asset_fees};
+use evo_testkit::{EvoTestKitApi, EvoTestApiBuilder, asset_fees};
 
 use dmbc::currency::api::fees::FeesResponseBody;
 use dmbc::currency::assets::MetaAsset;
@@ -23,14 +22,15 @@ use dmbc::currency::transactions::builders::transaction;
 
 #[test]
 fn fees_for_add_assets() {
-    let mut testkit = TestKit::default();
-    let api = testkit.api();
     let transaction_fee = 100;
     let per_asset_fee = 4;
     let amount = 5;
     let config_fees = TransactionFees::with_default_key(transaction_fee, per_asset_fee, 0, 0, 0, 0);
-
-    testkit.set_configuration(Configuration::new(config_fees));
+    let testkit = EvoTestApiBuilder::new()
+        .with_configuration(Configuration::new(config_fees))
+        .create();
+    
+    let api = testkit.api();
 
     let (public_key, secret_key) = crypto::gen_keypair();
     let (receiver_key, _) = crypto::gen_keypair();

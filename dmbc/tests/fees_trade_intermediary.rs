@@ -13,8 +13,7 @@ use std::collections::HashMap;
 
 use hyper::status::StatusCode;
 use exonum::crypto;
-use exonum_testkit::TestKit;
-use evo_testkit::{EvoTestKit, EvoTestKitApi, asset_fees, create_asset};
+use evo_testkit::{EvoTestApiBuilder, EvoTestKitApi, asset_fees, create_asset};
 
 use dmbc::currency::api::fees::FeesResponseBody;
 use dmbc::currency::configuration::{Configuration, TransactionFees};
@@ -25,8 +24,6 @@ use dmbc::currency::assets::TradeAsset;
 
 #[test]
 fn fees_for_trade_intermediary_recipient() {
-    let mut testkit = TestKit::default();
-    let api = testkit.api();
     let transaction_fee = 1000;
     let tax = 10;
     let units = 2;
@@ -34,15 +31,18 @@ fn fees_for_trade_intermediary_recipient() {
     let meta_data = "asset";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0);
 
-    testkit.set_configuration(Configuration::new(config_fees));
-
     let (creator_pub_key, _) = crypto::gen_keypair();
     let (seller_public_key, seller_secret_key) = crypto::gen_keypair();
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &creator_pub_key);
-    testkit.add_assets(&creator_pub_key, vec![asset.clone()], vec![info]);
+
+    let testkit = EvoTestApiBuilder::new()
+        .with_configuration(Configuration::new(config_fees))
+        .add_asset_value_to_wallet(asset.clone(), info, &seller_public_key)
+        .create();
+    let api = testkit.api();
 
     let tx_trade = transaction::Builder::new()
         .keypair(buyer_public_key, buyer_secret_key)
@@ -65,8 +65,6 @@ fn fees_for_trade_intermediary_recipient() {
 
 #[test]
 fn fees_for_trade_intermediary_sender() {
-    let mut testkit = TestKit::default();
-    let api = testkit.api();
     let transaction_fee = 1000;
     let tax = 10;
     let units = 2;
@@ -74,15 +72,18 @@ fn fees_for_trade_intermediary_sender() {
     let meta_data = "asset";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0);
 
-    testkit.set_configuration(Configuration::new(config_fees));
-
     let (creator_pub_key, _) = crypto::gen_keypair();
     let (seller_public_key, seller_secret_key) = crypto::gen_keypair();
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &creator_pub_key);
-    testkit.add_assets(&creator_pub_key, vec![asset.clone()], vec![info]);
+
+    let testkit = EvoTestApiBuilder::new()
+        .with_configuration(Configuration::new(config_fees))
+        .add_asset_value_to_wallet(asset.clone(), info, &seller_public_key)
+        .create();
+    let api = testkit.api();
 
     let tx_trade = transaction::Builder::new()
         .keypair(buyer_public_key, buyer_secret_key)
@@ -105,8 +106,6 @@ fn fees_for_trade_intermediary_sender() {
 
 #[test]
 fn fees_for_trade_intermediary_recipient_and_sender() {
-    let mut testkit = TestKit::default();
-    let api = testkit.api();
     let transaction_fee = 1000;
     let tax = 10;
     let units = 2;
@@ -114,15 +113,18 @@ fn fees_for_trade_intermediary_recipient_and_sender() {
     let meta_data = "asset";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0);
 
-    testkit.set_configuration(Configuration::new(config_fees));
-
     let (creator_pub_key, _) = crypto::gen_keypair();
     let (seller_public_key, seller_secret_key) = crypto::gen_keypair();
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &creator_pub_key);
-    testkit.add_assets(&creator_pub_key, vec![asset.clone()], vec![info]);
+
+    let testkit = EvoTestApiBuilder::new()
+        .with_configuration(Configuration::new(config_fees))
+        .add_asset_value_to_wallet(asset.clone(), info, &seller_public_key)
+        .create();
+    let api = testkit.api();
 
     let tx_trade = transaction::Builder::new()
         .keypair(buyer_public_key, buyer_secret_key)
@@ -146,8 +148,6 @@ fn fees_for_trade_intermediary_recipient_and_sender() {
 
 #[test]
 fn fees_for_trade_intermediary_intermedniary() {
-    let mut testkit = TestKit::default();
-    let api = testkit.api();
     let transaction_fee = 1000;
     let tax = 10;
     let units = 2;
@@ -155,15 +155,18 @@ fn fees_for_trade_intermediary_intermedniary() {
     let meta_data = "asset";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0);
 
-    testkit.set_configuration(Configuration::new(config_fees));
-
     let (creator_pub_key, _) = crypto::gen_keypair();
     let (seller_public_key, seller_secret_key) = crypto::gen_keypair();
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &creator_pub_key);
-    testkit.add_assets(&creator_pub_key, vec![asset.clone()], vec![info]);
+
+    let testkit = EvoTestApiBuilder::new()
+        .with_configuration(Configuration::new(config_fees))
+        .add_asset_value_to_wallet(asset.clone(), info, &seller_public_key)
+        .create();
+    let api = testkit.api();
 
     let tx_trade = transaction::Builder::new()
         .keypair(buyer_public_key, buyer_secret_key)
@@ -186,8 +189,6 @@ fn fees_for_trade_intermediary_intermedniary() {
 
 #[test]
 fn fees_for_trade_intermediary_recipient_and_sender_creator() {
-    let mut testkit = TestKit::default();
-    let api = testkit.api();
     let transaction_fee = 1000;
     let tax = 10;
     let units = 2;
@@ -195,14 +196,17 @@ fn fees_for_trade_intermediary_recipient_and_sender_creator() {
     let meta_data = "asset";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0);
 
-    testkit.set_configuration(Configuration::new(config_fees));
-
     let (seller_public_key, seller_secret_key) = crypto::gen_keypair();
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &seller_public_key);
-    testkit.add_assets(&seller_public_key, vec![asset.clone()], vec![info]);
+
+    let testkit = EvoTestApiBuilder::new()
+        .with_configuration(Configuration::new(config_fees))
+        .add_asset_value_to_wallet(asset.clone(), info, &seller_public_key)
+        .create();
+    let api = testkit.api();
 
     let tx_trade = transaction::Builder::new()
         .keypair(buyer_public_key, buyer_secret_key)
@@ -227,8 +231,6 @@ fn fees_for_trade_intermediary_recipient_and_sender_creator() {
 
 #[test]
 fn fees_for_trade_intermediary_asset_not_found() {
-    let mut testkit = TestKit::default();
-    let api = testkit.api();
     let transaction_fee = 1000;
     let tax = 10;
     let units = 2;
@@ -236,14 +238,17 @@ fn fees_for_trade_intermediary_asset_not_found() {
     let meta_data = "asset";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0);
 
-    testkit.set_configuration(Configuration::new(config_fees));
-
     let (creator_pub_key, _) = crypto::gen_keypair();
     let (seller_public_key, seller_secret_key) = crypto::gen_keypair();
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
     let (asset, _) = create_asset(meta_data, units, asset_fees(tax, 0), &creator_pub_key);
+
+    let testkit = EvoTestApiBuilder::new()
+        .with_configuration(Configuration::new(config_fees))
+        .create();
+    let api = testkit.api();
 
     let tx_trade = transaction::Builder::new()
         .keypair(buyer_public_key, buyer_secret_key)

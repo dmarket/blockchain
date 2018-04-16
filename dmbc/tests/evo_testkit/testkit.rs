@@ -5,7 +5,7 @@ use hyper::status::StatusCode;
 use iron_test::{request, response};
 use iron::headers::{ContentType, Headers};
 
-use exonum::crypto::{self, PublicKey};
+use exonum::crypto::{self, PublicKey, Hash};
 use exonum::messages::Message;
 use exonum_testkit::{TestKit as ExonumTestKit, TestKitBuilder, TestKitApi as ExonumTestKitApi};
 use exonum::encoding::serialize::FromHex;
@@ -261,4 +261,85 @@ pub fn create_asset2(
 
 pub fn default_genesis_key() -> PublicKey {
     PublicKey::from_hex(GENESIS_WALLET_PUB_KEY).unwrap()
+}
+
+pub struct EvoTestApiBuilder {
+    configuration: Option<Configuration>,
+    wallets: Vec<(PublicKey, Wallet)>,
+    assets: Vec<(PublicKey, AssetBundle, AssetInfo)>
+}
+
+impl EvoTestApiBuilder {
+    pub fn new() -> Self {
+        EvoTestApiBuilder {
+            configuration: None,
+            wallets: Vec::new(),
+            assets: Vec::new(),
+        }
+    }
+
+    pub fn with_configuration(self, configuration: Configuration) -> Self {
+        EvoTestApiBuilder {
+            configuration: Some(configuration),
+            ..self
+        }
+    }
+
+    pub fn add_wallet(mut self, public_key: &PublicKey, wallet: Wallet) -> Self {
+        self.wallets.push((*public_key, wallet));
+        self
+    }
+
+    pub fn add_asset_value_to_wallet(
+        mut self, 
+        asset: AssetBundle, 
+        info: AssetInfo,
+        public_key: &PublicKey
+    ) -> Self {
+        self.assets.push((*public_key, asset, info));
+        self
+    }
+
+    pub fn add_asset_to_wallet(
+        self, 
+        meta_data: &str, 
+        units: u64, 
+        fees: Fees, 
+        creator_key: &PublicKey, 
+        receiver_key: &PublicKey
+    ) -> Self {
+        let (asset, info) = create_asset(meta_data, units, fees, creator_key);
+        self.add_asset_value_to_wallet(asset, info, receiver_key)
+    }
+
+    pub fn add_asset_to_wallet2(
+        self, 
+        meta_data: &str, 
+        units: u64, 
+        fees: Fees, 
+        origin: &Hash, 
+        creator_key: &PublicKey, 
+        receiver_key: &PublicKey
+    ) -> Self {
+        let (asset, info) = create_asset2(meta_data, units, fees, creator_key, origin);
+        self.add_asset_value_to_wallet(asset, info, receiver_key)
+    }
+
+    pub fn create(self) -> ExonumTestKit {
+        let mut testkit = ExonumTestKit::default();
+        if let Some(configuration) = self.configuration {
+            testkit.set_configuration(configuration);
+        }
+
+        for (key, wallet) in self.wallets {
+            testkit.store_wallet(&key, wallet);
+        }
+
+        
+        for (key, asset, info) in self.assets {
+            testkit.add_assets(&key, vec![asset], vec![info]);
+        }
+
+        testkit
+    }
 }

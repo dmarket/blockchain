@@ -13,8 +13,7 @@ use std::collections::HashMap;
 
 use hyper::status::StatusCode;
 use exonum::crypto;
-use exonum_testkit::TestKit;
-use evo_testkit::{EvoTestKit, EvoTestKitApi, asset_fees, create_asset, default_genesis_key};
+use evo_testkit::{EvoTestKit, EvoTestApiBuilder, EvoTestKitApi, asset_fees, create_asset, default_genesis_key};
 
 use dmbc::currency::api::wallet::{self, ExtendedAsset, WalletAssetsResponse, WalletAssetsResponseBody,
                                   WalletInfo, WalletResponse, WalletsResponse, WalletsResponseBody};
@@ -23,18 +22,19 @@ use dmbc::currency::api::error::ApiError;
 
 #[test]
 fn wallet() {
-    let mut testkit = TestKit::default();
-    let api = testkit.api();
     let tax = 10;
     let units = 2;
     let balance = 1000;
     let meta_data = "asset";
 
     let (pub_key, _) = crypto::gen_keypair();
-    testkit.store_wallet(&pub_key, Wallet::new(balance, vec![]));
-
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &pub_key);
-    testkit.add_assets(&pub_key, vec![asset.clone()], vec![info]);
+
+    let testkit = EvoTestApiBuilder::new()
+        .add_wallet(&pub_key, Wallet::new(balance, vec![]))
+        .add_asset_value_to_wallet(asset.clone(), info, &pub_key)
+        .create();
+    let api = testkit.api();
 
     let (status, response): (StatusCode, WalletResponse) = api.get_with_status(
         &format!("/v1/wallets/{}", pub_key.to_string())
@@ -48,23 +48,24 @@ fn wallet() {
 
 #[test]
 fn wallets() {
-    let mut testkit = TestKit::default();
-    let api = testkit.api();
     let tax = 10;
     let units = 2;
     let balance = 1000;
     let meta_data = "asset";
 
     let (pub_key1, _) = crypto::gen_keypair();
-    testkit.store_wallet(&pub_key1, Wallet::new(balance, vec![]));
-
-    let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &pub_key1);
-    testkit.add_assets(&pub_key1, vec![asset.clone()], vec![info]);
-
     let (pub_key2, _) = crypto::gen_keypair();
-    testkit.store_wallet(&pub_key2, Wallet::new(balance, vec![]));
-    let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &pub_key2);
-    testkit.add_assets(&pub_key2, vec![asset.clone()], vec![info]);
+
+    let (asset1, info1) = create_asset(meta_data, units, asset_fees(tax, 0), &pub_key1);
+    let (asset2, info2) = create_asset(meta_data, units, asset_fees(tax, 0), &pub_key2);
+
+    let mut testkit = EvoTestApiBuilder::new()
+        .add_wallet(&pub_key1, Wallet::new(balance, vec![]))
+        .add_wallet(&pub_key2, Wallet::new(balance, vec![]))
+        .add_asset_value_to_wallet(asset1, info1, &pub_key1)
+        .add_asset_value_to_wallet(asset2, info2, &pub_key2)
+        .create();
+    let api = testkit.api();
 
     let genesis_key = default_genesis_key();
     let genesis = testkit.fetch_wallet(&genesis_key);
@@ -112,19 +113,19 @@ fn wallets() {
 
 #[test]
 fn wallets_pagination() {
-    let mut testkit = TestKit::default();
-    let api = testkit.api();
     let tax = 10;
     let units = 2;
     let meta_data = "asset";
 
-    let (pub_key, _) = crypto::gen_keypair();
-    testkit.store_wallet(&pub_key, Wallet::new_empty());
-    testkit.add_asset(meta_data, units, asset_fees(tax, 0), &pub_key);
+    let (pub_key1, _) = crypto::gen_keypair();
+    let (pub_key2, _) = crypto::gen_keypair();
 
-    let (pub_key, _) = crypto::gen_keypair();
-    testkit.store_wallet(&pub_key, Wallet::new_empty());
-    testkit.add_asset(meta_data, units, asset_fees(tax, 0), &pub_key);
+    let testkit = EvoTestApiBuilder::new()
+        .add_asset_to_wallet(meta_data, units, asset_fees(tax, 0), &pub_key1, &pub_key1)
+        .add_asset_to_wallet(meta_data, units, asset_fees(tax, 0), &pub_key2, &pub_key2)
+        .create();
+
+    let api = testkit.api();
 
     let total = 3;
     let count = 1;
@@ -143,8 +144,6 @@ fn wallets_pagination() {
 
 #[test]
 fn wallet_assets() {
-    let mut testkit = TestKit::default();
-    let api = testkit.api();
     let tax = 10;
     let units = 2;
     let meta_data0 = "asset0";
@@ -156,12 +155,12 @@ fn wallet_assets() {
     let (asset1, info1) = create_asset(meta_data1, units, asset_fees(tax, 0), &pub_key);
     let (asset2, info2) = create_asset(meta_data2, units, asset_fees(tax, 0), &pub_key);
 
-    testkit.store_wallet(&pub_key, Wallet::new_empty());
-    testkit.add_assets(
-        &pub_key, 
-        vec![asset0.clone(), asset1.clone(), asset2.clone()], 
-        vec![info0.clone(), info1.clone(), info2.clone()]
-    );
+    let testkit = EvoTestApiBuilder::new()
+        .add_asset_value_to_wallet(asset0.clone(), info0.clone(), &pub_key)
+        .add_asset_value_to_wallet(asset1.clone(), info1.clone(), &pub_key)
+        .add_asset_value_to_wallet(asset2.clone(), info2.clone(), &pub_key)
+        .create();
+    let api = testkit.api();
 
     let (status, response): (StatusCode, WalletAssetsResponse) = api.get_with_status(
         &format!("/v1/wallets/{}/assets?{}=true", pub_key.to_string(), wallet::PARAMETER_META_DATA_KEY)
@@ -188,8 +187,6 @@ fn wallet_assets() {
 
 #[test]
 fn wallet_assets_meta_data() {
-    let mut testkit = TestKit::default();
-    let api = testkit.api();
     let tax = 10;
     let units = 2;
     let meta_data = "asset";
@@ -197,8 +194,11 @@ fn wallet_assets_meta_data() {
     let (pub_key, _) = crypto::gen_keypair();
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &pub_key);
 
-    testkit.store_wallet(&pub_key, Wallet::new_empty());
-    testkit.add_assets(&pub_key, vec![asset.clone()], vec![info.clone()]);
+    let testkit = EvoTestApiBuilder::new()
+        .add_asset_value_to_wallet(asset.clone(), info.clone(), &pub_key)
+        .create();
+
+    let api = testkit.api();
 
     let (status, response): (StatusCode, WalletAssetsResponse) = api.get_with_status(
         &format!(
@@ -225,7 +225,7 @@ fn wallet_assets_meta_data() {
 
 #[test]
 fn wallet_invalid_public_key() {
-    let testkit = TestKit::default();
+    let testkit = EvoTestApiBuilder::new().create();
     let api = testkit.api();
 
     let (status, response): (StatusCode, WalletResponse) = api.get_with_status(
@@ -238,7 +238,7 @@ fn wallet_invalid_public_key() {
 
 #[test]
 fn wallet_assets_invalid_public_key() {
-    let testkit = TestKit::default();
+    let testkit = EvoTestApiBuilder::new().create();
     let api = testkit.api();
 
     let (status, response): (StatusCode, WalletAssetsResponse) = api.get_with_status(

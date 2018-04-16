@@ -13,8 +13,7 @@ use std::collections::HashMap;
 
 use hyper::status::StatusCode;
 use exonum::crypto;
-use exonum_testkit::TestKit;
-use evo_testkit::{EvoTestKit, EvoTestKitApi, asset_fees, create_asset};
+use evo_testkit::{EvoTestApiBuilder, EvoTestKitApi, asset_fees, create_asset};
 
 use dmbc::currency::api::fees::FeesResponseBody;
 use dmbc::currency::configuration::{Configuration, TransactionFees};
@@ -24,8 +23,6 @@ use dmbc::currency::transactions::components::FeeStrategy;
 
 #[test]
 fn fees_for_exchange_recipient() {
-    let mut testkit = TestKit::default();
-    let api = testkit.api();
     let transaction_fee = 1000;
     let tax = 10;
     let units = 2;
@@ -35,27 +32,23 @@ fn fees_for_exchange_recipient() {
     let meta_data3 = "asset3";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0);
 
-    testkit.set_configuration(Configuration::new(config_fees));
-
     let (creator_pub_key, _) = crypto::gen_keypair();
     let (sender_public_key, sender_secret_key) = crypto::gen_keypair();
-    let (recipient_public_key, recipient_secret_key) = crypto::gen_keypair();   
+    let (recipient_public_key, recipient_secret_key) = crypto::gen_keypair();
 
     let (asset0, info0) = create_asset(meta_data0, units, asset_fees(tax, 0), &creator_pub_key);
     let (asset1, info1) = create_asset(meta_data1, units, asset_fees(tax, 0), &creator_pub_key);
     let (asset2, info2) = create_asset(meta_data2, units, asset_fees(tax, 0), &creator_pub_key);
     let (asset3, info3) = create_asset(meta_data3, units, asset_fees(tax, 0), &creator_pub_key);
 
-    testkit.add_assets(
-        &sender_public_key, 
-        vec![asset0.clone(), asset1.clone(), asset2.clone()], 
-        vec![info0.clone(), info1.clone(), info2.clone()]
-    );
-    testkit.add_assets(
-        &recipient_public_key, 
-        vec![asset3.clone()], 
-        vec![info3.clone()]
-    );
+    let testkit = EvoTestApiBuilder::new()
+        .with_configuration(Configuration::new(config_fees))
+        .add_asset_value_to_wallet(asset0.clone(), info0, &sender_public_key)
+        .add_asset_value_to_wallet(asset1.clone(), info1, &sender_public_key)
+        .add_asset_value_to_wallet(asset2.clone(), info2, &sender_public_key)
+        .add_asset_value_to_wallet(asset3.clone(), info3, &recipient_public_key)
+        .create();
+    let api = testkit.api();
 
     let tx_exchange_assets = transaction::Builder::new()
         .keypair(recipient_public_key, recipient_secret_key)
@@ -81,8 +74,6 @@ fn fees_for_exchange_recipient() {
 
 #[test]
 fn fees_for_exchange_sender() {
-    let mut testkit = TestKit::default();
-    let api = testkit.api();
     let transaction_fee = 1000;
     let tax = 10;
     let units = 2;
@@ -91,8 +82,6 @@ fn fees_for_exchange_sender() {
     let meta_data2 = "asset2";
     let meta_data3 = "asset3";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0);
-
-    testkit.set_configuration(Configuration::new(config_fees));
 
     let (creator_pub_key, _) = crypto::gen_keypair();
     let (sender_public_key, sender_secret_key) = crypto::gen_keypair();
@@ -103,16 +92,14 @@ fn fees_for_exchange_sender() {
     let (asset2, info2) = create_asset(meta_data2, units, asset_fees(tax, 0), &creator_pub_key);
     let (asset3, info3) = create_asset(meta_data3, units, asset_fees(tax, 0), &creator_pub_key);
 
-    testkit.add_assets(
-        &sender_public_key, 
-        vec![asset0.clone(), asset1.clone(), asset2.clone()], 
-        vec![info0.clone(), info1.clone(), info2.clone()]
-    );
-    testkit.add_assets(
-        &recipient_public_key, 
-        vec![asset3.clone()], 
-        vec![info3.clone()]
-    );
+    let testkit = EvoTestApiBuilder::new()
+        .with_configuration(Configuration::new(config_fees))
+        .add_asset_value_to_wallet(asset0.clone(), info0, &sender_public_key)
+        .add_asset_value_to_wallet(asset1.clone(), info1, &sender_public_key)
+        .add_asset_value_to_wallet(asset2.clone(), info2, &sender_public_key)
+        .add_asset_value_to_wallet(asset3.clone(), info3, &recipient_public_key)
+        .create();
+    let api = testkit.api();
 
     let tx_exchange_assets = transaction::Builder::new()
         .keypair(recipient_public_key, recipient_secret_key)
@@ -138,8 +125,6 @@ fn fees_for_exchange_sender() {
 
 #[test]
 fn fees_for_exchange_recipient_and_sender() {
-    let mut testkit = TestKit::default();
-    let api = testkit.api();
     let transaction_fee = 1000;
     let tax = 10;
     let units = 2;
@@ -149,27 +134,23 @@ fn fees_for_exchange_recipient_and_sender() {
     let meta_data3 = "asset3";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0);
 
-    testkit.set_configuration(Configuration::new(config_fees));
-
     let (creator_pub_key, _) = crypto::gen_keypair();
     let (sender_public_key, sender_secret_key) = crypto::gen_keypair();
-    let (recipient_public_key, recipient_secret_key) = crypto::gen_keypair(); 
+    let (recipient_public_key, recipient_secret_key) = crypto::gen_keypair();
 
     let (asset0, info0) = create_asset(meta_data0, units, asset_fees(tax, 0), &creator_pub_key);
     let (asset1, info1) = create_asset(meta_data1, units, asset_fees(tax, 0), &creator_pub_key);
     let (asset2, info2) = create_asset(meta_data2, units, asset_fees(tax, 0), &creator_pub_key);
     let (asset3, info3) = create_asset(meta_data3, units, asset_fees(tax, 0), &creator_pub_key);
 
-    testkit.add_assets(
-        &sender_public_key, 
-        vec![asset0.clone(), asset1.clone(), asset2.clone()], 
-        vec![info0.clone(), info1.clone(), info2.clone()]
-    );
-    testkit.add_assets(
-        &recipient_public_key, 
-        vec![asset3.clone()], 
-        vec![info3.clone()]
-    );
+    let testkit = EvoTestApiBuilder::new()
+        .with_configuration(Configuration::new(config_fees))
+        .add_asset_value_to_wallet(asset0.clone(), info0, &sender_public_key)
+        .add_asset_value_to_wallet(asset1.clone(), info1, &sender_public_key)
+        .add_asset_value_to_wallet(asset2.clone(), info2, &sender_public_key)
+        .add_asset_value_to_wallet(asset3.clone(), info3, &recipient_public_key)
+        .create();
+    let api = testkit.api();
 
     let tx_exchange_assets = transaction::Builder::new()
         .keypair(recipient_public_key, recipient_secret_key)
@@ -196,8 +177,6 @@ fn fees_for_exchange_recipient_and_sender() {
 
 #[test]
 fn fees_for_exchange_recipient_and_sender_creator() {
-    let mut testkit = TestKit::default();
-    let api = testkit.api();
     let transaction_fee = 1000;
     let tax = 10;
     let units = 2;
@@ -207,26 +186,22 @@ fn fees_for_exchange_recipient_and_sender_creator() {
     let meta_data3 = "asset3";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0);
 
-    testkit.set_configuration(Configuration::new(config_fees));
-
     let (sender_public_key, sender_secret_key) = crypto::gen_keypair();
-    let (recipient_public_key, recipient_secret_key) = crypto::gen_keypair();  
+    let (recipient_public_key, recipient_secret_key) = crypto::gen_keypair();
 
     let (asset0, info0) = create_asset(meta_data0, units, asset_fees(tax, 0), &sender_public_key);
     let (asset1, info1) = create_asset(meta_data1, units, asset_fees(tax, 0), &sender_public_key);
     let (asset2, info2) = create_asset(meta_data2, units, asset_fees(tax, 0), &sender_public_key);
     let (asset3, info3) = create_asset(meta_data3, units, asset_fees(tax, 0), &sender_public_key);
 
-    testkit.add_assets(
-        &sender_public_key, 
-        vec![asset0.clone(), asset1.clone(), asset2.clone()], 
-        vec![info0.clone(), info1.clone(), info2.clone()]
-    );
-    testkit.add_assets(
-        &recipient_public_key, 
-        vec![asset3.clone()], 
-        vec![info3.clone()]
-    );
+    let testkit = EvoTestApiBuilder::new()
+        .with_configuration(Configuration::new(config_fees))
+        .add_asset_value_to_wallet(asset0.clone(), info0, &sender_public_key)
+        .add_asset_value_to_wallet(asset1.clone(), info1, &sender_public_key)
+        .add_asset_value_to_wallet(asset2.clone(), info2, &sender_public_key)
+        .add_asset_value_to_wallet(asset3.clone(), info3, &recipient_public_key)
+        .create();
+    let api = testkit.api();
 
     let tx_exchange_assets = transaction::Builder::new()
         .keypair(recipient_public_key, recipient_secret_key)
@@ -254,9 +229,7 @@ fn fees_for_exchange_recipient_and_sender_creator() {
 
 #[test]
 fn fees_for_exchange_invalid_transaction() {
-    let mut testkit = TestKit::default();
-    let api = testkit.api();
-    let transaction_fee = 1000;
+let transaction_fee = 1000;
     let tax = 10;
     let units = 2;
     let meta_data0 = "asset0";
@@ -265,26 +238,23 @@ fn fees_for_exchange_invalid_transaction() {
     let meta_data3 = "asset3";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0);
 
-    testkit.set_configuration(Configuration::new(config_fees));
-
+    let (creator_pub_key, _) = crypto::gen_keypair();
     let (sender_public_key, sender_secret_key) = crypto::gen_keypair();
-    let (recipient_public_key, recipient_secret_key) = crypto::gen_keypair(); 
+    let (recipient_public_key, recipient_secret_key) = crypto::gen_keypair();
 
-    let (asset0, info0) = create_asset(meta_data0, units, asset_fees(tax, 0), &sender_public_key);
-    let (asset1, info1) = create_asset(meta_data1, units, asset_fees(tax, 0), &sender_public_key);
-    let (asset2, info2) = create_asset(meta_data2, units, asset_fees(tax, 0), &sender_public_key);
-    let (asset3, info3) = create_asset(meta_data3, units, asset_fees(tax, 0), &sender_public_key);
+    let (asset0, info0) = create_asset(meta_data0, units, asset_fees(tax, 0), &creator_pub_key);
+    let (asset1, info1) = create_asset(meta_data1, units, asset_fees(tax, 0), &creator_pub_key);
+    let (asset2, info2) = create_asset(meta_data2, units, asset_fees(tax, 0), &creator_pub_key);
+    let (asset3, info3) = create_asset(meta_data3, units, asset_fees(tax, 0), &creator_pub_key);
 
-    testkit.add_assets(
-        &sender_public_key, 
-        vec![asset0.clone(), asset1.clone(), asset2.clone()], 
-        vec![info0.clone(), info1.clone(), info2.clone()]
-    );
-    testkit.add_assets(
-        &recipient_public_key, 
-        vec![asset3.clone()], 
-        vec![info3.clone()]
-    );
+    let testkit = EvoTestApiBuilder::new()
+        .with_configuration(Configuration::new(config_fees))
+        .add_asset_value_to_wallet(asset0.clone(), info0, &sender_public_key)
+        .add_asset_value_to_wallet(asset1.clone(), info1, &sender_public_key)
+        .add_asset_value_to_wallet(asset2.clone(), info2, &sender_public_key)
+        .add_asset_value_to_wallet(asset3.clone(), info3, &recipient_public_key)
+        .create();
+    let api = testkit.api();
 
     let tx_exchange_assets = transaction::Builder::new()
         .keypair(recipient_public_key, recipient_secret_key)
@@ -306,8 +276,6 @@ fn fees_for_exchange_invalid_transaction() {
 
 #[test]
 fn fees_for_exchange_asset_not_found() {
-    let mut testkit = TestKit::default();
-    let api = testkit.api();
     let transaction_fee = 1000;
     let tax = 10;
     let units = 2;
@@ -317,15 +285,19 @@ fn fees_for_exchange_asset_not_found() {
     let meta_data3 = "asset3";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0);
 
-    testkit.set_configuration(Configuration::new(config_fees));
-
+    let (creator_pub_key, _) = crypto::gen_keypair();
     let (sender_public_key, sender_secret_key) = crypto::gen_keypair();
-    let (recipient_public_key, recipient_secret_key) = crypto::gen_keypair(); 
+    let (recipient_public_key, recipient_secret_key) = crypto::gen_keypair();
 
-    let (asset0, _) = create_asset(meta_data0, units, asset_fees(tax, 0), &sender_public_key);
-    let (asset1, _) = create_asset(meta_data1, units, asset_fees(tax, 0), &sender_public_key);
-    let (asset2, _) = create_asset(meta_data2, units, asset_fees(tax, 0), &sender_public_key);
-    let (asset3, _) = create_asset(meta_data3, units, asset_fees(tax, 0), &sender_public_key);
+    let testkit = EvoTestApiBuilder::new()
+        .with_configuration(Configuration::new(config_fees))
+        .create();
+    let api = testkit.api();
+
+    let (asset0, _) = create_asset(meta_data0, units, asset_fees(tax, 0), &creator_pub_key);
+    let (asset1, _) = create_asset(meta_data1, units, asset_fees(tax, 0), &creator_pub_key);
+    let (asset2, _) = create_asset(meta_data2, units, asset_fees(tax, 0), &creator_pub_key);
+    let (asset3, _) = create_asset(meta_data3, units, asset_fees(tax, 0), &creator_pub_key);
 
     let tx_exchange_assets = transaction::Builder::new()
         .keypair(recipient_public_key, recipient_secret_key)

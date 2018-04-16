@@ -13,8 +13,7 @@ use std::collections::HashMap;
 
 use hyper::status::StatusCode;
 use exonum::crypto;
-use exonum_testkit::TestKit;
-use evo_testkit::{EvoTestKit, EvoTestKitApi, asset_fees, create_asset};
+use evo_testkit::{EvoTestApiBuilder, EvoTestKitApi, asset_fees, create_asset};
 
 use dmbc::currency::api::fees::FeesResponseBody;
 use dmbc::currency::configuration::{Configuration, TransactionFees};
@@ -23,22 +22,23 @@ use dmbc::currency::error::Error;
 
 #[test]
 fn fees_for_transfer() {
-    let mut testkit = TestKit::default();
-    let api = testkit.api();
     let transaction_fee = 1000;
     let amount = 2;
     let tax = 10;
     let meta_data = "asset";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee);
 
-    testkit.set_configuration(Configuration::new(config_fees));
-
     let (creator_key, _) = crypto::gen_keypair();
     let (recipient_key, _) = crypto::gen_keypair();
     let (sender_pub_key, sender_sec_key) = crypto::gen_keypair();
 
     let (asset, info) = create_asset(meta_data, amount, asset_fees(tax, 0), &creator_key);
-    testkit.add_assets(&sender_pub_key, vec![asset.clone()], vec![info]);
+
+    let testkit = EvoTestApiBuilder::new()
+        .with_configuration(Configuration::new(config_fees))
+        .add_asset_value_to_wallet(asset.clone(), info, &sender_pub_key)
+        .create();
+    let api = testkit.api();    
 
     let tx_transfer = transaction::Builder::new()
         .keypair(sender_pub_key, sender_sec_key)
@@ -60,21 +60,22 @@ fn fees_for_transfer() {
 
 #[test]
 fn fees_for_transfer_sender_is_creator() {
-    let mut testkit = TestKit::default();
-    let api = testkit.api();
     let transaction_fee = 1000;
     let amount = 2;
     let tax = 10;
     let meta_data = "asset";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee);
 
-    testkit.set_configuration(Configuration::new(config_fees));
-
     let (recipient_key, _) = crypto::gen_keypair();
     let (sender_pub_key, sender_sec_key) = crypto::gen_keypair();
 
     let (asset, info) = create_asset(meta_data, amount, asset_fees(tax, 0), &sender_pub_key);
-    testkit.add_assets(&sender_pub_key, vec![asset.clone()], vec![info]);
+
+    let testkit = EvoTestApiBuilder::new()
+        .with_configuration(Configuration::new(config_fees))
+        .add_asset_value_to_wallet(asset.clone(), info, &sender_pub_key)
+        .create();
+    let api = testkit.api();    
 
     let tx_transfer = transaction::Builder::new()
         .keypair(sender_pub_key, sender_sec_key)
@@ -95,21 +96,22 @@ fn fees_for_transfer_sender_is_creator() {
 
 #[test]
 fn fees_for_transfer_asset_not_found() {
-    let mut testkit = TestKit::default();
-    let api = testkit.api();
-    let transaction_fee = 1000;
+        let transaction_fee = 1000;
     let amount = 2;
     let tax = 10;
     let meta_data = "asset";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee);
-
-    testkit.set_configuration(Configuration::new(config_fees));
 
     let (creator_key, _) = crypto::gen_keypair();
     let (recipient_key, _) = crypto::gen_keypair();
     let (sender_pub_key, sender_sec_key) = crypto::gen_keypair();
 
     let (asset, _) = create_asset(meta_data, amount, asset_fees(tax, 0), &creator_key);
+
+    let testkit = EvoTestApiBuilder::new()
+        .with_configuration(Configuration::new(config_fees))
+        .create();
+    let api = testkit.api(); 
 
     let tx_transfer = transaction::Builder::new()
         .keypair(sender_pub_key, sender_sec_key)
