@@ -75,21 +75,21 @@ fn wallets() {
         genesis_key,
         WalletInfo {
             balance: genesis.balance(),
-            count_assets: genesis_count_assets,
+            assets_count: genesis_count_assets,
         },
     );
     wallets.insert(
         pub_key1,
         WalletInfo {
             balance: balance,
-            count_assets: 1,
+            assets_count: 1,
         },
     );
     wallets.insert(
         pub_key2,
         WalletInfo {
             balance: balance,
-            count_assets: 1,
+            assets_count: 1,
         },
     );
     let total = wallets.len() as u64;

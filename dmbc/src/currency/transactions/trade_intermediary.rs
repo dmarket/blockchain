@@ -5,7 +5,7 @@ use exonum::crypto;
 use exonum::crypto::{PublicKey, Signature};
 use exonum::messages::Message;
 use exonum::storage::Fork;
-use prometheus::{Counter, Histogram};
+use prometheus::{IntCounter, Histogram};
 use serde_json;
 
 use currency::assets::TradeAsset;
@@ -52,7 +52,11 @@ impl FeesCalculator for TradeIntermediary {
     fn calculate_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error> {
         let offer = self.offer();
         let genesis_fees = Configuration::extract(view).fees();
-        let fees = ThirdPartyFees::new_trade(&*view, &offer.assets())?;
+        let mut fees = ThirdPartyFees::new_trade(&*view, &offer.assets())?;
+        fees.add_fee(
+            offer.intermediary().wallet(),
+            offer.intermediary().commission()
+        );
         let fee_strategy =
             FeeStrategy::try_from(offer.fee_strategy()).expect("fee strategy must be valid");
 
@@ -211,23 +215,23 @@ impl TradeIntermediary {
 }
 
 lazy_static! {
-    static ref VERIFY_COUNT: Counter = register_counter!(
+    static ref VERIFY_COUNT: IntCounter = register_int_counter!(
         "dmbc_transaction_trade_intermediary_verify_count",
         "Times .verify() was called on a transaction."
     ).unwrap();
-    static ref VERIFY_SUCCESS_COUNT: Counter = register_counter!(
+    static ref VERIFY_SUCCESS_COUNT: IntCounter = register_int_counter!(
         "dmbc_transaction_trade_intermediary_verify_success_count",
         "Times verification was successfull on a transaction."
     ).unwrap();
-    static ref EXECUTE_COUNT: Counter = register_counter!(
+    static ref EXECUTE_COUNT: IntCounter = register_int_counter!(
         "dmbc_transaction_trade_intermediary_execute_count",
         "Transactions executed."
     ).unwrap();
-    static ref EXECUTE_SUCCESS_COUNT: Counter = register_counter!(
+    static ref EXECUTE_SUCCESS_COUNT: IntCounter = register_int_counter!(
         "dmbc_transaction_trade_intermediary_execute_success_count",
         "Times transaction execution reported a success."
     ).unwrap();
-    static ref EXECUTE_FINISH_COUNT: Counter = register_counter!(
+    static ref EXECUTE_FINISH_COUNT: IntCounter = register_int_counter!(
         "dmbc_transaction_trade_intermediary_execute_finish_count",
         "Times transaction has finished executing without panicking."
     ).unwrap();

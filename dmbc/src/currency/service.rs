@@ -9,6 +9,7 @@ use exonum::storage::Fork;
 use exonum::storage::Snapshot;
 use iron::Handler;
 use router::Router;
+use prometheus::IntGauge;
 
 use super::nats;
 use config;
@@ -44,6 +45,13 @@ impl Service {
         let config = Configuration::extract(view.as_ref());
         *config.fees().recipient()
     }
+}
+
+lazy_static! {
+    static ref BLOCKCHAIN_HEIGHT: IntGauge = register_int_gauge!(
+        "dmbc_blockchain_height_blocks",
+        "Height of the blockchain of the current node in blocks."
+    ).unwrap();
 }
 
 impl blockchain::Service for Service {
@@ -89,6 +97,8 @@ impl blockchain::Service for Service {
         let last_block = schema.last_block();
 
         info!("Block #{}.", last_block.height());
+
+        BLOCKCHAIN_HEIGHT.set(last_block.height().0 as i64);
 
         let txs = schema.block_txs(last_block.height());
         for hash in txs.iter() {
