@@ -1,7 +1,7 @@
 [package]
 name = "dmbc-discovery"
-version = "0.1.0"
-authors = ["Mikola Samardak <niksaak@gmail.com>"]
+version = "0.2.0"
+authors = ["Ilya Sinyakin <sinyakin.ilya@gmail.com>", "Mikola Samardak <niksaak@gmail.com>" ,"Taras Shchybovyk <tshchybo@gmail.com>"]
 
 [dependencies]
 dmbc = { path = "../dmbc" }
