@@ -16,7 +16,7 @@ use dmbc::currency::{SERVICE_NAME, Service};
 use dmbc::currency::wallet::{self, Wallet};
 use dmbc::currency::assets::{self, AssetBundle, AssetInfo, Fees, MetaAsset, AssetId};
 use dmbc::currency::transactions::builders::fee;
-use dmbc::currency::api::transaction::{TxPostResponse, TransactionResponse};
+use dmbc::currency::api::transaction::TxPostResponse;
 use dmbc::currency::api::fees::FeesResponse;
 use dmbc::currency::configuration::GENESIS_WALLET_PUB_KEY;
 
@@ -37,6 +37,8 @@ pub trait EvoTestKit {
     fn fetch_wallet(&mut self, pub_key: &PublicKey) -> Wallet;
 
     fn store_wallet(&mut self, pub_key: &PublicKey, wallet: Wallet);
+
+    fn fetch_asset_info(&mut self, id: &AssetId) -> Option<AssetInfo>;
 }
 
 impl EvoTestKit for ExonumTestKit {
@@ -104,6 +106,12 @@ impl EvoTestKit for ExonumTestKit {
 
         assert!(blockchain.merge(fork.into_patch()).is_ok());
     }
+
+    fn fetch_asset_info(&mut self, id: &AssetId) -> Option<AssetInfo> {
+        let blockchain = self.blockchain_mut();
+        let fork = blockchain.fork();
+        assets::Schema(&fork).fetch(&id)
+    }
 }
 
 
@@ -123,7 +131,7 @@ pub trait EvoTestKitApi {
     fn post_raw_with_status2<D>(&self, endpoint: &str, headers: Headers, body: &str) -> (StatusCode, D)
     where for <'de> D: Deserialize<'de>;
 
-    fn post_tx<T>(&self, tx: &T) 
+    fn post_tx<T>(&self, tx: &T) -> (StatusCode, TxPostResponse)
     where T: Message + Serialize; 
 
     fn post_fee<T>(&self, tx: &T) -> (StatusCode, FeesResponse)
@@ -196,15 +204,10 @@ impl EvoTestKitApi for ExonumTestKitApi {
         )
     }
 
-    fn post_tx<T>(&self, tx: &T) 
+    fn post_tx<T>(&self, tx: &T) -> (StatusCode, TxPostResponse)
     where T: Message + Serialize 
     {
-        let (status, response): (StatusCode, TxPostResponse) = self.post_with_status(
-            "v1/transactions", &tx
-        );
-
-        assert_eq!(status, StatusCode::Ok);
-        assert_eq!(response, Ok(Ok(TransactionResponse { tx_hash: tx.hash() })));
+        self.post_with_status("v1/transactions", &tx)
     }
 
     fn post_fee<T>(&self, tx: &T) -> (StatusCode, FeesResponse)
@@ -237,6 +240,24 @@ pub fn create_asset(
 
     (asset, info)
 }
+
+pub fn create_asset2(
+    meta_data: &str, 
+    units: u64, 
+    fees: Fees, 
+    creator: &PublicKey,
+    origin: &crypto::Hash
+) -> (AssetBundle, AssetInfo) 
+{
+    let (receiver, _) = crypto::gen_keypair();
+    let meta_asset = MetaAsset::new(&receiver, meta_data, units, fees);
+    let id = AssetId::from_data(meta_data, creator);
+    let asset = meta_asset.to_bundle(id);
+    let info = meta_asset.to_info(creator, origin);
+
+    (asset, info)
+}
+
 
 pub fn default_genesis_key() -> PublicKey {
     PublicKey::from_hex(GENESIS_WALLET_PUB_KEY).unwrap()
