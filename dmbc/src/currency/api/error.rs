@@ -9,6 +9,8 @@ pub enum ApiError {
     EmptyRequestBody,
     IncorrectRequest,
     WalletHexInvalid,
+    HeightIsMissing,
+    BlockNotFound,
 }
 
 impl ApiError {
@@ -21,6 +23,8 @@ impl ApiError {
             ApiError::EmptyRequestBody => StatusCode::BadRequest,
             ApiError::IncorrectRequest => StatusCode::BadRequest,
             ApiError::WalletHexInvalid => StatusCode::BadRequest,
+            ApiError::HeightIsMissing => StatusCode::BadRequest,
+            ApiError::BlockNotFound => StatusCode::NotFound,
         }
     }
 }
