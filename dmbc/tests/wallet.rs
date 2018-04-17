@@ -31,8 +31,8 @@ fn wallet() {
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &pub_key);
 
     let testkit = EvoTestApiBuilder::new()
-        .add_wallet(&pub_key, Wallet::new(balance, vec![]))
-        .add_asset_value_to_wallet(asset.clone(), info, &pub_key)
+        .add_wallet_value(&pub_key, Wallet::new(balance, vec![]))
+        .add_asset_value_to_wallet(&pub_key, asset.clone(), info)
         .create();
     let api = testkit.api();
 
@@ -60,10 +60,10 @@ fn wallets() {
     let (asset2, info2) = create_asset(meta_data, units, asset_fees(tax, 0), &pub_key2);
 
     let mut testkit = EvoTestApiBuilder::new()
-        .add_wallet(&pub_key1, Wallet::new(balance, vec![]))
-        .add_wallet(&pub_key2, Wallet::new(balance, vec![]))
-        .add_asset_value_to_wallet(asset1, info1, &pub_key1)
-        .add_asset_value_to_wallet(asset2, info2, &pub_key2)
+        .add_wallet_value(&pub_key1, Wallet::new(balance, vec![]))
+        .add_wallet_value(&pub_key2, Wallet::new(balance, vec![]))
+        .add_asset_value_to_wallet(&pub_key1, asset1, info1)
+        .add_asset_value_to_wallet(&pub_key2, asset2, info2)
         .create();
     let api = testkit.api();
 
@@ -156,9 +156,9 @@ fn wallet_assets() {
     let (asset2, info2) = create_asset(meta_data2, units, asset_fees(tax, 0), &pub_key);
 
     let testkit = EvoTestApiBuilder::new()
-        .add_asset_value_to_wallet(asset0.clone(), info0.clone(), &pub_key)
-        .add_asset_value_to_wallet(asset1.clone(), info1.clone(), &pub_key)
-        .add_asset_value_to_wallet(asset2.clone(), info2.clone(), &pub_key)
+        .add_asset_value_to_wallet(&pub_key, asset0.clone(), info0.clone())
+        .add_asset_value_to_wallet(&pub_key, asset1.clone(), info1.clone())
+        .add_asset_value_to_wallet(&pub_key, asset2.clone(), info2.clone())
         .create();
     let api = testkit.api();
 
@@ -195,7 +195,7 @@ fn wallet_assets_meta_data() {
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &pub_key);
 
     let testkit = EvoTestApiBuilder::new()
-        .add_asset_value_to_wallet(asset.clone(), info.clone(), &pub_key)
+        .add_asset_value_to_wallet(&pub_key, asset.clone(), info.clone())
         .create();
 
     let api = testkit.api();

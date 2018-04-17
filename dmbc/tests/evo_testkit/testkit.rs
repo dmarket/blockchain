@@ -5,7 +5,7 @@ use hyper::status::StatusCode;
 use iron_test::{request, response};
 use iron::headers::{ContentType, Headers};
 
-use exonum::crypto::{self, PublicKey, Hash};
+use exonum::crypto::{self, PublicKey};
 use exonum::messages::Message;
 use exonum_testkit::{TestKit as ExonumTestKit, TestKitBuilder, TestKitApi as ExonumTestKitApi};
 use exonum::encoding::serialize::FromHex;
@@ -39,6 +39,8 @@ pub trait EvoTestKit {
     fn store_wallet(&mut self, pub_key: &PublicKey, wallet: Wallet);
 
     fn fetch_asset_info(&mut self, id: &AssetId) -> Option<AssetInfo>;
+
+    fn store_asset_info(&mut self, id: &AssetId, info: AssetInfo);
 }
 
 impl EvoTestKit for ExonumTestKit {
@@ -111,6 +113,15 @@ impl EvoTestKit for ExonumTestKit {
         let blockchain = self.blockchain_mut();
         let fork = blockchain.fork();
         assets::Schema(&fork).fetch(&id)
+    }
+
+    fn store_asset_info(&mut self, id: &AssetId, info: AssetInfo) {
+        let blockchain = self.blockchain_mut();
+        let mut fork = blockchain.fork();
+
+        assets::Schema(&mut fork).store(id, info);
+
+        assert!(blockchain.merge(fork.into_patch()).is_ok());
     }
 }
 
@@ -276,7 +287,8 @@ pub fn default_genesis_key() -> PublicKey {
 pub struct EvoTestApiBuilder {
     configuration: Option<Configuration>,
     wallets: Vec<(PublicKey, Wallet)>,
-    assets: Vec<(PublicKey, AssetBundle, AssetInfo)>
+    assets: Vec<(PublicKey, AssetBundle, AssetInfo)>,
+    infos: Vec<(AssetId, AssetInfo)>,
 }
 
 impl EvoTestApiBuilder {
@@ -285,6 +297,7 @@ impl EvoTestApiBuilder {
             configuration: None,
             wallets: Vec::new(),
             assets: Vec::new(),
+            infos: Vec::new(),
         }
     }
 
@@ -295,18 +308,23 @@ impl EvoTestApiBuilder {
         }
     }
 
-    pub fn add_wallet(mut self, public_key: &PublicKey, wallet: Wallet) -> Self {
+    pub fn add_asset_info(mut self, id: &AssetId, info: AssetInfo) -> Self {
+        self.infos.push((*id, info));
+        self
+    }
+
+    pub fn add_wallet_value(mut self, public_key: &PublicKey, wallet: Wallet) -> Self {
         self.wallets.push((*public_key, wallet));
         self
     }
 
     pub fn add_asset_value_to_wallet(
         mut self, 
+        wallet_key: &PublicKey,
         asset: AssetBundle, 
-        info: AssetInfo,
-        public_key: &PublicKey
+        info: AssetInfo
     ) -> Self {
-        self.assets.push((*public_key, asset, info));
+        self.assets.push((*wallet_key, asset, info));
         self
     }
 
@@ -319,20 +337,7 @@ impl EvoTestApiBuilder {
         receiver_key: &PublicKey
     ) -> Self {
         let (asset, info) = create_asset(meta_data, units, fees, creator_key);
-        self.add_asset_value_to_wallet(asset, info, receiver_key)
-    }
-
-    pub fn add_asset_to_wallet2(
-        self, 
-        meta_data: &str, 
-        units: u64, 
-        fees: Fees, 
-        origin: &Hash, 
-        creator_key: &PublicKey, 
-        receiver_key: &PublicKey
-    ) -> Self {
-        let (asset, info) = create_asset2(meta_data, units, fees, creator_key, origin);
-        self.add_asset_value_to_wallet(asset, info, receiver_key)
+        self.add_asset_value_to_wallet(receiver_key, asset, info)
     }
 
     pub fn create(self) -> ExonumTestKit {
@@ -345,6 +350,9 @@ impl EvoTestApiBuilder {
             testkit.store_wallet(&key, wallet);
         }
 
+        for (id, info) in self.infos {
+            testkit.store_asset_info(&id, info);
+        }
         
         for (key, asset, info) in self.assets {
             testkit.add_assets(&key, vec![asset], vec![info]);

@@ -36,8 +36,8 @@ fn delete_assets_one_from_bundle() {
     
     let mut testkit = EvoTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_wallet(&public_key, Wallet::new(balance, vec![]))
-        .add_asset_value_to_wallet(asset.clone(), info.clone(), &public_key)
+        .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
+        .add_asset_value_to_wallet(&public_key, asset.clone(), info.clone())
         .create();
     let api = testkit.api();
 
@@ -83,8 +83,8 @@ fn delete_assets_all_from_bundle() {
     
     let mut testkit = EvoTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_wallet(&public_key, Wallet::new(balance, vec![]))
-        .add_asset_value_to_wallet(asset.clone(), info, &public_key)
+        .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
+        .add_asset_value_to_wallet(&public_key, asset.clone(), info)
         .create();
     let api = testkit.api();
 
@@ -128,7 +128,7 @@ fn delete_assets_that_doent_exist() {
 
     let mut testkit = EvoTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_wallet(&public_key, Wallet::new(balance, vec![]))
+        .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
         .create();
     let api = testkit.api();
 
@@ -171,8 +171,8 @@ fn delete_assets_that_doent_exist2() {
 
     let mut testkit = EvoTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_wallet(&public_key, Wallet::new(balance, vec![]))
-        .add_asset_value_to_wallet(another_asset.clone(), another_info.clone(), &public_key)
+        .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
+        .add_asset_value_to_wallet(&public_key, another_asset.clone(), another_info.clone())
         .create();
     let api = testkit.api();
 
@@ -219,8 +219,8 @@ fn delete_assets_amount_more_than_wallet_have() {
 
     let mut testkit = EvoTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_wallet(&public_key, Wallet::new(balance, vec![]))
-        .add_asset_value_to_wallet(asset.clone(), info.clone(), &public_key)
+        .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
+        .add_asset_value_to_wallet(&public_key, asset.clone(), info.clone())
         .create();
     let api = testkit.api();
 
@@ -266,8 +266,8 @@ fn delete_assets_insufficient_funds() {
 
     let mut testkit = EvoTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_wallet(&public_key, Wallet::new(balance, vec![]))
-        .add_asset_value_to_wallet(asset.clone(), info.clone(), &public_key)
+        .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
+        .add_asset_value_to_wallet(&public_key, asset.clone(), info.clone())
         .create();
     let api = testkit.api();
 
@@ -313,8 +313,8 @@ fn delete_assets_with_different_creator() {
 
     let mut testkit = EvoTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_wallet(&public_key, Wallet::new(balance, vec![]))
-        .add_asset_value_to_wallet(asset.clone(), info.clone(), &public_key)
+        .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
+        .add_asset_value_to_wallet(&public_key, asset.clone(), info.clone())
         .create();
     let api = testkit.api();
 
@@ -362,9 +362,9 @@ fn delete_assets_two_assets_where_one_asset_doesnt_have_enough_items() {
 
     let mut testkit = EvoTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_wallet(&public_key, Wallet::new(balance, vec![]))
-        .add_asset_value_to_wallet(asset1.clone(), info1.clone(), &public_key)
-        .add_asset_value_to_wallet(asset2.clone(), info2.clone(), &public_key)
+        .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
+        .add_asset_value_to_wallet(&public_key, asset1.clone(), info1.clone())
+        .add_asset_value_to_wallet(&public_key, asset2.clone(), info2.clone())
         .create();
     let api = testkit.api();
 
@@ -416,9 +416,9 @@ fn delete_assets_two_assets_where_one_have_another_creator() {
 
     let mut testkit = EvoTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_wallet(&public_key, Wallet::new(balance, vec![]))
-        .add_asset_value_to_wallet(asset1.clone(), info1.clone(), &public_key)
-        .add_asset_value_to_wallet(asset2.clone(), info2.clone(), &public_key)
+        .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
+        .add_asset_value_to_wallet(&public_key, asset1.clone(), info1.clone())
+        .add_asset_value_to_wallet(&public_key, asset2.clone(), info2.clone())
         .create();
     let api = testkit.api();
 

@@ -40,7 +40,7 @@ fn fees_for_trade_intermediary_recipient() {
 
     let testkit = EvoTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_asset_value_to_wallet(asset.clone(), info, &seller_public_key)
+        .add_asset_value_to_wallet(&seller_public_key, asset.clone(), info)
         .create();
     let api = testkit.api();
 
@@ -81,7 +81,7 @@ fn fees_for_trade_intermediary_sender() {
 
     let testkit = EvoTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_asset_value_to_wallet(asset.clone(), info, &seller_public_key)
+        .add_asset_value_to_wallet(&seller_public_key, asset.clone(), info)
         .create();
     let api = testkit.api();
 
@@ -122,7 +122,7 @@ fn fees_for_trade_intermediary_recipient_and_sender() {
 
     let testkit = EvoTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_asset_value_to_wallet(asset.clone(), info, &seller_public_key)
+        .add_asset_value_to_wallet(&seller_public_key, asset.clone(), info)
         .create();
     let api = testkit.api();
 
@@ -164,7 +164,7 @@ fn fees_for_trade_intermediary_intermedniary() {
 
     let testkit = EvoTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_asset_value_to_wallet(asset.clone(), info, &seller_public_key)
+        .add_asset_value_to_wallet(&seller_public_key, asset.clone(), info)
         .create();
     let api = testkit.api();
 
@@ -204,7 +204,7 @@ fn fees_for_trade_intermediary_recipient_and_sender_creator() {
 
     let testkit = EvoTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_asset_value_to_wallet(asset.clone(), info, &seller_public_key)
+        .add_asset_value_to_wallet(&seller_public_key, asset.clone(), info)
         .create();
     let api = testkit.api();
 

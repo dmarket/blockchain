@@ -43,10 +43,10 @@ fn fees_for_exchange_recipient() {
 
     let testkit = EvoTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_asset_value_to_wallet(asset0.clone(), info0, &sender_public_key)
-        .add_asset_value_to_wallet(asset1.clone(), info1, &sender_public_key)
-        .add_asset_value_to_wallet(asset2.clone(), info2, &sender_public_key)
-        .add_asset_value_to_wallet(asset3.clone(), info3, &recipient_public_key)
+        .add_asset_value_to_wallet(&sender_public_key, asset0.clone(), info0)
+        .add_asset_value_to_wallet(&sender_public_key, asset1.clone(), info1)
+        .add_asset_value_to_wallet(&sender_public_key, asset2.clone(), info2)
+        .add_asset_value_to_wallet(&recipient_public_key, asset3.clone(), info3)
         .create();
     let api = testkit.api();
 
@@ -94,10 +94,10 @@ fn fees_for_exchange_sender() {
 
     let testkit = EvoTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_asset_value_to_wallet(asset0.clone(), info0, &sender_public_key)
-        .add_asset_value_to_wallet(asset1.clone(), info1, &sender_public_key)
-        .add_asset_value_to_wallet(asset2.clone(), info2, &sender_public_key)
-        .add_asset_value_to_wallet(asset3.clone(), info3, &recipient_public_key)
+        .add_asset_value_to_wallet(&sender_public_key, asset0.clone(), info0)
+        .add_asset_value_to_wallet(&sender_public_key, asset1.clone(), info1)
+        .add_asset_value_to_wallet(&sender_public_key, asset2.clone(), info2)
+        .add_asset_value_to_wallet(&recipient_public_key, asset3.clone(), info3)
         .create();
     let api = testkit.api();
 
@@ -145,10 +145,10 @@ fn fees_for_exchange_recipient_and_sender() {
 
     let testkit = EvoTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_asset_value_to_wallet(asset0.clone(), info0, &sender_public_key)
-        .add_asset_value_to_wallet(asset1.clone(), info1, &sender_public_key)
-        .add_asset_value_to_wallet(asset2.clone(), info2, &sender_public_key)
-        .add_asset_value_to_wallet(asset3.clone(), info3, &recipient_public_key)
+        .add_asset_value_to_wallet(&sender_public_key, asset0.clone(), info0)
+        .add_asset_value_to_wallet(&sender_public_key, asset1.clone(), info1)
+        .add_asset_value_to_wallet(&sender_public_key, asset2.clone(), info2)
+        .add_asset_value_to_wallet(&recipient_public_key, asset3.clone(), info3)
         .create();
     let api = testkit.api();
 
@@ -196,10 +196,10 @@ fn fees_for_exchange_recipient_and_sender_creator() {
 
     let testkit = EvoTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_asset_value_to_wallet(asset0.clone(), info0, &sender_public_key)
-        .add_asset_value_to_wallet(asset1.clone(), info1, &sender_public_key)
-        .add_asset_value_to_wallet(asset2.clone(), info2, &sender_public_key)
-        .add_asset_value_to_wallet(asset3.clone(), info3, &recipient_public_key)
+        .add_asset_value_to_wallet(&sender_public_key, asset0.clone(), info0)
+        .add_asset_value_to_wallet(&sender_public_key, asset1.clone(), info1)
+        .add_asset_value_to_wallet(&sender_public_key, asset2.clone(), info2)
+        .add_asset_value_to_wallet(&recipient_public_key, asset3.clone(), info3)
         .create();
     let api = testkit.api();
 
@@ -249,10 +249,10 @@ let transaction_fee = 1000;
 
     let testkit = EvoTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_asset_value_to_wallet(asset0.clone(), info0, &sender_public_key)
-        .add_asset_value_to_wallet(asset1.clone(), info1, &sender_public_key)
-        .add_asset_value_to_wallet(asset2.clone(), info2, &sender_public_key)
-        .add_asset_value_to_wallet(asset3.clone(), info3, &recipient_public_key)
+        .add_asset_value_to_wallet(&sender_public_key, asset0.clone(), info0)
+        .add_asset_value_to_wallet(&sender_public_key, asset1.clone(), info1)
+        .add_asset_value_to_wallet(&sender_public_key, asset2.clone(), info2)
+        .add_asset_value_to_wallet(&recipient_public_key, asset3.clone(), info3)
         .create();
     let api = testkit.api();
 
