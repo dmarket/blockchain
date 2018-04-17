@@ -370,7 +370,7 @@ fn add_assets_with_different_fees() {
         .transfer(10, 10)
         .build();
 
-    let meta_asset2 = MetaAsset::new(&public_key, meta_data, 1, fees2.clone());
+    let meta_asset2 = MetaAsset::new(&public_key, meta_data, 100, fees2.clone());
 
     let tx_add_assets = transaction::Builder::new()
         .keypair(public_key, secret_key.clone())

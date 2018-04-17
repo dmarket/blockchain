@@ -16,7 +16,7 @@ use dmbc::currency::{SERVICE_NAME, Service};
 use dmbc::currency::wallet::{self, Wallet};
 use dmbc::currency::assets::{self, AssetBundle, AssetInfo, Fees, MetaAsset, AssetId};
 use dmbc::currency::transactions::builders::fee;
-use dmbc::currency::api::transaction::TxPostResponse;
+use dmbc::currency::api::transaction::{TxPostResponse, StatusResponse};
 use dmbc::currency::api::fees::FeesResponse;
 use dmbc::currency::configuration::GENESIS_WALLET_PUB_KEY;
 
@@ -134,6 +134,9 @@ pub trait EvoTestKitApi {
     fn post_tx<T>(&self, tx: &T) -> (StatusCode, TxPostResponse)
     where T: Message + Serialize; 
 
+    fn get_tx_status<T>(&self, transaction: &T) -> (StatusCode, StatusResponse)
+    where T: Message + Serialize;
+
     fn post_fee<T>(&self, tx: &T) -> (StatusCode, FeesResponse)
     where T: Message + Serialize; 
 }
@@ -208,6 +211,13 @@ impl EvoTestKitApi for ExonumTestKitApi {
     where T: Message + Serialize 
     {
         self.post_with_status("v1/transactions", &tx)
+    }
+
+    fn get_tx_status<T>(&self, transaction: &T) -> (StatusCode, StatusResponse)
+    where T: Message + Serialize 
+    {   
+        let endpoint = &format!("/v1/transactions/{}", transaction.hash().to_string());
+        self.get_with_status(endpoint)
     }
 
     fn post_fee<T>(&self, tx: &T) -> (StatusCode, FeesResponse)
