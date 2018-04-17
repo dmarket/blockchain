@@ -328,18 +328,6 @@ impl EvoTestApiBuilder {
         self
     }
 
-    pub fn add_asset_to_wallet(
-        self, 
-        meta_data: &str, 
-        units: u64, 
-        fees: Fees, 
-        creator_key: &PublicKey, 
-        receiver_key: &PublicKey
-    ) -> Self {
-        let (asset, info) = create_asset(meta_data, units, fees, creator_key);
-        self.add_asset_value_to_wallet(receiver_key, asset, info)
-    }
-
     pub fn create(self) -> ExonumTestKit {
         let mut testkit = ExonumTestKit::default();
         if let Some(configuration) = self.configuration {

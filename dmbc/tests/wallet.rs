@@ -120,9 +120,12 @@ fn wallets_pagination() {
     let (pub_key1, _) = crypto::gen_keypair();
     let (pub_key2, _) = crypto::gen_keypair();
 
+    let (asset1, info1) = create_asset(meta_data, units, asset_fees(tax, 0), &pub_key1);
+    let (asset2, info2) = create_asset(meta_data, units, asset_fees(tax, 0), &pub_key2);
+
     let testkit = EvoTestApiBuilder::new()
-        .add_asset_to_wallet(meta_data, units, asset_fees(tax, 0), &pub_key1, &pub_key1)
-        .add_asset_to_wallet(meta_data, units, asset_fees(tax, 0), &pub_key2, &pub_key2)
+        .add_asset_value_to_wallet(&pub_key1, asset1, info1)
+        .add_asset_value_to_wallet(&pub_key2, asset2, info2)
         .create();
 
     let api = testkit.api();

@@ -104,7 +104,7 @@ fn add_assets_mine_existing_asset_to_receivers_non_empty_wallet() {
     let mut testkit = EvoTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&creator_public_key, Wallet::new(balance, vec![]))
-        .add_asset_value_to_wallet(&receiver_key, asset.clone(), info.clone())
+        .add_asset_value_to_wallet(&receiver_key,asset.clone(), info.clone())
         .create();
     let api = testkit.api();
     
