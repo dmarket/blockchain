@@ -100,8 +100,8 @@ fn trade_fee_strategy() {
     let buyer_wallet = get_wallet(&api, &buyer_public_key);
 
     let asset_price = units * price_per_unit;
-    let seller_expected_balance = DMC_1 + asset_price + trade_tax;
-    let buyer_expected_balance = DMC_1 - asset_price - trade_tax - transaction_trade_fee;
+    let seller_expected_balance = DMC_1 + asset_price + trade_tax * units;
+    let buyer_expected_balance = DMC_1 - asset_price - trade_tax * units - transaction_trade_fee;
 
     assert!(seller_wallet.assets().is_empty());
     assert_eq!(seller_wallet.balance(), seller_expected_balance);
@@ -169,9 +169,9 @@ fn trade_fee_strategy() {
     let buyer_wallet = get_wallet(&api, &buyer_public_key);
 
     let seller_expected_balance =
-        DMC_1 + units * price_per_unit + trade_tax / 2 - transaction_trade_fee / 2;
+        DMC_1 + units * price_per_unit + trade_tax * units / 2 - transaction_trade_fee / 2;
     let buyer_expected_balance =
-        DMC_1 - units * price_per_unit - trade_tax / 2 - transaction_trade_fee / 2;
+        DMC_1 - units * price_per_unit - trade_tax * units / 2 - transaction_trade_fee / 2;
 
     assert!(seller_wallet.assets().is_empty());
     assert_eq!(seller_wallet.balance(), seller_expected_balance);

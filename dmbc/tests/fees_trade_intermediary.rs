@@ -56,7 +56,7 @@ fn fees_for_trade_intermediary_recipient() {
 
     let (status, response) = api.post_fee(&tx_trade);
     let mut expected = HashMap::new();
-    let expected_fee = transaction_fee + tax;
+    let expected_fee = transaction_fee + tax * units;
     expected.insert(buyer_public_key, expected_fee);
 
     assert_eq!(status, StatusCode::Ok);
@@ -97,7 +97,7 @@ fn fees_for_trade_intermediary_sender() {
 
     let (status, response) = api.post_fee(&tx_trade);
     let mut expected = HashMap::new();
-    let expected_fee = transaction_fee + tax;
+    let expected_fee = transaction_fee + tax * units;
     expected.insert(seller_public_key, expected_fee);
 
     assert_eq!(status, StatusCode::Ok);
@@ -138,7 +138,7 @@ fn fees_for_trade_intermediary_recipient_and_sender() {
 
     let (status, response) = api.post_fee(&tx_trade);
     let mut expected = HashMap::new();
-    let expected_fee = transaction_fee / 2 + tax / 2;
+    let expected_fee = transaction_fee / 2 + tax * units / 2;
     expected.insert(buyer_public_key, expected_fee);
     expected.insert(seller_public_key, expected_fee);
 
@@ -180,7 +180,7 @@ fn fees_for_trade_intermediary_intermedniary() {
 
     let (status, response) = api.post_fee(&tx_trade);
     let mut expected = HashMap::new();
-    let expected_fee = transaction_fee + tax;
+    let expected_fee = transaction_fee + tax * units;
     expected.insert(intermediary_public_key, expected_fee);
 
     assert_eq!(status, StatusCode::Ok);
@@ -221,7 +221,7 @@ fn fees_for_trade_intermediary_recipient_and_sender_creator() {
     let (status, response) = api.post_fee(&tx_trade);
     let mut expected = HashMap::new();
     let expected_seller_fee = transaction_fee / 2;
-    let expected_buyer_fee = transaction_fee / 2 + tax / 2;
+    let expected_buyer_fee = transaction_fee / 2 + tax * units / 2;
     expected.insert(seller_public_key, expected_seller_fee);
     expected.insert(buyer_public_key, expected_buyer_fee);
 
