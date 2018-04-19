@@ -9,6 +9,8 @@ pub mod hex;
 pub mod metrics;
 pub mod transaction;
 pub mod wallet;
+pub mod blocks;
+
 extern crate params;
 
 use exonum::api::Api;
@@ -28,6 +30,7 @@ use self::assets_intern::AssetInternApi;
 use self::fees::FeesApi;
 use self::hex::HexApi;
 use self::metrics::MetricsApi;
+use self::blocks::BlocksApi;
 use self::params::{FromValue, Params};
 use self::transaction::TransactionApi;
 use self::wallet::WalletApi;
@@ -138,6 +141,11 @@ impl Api for ServiceApi {
         api.wire(router);
 
         let api = FeesApi {
+            blockchain: self.clone().blockchain,
+        };
+        api.wire(router);
+
+        let api = BlocksApi {
             blockchain: self.clone().blockchain,
         };
         api.wire(router);
