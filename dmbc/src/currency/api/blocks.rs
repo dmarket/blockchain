@@ -50,27 +50,19 @@ impl BlocksApi {
 lazy_static! {
     static ref LIST_REQUESTS: IntCounter = register_int_counter!(
         "dmbc_blocks_api_list_requests_total",
-        "Wallet list requests."
+        "Block list requests."
     ).unwrap();
     static ref LIST_RESPONSES: IntCounter = register_int_counter!(
         "dmbc_blocks_api_list_responses_total",
-        "Wallet list responses."
+        "Block list responses."
     ).unwrap();
-    static ref BALANCE_REQUESTS: IntCounter = register_int_counter!(
-        "dmbc_blocks_api_balance_requests_total",
-        "Balance requests."
+    static ref INFO_REQUESTS: IntCounter = register_int_counter!(
+        "dmbc_blocks_api_info_requests_total",
+        "Block info requests."
     ).unwrap();
-    static ref BALANCE_RESPONSES: IntCounter = register_int_counter!(
-        "dmbc_blocks_api_balance_responses_total",
-        "Balance responses."
-    ).unwrap();
-    static ref ASSETS_REQUESTS: IntCounter = register_int_counter!(
-        "dmbc_blocks_api_assets_requests_total",
-        "Wallet asset list requests."
-    ).unwrap();
-    static ref ASSETS_RESPONSES: IntCounter = register_int_counter!(
-        "dmbc_blocks_api_assets_responses_total",
-        "Wallet asset list responses."
+    static ref INFO_RESPONSES: IntCounter = register_int_counter!(
+        "dmbc_blocks_api_info_responses_total",
+        "Block info responses."
     ).unwrap();
 }
 
@@ -79,6 +71,8 @@ impl Api for BlocksApi {
         // Gets status of the wallet corresponding to the public key.
         let _self = self.clone();
         let blocks = move |req: &mut Request| -> IronResult<Response> {
+            LIST_REQUESTS.inc();
+
             let map = req.get_ref::<Params>().unwrap();
             let mut err:Option<ApiError> = None;
             let count: u64 = match map.find(&["count"]) {
@@ -120,11 +114,14 @@ impl Api for BlocksApi {
             res.headers.set(ContentType::json());
             res.headers.set(AccessControlAllowOrigin::Any);
 
+            LIST_RESPONSES.inc();
             Ok(res)
         };
 
         let _self = self.clone();
         let block = move |req: &mut Request| -> IronResult<Response> {
+            INFO_REQUESTS.inc();
+
             let params = req.extensions.get::<Router>().unwrap();
 
             let result:Result<Option<BlockInfo>, ApiError> = match params.find("height") {
@@ -146,6 +143,7 @@ impl Api for BlocksApi {
             res.headers.set(ContentType::json());
             res.headers.set(AccessControlAllowOrigin::Any);
 
+            INFO_RESPONSES.inc();
             Ok(res)
         };
 
