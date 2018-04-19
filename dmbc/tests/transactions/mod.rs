@@ -15,8 +15,6 @@ use dmbc::currency::wallet::Wallet;
 use dmbc::currency::Service;
 use dmbc::currency::SERVICE_NAME;
 
-pub mod exchange;
-pub mod mine;
 pub mod trade;
 pub mod trade_intermediary;
 pub mod transfer;
