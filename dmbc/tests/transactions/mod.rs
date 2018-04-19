@@ -17,7 +17,6 @@ use dmbc::currency::SERVICE_NAME;
 
 pub mod trade;
 pub mod trade_intermediary;
-pub mod transfer;
 
 pub const DMC_1: u64 = 1_00_000_000;
 
@@ -75,20 +74,6 @@ pub fn set_configuration(testkit: &mut TestKit, fees: TransactionFees) {
     };
     testkit.commit_configuration_change(proposal);
     testkit.create_block();
-}
-
-fn mine_wallet(testkit: &mut TestKit) -> (PublicKey, SecretKey) {
-    let (pk, sk) = crypto::gen_keypair();
-
-    let mine_1_dmc = transaction::Builder::new()
-        .keypair(pk, sk.clone())
-        .tx_mine()
-        .build();
-
-    post_tx(&testkit.api(), &mine_1_dmc);
-    testkit.create_block();
-
-    (pk, sk)
 }
 
 pub struct WalletMiner {
