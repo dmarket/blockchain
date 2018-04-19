@@ -66,18 +66,12 @@ impl EvoTestKit for ExonumTestKit {
         let blockchain = self.blockchain_mut();
         let mut fork = blockchain.fork();
         let mut wallet = wallet::Schema(&fork).fetch(&pub_key);
-        let wallet = Wallet::new(
-            wallet.balance(),
-            { 
-                wallet.add_assets(assets.clone());
-                wallet.assets()
-            }
-        );
-        wallet::Schema(&mut fork).store(&pub_key, wallet);
 
         for (asset, info) in assets.into_iter().zip(infos.into_iter()) {
+            wallet.add_assets(vec![asset.clone()]);
             assets::Schema(&mut fork).store(&asset.id(), info);
         }
+        wallet::Schema(&mut fork).store(&pub_key, Wallet::new(wallet.balance(), wallet.assets()));
 
         assert!(blockchain.merge(fork.into_patch()).is_ok());
     }
@@ -104,7 +98,10 @@ impl EvoTestKit for ExonumTestKit {
         let blockchain = self.blockchain_mut();
         let mut fork = blockchain.fork();
 
-        wallet::Schema(&mut fork).store(&pub_key, wallet);
+        let mut existing_wallet = wallet::Schema(&fork).fetch(&pub_key);
+        existing_wallet.add_assets(wallet.assets());
+        let updated_balance = existing_wallet.balance() + wallet.balance();
+        wallet::Schema(&mut fork).store(&pub_key, Wallet::new(updated_balance, existing_wallet.assets()));
 
         assert!(blockchain.merge(fork.into_patch()).is_ok());
     }
