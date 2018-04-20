@@ -39,7 +39,7 @@ fn fees_for_trade_recipient() {
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_asset_value_to_wallet(&seller_public_key, asset.clone(), info)
+        .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
 
@@ -78,7 +78,7 @@ fn fees_for_trade_sender() {
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_asset_value_to_wallet(&seller_public_key, asset.clone(), info)
+        .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
 
@@ -117,7 +117,7 @@ fn fees_for_trade_recipient_and_sender() {
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_asset_value_to_wallet(&seller_public_key, asset.clone(), info)
+        .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
 
@@ -156,7 +156,7 @@ fn fees_for_trade_recipient_and_sender_creator() {
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_asset_value_to_wallet(&seller_public_key, asset.clone(), info)
+        .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
 
@@ -197,7 +197,7 @@ fn fees_for_trade_invalid_transaction() {
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_asset_value_to_wallet(&seller_public_key, asset.clone(), info)
+        .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
 

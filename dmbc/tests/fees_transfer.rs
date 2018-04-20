@@ -36,7 +36,7 @@ fn fees_for_transfer() {
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_asset_value_to_wallet(&sender_pub_key, asset.clone(), info)
+        .add_asset_to_wallet(&sender_pub_key, (asset.clone(), info))
         .create();
     let api = testkit.api();    
 
@@ -73,7 +73,7 @@ fn fees_for_transfer_sender_is_creator() {
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_asset_value_to_wallet(&sender_pub_key, asset.clone(), info)
+        .add_asset_to_wallet(&sender_pub_key, (asset.clone(), info))
         .create();
     let api = testkit.api();    
 

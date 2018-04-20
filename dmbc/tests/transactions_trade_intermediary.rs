@@ -43,7 +43,7 @@ fn trade_intermediary_fee_from_recipient() {
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))
-        .add_asset_value_to_wallet(&seller_public_key, asset.clone(), info)
+        .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
 
@@ -117,7 +117,7 @@ fn trade_intermediary_fee_from_sender() {
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))
-        .add_asset_value_to_wallet(&seller_public_key, asset.clone(), info)
+        .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
 
@@ -190,7 +190,7 @@ fn trade_intermediary_fee_from_recipient_and_sender() {
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))
-        .add_asset_value_to_wallet(&seller_public_key, asset.clone(), info)
+        .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
 
@@ -263,7 +263,7 @@ fn trade_intermediary_fee_from_intermediary() {
         .add_wallet_value(&intermediary_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))
-        .add_asset_value_to_wallet(&seller_public_key, asset.clone(), info)
+        .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
 
@@ -406,7 +406,7 @@ fn trade_intermediary_insufficient_assets() {
         .add_wallet_value(&intermediary_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))
-        .add_asset_value_to_wallet(&seller_public_key, asset.clone(), info)
+        .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
 
@@ -475,7 +475,7 @@ fn trade_intermediary_insufficient_funds() {
         .add_wallet_value(&intermediary_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))
-        .add_asset_value_to_wallet(&seller_public_key, asset.clone(), info)
+        .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
 

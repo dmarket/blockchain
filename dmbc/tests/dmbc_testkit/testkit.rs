@@ -23,14 +23,7 @@ use dmbc::currency::configuration::GENESIS_WALLET_PUB_KEY;
 pub trait DmbcTestKit {
     fn default() -> Self;
 
-    fn add_asset(
-        &mut self, meta_data: &str, 
-        units: u64, 
-        fees: Fees, 
-        creator: &PublicKey
-    );
-
-    fn add_assets(&mut self, pub_key: &PublicKey, assets: Vec<AssetBundle>, infos: Vec<AssetInfo>);
+    fn add_assets(&mut self, pub_key: &PublicKey, assets: Vec<(AssetBundle, AssetInfo)>);
 
     fn set_configuration(&mut self, configuration: Configuration);
 
@@ -51,23 +44,12 @@ impl DmbcTestKit for ExonumTestKit {
             .create()
     }
 
-    fn add_asset(
-        &mut self, 
-        meta_data: &str, 
-        units: u64, 
-        fees: Fees, 
-        creator: &PublicKey
-    ) {
-        let (asset, info) = create_asset(meta_data, units, fees, &creator);
-        self.add_assets(&creator, vec![asset], vec![info]);
-    }
-
-    fn add_assets(&mut self, pub_key: &PublicKey, assets: Vec<AssetBundle>, infos: Vec<AssetInfo>) {
+    fn add_assets(&mut self, pub_key: &PublicKey, assets: Vec<(AssetBundle, AssetInfo)>) {
         let blockchain = self.blockchain_mut();
         let mut fork = blockchain.fork();
         let mut wallet = wallet::Schema(&fork).fetch(&pub_key);
 
-        for (asset, info) in assets.into_iter().zip(infos.into_iter()) {
+        for (asset, info) in assets {
             wallet.add_assets(vec![asset.clone()]);
             assets::Schema(&mut fork).store(&asset.id(), info);
         }
@@ -284,7 +266,7 @@ pub fn default_genesis_key() -> PublicKey {
 pub struct DmbcTestApiBuilder {
     configuration: Option<Configuration>,
     wallets: Vec<(PublicKey, Wallet)>,
-    assets: Vec<(PublicKey, AssetBundle, AssetInfo)>,
+    assets: Vec<(PublicKey, (AssetBundle, AssetInfo))>,
     infos: Vec<(AssetId, AssetInfo)>,
 }
 
@@ -305,6 +287,11 @@ impl DmbcTestApiBuilder {
         }
     }
 
+    pub fn add_asset_to_wallet(mut self, public_key: &PublicKey, asset: (AssetBundle, AssetInfo)) -> Self {
+        self.assets.push((*public_key, asset));
+        self
+    }
+
     pub fn add_asset_info(mut self, id: &AssetId, info: AssetInfo) -> Self {
         self.infos.push((*id, info));
         self
@@ -312,16 +299,6 @@ impl DmbcTestApiBuilder {
 
     pub fn add_wallet_value(mut self, public_key: &PublicKey, wallet: Wallet) -> Self {
         self.wallets.push((*public_key, wallet));
-        self
-    }
-
-    pub fn add_asset_value_to_wallet(
-        mut self, 
-        wallet_key: &PublicKey,
-        asset: AssetBundle, 
-        info: AssetInfo
-    ) -> Self {
-        self.assets.push((*wallet_key, asset, info));
         self
     }
 
@@ -339,8 +316,8 @@ impl DmbcTestApiBuilder {
             testkit.store_asset_info(&id, info);
         }
         
-        for (key, asset, info) in self.assets {
-            testkit.add_assets(&key, vec![asset], vec![info]);
+        for (key, asset) in self.assets {
+            testkit.add_assets(&key, vec![asset])
         }
 
         testkit

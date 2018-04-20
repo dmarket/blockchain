@@ -38,7 +38,7 @@ fn transfer() {
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
-        .add_asset_value_to_wallet(&public_key, asset.clone(), info)
+        .add_asset_to_wallet(&public_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
 
@@ -189,7 +189,7 @@ fn transfer_insufficient_assets() {
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
-        .add_asset_value_to_wallet(&public_key, asset.clone(), info)
+        .add_asset_to_wallet(&public_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
 

@@ -44,10 +44,10 @@ fn fees_for_exchange_intermediary_recipient() {
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_asset_value_to_wallet(&sender_public_key, asset0.clone(), info0)
-        .add_asset_value_to_wallet(&sender_public_key, asset1.clone(), info1)
-        .add_asset_value_to_wallet(&sender_public_key, asset2.clone(), info2)
-        .add_asset_value_to_wallet(&recipient_public_key, asset3.clone(), info3)
+        .add_asset_to_wallet(&sender_public_key, (asset0.clone(), info0))
+        .add_asset_to_wallet(&sender_public_key, (asset1.clone(), info1))
+        .add_asset_to_wallet(&sender_public_key, (asset2.clone(), info2))
+        .add_asset_to_wallet(&recipient_public_key, (asset3.clone(), info3))
         .create();
     let api = testkit.api();
 
@@ -96,10 +96,10 @@ fn fees_for_exchange_intermediary_sender() {
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_asset_value_to_wallet(&sender_public_key, asset0.clone(), info0)
-        .add_asset_value_to_wallet(&sender_public_key, asset1.clone(), info1)
-        .add_asset_value_to_wallet(&sender_public_key, asset2.clone(), info2)
-        .add_asset_value_to_wallet(&recipient_public_key, asset3.clone(), info3)
+        .add_asset_to_wallet(&sender_public_key, (asset0.clone(), info0))
+        .add_asset_to_wallet(&sender_public_key, (asset1.clone(), info1))
+        .add_asset_to_wallet(&sender_public_key, (asset2.clone(), info2))
+        .add_asset_to_wallet(&recipient_public_key, (asset3.clone(), info3))
         .create();
     let api = testkit.api();
 
@@ -148,10 +148,10 @@ fn fees_for_exchange_intermediary_recipient_and_sender() {
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_asset_value_to_wallet(&sender_public_key, asset0.clone(), info0)
-        .add_asset_value_to_wallet(&sender_public_key, asset1.clone(), info1)
-        .add_asset_value_to_wallet(&sender_public_key, asset2.clone(), info2)
-        .add_asset_value_to_wallet(&recipient_public_key, asset3.clone(), info3)
+        .add_asset_to_wallet(&sender_public_key, (asset0.clone(), info0))
+        .add_asset_to_wallet(&sender_public_key, (asset1.clone(), info1))
+        .add_asset_to_wallet(&sender_public_key, (asset2.clone(), info2))
+        .add_asset_to_wallet(&recipient_public_key, (asset3.clone(), info3))
         .create();
     let api = testkit.api();
 
@@ -201,10 +201,10 @@ fn fees_for_exchange_intermediary_intermediary() {
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_asset_value_to_wallet(&sender_public_key, asset0.clone(), info0)
-        .add_asset_value_to_wallet(&sender_public_key, asset1.clone(), info1)
-        .add_asset_value_to_wallet(&sender_public_key, asset2.clone(), info2)
-        .add_asset_value_to_wallet(&recipient_public_key, asset3.clone(), info3)
+        .add_asset_to_wallet(&sender_public_key, (asset0.clone(), info0))
+        .add_asset_to_wallet(&sender_public_key, (asset1.clone(), info1))
+        .add_asset_to_wallet(&sender_public_key, (asset2.clone(), info2))
+        .add_asset_to_wallet(&recipient_public_key, (asset3.clone(), info3))
         .create();
     let api = testkit.api();
 
@@ -252,10 +252,10 @@ fn fees_for_exchange_intermediary_recipient_and_sender_creator() {
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
-        .add_asset_value_to_wallet(&sender_public_key, asset0.clone(), info0)
-        .add_asset_value_to_wallet(&sender_public_key, asset1.clone(), info1)
-        .add_asset_value_to_wallet(&sender_public_key, asset2.clone(), info2)
-        .add_asset_value_to_wallet(&recipient_public_key, asset3.clone(), info3)
+        .add_asset_to_wallet(&sender_public_key, (asset0.clone(), info0))
+        .add_asset_to_wallet(&sender_public_key, (asset1.clone(), info1))
+        .add_asset_to_wallet(&sender_public_key, (asset2.clone(), info2))
+        .add_asset_to_wallet(&recipient_public_key, (asset3.clone(), info3))
         .create();
     let api = testkit.api();
 

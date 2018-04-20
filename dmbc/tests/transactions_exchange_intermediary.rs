@@ -59,12 +59,12 @@ fn exchange_i_assets() {
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
-        .add_asset_value_to_wallet(&sender_pk, asset1.clone(), info1)
-        .add_asset_value_to_wallet(&sender_pk, asset2.clone(), info2)
-        .add_asset_value_to_wallet(&sender_pk, asset3.clone(), info3)
-        .add_asset_value_to_wallet(&recipient_pk, asset4.clone(), info4)
-        .add_asset_value_to_wallet(&recipient_pk, asset5.clone(), info5)
-        .add_asset_value_to_wallet(&recipient_pk, asset6.clone(), info6)
+        .add_asset_to_wallet(&sender_pk, (asset1.clone(), info1))
+        .add_asset_to_wallet(&sender_pk, (asset2.clone(), info2))
+        .add_asset_to_wallet(&sender_pk, (asset3.clone(), info3))
+        .add_asset_to_wallet(&recipient_pk, (asset4.clone(), info4))
+        .add_asset_to_wallet(&recipient_pk, (asset5.clone(), info5))
+        .add_asset_to_wallet(&recipient_pk, (asset6.clone(), info6))
         .create();
     let api = testkit.api();
     let genesis_balance = testkit.fetch_wallet(&default_genesis_key()).balance();
@@ -167,8 +167,8 @@ fn exchange_i_assets_creator_is_sender() {
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
-        .add_asset_value_to_wallet(&sender_pk, asset1.clone(), info1)
-        .add_asset_value_to_wallet(&recipient_pk, asset2.clone(), info2)
+        .add_asset_to_wallet(&sender_pk, (asset1.clone(), info1))
+        .add_asset_to_wallet(&recipient_pk, (asset2.clone(), info2))
         .create();
     let api = testkit.api();
     let genesis_balance = testkit.fetch_wallet(&default_genesis_key()).balance();
@@ -256,8 +256,8 @@ fn exchange_i_assets_creator_is_intermediary() {
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
-        .add_asset_value_to_wallet(&sender_pk, asset1.clone(), info1)
-        .add_asset_value_to_wallet(&recipient_pk, asset2.clone(), info2)
+        .add_asset_to_wallet(&sender_pk, (asset1.clone(), info1))
+        .add_asset_to_wallet(&recipient_pk, (asset2.clone(), info2))
         .create();
     let api = testkit.api();
     let genesis_balance = testkit.fetch_wallet(&default_genesis_key()).balance();
@@ -345,8 +345,8 @@ fn exchange_i_assets_payer_fee_intermediary() {
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&intermediary_pk, Wallet::new(intermediary_balance, vec![]))
-        .add_asset_value_to_wallet(&sender_pk, asset1.clone(), info1)
-        .add_asset_value_to_wallet(&recipient_pk, asset2.clone(), info2)
+        .add_asset_to_wallet(&sender_pk, (asset1.clone(), info1))
+        .add_asset_to_wallet(&recipient_pk, (asset2.clone(), info2))
         .create();
     let api = testkit.api();
     let genesis_balance = testkit.fetch_wallet(&default_genesis_key()).balance();
@@ -501,8 +501,8 @@ fn exchange_i_assets_insufficient_assets() {
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&intermediary_pk, Wallet::new(intermediary_balance, vec![]))
-        .add_asset_value_to_wallet(&sender_pk, asset1.clone(), info1)
-        .add_asset_value_to_wallet(&recipient_pk, asset2.clone(), info2)
+        .add_asset_to_wallet(&sender_pk, (asset1.clone(), info1))
+        .add_asset_to_wallet(&recipient_pk, (asset2.clone(), info2))
         .create();
     let api = testkit.api();
     let genesis_balance = testkit.fetch_wallet(&default_genesis_key()).balance();
@@ -573,8 +573,8 @@ fn exchange_i_assets_insufficient_funds() {
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&intermediary_pk, Wallet::new(intermediary_balance, vec![]))
-        .add_asset_value_to_wallet(&sender_pk, asset1.clone(), info1)
-        .add_asset_value_to_wallet(&recipient_pk, asset2.clone(), info2)
+        .add_asset_to_wallet(&sender_pk, (asset1.clone(), info1))
+        .add_asset_to_wallet(&recipient_pk, (asset2.clone(), info2))
         .create();
     let api = testkit.api();
     let genesis_balance = testkit.fetch_wallet(&default_genesis_key()).balance();

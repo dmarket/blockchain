@@ -42,7 +42,7 @@ fn trade_fee_from_recipient() {
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))
-        .add_asset_value_to_wallet(&seller_public_key, asset.clone(), info)
+        .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
 
@@ -109,7 +109,7 @@ fn trade_fee_from_sender() {
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))
-        .add_asset_value_to_wallet(&seller_public_key, asset.clone(), info)
+        .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
 
@@ -175,7 +175,7 @@ fn trade_fee_from_recipient_and_sender() {
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))
-        .add_asset_value_to_wallet(&seller_public_key, asset.clone(), info)
+        .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
 
@@ -240,7 +240,7 @@ fn trade_fee_bad_request() {
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))
-        .add_asset_value_to_wallet(&seller_public_key, asset.clone(), info)
+        .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
 
@@ -357,7 +357,7 @@ fn trade_insufficient_assets() {
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))
-        .add_asset_value_to_wallet(&seller_public_key, asset.clone(), info)
+        .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
 
@@ -417,7 +417,7 @@ fn trade_insufficient_funds() {
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))
-        .add_asset_value_to_wallet(&seller_public_key, asset.clone(), info)
+        .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
 
