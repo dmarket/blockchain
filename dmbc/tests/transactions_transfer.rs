@@ -7,12 +7,12 @@ extern crate iron_test;
 extern crate serde_json;
 extern crate mount;
 
-pub mod evo_testkit;
+pub mod dmbc_testkit;
 
 use hyper::status::StatusCode;
 use exonum::messages::Message;
 use exonum::crypto;
-use evo_testkit::{EvoTestKit, EvoTestApiBuilder, EvoTestKitApi, asset_fees, create_asset};
+use dmbc_testkit::{DmbcTestKit, DmbcTestApiBuilder, DmbcTestKitApi, asset_fees, create_asset};
 
 use dmbc::currency::configuration::{Configuration, TransactionFees};
 use dmbc::currency::transactions::builders::transaction;
@@ -35,7 +35,7 @@ fn transfer() {
 
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &public_key);
 
-    let mut testkit = EvoTestApiBuilder::new()
+    let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
         .add_asset_value_to_wallet(&public_key, asset.clone(), info)
@@ -86,7 +86,7 @@ fn transfer_asset_not_found() {
 
     let (asset, _) = create_asset(meta_data, units, asset_fees(tax, 0), &public_key);
 
-    let mut testkit = EvoTestApiBuilder::new()
+    let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
         .create();
@@ -136,7 +136,7 @@ fn transfer_insufficient_funds() {
 
     let (asset, _) = create_asset(meta_data, units, asset_fees(tax, 0), &public_key);
 
-    let mut testkit = EvoTestApiBuilder::new()
+    let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
         .create();
@@ -186,7 +186,7 @@ fn transfer_insufficient_assets() {
 
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &public_key);
 
-    let mut testkit = EvoTestApiBuilder::new()
+    let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
         .add_asset_value_to_wallet(&public_key, asset.clone(), info)

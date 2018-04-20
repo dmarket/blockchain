@@ -7,12 +7,12 @@ extern crate iron_test;
 extern crate serde_json;
 extern crate mount;
 
-pub mod evo_testkit;
+pub mod dmbc_testkit;
 
 use hyper::status::StatusCode;
 use exonum::messages::Message;
 use exonum::crypto;
-use evo_testkit::{EvoTestKit, EvoTestApiBuilder, EvoTestKitApi, asset_fees, create_asset, create_asset2};
+use dmbc_testkit::{DmbcTestKit, DmbcTestApiBuilder, DmbcTestKitApi, asset_fees, create_asset, create_asset2};
 
 use dmbc::currency::configuration::{Configuration, TransactionFees};
 use dmbc::currency::transactions::builders::transaction;
@@ -34,7 +34,7 @@ fn add_assets_mine_new_asset_to_receiver_empty_wallet() {
     let (creator_public_key, creator_secret_key) = crypto::gen_keypair();
     let (receiver_key, _) = crypto::gen_keypair();
 
-    let mut testkit = EvoTestApiBuilder::new()
+    let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&creator_public_key, Wallet::new(balance, vec![]))
         .create();
@@ -101,7 +101,7 @@ fn add_assets_mine_existing_asset_to_receivers_non_empty_wallet() {
     let meta_asset = MetaAsset::new(&receiver_key, meta_data, units, asset_fees(tax, 0));
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &creator_public_key);
 
-    let mut testkit = EvoTestApiBuilder::new()
+    let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&creator_public_key, Wallet::new(balance, vec![]))
         .add_asset_value_to_wallet(&receiver_key,asset.clone(), info.clone())
@@ -160,7 +160,7 @@ fn add_assets_mine_existing_asset_to_creators_empty_wallet() {
 
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &creator_public_key);
 
-    let mut testkit = EvoTestApiBuilder::new()
+    let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&creator_public_key, Wallet::new(balance, vec![]))
         .add_asset_value_to_wallet(&receiver_key, asset.clone(), info.clone())
@@ -225,7 +225,7 @@ fn add_assets_mine_existing_asset_to_creator_and_receiver() {
         &creator_public_key, 
     );
 
-    let mut testkit = EvoTestApiBuilder::new()
+    let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&creator_public_key, Wallet::new(balance, vec![]))
         .add_asset_value_to_wallet(&receiver_key, asset.clone(), info.clone())
@@ -289,7 +289,7 @@ fn add_assets_mine_existing_asset_to_receivers_wallet_with_different_asset() {
 
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &creator_public_key);
 
-    let mut testkit = EvoTestApiBuilder::new()
+    let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&creator_public_key, Wallet::new(balance, vec![]))
         .add_asset_value_to_wallet(&receiver_key, asset.clone(), info.clone())
@@ -354,7 +354,7 @@ fn add_assets_mine_existing_asset_with_different_fees() {
 
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax1, 0), &public_key);
 
-    let mut testkit = EvoTestApiBuilder::new()
+    let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
         .add_asset_value_to_wallet(&public_key, asset.clone(), info.clone())
@@ -400,7 +400,7 @@ fn add_assets_insufficient_funds() {
 
     let (public_key, secret_key) = crypto::gen_keypair();
 
-    let mut testkit = EvoTestApiBuilder::new()
+    let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .create();
     let api = testkit.api();

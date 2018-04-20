@@ -20,7 +20,7 @@ use dmbc::currency::api::transaction::{TxPostResponse, StatusResponse};
 use dmbc::currency::api::fees::FeesResponse;
 use dmbc::currency::configuration::GENESIS_WALLET_PUB_KEY;
 
-pub trait EvoTestKit {
+pub trait DmbcTestKit {
     fn default() -> Self;
 
     fn add_asset(
@@ -43,7 +43,7 @@ pub trait EvoTestKit {
     fn store_asset_info(&mut self, id: &AssetId, info: AssetInfo);
 }
 
-impl EvoTestKit for ExonumTestKit {
+impl DmbcTestKit for ExonumTestKit {
     fn default() -> Self {
         TestKitBuilder::validator()
             .with_validators(4)
@@ -123,7 +123,7 @@ impl EvoTestKit for ExonumTestKit {
 }
 
 
-pub trait EvoTestKitApi {
+pub trait DmbcTestKitApi {
     fn get_internal_with_status<D>(mount: &Mount, url: &str) -> (StatusCode, D) 
     where for <'de> D: Deserialize<'de>;
 
@@ -149,7 +149,7 @@ pub trait EvoTestKitApi {
     where T: Message + Serialize; 
 }
 
-impl EvoTestKitApi for ExonumTestKitApi {
+impl DmbcTestKitApi for ExonumTestKitApi {
 
     fn get_internal_with_status<D>(mount: &Mount, endpoint: &str) -> (StatusCode, D) 
     where for <'de> D: Deserialize<'de>
@@ -281,16 +281,16 @@ pub fn default_genesis_key() -> PublicKey {
     PublicKey::from_hex(GENESIS_WALLET_PUB_KEY).unwrap()
 }
 
-pub struct EvoTestApiBuilder {
+pub struct DmbcTestApiBuilder {
     configuration: Option<Configuration>,
     wallets: Vec<(PublicKey, Wallet)>,
     assets: Vec<(PublicKey, AssetBundle, AssetInfo)>,
     infos: Vec<(AssetId, AssetInfo)>,
 }
 
-impl EvoTestApiBuilder {
+impl DmbcTestApiBuilder {
     pub fn new() -> Self {
-        EvoTestApiBuilder {
+        DmbcTestApiBuilder {
             configuration: None,
             wallets: Vec::new(),
             assets: Vec::new(),
@@ -299,7 +299,7 @@ impl EvoTestApiBuilder {
     }
 
     pub fn with_configuration(self, configuration: Configuration) -> Self {
-        EvoTestApiBuilder {
+        DmbcTestApiBuilder {
             configuration: Some(configuration),
             ..self
         }

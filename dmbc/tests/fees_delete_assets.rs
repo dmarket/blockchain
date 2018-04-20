@@ -7,13 +7,13 @@ extern crate iron_test;
 extern crate serde_json;
 extern crate mount;
 
-pub mod evo_testkit;
+pub mod dmbc_testkit;
 
 use std::collections::HashMap;
 
 use hyper::status::StatusCode;
 use exonum::crypto;
-use evo_testkit::{EvoTestApiBuilder, EvoTestKitApi};
+use dmbc_testkit::{DmbcTestApiBuilder, DmbcTestKitApi};
 
 use dmbc::currency::api::fees::FeesResponseBody;
 use dmbc::currency::configuration::{Configuration, TransactionFees};
@@ -23,7 +23,7 @@ use dmbc::currency::transactions::builders::transaction;
 fn fees_for_delete_assets() {   
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, transaction_fee, 0, 0, 0);
-    let testkit = EvoTestApiBuilder::new()
+    let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .create();
 

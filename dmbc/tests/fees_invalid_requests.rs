@@ -7,12 +7,12 @@ extern crate iron_test;
 extern crate serde_json;
 extern crate mount;
 
-pub mod evo_testkit;
+pub mod dmbc_testkit;
 
 use hyper::status::StatusCode;
 use iron::headers::Headers;
 use exonum_testkit::TestKit;
-use evo_testkit::{EvoTestKit, EvoTestKitApi};
+use dmbc_testkit::{DmbcTestKit, DmbcTestKitApi};
 
 use dmbc::currency::api::error::ApiError;
 use dmbc::currency::api::fees::FeesResponse;

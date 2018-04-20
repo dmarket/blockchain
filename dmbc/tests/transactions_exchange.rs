@@ -7,12 +7,12 @@ extern crate iron_test;
 extern crate serde_json;
 extern crate mount;
 
-pub mod evo_testkit;
+pub mod dmbc_testkit;
 
 use hyper::status::StatusCode;
 use exonum::messages::Message;
 use exonum::crypto;
-use evo_testkit::{EvoTestKit, EvoTestApiBuilder, EvoTestKitApi, asset_fees, create_asset, default_genesis_key};
+use dmbc_testkit::{DmbcTestKit, DmbcTestApiBuilder, DmbcTestKitApi, asset_fees, create_asset, default_genesis_key};
 
 use dmbc::currency::configuration::{Configuration, TransactionFees};
 use dmbc::currency::transactions::builders::transaction;
@@ -53,7 +53,7 @@ fn exchange_assets_fee_from_recipient() {
     let (asset5, info5) = create_asset(meta_data5, receiver_units, asset_fees(tax, 0), &creator_pk);
     let (asset6, info6) = create_asset(meta_data6, receiver_units, asset_fees(tax, 0), &creator_pk);
 
-    let mut testkit = EvoTestApiBuilder::new()
+    let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
@@ -165,7 +165,7 @@ fn exchange_assets_fee_from_sender() {
     let (asset5, info5) = create_asset(meta_data5, receiver_units, asset_fees(tax, 0), &creator_pk);
     let (asset6, info6) = create_asset(meta_data6, receiver_units, asset_fees(tax, 0), &creator_pk);
 
-    let mut testkit = EvoTestApiBuilder::new()
+    let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
@@ -277,7 +277,7 @@ fn exchange_assets_fee_from_recipient_and_sender() {
     let (asset5, info5) = create_asset(meta_data5, receiver_units, asset_fees(tax, 0), &creator_pk);
     let (asset6, info6) = create_asset(meta_data6, receiver_units, asset_fees(tax, 0), &creator_pk);
 
-    let mut testkit = EvoTestApiBuilder::new()
+    let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
@@ -388,7 +388,7 @@ fn exchange_assets_invalid_tx() {
     let (asset5, info5) = create_asset(meta_data5, receiver_units, asset_fees(tax, 0), &creator_pk);
     let (asset6, info6) = create_asset(meta_data6, receiver_units, asset_fees(tax, 0), &creator_pk);
 
-    let mut testkit = EvoTestApiBuilder::new()
+    let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
@@ -471,7 +471,7 @@ fn exchange_assets_insufficient_funds() {
     let (asset5, info5) = create_asset(meta_data5, receiver_units, asset_fees(tax, 0), &creator_pk);
     let (asset6, info6) = create_asset(meta_data6, receiver_units, asset_fees(tax, 0), &creator_pk);
 
-    let mut testkit = EvoTestApiBuilder::new()
+    let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
         .add_asset_value_to_wallet(&sender_pk, asset1.clone(), info1)
@@ -555,7 +555,7 @@ fn exchange_assets_assets_not_found() {
     let (asset5, info5) = create_asset(meta_data5, receiver_units, asset_fees(tax, 0), &creator_pk);
     let (asset6, info6) = create_asset(meta_data6, receiver_units, asset_fees(tax, 0), &creator_pk);
 
-    let mut testkit = EvoTestApiBuilder::new()
+    let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
@@ -640,7 +640,7 @@ fn exchange_assets_insufficient_assets() {
     let (asset5, info5) = create_asset(meta_data5, receiver_units, asset_fees(tax, 0), &creator_pk);
     let (asset6, info6) = create_asset(meta_data6, receiver_units, asset_fees(tax, 0), &creator_pk);
 
-    let mut testkit = EvoTestApiBuilder::new()
+    let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))

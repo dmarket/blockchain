@@ -7,13 +7,13 @@ extern crate iron_test;
 extern crate serde_json;
 extern crate mount;
 
-pub mod evo_testkit;
+pub mod dmbc_testkit;
 
 use std::collections::HashMap;
 
 use hyper::status::StatusCode;
 use exonum::crypto;
-use evo_testkit::{EvoTestApiBuilder, EvoTestKitApi, asset_fees, create_asset};
+use dmbc_testkit::{DmbcTestApiBuilder, DmbcTestKitApi, asset_fees, create_asset};
 
 use dmbc::currency::api::fees::FeesResponseBody;
 use dmbc::currency::configuration::{Configuration, TransactionFees};
@@ -34,7 +34,7 @@ fn fees_for_transfer() {
 
     let (asset, info) = create_asset(meta_data, amount, asset_fees(tax, 0), &creator_key);
 
-    let testkit = EvoTestApiBuilder::new()
+    let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_asset_value_to_wallet(&sender_pub_key, asset.clone(), info)
         .create();
@@ -71,7 +71,7 @@ fn fees_for_transfer_sender_is_creator() {
 
     let (asset, info) = create_asset(meta_data, amount, asset_fees(tax, 0), &sender_pub_key);
 
-    let testkit = EvoTestApiBuilder::new()
+    let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_asset_value_to_wallet(&sender_pub_key, asset.clone(), info)
         .create();
@@ -108,7 +108,7 @@ fn fees_for_transfer_asset_not_found() {
 
     let (asset, _) = create_asset(meta_data, amount, asset_fees(tax, 0), &creator_key);
 
-    let testkit = EvoTestApiBuilder::new()
+    let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .create();
     let api = testkit.api(); 

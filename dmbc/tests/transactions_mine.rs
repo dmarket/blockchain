@@ -7,12 +7,12 @@ extern crate iron_test;
 extern crate serde_json;
 extern crate mount;
 
-pub mod evo_testkit;
+pub mod dmbc_testkit;
 
 use hyper::status::StatusCode;
 use exonum::messages::Message;
 use exonum::crypto;
-use evo_testkit::{EvoTestKit, EvoTestApiBuilder, EvoTestKitApi};
+use dmbc_testkit::{DmbcTestKit, DmbcTestApiBuilder, DmbcTestKitApi};
 
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::api::transaction::TransactionResponse;
@@ -25,7 +25,7 @@ fn mine_wallet() {
         .tx_mine()
         .build();
 
-    let mut testkit = EvoTestApiBuilder::new()
+    let mut testkit = DmbcTestApiBuilder::new()
         .create();
     let api = testkit.api();
 

@@ -7,14 +7,14 @@ extern crate iron_test;
 extern crate serde_json;
 extern crate mount;
 
-pub mod evo_testkit;
+pub mod dmbc_testkit;
 
 use std::collections::HashMap;
 
 use hyper::status::StatusCode;
 use exonum::crypto;
 use exonum_testkit::TestKit;
-use evo_testkit::{EvoTestKit, EvoTestKitApi};
+use dmbc_testkit::{DmbcTestKit, DmbcTestKitApi};
 
 use dmbc::currency::api::assets_intern::{AssetIdBatchResponse, AssetIdRequest,
                                          AssetIdBatchResponseBody, AssetIdBatchRequest,

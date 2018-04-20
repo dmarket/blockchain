@@ -7,12 +7,12 @@ extern crate iron_test;
 extern crate serde_json;
 extern crate mount;
 
-pub mod evo_testkit;
+pub mod dmbc_testkit;
 
 use hyper::status::StatusCode;
 use exonum::messages::Message;
 use exonum::crypto;
-use evo_testkit::{EvoTestKit, EvoTestApiBuilder, EvoTestKitApi, asset_fees, create_asset, default_genesis_key};
+use dmbc_testkit::{DmbcTestKit, DmbcTestApiBuilder, DmbcTestKitApi, asset_fees, create_asset, default_genesis_key};
 
 use dmbc::currency::configuration::{Configuration, TransactionFees};
 use dmbc::currency::transactions::builders::transaction;
@@ -38,7 +38,7 @@ fn trade_fee_from_recipient() {
 
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &seller_public_key);
 
-    let mut testkit = EvoTestApiBuilder::new()
+    let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))
@@ -105,7 +105,7 @@ fn trade_fee_from_sender() {
 
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &seller_public_key);
 
-    let mut testkit = EvoTestApiBuilder::new()
+    let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))
@@ -171,7 +171,7 @@ fn trade_fee_from_recipient_and_sender() {
 
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &seller_public_key);
 
-    let mut testkit = EvoTestApiBuilder::new()
+    let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))
@@ -236,7 +236,7 @@ fn trade_fee_bad_request() {
 
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &seller_public_key);
 
-    let mut testkit = EvoTestApiBuilder::new()
+    let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))
@@ -295,7 +295,7 @@ fn trade_asset_not_found() {
 
     let (asset, _) = create_asset(meta_data, units, asset_fees(tax, 0), &seller_public_key);
 
-    let mut testkit = EvoTestApiBuilder::new()
+    let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))
@@ -353,7 +353,7 @@ fn trade_insufficient_assets() {
 
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &seller_public_key);
 
-    let mut testkit = EvoTestApiBuilder::new()
+    let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))
@@ -413,7 +413,7 @@ fn trade_insufficient_funds() {
 
     let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &seller_public_key);
 
-    let mut testkit = EvoTestApiBuilder::new()
+    let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))

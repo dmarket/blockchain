@@ -7,13 +7,13 @@ extern crate iron_test;
 extern crate serde_json;
 extern crate mount;
 
-pub mod evo_testkit;
+pub mod dmbc_testkit;
 
 use std::collections::HashMap;
 
 use hyper::status::StatusCode;
 use exonum::crypto;
-use evo_testkit::{EvoTestApiBuilder, EvoTestKitApi, asset_fees, create_asset};
+use dmbc_testkit::{DmbcTestApiBuilder, DmbcTestKitApi, asset_fees, create_asset};
 
 use dmbc::currency::api::fees::FeesResponseBody;
 use dmbc::currency::configuration::{Configuration, TransactionFees};
@@ -42,7 +42,7 @@ fn fees_for_exchange_intermediary_recipient() {
     let (asset2, info2) = create_asset(meta_data2, units, asset_fees(tax, 0), &creator_pub_key);
     let (asset3, info3) = create_asset(meta_data3, units, asset_fees(tax, 0), &creator_pub_key);
 
-    let testkit = EvoTestApiBuilder::new()
+    let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_asset_value_to_wallet(&sender_public_key, asset0.clone(), info0)
         .add_asset_value_to_wallet(&sender_public_key, asset1.clone(), info1)
@@ -94,7 +94,7 @@ fn fees_for_exchange_intermediary_sender() {
     let (asset2, info2) = create_asset(meta_data2, units, asset_fees(tax, 0), &creator_pub_key);
     let (asset3, info3) = create_asset(meta_data3, units, asset_fees(tax, 0), &creator_pub_key);
 
-    let testkit = EvoTestApiBuilder::new()
+    let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_asset_value_to_wallet(&sender_public_key, asset0.clone(), info0)
         .add_asset_value_to_wallet(&sender_public_key, asset1.clone(), info1)
@@ -146,7 +146,7 @@ fn fees_for_exchange_intermediary_recipient_and_sender() {
     let (asset2, info2) = create_asset(meta_data2, units, asset_fees(tax, 0), &creator_pub_key);
     let (asset3, info3) = create_asset(meta_data3, units, asset_fees(tax, 0), &creator_pub_key);
 
-    let testkit = EvoTestApiBuilder::new()
+    let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_asset_value_to_wallet(&sender_public_key, asset0.clone(), info0)
         .add_asset_value_to_wallet(&sender_public_key, asset1.clone(), info1)
@@ -199,7 +199,7 @@ fn fees_for_exchange_intermediary_intermediary() {
     let (asset2, info2) = create_asset(meta_data2, units, asset_fees(tax, 0), &creator_pub_key);
     let (asset3, info3) = create_asset(meta_data3, units, asset_fees(tax, 0), &creator_pub_key);
 
-    let testkit = EvoTestApiBuilder::new()
+    let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_asset_value_to_wallet(&sender_public_key, asset0.clone(), info0)
         .add_asset_value_to_wallet(&sender_public_key, asset1.clone(), info1)
@@ -250,7 +250,7 @@ fn fees_for_exchange_intermediary_recipient_and_sender_creator() {
     let (asset2, info2) = create_asset(meta_data2, units, asset_fees(tax, 0), &sender_public_key);
     let (asset3, info3) = create_asset(meta_data3, units, asset_fees(tax, 0), &sender_public_key);
 
-    let testkit = EvoTestApiBuilder::new()
+    let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_asset_value_to_wallet(&sender_public_key, asset0.clone(), info0)
         .add_asset_value_to_wallet(&sender_public_key, asset1.clone(), info1)
@@ -304,7 +304,7 @@ let transaction_fee = 1000;
     let (asset2, _) = create_asset(meta_data2, units, asset_fees(tax, 0), &creator_pub_key);
     let (asset3, _) = create_asset(meta_data3, units, asset_fees(tax, 0), &creator_pub_key);
 
-    let testkit = EvoTestApiBuilder::new()
+    let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .create();
     let api = testkit.api();
