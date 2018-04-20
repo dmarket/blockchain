@@ -50,6 +50,7 @@ jobs:
           name: Run Tests
           command: |
             export CC=clang
+            export CXX=clang++
             cargo test --color=always
 
 #      - store_artifacts:
