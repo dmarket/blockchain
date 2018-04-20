@@ -51,7 +51,7 @@ jobs:
           command: |
             export CC=clang
             export CXX=clang++
-            cargo test --color=always
+            cargo test --color=always --jobs 2
 
 #      - store_artifacts:
 #          path: /project/report/
