@@ -102,6 +102,21 @@ impl TradeIntermediary {
         self.offer().raw
     }
 
+    fn can_move_assets(&self, view: &mut Fork) -> Result<(), Error> {
+        let mut wallet_buyer = wallet::Schema(&*view).fetch(self.offer().buyer());
+        let mut wallet_seller = wallet::Schema(&*view).fetch(self.offer().seller());
+
+        let assets = self.offer()
+                    .assets()
+                    .into_iter()
+                    .map(|a| a.to_bundle())
+                    .collect::<Vec<_>>();
+
+        wallet::move_assets(&mut wallet_seller, &mut wallet_buyer, &assets)?;
+
+        Ok(())
+    }
+
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
         info!("Processing tx: {:?}", self);
 
@@ -162,6 +177,9 @@ impl TradeIntermediary {
             offer.intermediary().wallet(),
             offer.intermediary().commission(),
         );
+
+        self.can_move_assets(view)?;
+
         let mut wallet_buyer = wallet::Schema(&*view).fetch(self.offer().buyer());
         let mut wallet_seller = wallet::Schema(&*view).fetch(self.offer().seller());
 

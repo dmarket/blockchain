@@ -73,7 +73,7 @@ fn transfer() {
 }
 
 #[test]
-fn tranfer_asset_not_found() {
+fn transfer_asset_not_found() {
     let tax = 10;
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee);
@@ -123,7 +123,7 @@ fn tranfer_asset_not_found() {
 }
 
 #[test]
-fn tranfer_insufficient_funds() {
+fn transfer_insufficient_funds() {
     let tax = 10;
     let transaction_fee = 1000_000_000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee);
@@ -173,7 +173,7 @@ fn tranfer_insufficient_funds() {
 }
 
 #[test]
-fn tranfer_insufficient_assets() {
+fn transfer_insufficient_assets() {
     let tax = 10;
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee);

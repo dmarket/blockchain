@@ -16,7 +16,6 @@ use dmbc::currency::Service;
 use dmbc::currency::SERVICE_NAME;
 
 pub mod trade;
-pub mod trade_intermediary;
 
 pub const DMC_1: u64 = 1_00_000_000;
 
