@@ -23,7 +23,7 @@ use dmbc::currency::wallet::Wallet;
 use dmbc::currency::transactions::components::FeeStrategy;
 
 #[test]
-fn exchange_i_assets() {
+fn exchange_intermediary_assets() {
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0);
     let tax = 10;
@@ -141,7 +141,7 @@ fn exchange_i_assets() {
 }
 
 #[test]
-fn exchange_i_assets_creator_is_sender() {
+fn exchange_intermediary_assets_creator_is_sender() {
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0);
     let tax = 10;
@@ -230,7 +230,7 @@ fn exchange_i_assets_creator_is_sender() {
 }
 
 #[test]
-fn exchange_i_assets_creator_is_intermediary() {
+fn exchange_intermediary_assets_creator_is_intermediary() {
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0);
     let tax = 10;
@@ -318,7 +318,7 @@ fn exchange_i_assets_creator_is_intermediary() {
 }
 
 #[test]
-fn exchange_i_assets_payer_fee_intermediary() {
+fn exchange_intermediary_assets_payer_fee_intermediary() {
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0);
     let tax = 10;
@@ -404,7 +404,7 @@ fn exchange_i_assets_payer_fee_intermediary() {
 }
 
 #[test]
-fn exchange_i_assets_asset_not_found() {
+fn exchange_intermediary_assets_asset_not_found() {
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0);
     let tax = 10;
@@ -474,7 +474,7 @@ fn exchange_i_assets_asset_not_found() {
 }
 
 #[test]
-fn exchange_i_assets_insufficient_assets() {
+fn exchange_intermediary_assets_insufficient_assets() {
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0);
     let tax = 10;
@@ -546,7 +546,7 @@ fn exchange_i_assets_insufficient_assets() {
 }
 
 #[test]
-fn exchange_i_assets_insufficient_funds() {
+fn exchange_intermediary_assets_insufficient_funds() {
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0);
     let tax = 10;
