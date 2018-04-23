@@ -227,6 +227,20 @@ fn wallet_assets_meta_data() {
 }
 
 #[test]
+fn wallet_empty_with_valid_key() {
+    let testkit = DmbcTestApiBuilder::new().create();
+    let api = testkit.api();
+
+    let (pub_key, _) = crypto::gen_keypair();
+    let (status, response): (StatusCode, WalletResponse) = api.get_with_status(
+        &format!("/v1/wallets/{}", pub_key.to_string()),
+    );
+
+    assert_eq!(status, StatusCode::Ok);
+    assert_eq!(response, Ok(Wallet::new_empty()));
+}
+
+#[test]
 fn wallet_invalid_public_key() {
     let testkit = DmbcTestApiBuilder::new().create();
     let api = testkit.api();
