@@ -49,7 +49,7 @@ impl Api for AssetApi {
             let path = req.url.path();
             let asset_id_str = path.last().unwrap();
             let a: AssetResponse = AssetId::from_hex(&asset_id_str)
-                .map_err(|_| ApiError::AssetIdHashInvalid)
+                .map_err(|_| ApiError::AssetIdInvalid)
 //                .and_then(|asset_id| self_.get_asset_info(&asset_id).ok_or(ApiError::AssetIdNotFound));
                 .map(|asset_id| self_.get_asset_info(&asset_id));
 

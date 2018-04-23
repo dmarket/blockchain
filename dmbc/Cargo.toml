@@ -29,6 +29,7 @@ lazy_static = "1.0"
 
 [dev-dependencies]
 exonum-testkit = "0.1.1"
+mount = "0.4"
 
 [dev-dependencies.iron-test]
 version = "0.6.0"

@@ -89,7 +89,6 @@ impl ThirdPartyFees {
     {
         let view = view.as_ref();
         let assets = assets.into_iter();
-        let assets_price: u64 = assets.clone().map(|ta| ta.total_price()).sum();
         let mut to_third_party = HashMap::new();
 
         for asset in assets {
@@ -97,7 +96,7 @@ impl ThirdPartyFees {
                 .fetch(&asset.id())
                 .ok_or_else(|| Error::AssetNotFound)?;
 
-            let fee = info.fees().trade().for_price(assets_price);
+            let fee = info.fees().trade().for_price(asset.price()) * asset.amount() ;
             to_third_party
                 .entry(*info.creator())
                 .and_modify(|prev_fee| {

@@ -49,7 +49,9 @@ jobs:
       - run:
           name: Run Tests
           command: |
-            cargo test --color=always
+            export CC=clang
+            export CXX=clang++
+            cargo test --color=always --jobs 2
 
 #      - store_artifacts:
 #          path: /project/report/
