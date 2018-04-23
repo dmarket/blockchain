@@ -13,7 +13,7 @@ use std::collections::HashMap;
 
 use hyper::status::StatusCode;
 use exonum::crypto;
-use dmbc_testkit::{DmbcTestApiBuilder, DmbcTestKitApi, asset_fees, create_asset};
+use dmbc_testkit::{DmbcTestApiBuilder, DmbcTestKitApi};
 
 use dmbc::currency::api::fees::FeesResponseBody;
 use dmbc::currency::configuration::{Configuration, TransactionFees};
@@ -32,7 +32,7 @@ fn fees_for_transfer() {
     let (recipient_key, _) = crypto::gen_keypair();
     let (sender_pub_key, sender_sec_key) = crypto::gen_keypair();
 
-    let (asset, info) = create_asset(meta_data, amount, asset_fees(tax, 0), &creator_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, amount, dmbc_testkit::asset_fees(tax, 0), &creator_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -69,7 +69,7 @@ fn fees_for_transfer_sender_is_creator() {
     let (recipient_key, _) = crypto::gen_keypair();
     let (sender_pub_key, sender_sec_key) = crypto::gen_keypair();
 
-    let (asset, info) = create_asset(meta_data, amount, asset_fees(tax, 0), &sender_pub_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, amount, dmbc_testkit::asset_fees(tax, 0), &sender_pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -106,7 +106,7 @@ fn fees_for_transfer_asset_not_found() {
     let (recipient_key, _) = crypto::gen_keypair();
     let (sender_pub_key, sender_sec_key) = crypto::gen_keypair();
 
-    let (asset, _) = create_asset(meta_data, amount, asset_fees(tax, 0), &creator_key);
+    let (asset, _) = dmbc_testkit::create_asset(meta_data, amount, dmbc_testkit::asset_fees(tax, 0), &creator_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))

@@ -13,7 +13,7 @@ use std::collections::HashMap;
 
 use hyper::status::StatusCode;
 use exonum::crypto;
-use dmbc_testkit::{DmbcTestApiBuilder, DmbcTestKitApi, asset_fees, create_asset};
+use dmbc_testkit::{DmbcTestApiBuilder, DmbcTestKitApi};
 
 use dmbc::currency::api::fees::FeesResponseBody;
 use dmbc::currency::configuration::{Configuration, TransactionFees};
@@ -36,7 +36,7 @@ fn fees_for_trade_intermediary_recipient() {
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
-    let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &creator_pub_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &creator_pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -77,7 +77,7 @@ fn fees_for_trade_intermediary_sender() {
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
-    let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &creator_pub_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &creator_pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -118,7 +118,7 @@ fn fees_for_trade_intermediary_recipient_and_sender() {
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
-    let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &creator_pub_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &creator_pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -160,7 +160,7 @@ fn fees_for_trade_intermediary_intermedniary() {
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
-    let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &creator_pub_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &creator_pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -200,7 +200,7 @@ fn fees_for_trade_intermediary_recipient_and_sender_creator() {
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
-    let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &seller_public_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &seller_public_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -243,7 +243,7 @@ fn fees_for_trade_intermediary_asset_not_found() {
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
-    let (asset, _) = create_asset(meta_data, units, asset_fees(tax, 0), &creator_pub_key);
+    let (asset, _) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &creator_pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))

@@ -12,7 +12,7 @@ pub mod dmbc_testkit;
 use hyper::status::StatusCode;
 use exonum::messages::Message;
 use exonum::crypto;
-use dmbc_testkit::{DmbcTestKit, DmbcTestApiBuilder, DmbcTestKitApi, asset_fees, create_asset, create_asset2};
+use dmbc_testkit::{DmbcTestKit, DmbcTestApiBuilder, DmbcTestKitApi};
 
 use dmbc::currency::configuration::{Configuration, TransactionFees};
 use dmbc::currency::transactions::builders::transaction;
@@ -41,7 +41,7 @@ fn add_assets_mine_new_asset_to_receiver_empty_wallet() {
     let api = testkit.api();
 
     // post the transaction
-    let meta_asset = MetaAsset::new(&receiver_key, meta_data, units, asset_fees(tax, 0));
+    let meta_asset = MetaAsset::new(&receiver_key, meta_data, units, dmbc_testkit::asset_fees(tax, 0));
     let tx_add_assets = transaction::Builder::new()
         .keypair(creator_public_key, creator_secret_key)
         .tx_add_assets()
@@ -68,10 +68,10 @@ fn add_assets_mine_new_asset_to_receiver_empty_wallet() {
     assert!(creator.assets().is_empty());
 
     // create asset's equivalents created by tx execution
-    let (asset, info) = create_asset2(
+    let (asset, info) = dmbc_testkit::create_asset2(
         meta_data, 
         units, 
-        asset_fees(tax, 0), 
+        dmbc_testkit::asset_fees(tax, 0), 
         &creator_public_key,
         &tx_hash
     );
@@ -98,8 +98,8 @@ fn add_assets_mine_existing_asset_to_receivers_non_empty_wallet() {
     let (creator_public_key, creator_secret_key) = crypto::gen_keypair();
     let (receiver_key, _) = crypto::gen_keypair();
 
-    let meta_asset = MetaAsset::new(&receiver_key, meta_data, units, asset_fees(tax, 0));
-    let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &creator_public_key);
+    let meta_asset = MetaAsset::new(&receiver_key, meta_data, units, dmbc_testkit::asset_fees(tax, 0));
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &creator_public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -158,7 +158,7 @@ fn add_assets_mine_existing_asset_to_creators_empty_wallet() {
     let (creator_public_key, creator_secret_key) = crypto::gen_keypair();
     let (receiver_key, _) = crypto::gen_keypair();
 
-    let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &creator_public_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &creator_public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -167,7 +167,7 @@ fn add_assets_mine_existing_asset_to_creators_empty_wallet() {
         .create();
     let api = testkit.api();
     
-    let meta_asset = MetaAsset::new(&creator_public_key, meta_data, units, asset_fees(tax, 0));
+    let meta_asset = MetaAsset::new(&creator_public_key, meta_data, units, dmbc_testkit::asset_fees(tax, 0));
     let tx_add_assets = transaction::Builder::new()
         .keypair(creator_public_key, creator_secret_key)
         .tx_add_assets()
@@ -218,10 +218,10 @@ fn add_assets_mine_existing_asset_to_creator_and_receiver() {
     let (creator_public_key, creator_secret_key) = crypto::gen_keypair();
     let (receiver_key, _) = crypto::gen_keypair();
 
-    let (asset, info) = create_asset(
+    let (asset, info) = dmbc_testkit::create_asset(
         meta_data, 
         units, 
-        asset_fees(tax, 0), 
+        dmbc_testkit::asset_fees(tax, 0), 
         &creator_public_key, 
     );
 
@@ -232,8 +232,8 @@ fn add_assets_mine_existing_asset_to_creator_and_receiver() {
         .create();
     let api = testkit.api();
     
-    let meta_asset_for_creator = MetaAsset::new(&creator_public_key, meta_data, units, asset_fees(tax, 0));
-    let meta_asset_for_receiver = MetaAsset::new(&receiver_key, meta_data, units, asset_fees(tax, 0));
+    let meta_asset_for_creator = MetaAsset::new(&creator_public_key, meta_data, units, dmbc_testkit::asset_fees(tax, 0));
+    let meta_asset_for_receiver = MetaAsset::new(&receiver_key, meta_data, units, dmbc_testkit::asset_fees(tax, 0));
     let tx_add_assets = transaction::Builder::new()
         .keypair(creator_public_key, creator_secret_key)
         .tx_add_assets()
@@ -287,7 +287,7 @@ fn add_assets_mine_existing_asset_to_receivers_wallet_with_different_asset() {
     let (creator_public_key, creator_secret_key) = crypto::gen_keypair();
     let (receiver_key, _) = crypto::gen_keypair();
 
-    let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &creator_public_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &creator_public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -296,7 +296,7 @@ fn add_assets_mine_existing_asset_to_receivers_wallet_with_different_asset() {
         .create();
     let api = testkit.api();
     
-    let meta_asset_for_receiver = MetaAsset::new(&receiver_key, new_meta_data, units, asset_fees(tax, 0));
+    let meta_asset_for_receiver = MetaAsset::new(&receiver_key, new_meta_data, units, dmbc_testkit::asset_fees(tax, 0));
     let tx_add_assets = transaction::Builder::new()
         .keypair(creator_public_key, creator_secret_key)
         .tx_add_assets()
@@ -317,10 +317,10 @@ fn add_assets_mine_existing_asset_to_receivers_wallet_with_different_asset() {
     assert_eq!(tx_status, Ok(Ok(())));
 
     // check creator wallet
-    let (new_asset, new_info) = create_asset2(
+    let (new_asset, new_info) = dmbc_testkit::create_asset2(
         new_meta_data, 
         units, 
-        asset_fees(tax, 0), 
+        dmbc_testkit::asset_fees(tax, 0), 
         &creator_public_key, 
         &tx_hash
     );
@@ -352,7 +352,7 @@ fn add_assets_mine_existing_asset_with_different_fees() {
 
     let (public_key, secret_key) = crypto::gen_keypair();
 
-    let (asset, info) = create_asset(meta_data, units, asset_fees(tax1, 0), &public_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax1, 0), &public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -364,7 +364,7 @@ fn add_assets_mine_existing_asset_with_different_fees() {
     let tx_add_assets = transaction::Builder::new()
         .keypair(public_key, secret_key.clone())
         .tx_add_assets()
-        .add_asset(meta_data, units, asset_fees(tax2, 0))
+        .add_asset(meta_data, units, dmbc_testkit::asset_fees(tax2, 0))
         .seed(85)
         .build();
     
@@ -408,7 +408,7 @@ fn add_assets_insufficient_funds() {
     let tx_add_assets = transaction::Builder::new()
         .keypair(public_key, secret_key.clone())
         .tx_add_assets()
-        .add_asset(meta_data, units, asset_fees(tax, 0))
+        .add_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0))
         .seed(85)
         .build();
     

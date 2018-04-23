@@ -13,7 +13,7 @@ use std::collections::HashMap;
 
 use hyper::status::StatusCode;
 use exonum::crypto;
-use dmbc_testkit::{DmbcTestApiBuilder, DmbcTestKitApi, asset_fees, create_asset};
+use dmbc_testkit::{DmbcTestApiBuilder, DmbcTestKitApi};
 
 use dmbc::currency::api::fees::FeesResponseBody;
 use dmbc::currency::configuration::{Configuration, TransactionFees};
@@ -36,10 +36,10 @@ fn fees_for_exchange_recipient() {
     let (sender_public_key, sender_secret_key) = crypto::gen_keypair();
     let (recipient_public_key, recipient_secret_key) = crypto::gen_keypair();
 
-    let (asset0, info0) = create_asset(meta_data0, units, asset_fees(tax, 0), &creator_pub_key);
-    let (asset1, info1) = create_asset(meta_data1, units, asset_fees(tax, 0), &creator_pub_key);
-    let (asset2, info2) = create_asset(meta_data2, units, asset_fees(tax, 0), &creator_pub_key);
-    let (asset3, info3) = create_asset(meta_data3, units, asset_fees(tax, 0), &creator_pub_key);
+    let (asset0, info0) = dmbc_testkit::create_asset(meta_data0, units, dmbc_testkit::asset_fees(tax, 0), &creator_pub_key);
+    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, units, dmbc_testkit::asset_fees(tax, 0), &creator_pub_key);
+    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, units, dmbc_testkit::asset_fees(tax, 0), &creator_pub_key);
+    let (asset3, info3) = dmbc_testkit::create_asset(meta_data3, units, dmbc_testkit::asset_fees(tax, 0), &creator_pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -87,10 +87,10 @@ fn fees_for_exchange_sender() {
     let (sender_public_key, sender_secret_key) = crypto::gen_keypair();
     let (recipient_public_key, recipient_secret_key) = crypto::gen_keypair();
 
-    let (asset0, info0) = create_asset(meta_data0, units, asset_fees(tax, 0), &creator_pub_key);
-    let (asset1, info1) = create_asset(meta_data1, units, asset_fees(tax, 0), &creator_pub_key);
-    let (asset2, info2) = create_asset(meta_data2, units, asset_fees(tax, 0), &creator_pub_key);
-    let (asset3, info3) = create_asset(meta_data3, units, asset_fees(tax, 0), &creator_pub_key);
+    let (asset0, info0) = dmbc_testkit::create_asset(meta_data0, units, dmbc_testkit::asset_fees(tax, 0), &creator_pub_key);
+    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, units, dmbc_testkit::asset_fees(tax, 0), &creator_pub_key);
+    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, units, dmbc_testkit::asset_fees(tax, 0), &creator_pub_key);
+    let (asset3, info3) = dmbc_testkit::create_asset(meta_data3, units, dmbc_testkit::asset_fees(tax, 0), &creator_pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -138,10 +138,10 @@ fn fees_for_exchange_recipient_and_sender() {
     let (sender_public_key, sender_secret_key) = crypto::gen_keypair();
     let (recipient_public_key, recipient_secret_key) = crypto::gen_keypair();
 
-    let (asset0, info0) = create_asset(meta_data0, units, asset_fees(tax, 0), &creator_pub_key);
-    let (asset1, info1) = create_asset(meta_data1, units, asset_fees(tax, 0), &creator_pub_key);
-    let (asset2, info2) = create_asset(meta_data2, units, asset_fees(tax, 0), &creator_pub_key);
-    let (asset3, info3) = create_asset(meta_data3, units, asset_fees(tax, 0), &creator_pub_key);
+    let (asset0, info0) = dmbc_testkit::create_asset(meta_data0, units, dmbc_testkit::asset_fees(tax, 0), &creator_pub_key);
+    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, units, dmbc_testkit::asset_fees(tax, 0), &creator_pub_key);
+    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, units, dmbc_testkit::asset_fees(tax, 0), &creator_pub_key);
+    let (asset3, info3) = dmbc_testkit::create_asset(meta_data3, units, dmbc_testkit::asset_fees(tax, 0), &creator_pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -189,10 +189,10 @@ fn fees_for_exchange_recipient_and_sender_creator() {
     let (sender_public_key, sender_secret_key) = crypto::gen_keypair();
     let (recipient_public_key, recipient_secret_key) = crypto::gen_keypair();
 
-    let (asset0, info0) = create_asset(meta_data0, units, asset_fees(tax, 0), &sender_public_key);
-    let (asset1, info1) = create_asset(meta_data1, units, asset_fees(tax, 0), &sender_public_key);
-    let (asset2, info2) = create_asset(meta_data2, units, asset_fees(tax, 0), &sender_public_key);
-    let (asset3, info3) = create_asset(meta_data3, units, asset_fees(tax, 0), &sender_public_key);
+    let (asset0, info0) = dmbc_testkit::create_asset(meta_data0, units, dmbc_testkit::asset_fees(tax, 0), &sender_public_key);
+    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, units, dmbc_testkit::asset_fees(tax, 0), &sender_public_key);
+    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, units, dmbc_testkit::asset_fees(tax, 0), &sender_public_key);
+    let (asset3, info3) = dmbc_testkit::create_asset(meta_data3, units, dmbc_testkit::asset_fees(tax, 0), &sender_public_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -242,10 +242,10 @@ let transaction_fee = 1000;
     let (sender_public_key, sender_secret_key) = crypto::gen_keypair();
     let (recipient_public_key, recipient_secret_key) = crypto::gen_keypair();
 
-    let (asset0, info0) = create_asset(meta_data0, units, asset_fees(tax, 0), &creator_pub_key);
-    let (asset1, info1) = create_asset(meta_data1, units, asset_fees(tax, 0), &creator_pub_key);
-    let (asset2, info2) = create_asset(meta_data2, units, asset_fees(tax, 0), &creator_pub_key);
-    let (asset3, info3) = create_asset(meta_data3, units, asset_fees(tax, 0), &creator_pub_key);
+    let (asset0, info0) = dmbc_testkit::create_asset(meta_data0, units, dmbc_testkit::asset_fees(tax, 0), &creator_pub_key);
+    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, units, dmbc_testkit::asset_fees(tax, 0), &creator_pub_key);
+    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, units, dmbc_testkit::asset_fees(tax, 0), &creator_pub_key);
+    let (asset3, info3) = dmbc_testkit::create_asset(meta_data3, units, dmbc_testkit::asset_fees(tax, 0), &creator_pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -294,10 +294,10 @@ fn fees_for_exchange_asset_not_found() {
         .create();
     let api = testkit.api();
 
-    let (asset0, _) = create_asset(meta_data0, units, asset_fees(tax, 0), &creator_pub_key);
-    let (asset1, _) = create_asset(meta_data1, units, asset_fees(tax, 0), &creator_pub_key);
-    let (asset2, _) = create_asset(meta_data2, units, asset_fees(tax, 0), &creator_pub_key);
-    let (asset3, _) = create_asset(meta_data3, units, asset_fees(tax, 0), &creator_pub_key);
+    let (asset0, _) = dmbc_testkit::create_asset(meta_data0, units, dmbc_testkit::asset_fees(tax, 0), &creator_pub_key);
+    let (asset1, _) = dmbc_testkit::create_asset(meta_data1, units, dmbc_testkit::asset_fees(tax, 0), &creator_pub_key);
+    let (asset2, _) = dmbc_testkit::create_asset(meta_data2, units, dmbc_testkit::asset_fees(tax, 0), &creator_pub_key);
+    let (asset3, _) = dmbc_testkit::create_asset(meta_data3, units, dmbc_testkit::asset_fees(tax, 0), &creator_pub_key);
 
     let tx_exchange_assets = transaction::Builder::new()
         .keypair(recipient_public_key, recipient_secret_key)

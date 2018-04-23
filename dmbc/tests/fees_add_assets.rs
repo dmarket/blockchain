@@ -13,7 +13,7 @@ use std::collections::HashMap;
 
 use hyper::status::StatusCode;
 use exonum::crypto;
-use dmbc_testkit::{DmbcTestKitApi, DmbcTestApiBuilder, asset_fees};
+use dmbc_testkit::{DmbcTestKitApi, DmbcTestApiBuilder};
 
 use dmbc::currency::api::fees::FeesResponseBody;
 use dmbc::currency::assets::MetaAsset;
@@ -35,7 +35,7 @@ fn fees_for_add_assets() {
     let (public_key, secret_key) = crypto::gen_keypair();
     let (receiver_key, _) = crypto::gen_keypair();
 
-    let fees = asset_fees(10, 10);
+    let fees = dmbc_testkit::asset_fees(10, 10);
 
     let meta_data = "asset";
     let meta_asset = MetaAsset::new(&receiver_key, meta_data, amount, fees);

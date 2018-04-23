@@ -12,7 +12,7 @@ pub mod dmbc_testkit;
 use hyper::status::StatusCode;
 use exonum::messages::Message;
 use exonum::crypto;
-use dmbc_testkit::{DmbcTestKit, DmbcTestApiBuilder, DmbcTestKitApi, asset_fees, create_asset};
+use dmbc_testkit::{DmbcTestKit, DmbcTestApiBuilder, DmbcTestKitApi};
 
 use dmbc::currency::configuration::{Configuration, TransactionFees};
 use dmbc::currency::transactions::builders::transaction;
@@ -32,7 +32,7 @@ fn delete_assets_one_from_bundle() {
     let config_fees = TransactionFees::with_default_key(0, 0, transaction_fee, 0, 0, 0);
 
     let (public_key, secret_key) = crypto::gen_keypair();
-    let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &public_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &public_key);
     
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -79,7 +79,7 @@ fn delete_assets_all_from_bundle() {
     let config_fees = TransactionFees::with_default_key(0, 0, transaction_fee, 0, 0, 0);
 
     let (public_key, secret_key) = crypto::gen_keypair();
-    let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &public_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &public_key);
     
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -167,7 +167,7 @@ fn delete_assets_that_doent_exist2() {
     let config_fees = TransactionFees::with_default_key(0, 0, transaction_fee, 0, 0, 0);
 
     let (public_key, secret_key) = crypto::gen_keypair();
-    let (another_asset, another_info) = create_asset(meta_data2, units, asset_fees(tax, 0), &public_key);
+    let (another_asset, another_info) = dmbc_testkit::create_asset(meta_data2, units, dmbc_testkit::asset_fees(tax, 0), &public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -215,7 +215,7 @@ fn delete_assets_amount_more_than_wallet_have() {
     let config_fees = TransactionFees::with_default_key(0, 0, transaction_fee, 0, 0, 0);
 
     let (public_key, secret_key) = crypto::gen_keypair();
-    let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &public_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -262,7 +262,7 @@ fn delete_assets_insufficient_funds() {
     let config_fees = TransactionFees::with_default_key(0, 0, transaction_fee, 0, 0, 0);
 
     let (public_key, secret_key) = crypto::gen_keypair();
-    let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &public_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -309,7 +309,7 @@ fn delete_assets_with_different_creator() {
 
     let (creator_key, _) = crypto::gen_keypair();
     let (public_key, secret_key) = crypto::gen_keypair();
-    let (asset, info) = create_asset(meta_data, units, asset_fees(tax, 0), &creator_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &creator_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -357,8 +357,8 @@ fn delete_assets_two_assets_where_one_asset_doesnt_have_enough_items() {
     let config_fees = TransactionFees::with_default_key(0, 0, transaction_fee, 0, 0, 0);
 
     let (public_key, secret_key) = crypto::gen_keypair();
-    let (asset1, info1) = create_asset(meta_data1, units, asset_fees(tax, 0), &public_key);
-    let (asset2, info2) = create_asset(meta_data2, units, asset_fees(tax, 0), &public_key);
+    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, units, dmbc_testkit::asset_fees(tax, 0), &public_key);
+    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, units, dmbc_testkit::asset_fees(tax, 0), &public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -411,8 +411,8 @@ fn delete_assets_two_assets_where_one_have_another_creator() {
 
     let (creator_key, _) = crypto::gen_keypair();
     let (public_key, secret_key) = crypto::gen_keypair();
-    let (asset1, info1) = create_asset(meta_data1, units, asset_fees(tax, 0), &creator_key);
-    let (asset2, info2) = create_asset(meta_data2, units, asset_fees(tax, 0), &public_key);
+    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, units, dmbc_testkit::asset_fees(tax, 0), &creator_key);
+    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, units, dmbc_testkit::asset_fees(tax, 0), &public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
