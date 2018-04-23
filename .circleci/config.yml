@@ -70,7 +70,7 @@ jobs:
       - run:
           name: Generate Coverage
           command: |
-            kcov --verify --include-path dmbc target/debug/coverage $(find target/debug -maxdepth 1 -type f -executable -name 'tests-*')
+            kcov --verify --include-path dmbc target/debug/coverage $(find target/debug -maxdepth 1 -type f -executable | grep -v -E '(dmbc-node|dmbc-discovery|dmbc-flooder|dmbc-fuzzer|dmbc-bot)')
 
       - store_artifacts:
           path: target/debug/coverage
