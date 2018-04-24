@@ -70,10 +70,13 @@ jobs:
       - run:
           name: Generate Coverage
           command: |
-            kcov --verify --include-path dmbc target/debug/coverage $(find target/debug -maxdepth 1 -type f -executable | grep -v -E '(dmbc-node|dmbc-discovery|dmbc-flooder|dmbc-fuzzer|dmbc-bot)')
+            TESTS=`find target/debug -maxdepth 1 -type f -executable |  grep -v -E '(dmbc-node|dmbc-discovery|dmbc-flooder|dmbc-fuzzer|dmbc-bot)'`
+            for i in $TESTS; do mkdir -p target/debug/coverage/$i && kcov --verify --include-path dmbc target/debug/coverage/$i $i; done
+            kcov --merge target/debug/coverage/merged/ target/debug/coverage/target/debug/*
+            #kcov --verify --include-path dmbc target/debug/coverage $(find target/debug -maxdepth 1 -type f -executable | grep -v -E '(dmbc-node|dmbc-discovery|dmbc-flooder|dmbc-fuzzer|dmbc-bot)')
 
       - store_artifacts:
-          path: target/debug/coverage
+          path: target/debug/coverage/merged
 
       - setup_remote_docker
 
