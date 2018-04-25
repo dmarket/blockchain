@@ -26,10 +26,19 @@ pub const PARAMETER_META_DATA_KEY: &str = "meta_data";
 pub struct WalletApi {
     pub blockchain: Blockchain,
 }
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct WalletInfo {
     pub balance: u64,
     pub assets_count: u64,
+}
+
+impl WalletInfo {
+    pub fn from(wallet: Wallet) -> Self {
+        WalletInfo {
+            balance: wallet.balance(),
+            assets_count: wallet.assets().len() as u64,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -63,7 +72,7 @@ pub struct WalletAssetsResponseBody {
     pub assets: Vec<ExtendedAsset>,
 }
 
-pub type WalletResponse = Result<Wallet, ApiError>;
+pub type WalletResponse = Result<WalletInfo, ApiError>;
 
 pub type WalletsResponse = Result<WalletsResponseBody, ApiError>;
 
@@ -80,10 +89,7 @@ impl WalletApi {
         let index = wallet::Schema(view).index();
         let mut result: HashMap<PublicKey, WalletInfo> = HashMap::new();
         for v in index.iter() {
-            let wi = WalletInfo {
-                balance: v.1.balance(),
-                assets_count: v.1.assets().len() as u64,
-            };
+            let wi = WalletInfo::from(v.1);
             result.insert(v.0, wi);
         }
 
@@ -105,10 +111,7 @@ impl WalletApi {
                 total += 1;
                 continue;
             }
-            let wi = WalletInfo {
-                balance: v.1.balance(),
-                assets_count: v.1.assets().len() as u64,
-            };
+            let wi = WalletInfo::from(v.1);
             result.insert(v.0, wi);
             count += 1;
             total += 1;
@@ -171,7 +174,10 @@ impl Api for WalletApi {
             let path = req.url.path();
             let wallet_key = path.last().unwrap();
             let result: WalletResponse = match PublicKey::from_hex(wallet_key) {
-                Ok(public_key) => Ok(self_.wallet(&public_key)),
+                Ok(public_key) => {
+                    let wallet = self_.wallet(&public_key);
+                    Ok(WalletInfo::from(wallet))
+                }
                 Err(_) => Err(ApiError::WalletHexInvalid),
             };
 

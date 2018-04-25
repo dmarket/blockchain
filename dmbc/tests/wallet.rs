@@ -43,7 +43,7 @@ fn wallet() {
     let wallet = Wallet::new(balance, vec![asset]);
 
     assert_eq!(status, StatusCode::Ok);
-    assert_eq!(response, Ok(wallet));
+    assert_eq!(response, Ok(WalletInfo::from(wallet)));
 }
 
 #[test]
@@ -237,7 +237,7 @@ fn wallet_empty_with_valid_key() {
     );
 
     assert_eq!(status, StatusCode::Ok);
-    assert_eq!(response, Ok(Wallet::new_empty()));
+    assert_eq!(response, Ok(WalletInfo::from(Wallet::new_empty())));
 }
 
 #[test]
