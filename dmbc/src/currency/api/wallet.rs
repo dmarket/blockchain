@@ -56,6 +56,10 @@ impl ExtendedAsset {
             meta_data: info,
         }
     }
+
+    pub fn into(&self) -> AssetBundle {
+        AssetBundle::new(self.id, self.amount)
+    }
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
