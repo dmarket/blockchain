@@ -12,7 +12,7 @@ pub mod dmbc_testkit;
 use hyper::status::StatusCode;
 use exonum::messages::Message;
 use exonum::crypto;
-use dmbc_testkit::{DmbcTestKit, DmbcTestApiBuilder, DmbcTestKitApi};
+use dmbc_testkit::{DmbcTestApiBuilder, DmbcTestKitApi};
 
 use dmbc::currency::configuration::{Configuration, TransactionFees};
 use dmbc::currency::transactions::builders::transaction;
@@ -62,14 +62,16 @@ fn transfer() {
     let (_, tx_status) = api.get_tx_status(&tx_transfer);
     assert_eq!(tx_status, Ok(Ok(())));
 
-    let recipient_wallet = testkit.fetch_wallet(&recipient_key);
-    assert_eq!(recipient_wallet.balance(), 0);
-    assert_eq!(recipient_wallet.assets(), vec![asset]);
+    let recipient_wallet = api.get_wallet(&recipient_key);
+    let recipient_assets = api.get_wallet_assets(&recipient_key).iter().map(|a| a.into()).collect::<Vec<AssetBundle>>();
+    assert_eq!(recipient_wallet.balance, 0);
+    assert_eq!(recipient_assets, vec![asset]);
 
-    let sender_wallet = testkit.fetch_wallet(&public_key);
+    let sender_wallet = api.get_wallet(&public_key);
     let expected_balance = balance - transaction_fee;
-    assert_eq!(sender_wallet.balance(), expected_balance);
-    assert!(sender_wallet.assets().is_empty());
+    let sender_assets = api.get_wallet_assets(&public_key).iter().map(|a| a.into()).collect::<Vec<AssetBundle>>();
+    assert_eq!(sender_wallet.balance, expected_balance);
+    assert!(sender_assets.is_empty());
 }
 
 #[test]
@@ -112,14 +114,15 @@ fn transfer_asset_not_found() {
     let (_, tx_status) = api.get_tx_status(&tx_transfer);
     assert_eq!(tx_status, Ok(Err(Error::AssetNotFound)));
 
-    let recipient_wallet = testkit.fetch_wallet(&recipient_key);
-    assert_eq!(recipient_wallet.balance(), 0);
-    assert!(recipient_wallet.assets().is_empty());
+    let recipient_wallet = api.get_wallet(&recipient_key);
+    assert_eq!(recipient_wallet.balance, 0);
+    assert!(recipient_wallet.assets_count == 0);
 
-    let sender_wallet = testkit.fetch_wallet(&public_key);
+    let sender_wallet = api.get_wallet(&public_key);
     let expected_balance = balance - transaction_fee;
-    assert_eq!(sender_wallet.balance(), expected_balance);
-    assert!(sender_wallet.assets().is_empty());
+    let sender_assets = api.get_wallet_assets(&public_key).iter().map(|a| a.into()).collect::<Vec<AssetBundle>>();
+    assert_eq!(sender_wallet.balance, expected_balance);
+    assert!(sender_assets.is_empty());
 }
 
 #[test]
@@ -162,14 +165,14 @@ fn transfer_insufficient_funds() {
     let (_, tx_status) = api.get_tx_status(&tx_transfer);
     assert_eq!(tx_status, Ok(Err(Error::InsufficientFunds)));
 
-    let recipient_wallet = testkit.fetch_wallet(&recipient_key);
-    assert_eq!(recipient_wallet.balance(), 0);
-    assert!(recipient_wallet.assets().is_empty());
+    let recipient_wallet = api.get_wallet(&recipient_key);
+    assert_eq!(recipient_wallet.balance, 0);
+    assert!(recipient_wallet.assets_count == 0);
 
-    let sender_wallet = testkit.fetch_wallet(&public_key);
+    let sender_wallet = api.get_wallet(&public_key);
     let expected_balance = balance;
-    assert_eq!(sender_wallet.balance(), expected_balance);
-    assert!(sender_wallet.assets().is_empty());
+    assert_eq!(sender_wallet.balance, expected_balance);
+    assert!(sender_wallet.assets_count == 0);
 }
 
 #[test]
@@ -213,11 +216,11 @@ fn transfer_insufficient_assets() {
     let (_, tx_status) = api.get_tx_status(&tx_transfer);
     assert_eq!(tx_status, Ok(Err(Error::InsufficientAssets)));
 
-    let recipient_wallet = testkit.fetch_wallet(&recipient_key);
-    assert_eq!(recipient_wallet.balance(), 0);
-    assert!(recipient_wallet.assets().is_empty());
+    let recipient_wallet = api.get_wallet(&recipient_key);
+    assert_eq!(recipient_wallet.balance, 0);
+    assert!(recipient_wallet.assets_count == 0);
 
-    let sender_wallet = testkit.fetch_wallet(&public_key);
+    let sender_wallet = api.get_wallet(&public_key);
     let expected_balance = balance - transaction_fee;
-    assert_eq!(sender_wallet.balance(), expected_balance);
+    assert_eq!(sender_wallet.balance, expected_balance);
 }
