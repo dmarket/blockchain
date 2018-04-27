@@ -12,7 +12,7 @@ pub mod dmbc_testkit;
 use hyper::status::StatusCode;
 use exonum::messages::Message;
 use exonum::crypto;
-use dmbc_testkit::{DmbcTestKit, DmbcTestApiBuilder, DmbcTestKitApi};
+use dmbc_testkit::{DmbcTestApiBuilder, DmbcTestKitApi};
 
 use dmbc::currency::configuration::{Configuration, TransactionFees};
 use dmbc::currency::transactions::builders::transaction;
@@ -62,10 +62,10 @@ fn add_assets_mine_new_asset_to_receiver_empty_wallet() {
     assert_eq!(tx_status, Ok(Ok(())));
 
     // check creator wallet
-    let creator = testkit.fetch_wallet(&creator_public_key);
+    let creator = api.get_wallet(&creator_public_key);
     let expected_balance = balance - transaction_fee - per_asset_fee * units;
-    assert_eq!(creator.balance(), expected_balance);
-    assert!(creator.assets().is_empty());
+    assert_eq!(creator.balance, expected_balance);
+    assert!(creator.assets_count == 0);
 
     // create asset's equivalents created by tx execution
     let (asset, info) = dmbc_testkit::create_asset2(
@@ -77,12 +77,15 @@ fn add_assets_mine_new_asset_to_receiver_empty_wallet() {
     );
 
     // check receiver wallet
-    let receiver = testkit.fetch_wallet(&receiver_key);
-    assert_eq!(receiver.assets(), vec![asset.clone()]);
+    // let receiver = testkit.fetch_wallet(&receiver_key);
+    let receivers_assets = api.get_wallet_assets(&receiver_key);
+    let assets: Vec<AssetBundle> = receivers_assets.iter().map(|a| a.into()).collect();
+    assert_eq!(assets, vec![asset.clone()]);
 
     // compare asset info from blockchain
-    let info_from_blockchain = testkit.fetch_asset_info(&asset.id());
-    assert_eq!(info_from_blockchain, Some(info));
+    // let info_from_blockchain = testkit.fetch_asset_info(&asset.id());
+    let asset_info: Vec<AssetInfo> = receivers_assets.iter().map(|a| a.clone().meta_data.unwrap()).collect();
+    assert_eq!(asset_info, vec![info]);
 }
 
 #[test]
@@ -128,21 +131,25 @@ fn add_assets_mine_existing_asset_to_receivers_non_empty_wallet() {
     assert_eq!(tx_status, Ok(Ok(())));
 
     // check creator wallet
-    let creator = testkit.fetch_wallet(&creator_public_key);
+    // let creator = testkit.fetch_wallet(&creator_public_key);
+    let creator = api.get_wallet(&creator_public_key);
     let expected_balance = balance - transaction_fee - per_asset_fee * units;
-    assert_eq!(creator.balance(), expected_balance);
-    assert!(creator.assets().is_empty());
+    assert_eq!(creator.balance, expected_balance);
+    assert!(creator.assets_count == 0);
 
     let updated_asset = AssetBundle::new(asset.id(), asset.amount() * 2);
     let updated_info = AssetInfo::new(info.creator(), info.origin(), info.amount() * 2, info.fees());
 
     // check receiver wallet
-    let receiver = testkit.fetch_wallet(&receiver_key);
-    assert_eq!(receiver.assets(), vec![updated_asset.clone()]);
+    // let receiver = testkit.fetch_wallet(&receiver_key);
+    let receiver_assets = api.get_wallet_assets(&receiver_key);
+    let assets: Vec<AssetBundle> = receiver_assets.iter().map(|a| a.into()).collect();
+    assert_eq!(assets, vec![updated_asset.clone()]);
 
     // compare asset info from blockchain
-    let info_from_blockchain = testkit.fetch_asset_info(&updated_asset.id());
-    assert_eq!(info_from_blockchain, Some(updated_info));
+    // let info_from_blockchain = testkit.fetch_asset_info(&updated_asset.id());
+    let assets_infos: Vec<AssetInfo> = receiver_assets.iter().map(|a| a.clone().meta_data.unwrap()).collect();
+    assert_eq!(assets_infos, vec![updated_info]);
 }
 
 #[test]
@@ -191,18 +198,24 @@ fn add_assets_mine_existing_asset_to_creators_empty_wallet() {
     let asset = AssetBundle::new(asset.id(), asset.amount());
     let updated_info = AssetInfo::new(info.creator(), info.origin(), info.amount() * 2, info.fees());
 
-    let creator = testkit.fetch_wallet(&creator_public_key);
+    // let creator = testkit.fetch_wallet(&creator_public_key);
+    let creator = api.get_wallet(&creator_public_key);
+    let creators_assets = api.get_wallet_assets(&creator_public_key);
+    let assets: Vec<AssetBundle> = creators_assets.iter().map(|a| a.into()).collect();
     let expected_balance = balance - transaction_fee - per_asset_fee * units;
-    assert_eq!(creator.balance(), expected_balance);
-    assert_eq!(creator.assets(), vec![asset.clone()]);
+    assert_eq!(creator.balance, expected_balance);
+    assert_eq!(assets, vec![asset.clone()]);
 
     // check receiver wallet
-    let receiver = testkit.fetch_wallet(&receiver_key);
-    assert_eq!(receiver.assets(), vec![asset.clone()]);
+    // let receiver = testkit.fetch_wallet(&receiver_key);
+    let receivers_assets = api.get_wallet_assets(&receiver_key);
+    let assets: Vec<AssetBundle> = receivers_assets.iter().map(|a| a.into()).collect();
+    assert_eq!(assets, vec![asset.clone()]);
 
     // compare asset info from blockchain
-    let info_from_blockchain = testkit.fetch_asset_info(&asset.id());
-    assert_eq!(info_from_blockchain, Some(updated_info));
+    // let info_from_blockchain = testkit.fetch_asset_info(&asset.id());
+    let assets_infos: Vec<AssetInfo> = receivers_assets.iter().map(|a| a.clone().meta_data.unwrap()).collect();
+    assert_eq!(assets_infos, vec![updated_info]);
 }
 
 #[test]
@@ -259,18 +272,24 @@ fn add_assets_mine_existing_asset_to_creator_and_receiver() {
     let receiver_asset = AssetBundle::new(asset.id(), asset.amount() * 2);
     let updated_info = AssetInfo::new(info.creator(), info.origin(), info.amount() * 3, info.fees());
 
-    let creator = testkit.fetch_wallet(&creator_public_key);
+    // let creator = testkit.fetch_wallet(&creator_public_key);
+    let creator = api.get_wallet(&creator_public_key);
+    let creators_assets = api.get_wallet_assets(&creator_public_key);
+    let assets: Vec<AssetBundle> = creators_assets.iter().map(|a| a.into()).collect();
     let expected_balance = balance - transaction_fee - per_asset_fee * units * 2;
-    assert_eq!(creator.balance(), expected_balance);
-    assert_eq!(creator.assets(), vec![creators_asset]);
+    assert_eq!(creator.balance, expected_balance);
+    assert_eq!(assets, vec![creators_asset]);
 
     // check receiver wallet
-    let receiver = testkit.fetch_wallet(&receiver_key);
-    assert_eq!(receiver.assets(), vec![receiver_asset]);
+    // let receiver = testkit.fetch_wallet(&receiver_key);
+    let receivers_assets = api.get_wallet_assets(&receiver_key);
+    let assets: Vec<AssetBundle> = receivers_assets.iter().map(|a| a.into()).collect();
+    assert_eq!(assets, vec![receiver_asset]);
 
     // compare asset info from blockchain
-    let info_from_blockchain = testkit.fetch_asset_info(&asset.id());
-    assert_eq!(info_from_blockchain, Some(updated_info));
+    // let info_from_blockchain = testkit.fetch_asset_info(&asset.id());
+    let assets_infos: Vec<AssetInfo> = receivers_assets.iter().map(|a| a.clone().meta_data.unwrap()).collect();
+    assert_eq!(assets_infos, vec![updated_info]);
 }
 
 #[test]
@@ -325,18 +344,22 @@ fn add_assets_mine_existing_asset_to_receivers_wallet_with_different_asset() {
         &tx_hash
     );
 
-    let creator = testkit.fetch_wallet(&creator_public_key);
+    // let creator = testkit.fetch_wallet(&creator_public_key);
+    let creator = api.get_wallet(&creator_public_key);
     let expected_balance = balance - transaction_fee - per_asset_fee * units;
-    assert_eq!(creator.balance(), expected_balance);
-    assert!(creator.assets().is_empty());
+    assert_eq!(creator.balance, expected_balance);
+    assert!(creator.assets_count == 0);
 
     // check receiver wallet
-    let receiver = testkit.fetch_wallet(&receiver_key);
-    assert_eq!(receiver.assets(), vec![asset, new_asset.clone()]);
+    // let receiver = testkit.fetch_wallet(&receiver_key);
+    let receivers_assets = api.get_wallet_assets(&receiver_key);
+    let assets: Vec<AssetBundle> = receivers_assets.iter().map(|a| a.into()).collect();
+    assert_eq!(assets, vec![asset, new_asset.clone()]);
 
     // compare asset info from blockchain
-    let info_from_blockchain = testkit.fetch_asset_info(&new_asset.id());
-    assert_eq!(info_from_blockchain, Some(new_info));
+    // let info_from_blockchain = testkit.fetch_asset_info(&new_asset.id());
+    let assets_infos: Vec<AssetInfo> = receivers_assets.iter().map(|a| a.clone().meta_data.unwrap()).collect();
+    assert_eq!(assets_infos[1], new_info);
 }
 
 #[test]
@@ -380,13 +403,17 @@ fn add_assets_mine_existing_asset_with_different_fees() {
     let (_, tx_status) = api.get_tx_status(&tx_add_assets);
     assert_eq!(tx_status, Ok(Err(Error::InvalidAssetInfo)));
 
-    let wallet = testkit.fetch_wallet(&public_key);
+    // let wallet = testkit.fetch_wallet(&public_key);
+    let wallet = api.get_wallet(&public_key);
+    let wallet_assets = api.get_wallet_assets(&public_key);
+    let assets: Vec<AssetBundle> = wallet_assets.iter().map(|a| a.into()).collect();
     let expected_balance = balance - transaction_fee;
-    assert_eq!(wallet.balance(), expected_balance);
-    assert_eq!(wallet.assets(), vec![asset.clone()]);
+    assert_eq!(wallet.balance, expected_balance);
+    assert_eq!(assets, vec![asset.clone()]);
     
-    let bc_info = testkit.fetch_asset_info(&asset.id());
-    assert_eq!(bc_info, Some(info));
+    // let bc_info = testkit.fetch_asset_info(&asset.id());
+    let assets_infos: Vec<AssetInfo> = wallet_assets.iter().map(|a| a.clone().meta_data.unwrap()).collect();
+    assert_eq!(assets_infos, vec![info]);
 }
 
 #[test]

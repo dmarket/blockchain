@@ -18,6 +18,9 @@ use dmbc::currency::assets::{self, AssetBundle, AssetInfo, Fees, MetaAsset, Asse
 use dmbc::currency::transactions::builders::fee;
 use dmbc::currency::api::transaction::{TxPostResponse, StatusResponse};
 use dmbc::currency::api::fees::FeesResponse;
+use dmbc::currency::api::wallet as wallet_api;
+use dmbc::currency::api::wallet::{WalletResponse, WalletAssetsResponse,
+                                    WalletInfo, ExtendedAsset};
 use dmbc::currency::configuration::GENESIS_WALLET_PUB_KEY;
 
 pub trait DmbcTestKit {
@@ -129,6 +132,10 @@ pub trait DmbcTestKitApi {
 
     fn post_fee<T>(&self, tx: &T) -> (StatusCode, FeesResponse)
     where T: Message + Serialize; 
+
+    fn get_wallet(&self, public_key: &PublicKey) -> WalletInfo;
+
+    fn get_wallet_assets(&self, public_key: &PublicKey) -> Vec<ExtendedAsset>;
 }
 
 impl DmbcTestKitApi for ExonumTestKitApi {
@@ -214,6 +221,30 @@ impl DmbcTestKitApi for ExonumTestKitApi {
     where T: Message + Serialize
     {
         self.post_with_status("/v1/fees/transactions", &tx)
+    }
+
+    fn get_wallet(&self, public_key: &PublicKey) -> WalletInfo {
+        let (status, response): (StatusCode, WalletResponse) = self.get_with_status(
+            &format!("/v1/wallets/{}", public_key.to_string())
+        );
+        
+        assert_eq!(status, StatusCode::Ok);
+        assert!(response.is_ok());
+        response.unwrap()
+    }
+
+    fn get_wallet_assets(&self, public_key: &PublicKey) -> Vec<ExtendedAsset> {
+        let (status, response): (StatusCode, WalletAssetsResponse) = self.get_with_status(
+            &format!(
+                "/v1/wallets/{}/assets?{}=true",
+                public_key.to_string(),
+                wallet_api::PARAMETER_META_DATA_KEY,
+            )
+        );
+
+        assert_eq!(status, StatusCode::Ok);
+        assert!(response.is_ok());
+        response.unwrap().assets
     }
 }
 

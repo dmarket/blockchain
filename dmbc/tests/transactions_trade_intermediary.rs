@@ -12,7 +12,7 @@ pub mod dmbc_testkit;
 use hyper::status::StatusCode;
 use exonum::messages::Message;
 use exonum::crypto;
-use dmbc_testkit::{DmbcTestKit, DmbcTestApiBuilder, DmbcTestKitApi};
+use dmbc_testkit::{DmbcTestApiBuilder, DmbcTestKitApi};
 
 use dmbc::currency::configuration::{Configuration, TransactionFees};
 use dmbc::currency::transactions::builders::transaction;
@@ -47,7 +47,7 @@ fn trade_intermediary_fee_from_recipient() {
         .create();
     let api = testkit.api();
 
-    let genesis_balance = testkit.fetch_wallet(&dmbc_testkit::default_genesis_key()).balance();
+    let genesis_balance = api.get_wallet(&dmbc_testkit::default_genesis_key()).balance;
 
     let tx_trade = transaction::Builder::new()
         .keypair(buyer_public_key, buyer_secret_key)
@@ -73,10 +73,10 @@ fn trade_intermediary_fee_from_recipient() {
     let (_, tx_status) = api.get_tx_status(&tx_trade);
     assert_eq!(tx_status, Ok(Ok(())));
 
-    let seller_wallet = testkit.fetch_wallet(&seller_public_key);
-    let buyer_wallet = testkit.fetch_wallet(&buyer_public_key);
-    let genesis_wallet = testkit.fetch_wallet(&dmbc_testkit::default_genesis_key());
-    let intermediary_wallet = testkit.fetch_wallet(&intermediary_public_key);
+    let seller_wallet = api.get_wallet(&seller_public_key);
+    let buyer_wallet = api.get_wallet(&buyer_public_key);
+    let genesis_wallet = api.get_wallet(&dmbc_testkit::default_genesis_key());
+    let intermediary_wallet = api.get_wallet(&intermediary_public_key);
 
     let assets_price = units * price;
     let trade_fee = units * tax;
@@ -84,16 +84,14 @@ fn trade_intermediary_fee_from_recipient() {
     let expected_buyer_balace = balance - assets_price - transaction_fee - trade_fee - intermediary_commission;
     let expected_genesis_balance = genesis_balance + transaction_fee;
 
-    assert_eq!(seller_wallet.balance(), expected_sellers_balance);
-    assert_eq!(buyer_wallet.balance(), expected_buyer_balace);
-    assert_eq!(genesis_wallet.balance(), expected_genesis_balance);
-    assert_eq!(intermediary_wallet.balance(), intermediary_commission);
-    assert!(seller_wallet.assets().is_empty());
-    assert_eq!(buyer_wallet.assets(),
-        vec![
-            asset
-        ]
-    );
+    assert_eq!(seller_wallet.balance, expected_sellers_balance);
+    assert_eq!(buyer_wallet.balance, expected_buyer_balace);
+    assert_eq!(genesis_wallet.balance, expected_genesis_balance);
+    assert_eq!(intermediary_wallet.balance, intermediary_commission);
+
+    let buyer_assets = api.get_wallet_assets(&buyer_public_key).iter().map(|a| a.into()).collect::<Vec<AssetBundle>>();
+    assert!(seller_wallet.assets_count == 0);
+    assert_eq!(buyer_assets,vec![asset]);
 }
 
 #[test]
@@ -121,7 +119,7 @@ fn trade_intermediary_fee_from_sender() {
         .create();
     let api = testkit.api();
 
-    let genesis_balance = testkit.fetch_wallet(&dmbc_testkit::default_genesis_key()).balance();
+    let genesis_balance = api.get_wallet(&dmbc_testkit::default_genesis_key()).balance;
 
     let tx_trade = transaction::Builder::new()
         .keypair(buyer_public_key, buyer_secret_key)
@@ -147,26 +145,24 @@ fn trade_intermediary_fee_from_sender() {
     let (_, tx_status) = api.get_tx_status(&tx_trade);
     assert_eq!(tx_status, Ok(Ok(())));
 
-    let seller_wallet = testkit.fetch_wallet(&seller_public_key);
-    let buyer_wallet = testkit.fetch_wallet(&buyer_public_key);
-    let genesis_wallet = testkit.fetch_wallet(&dmbc_testkit::default_genesis_key());
-    let intermediary_wallet = testkit.fetch_wallet(&intermediary_public_key);
+    let seller_wallet = api.get_wallet(&seller_public_key);
+    let buyer_wallet = api.get_wallet(&buyer_public_key);
+    let genesis_wallet = api.get_wallet(&dmbc_testkit::default_genesis_key());
+    let intermediary_wallet = api.get_wallet(&intermediary_public_key);
 
     let assets_price = units * price;
     let expected_sellers_balance = balance + assets_price - transaction_fee - intermediary_commission;
     let expected_buyer_balace = balance - assets_price;
     let expected_genesis_balance = genesis_balance + transaction_fee;
 
-    assert_eq!(seller_wallet.balance(), expected_sellers_balance);
-    assert_eq!(buyer_wallet.balance(), expected_buyer_balace);
-    assert_eq!(genesis_wallet.balance(), expected_genesis_balance);
-    assert_eq!(intermediary_wallet.balance(), intermediary_commission);
-    assert!(seller_wallet.assets().is_empty());
-    assert_eq!(buyer_wallet.assets(),
-        vec![
-            asset
-        ]
-    );
+    assert_eq!(seller_wallet.balance, expected_sellers_balance);
+    assert_eq!(buyer_wallet.balance, expected_buyer_balace);
+    assert_eq!(genesis_wallet.balance, expected_genesis_balance);
+    assert_eq!(intermediary_wallet.balance, intermediary_commission);
+    
+    let buyer_assets = api.get_wallet_assets(&buyer_public_key).iter().map(|a| a.into()).collect::<Vec<AssetBundle>>();
+    assert!(seller_wallet.assets_count == 0);
+    assert_eq!(buyer_assets,vec![asset]);
 }
 
 #[test]
@@ -194,7 +190,7 @@ fn trade_intermediary_fee_from_recipient_and_sender() {
         .create();
     let api = testkit.api();
 
-    let genesis_balance = testkit.fetch_wallet(&dmbc_testkit::default_genesis_key()).balance();
+    let genesis_balance = api.get_wallet(&dmbc_testkit::default_genesis_key()).balance;
 
     let tx_trade = transaction::Builder::new()
         .keypair(buyer_public_key, buyer_secret_key)
@@ -220,25 +216,23 @@ fn trade_intermediary_fee_from_recipient_and_sender() {
     let (_, tx_status) = api.get_tx_status(&tx_trade);
     assert_eq!(tx_status, Ok(Ok(())));
 
-    let seller_wallet = testkit.fetch_wallet(&seller_public_key);
-    let buyer_wallet = testkit.fetch_wallet(&buyer_public_key);
-    let genesis_wallet = testkit.fetch_wallet(&dmbc_testkit::default_genesis_key());
-    let intermediary_wallet = testkit.fetch_wallet(&intermediary_public_key);
+    let seller_wallet = api.get_wallet(&seller_public_key);
+    let buyer_wallet = api.get_wallet(&buyer_public_key);
+    let genesis_wallet = api.get_wallet(&dmbc_testkit::default_genesis_key());
+    let intermediary_wallet = api.get_wallet(&intermediary_public_key);
 
     let expected_sellers_balance = balance + units * price - transaction_fee/2 - intermediary_commission/2 + tax * units / 2;
     let expected_buyer_balace = balance - units * price - transaction_fee/2 - intermediary_commission/2 - tax * units / 2;
     let expected_genesis_balance = genesis_balance + transaction_fee;
 
-    assert_eq!(seller_wallet.balance(), expected_sellers_balance);
-    assert_eq!(buyer_wallet.balance(), expected_buyer_balace);
-    assert_eq!(genesis_wallet.balance(), expected_genesis_balance);
-    assert_eq!(intermediary_wallet.balance(), intermediary_commission);
-    assert!(seller_wallet.assets().is_empty());
-    assert_eq!(buyer_wallet.assets(),
-        vec![
-            asset
-        ]
-    );
+    assert_eq!(seller_wallet.balance, expected_sellers_balance);
+    assert_eq!(buyer_wallet.balance, expected_buyer_balace);
+    assert_eq!(genesis_wallet.balance, expected_genesis_balance);
+    assert_eq!(intermediary_wallet.balance, intermediary_commission);
+
+    let buyer_assets = api.get_wallet_assets(&buyer_public_key).iter().map(|a| a.into()).collect::<Vec<AssetBundle>>();
+    assert!(seller_wallet.assets_count == 0);
+    assert_eq!(buyer_assets,vec![asset]);
 }
 
 #[test]
@@ -267,7 +261,7 @@ fn trade_intermediary_fee_from_intermediary() {
         .create();
     let api = testkit.api();
 
-    let genesis_balance = testkit.fetch_wallet(&dmbc_testkit::default_genesis_key()).balance();
+    let genesis_balance = api.get_wallet(&dmbc_testkit::default_genesis_key()).balance;
 
     let tx_trade = transaction::Builder::new()
         .keypair(buyer_public_key, buyer_secret_key)
@@ -292,11 +286,11 @@ fn trade_intermediary_fee_from_intermediary() {
 
     let (_, tx_status) = api.get_tx_status(&tx_trade);
     assert_eq!(tx_status, Ok(Ok(())));
-
-    let seller_wallet = testkit.fetch_wallet(&seller_public_key);
-    let buyer_wallet = testkit.fetch_wallet(&buyer_public_key);
-    let genesis_wallet = testkit.fetch_wallet(&dmbc_testkit::default_genesis_key());
-    let intermediary_wallet = testkit.fetch_wallet(&intermediary_public_key);
+    
+    let seller_wallet = api.get_wallet(&seller_public_key);
+    let buyer_wallet = api.get_wallet(&buyer_public_key);
+    let genesis_wallet = api.get_wallet(&dmbc_testkit::default_genesis_key());
+    let intermediary_wallet = api.get_wallet(&intermediary_public_key);
 
     let assets_price = units * price;
     let trade_fee = tax * units;
@@ -305,16 +299,14 @@ fn trade_intermediary_fee_from_intermediary() {
     let expected_genesis_balance = genesis_balance + transaction_fee;
     let expected_intermediary_balance = balance - transaction_fee - trade_fee;
 
-    assert_eq!(seller_wallet.balance(), expected_sellers_balance);
-    assert_eq!(buyer_wallet.balance(), expected_buyer_balace);
-    assert_eq!(genesis_wallet.balance(), expected_genesis_balance);
-    assert_eq!(intermediary_wallet.balance(), expected_intermediary_balance);
-    assert!(seller_wallet.assets().is_empty());
-    assert_eq!(buyer_wallet.assets(),
-        vec![
-            asset
-        ]
-    );
+    assert_eq!(seller_wallet.balance, expected_sellers_balance);
+    assert_eq!(buyer_wallet.balance, expected_buyer_balace);
+    assert_eq!(genesis_wallet.balance, expected_genesis_balance);
+    assert_eq!(intermediary_wallet.balance, expected_intermediary_balance);
+
+    let buyer_assets = api.get_wallet_assets(&buyer_public_key).iter().map(|a| a.into()).collect::<Vec<AssetBundle>>();
+    assert!(seller_wallet.assets_count == 0);
+    assert_eq!(buyer_assets,vec![asset]);
 }
 
 #[test]
@@ -342,7 +334,7 @@ fn trade_intermediary_asset_not_found() {
         .create();
     let api = testkit.api();
 
-    let genesis_balance = testkit.fetch_wallet(&dmbc_testkit::default_genesis_key()).balance();
+    let genesis_balance = api.get_wallet(&dmbc_testkit::default_genesis_key()).balance;
 
     let tx_trade = transaction::Builder::new()
         .keypair(buyer_public_key, buyer_secret_key)
@@ -368,20 +360,20 @@ fn trade_intermediary_asset_not_found() {
     let (_, tx_status) = api.get_tx_status(&tx_trade);
     assert_eq!(tx_status, Ok(Err(Error::AssetNotFound)));
 
-    let seller_wallet = testkit.fetch_wallet(&seller_public_key);
-    let buyer_wallet = testkit.fetch_wallet(&buyer_public_key);
-    let genesis_wallet = testkit.fetch_wallet(&dmbc_testkit::default_genesis_key());
-    let intermediary_wallet = testkit.fetch_wallet(&intermediary_public_key);
+    let seller_wallet = api.get_wallet(&seller_public_key);
+    let buyer_wallet = api.get_wallet(&buyer_public_key);
+    let genesis_wallet = api.get_wallet(&dmbc_testkit::default_genesis_key());
+    let intermediary_wallet = api.get_wallet(&intermediary_public_key);
 
     let expected_sellers_balance = balance - transaction_fee / 2;
     let expected_buyer_balace = balance - transaction_fee / 2;
     let expected_genesis_balance = genesis_balance + transaction_fee;
     let expected_intermediary_balance = balance;
 
-    assert_eq!(seller_wallet.balance(), expected_sellers_balance);
-    assert_eq!(buyer_wallet.balance(), expected_buyer_balace);
-    assert_eq!(genesis_wallet.balance(), expected_genesis_balance);
-    assert_eq!(intermediary_wallet.balance(), expected_intermediary_balance);
+    assert_eq!(seller_wallet.balance, expected_sellers_balance);
+    assert_eq!(buyer_wallet.balance, expected_buyer_balace);
+    assert_eq!(genesis_wallet.balance, expected_genesis_balance);
+    assert_eq!(intermediary_wallet.balance, expected_intermediary_balance);
 }
 
 #[test]
@@ -410,7 +402,7 @@ fn trade_intermediary_insufficient_assets() {
         .create();
     let api = testkit.api();
 
-    let genesis_balance = testkit.fetch_wallet(&dmbc_testkit::default_genesis_key()).balance();
+    let genesis_balance = api.get_wallet(&dmbc_testkit::default_genesis_key()).balance;
     let insufficient_asset = AssetBundle::new(asset.id(), units * 2);
 
     let tx_trade = transaction::Builder::new()
@@ -437,20 +429,20 @@ fn trade_intermediary_insufficient_assets() {
     let (_, tx_status) = api.get_tx_status(&tx_trade);
     assert_eq!(tx_status, Ok(Err(Error::InsufficientAssets)));
 
-    let seller_wallet = testkit.fetch_wallet(&seller_public_key);
-    let buyer_wallet = testkit.fetch_wallet(&buyer_public_key);
-    let genesis_wallet = testkit.fetch_wallet(&dmbc_testkit::default_genesis_key());
-    let intermediary_wallet = testkit.fetch_wallet(&intermediary_public_key);
+    let seller_wallet = api.get_wallet(&seller_public_key);
+    let buyer_wallet = api.get_wallet(&buyer_public_key);
+    let genesis_wallet = api.get_wallet(&dmbc_testkit::default_genesis_key());
+    let intermediary_wallet = api.get_wallet(&intermediary_public_key);
 
     let expected_sellers_balance = balance - transaction_fee;
     let expected_buyer_balace = balance;
     let expected_genesis_balance = genesis_balance + transaction_fee;
     let expected_intermediary_balance = balance;
 
-    assert_eq!(seller_wallet.balance(), expected_sellers_balance);
-    assert_eq!(buyer_wallet.balance(), expected_buyer_balace);
-    assert_eq!(genesis_wallet.balance(), expected_genesis_balance);
-    assert_eq!(intermediary_wallet.balance(), expected_intermediary_balance);
+    assert_eq!(seller_wallet.balance, expected_sellers_balance);
+    assert_eq!(buyer_wallet.balance, expected_buyer_balace);
+    assert_eq!(genesis_wallet.balance, expected_genesis_balance);
+    assert_eq!(intermediary_wallet.balance, expected_intermediary_balance);
 }
 
 #[test]
@@ -479,7 +471,7 @@ fn trade_intermediary_insufficient_funds() {
         .create();
     let api = testkit.api();
 
-    let genesis_balance = testkit.fetch_wallet(&dmbc_testkit::default_genesis_key()).balance();
+    let genesis_balance = api.get_wallet(&dmbc_testkit::default_genesis_key()).balance;
     let insufficient_asset = AssetBundle::new(asset.id(), units * 2);
 
     let tx_trade = transaction::Builder::new()
@@ -506,19 +498,18 @@ fn trade_intermediary_insufficient_funds() {
     let (_, tx_status) = api.get_tx_status(&tx_trade);
     assert_eq!(tx_status, Ok(Err(Error::InsufficientFunds)));
 
-    let seller_wallet = testkit.fetch_wallet(&seller_public_key);
-    let buyer_wallet = testkit.fetch_wallet(&buyer_public_key);
-    let genesis_wallet = testkit.fetch_wallet(&dmbc_testkit::default_genesis_key());
-    let intermediary_wallet = testkit.fetch_wallet(&intermediary_public_key);
+    let seller_wallet = api.get_wallet(&seller_public_key);
+    let buyer_wallet = api.get_wallet(&buyer_public_key);
+    let genesis_wallet = api.get_wallet(&dmbc_testkit::default_genesis_key());
+    let intermediary_wallet = api.get_wallet(&intermediary_public_key);
 
     let expected_sellers_balance = balance;
     let expected_buyer_balace = balance;
     let expected_genesis_balance = genesis_balance;
     let expected_intermediary_balance = balance;
 
-    assert_eq!(seller_wallet.balance(), expected_sellers_balance);
-    assert_eq!(buyer_wallet.balance(), expected_buyer_balace);
-
-    assert_eq!(genesis_wallet.balance(), expected_genesis_balance);
-    assert_eq!(intermediary_wallet.balance(), expected_intermediary_balance);
+    assert_eq!(seller_wallet.balance, expected_sellers_balance);
+    assert_eq!(buyer_wallet.balance, expected_buyer_balace);
+    assert_eq!(genesis_wallet.balance, expected_genesis_balance);
+    assert_eq!(intermediary_wallet.balance, expected_intermediary_balance);
 }

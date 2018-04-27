@@ -26,10 +26,19 @@ pub const PARAMETER_META_DATA_KEY: &str = "meta_data";
 pub struct WalletApi {
     pub blockchain: Blockchain,
 }
-#[derive(Serialize, Deserialize, PartialEq, Debug)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct WalletInfo {
     pub balance: u64,
     pub assets_count: u64,
+}
+
+impl WalletInfo {
+    pub fn from(wallet: Wallet) -> Self {
+        WalletInfo {
+            balance: wallet.balance(),
+            assets_count: wallet.assets().len() as u64,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -47,6 +56,10 @@ impl ExtendedAsset {
             meta_data: info,
         }
     }
+
+    pub fn into(&self) -> AssetBundle {
+        AssetBundle::new(self.id, self.amount)
+    }
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
@@ -63,11 +76,13 @@ pub struct WalletAssetsResponseBody {
     pub assets: Vec<ExtendedAsset>,
 }
 
-pub type WalletResponse = Result<Wallet, ApiError>;
+pub type WalletResponse = Result<WalletInfo, ApiError>;
 
 pub type WalletsResponse = Result<WalletsResponseBody, ApiError>;
 
 pub type WalletAssetsResponse = Result<WalletAssetsResponseBody, ApiError>;
+
+pub type WalletAssetResponse = Result<ExtendedAsset, ApiError>;
 
 impl WalletApi {
     fn wallet(&self, pub_key: &PublicKey) -> Wallet {
@@ -80,10 +95,7 @@ impl WalletApi {
         let index = wallet::Schema(view).index();
         let mut result: HashMap<PublicKey, WalletInfo> = HashMap::new();
         for v in index.iter() {
-            let wi = WalletInfo {
-                balance: v.1.balance(),
-                assets_count: v.1.assets().len() as u64,
-            };
+            let wi = WalletInfo::from(v.1);
             result.insert(v.0, wi);
         }
 
@@ -105,10 +117,7 @@ impl WalletApi {
                 total += 1;
                 continue;
             }
-            let wi = WalletInfo {
-                balance: v.1.balance(),
-                assets_count: v.1.assets().len() as u64,
-            };
+            let wi = WalletInfo::from(v.1);
             result.insert(v.0, wi);
             count += 1;
             total += 1;
@@ -159,6 +168,14 @@ lazy_static! {
         "dmbc_wallet_api_assets_responses_total",
         "Wallet asset list responses."
     ).unwrap();
+    static ref ASSET_REQUESTS: IntCounter = register_int_counter!(
+        "dmbc_wallet_api_asset_requests_total",
+        "Wallet asset counter requests."
+    ).unwrap();
+    static ref ASSET_RESPONSES: IntCounter = register_int_counter!(
+        "dmbc_wallet_api_asset_responses_total",
+        "Wallet asset counter responses."
+    ).unwrap();
 }
 
 impl Api for WalletApi {
@@ -171,7 +188,10 @@ impl Api for WalletApi {
             let path = req.url.path();
             let wallet_key = path.last().unwrap();
             let result: WalletResponse = match PublicKey::from_hex(wallet_key) {
-                Ok(public_key) => Ok(self_.wallet(&public_key)),
+                Ok(public_key) => {
+                    let wallet = self_.wallet(&public_key);
+                    Ok(WalletInfo::from(wallet))
+                }
                 Err(_) => Err(ApiError::WalletHexInvalid),
             };
 
@@ -271,6 +291,63 @@ impl Api for WalletApi {
 
             Ok(res)
         };
+        let self_ = self.clone();
+        let wallet_asset_info = move |req: &mut Request| -> IronResult<Response> {
+            ASSET_REQUESTS.inc();
+
+            let public_key_result = {
+                let wallet_key = req.extensions
+                    .get::<Router>()
+                    .unwrap()
+                    .find("pub_key")
+                    .unwrap();
+                PublicKey::from_hex(wallet_key)
+            };
+            let asset_id_result = {
+                let id_hex = req.extensions
+                    .get::<Router>()
+                    .unwrap()
+                    .find("asset_id")
+                    .unwrap();
+                AssetId::from_hex(id_hex)
+            };
+            let result: WalletAssetResponse = match public_key_result {
+                Ok(public_key) => {
+                    match asset_id_result {
+                        Ok(id) => {
+                            let assets = self_.assets(&public_key);
+                            let info =
+                                if ServiceApi::read_parameter(req, PARAMETER_META_DATA_KEY, false) {
+                                    self_.asset_info(&id)
+                                } else {
+                                    None
+                                };
+                            match assets.iter()
+                                .find(|ref a| a.id() == id) {
+                                Some(asset) => Ok(ExtendedAsset::from_asset(asset, info)),
+                                None => Err(ApiError::AssetIdNotFound)
+                            }
+                        }
+                        Err(_) => Err(ApiError::AssetIdInvalid),
+                    }
+                },
+                Err(_) => Err(ApiError::WalletHexInvalid),
+            };
+
+            let mut res = Response::with((
+                result
+                    .clone()
+                    .err()
+                    .map(|e| e.to_status())
+                    .unwrap_or(status::Ok),
+                serde_json::to_string_pretty(&result).unwrap(),
+            ));
+            res.headers.set(ContentType::json());
+            res.headers.set(AccessControlAllowOrigin::Any);
+
+            ASSET_RESPONSES.inc();
+            Ok(res)
+        };
 
         router.get("/v1/wallets", wallets_info, "wallets_info");
         router.get("/v1/wallets/:pub_key", wallet_info, "get_balance");
@@ -278,6 +355,11 @@ impl Api for WalletApi {
             "/v1/wallets/:pub_key/assets",
             wallet_assets_info,
             "assets_info",
+        );
+        router.get(
+            "/v1/wallets/:pub_key/assets/:asset_id", 
+            wallet_asset_info,
+            "asset_info"
         );
     }
 }

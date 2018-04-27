@@ -12,7 +12,7 @@ pub mod dmbc_testkit;
 use hyper::status::StatusCode;
 use exonum::messages::Message;
 use exonum::crypto;
-use dmbc_testkit::{DmbcTestKit, DmbcTestApiBuilder, DmbcTestKitApi};
+use dmbc_testkit::{DmbcTestApiBuilder, DmbcTestKitApi};
 
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::api::transaction::TransactionResponse;
@@ -41,6 +41,6 @@ fn mine_wallet() {
     let (_, tx_status) = api.get_tx_status(&tx);
     assert_eq!(tx_status, Ok(Ok(())));
 
-    let wallet = testkit.fetch_wallet(&public_key);
-    assert_eq!(wallet.balance(), 100_000_000);
+    let wallet = api.get_wallet(&public_key);
+    assert_eq!(wallet.balance, 100_000_000);
 }
