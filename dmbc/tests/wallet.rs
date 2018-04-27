@@ -339,7 +339,7 @@ fn wallet_asset() {
 }
 
 #[test]
-fn wallet_asset_wiht_info() {
+fn wallet_asset_whit_info() {
     let meta_data = "asset";
     let units = 6;
     let tax = 11;

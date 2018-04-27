@@ -60,7 +60,6 @@ fn delete_assets_one_from_bundle() {
     let (_, tx_status) = api.get_tx_status(&tx_delete_assets);
     assert_eq!(tx_status, Ok(Ok(())));
 
-    // let wallet = testkit.fetch_wallet(&public_key);
     let wallet = api.get_wallet(&public_key);
     let wallet_assets = api.get_wallet_assets(&public_key);
     let assets: Vec<AssetBundle> = wallet_assets.iter().map(|a| a.into()).collect();
@@ -195,7 +194,6 @@ fn delete_assets_that_doent_exist2() {
     let (_, tx_status) = api.get_tx_status(&tx_delete_assets);
     assert_eq!(tx_status, Ok(Err(Error::AssetNotFound)));
 
-    // let wallet = testkit.fetch_wallet(&public_key);
     let wallet = api.get_wallet(&public_key);
     let wallet_assets = api.get_wallet_assets(&public_key);
     let assets = wallet_assets.iter().map(|a| a.into()).collect::<Vec<AssetBundle>>();

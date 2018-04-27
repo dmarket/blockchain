@@ -62,7 +62,6 @@ fn add_assets_mine_new_asset_to_receiver_empty_wallet() {
     assert_eq!(tx_status, Ok(Ok(())));
 
     // check creator wallet
-    // let creator = testkit.fetch_wallet(&creator_public_key);
     let creator = api.get_wallet(&creator_public_key);
     let expected_balance = balance - transaction_fee - per_asset_fee * units;
     assert_eq!(creator.balance, expected_balance);

@@ -429,7 +429,7 @@ fn trade_intermediary_insufficient_assets() {
     let (_, tx_status) = api.get_tx_status(&tx_trade);
     assert_eq!(tx_status, Ok(Err(Error::InsufficientAssets)));
 
-        let seller_wallet = api.get_wallet(&seller_public_key);
+    let seller_wallet = api.get_wallet(&seller_public_key);
     let buyer_wallet = api.get_wallet(&buyer_public_key);
     let genesis_wallet = api.get_wallet(&dmbc_testkit::default_genesis_key());
     let intermediary_wallet = api.get_wallet(&intermediary_public_key);

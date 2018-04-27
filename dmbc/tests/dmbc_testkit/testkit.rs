@@ -18,7 +18,8 @@ use dmbc::currency::assets::{self, AssetBundle, AssetInfo, Fees, MetaAsset, Asse
 use dmbc::currency::transactions::builders::fee;
 use dmbc::currency::api::transaction::{TxPostResponse, StatusResponse};
 use dmbc::currency::api::fees::FeesResponse;
-use dmbc::currency::api::wallet::{self as WalletApi, WalletResponse, WalletAssetsResponse,
+use dmbc::currency::api::wallet as wallet_api;
+use dmbc::currency::api::wallet::{WalletResponse, WalletAssetsResponse,
                                     WalletInfo, ExtendedAsset};
 use dmbc::currency::configuration::GENESIS_WALLET_PUB_KEY;
 
@@ -237,7 +238,7 @@ impl DmbcTestKitApi for ExonumTestKitApi {
             &format!(
                 "/v1/wallets/{}/assets?{}=true",
                 public_key.to_string(),
-                WalletApi::PARAMETER_META_DATA_KEY,
+                wallet_api::PARAMETER_META_DATA_KEY,
             )
         );
 
