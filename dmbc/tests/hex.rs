@@ -23,6 +23,9 @@ use dmbc::currency::transactions::components::FeeStrategy;
 
 #[test]
 fn hex_tx() {
+    unimplemented!();
+
+    /*
     let api = TestKit::default().api();
 
     let (public_key, secret_key) = crypto::gen_keypair();
@@ -40,6 +43,7 @@ fn hex_tx() {
 
     assert_eq!(status, StatusCode::Ok);
     assert_eq!(response, Ok(Some(HexResponse { hex })));
+    */
 }
 
 #[test]
@@ -69,6 +73,9 @@ fn hex_offer_tx() {
 
 #[test]
 fn hex_offer_tx_without_offer() {
+    unimplemented!();
+
+    /*
     let api = TestKit::default().api();
 
     let (public_key, secret_key) = crypto::gen_keypair();
@@ -85,6 +92,7 @@ fn hex_offer_tx_without_offer() {
 
     assert_eq!(status, StatusCode::Ok);
     assert_eq!(response, Ok(None));
+    */
 }
 
 #[test]

@@ -19,6 +19,8 @@ use dmbc::currency::api::transaction::TransactionResponse;
 
 #[test]
 fn mine_wallet() {
+    unimplemented!();
+    /*
     let (public_key, secret_key) = crypto::gen_keypair();
     let tx = transaction::Builder::new()
         .keypair(public_key, secret_key.clone())
@@ -43,4 +45,5 @@ fn mine_wallet() {
 
     let wallet = api.get_wallet(&public_key);
     assert_eq!(wallet.balance, 100_000_000);
+    */
 }

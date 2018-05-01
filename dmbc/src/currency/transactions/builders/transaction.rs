@@ -12,7 +12,6 @@ use currency::transactions::delete_assets::DeleteAssets;
 use currency::transactions::exchange::{Exchange, ExchangeOffer};
 use currency::transactions::exchange_intermediary::{ExchangeIntermediary,
                                                     ExchangeOfferIntermediary};
-use currency::transactions::mine::Mine;
 use currency::transactions::trade::{Trade, TradeOffer};
 use currency::transactions::trade_intermediary::{TradeIntermediary, TradeOfferIntermediary};
 use currency::transactions::transfer::Transfer;
@@ -106,11 +105,6 @@ impl Builder {
     pub fn tx_exchange_with_intermediary(self) -> ExchangeIntermediaryBuilder {
         self.validate();
         ExchangeIntermediaryBuilder::new(self.into())
-    }
-
-    pub fn tx_mine(self) -> MineBuilder {
-        self.validate();
-        MineBuilder::new(self.into())
     }
 
     pub fn tx_trade_assets(self) -> TradeBuilder {
@@ -506,28 +500,6 @@ impl ExchangeIntermediaryBuilder {
     }
 }
 
-pub struct MineBuilder {
-    meta: TransactionMetadata,
-    seed: u64,
-}
-
-impl MineBuilder {
-    fn new(meta: TransactionMetadata) -> Self {
-        MineBuilder { meta, seed: 0 }
-    }
-
-    pub fn seed(self, seed: u64) -> Self {
-        MineBuilder { seed, ..self }
-    }
-
-    pub fn build(self) -> Mine {
-        self.verify();
-        Mine::new(&self.meta.public_key, self.seed, &self.meta.secret_key)
-    }
-
-    fn verify(&self) {}
-}
-
 pub struct TradeBuilder {
     meta: TransactionMetadata,
     seller_public: Option<PublicKey>,
@@ -816,7 +788,6 @@ mod test {
     use currency::transactions::exchange::{Exchange, ExchangeOffer};
     use currency::transactions::exchange_intermediary::{ExchangeIntermediary,
                                                         ExchangeOfferIntermediary};
-    use currency::transactions::mine::Mine;
     use currency::transactions::trade::{Trade, TradeOffer};
     use currency::transactions::trade_intermediary::{TradeIntermediary, TradeOfferIntermediary};
     use currency::transactions::transfer::Transfer;
@@ -832,6 +803,9 @@ mod test {
 
     #[test]
     fn not_equal() {
+        unimplemented!();
+
+        /*
         let (public_key, secret_key) = crypto::gen_keypair();
         let transaction = transaction::Builder::new()
             .keypair(public_key, secret_key.clone())
@@ -842,6 +816,7 @@ mod test {
         let equivalent = Mine::new(&public_key, 18, &secret_key);
 
         assert_ne!(transaction, equivalent);
+        */
     }
 
     #[test]
@@ -973,20 +948,6 @@ mod test {
             "test_exchange",
             &recipient_sk,
         );
-
-        assert_eq!(transaction, equivalent);
-    }
-
-    #[test]
-    fn mine() {
-        let (public_key, secret_key) = crypto::gen_keypair();
-        let transaction = transaction::Builder::new()
-            .keypair(public_key, secret_key.clone())
-            .tx_mine()
-            .seed(9)
-            .build();
-
-        let equivalent = Mine::new(&public_key, 9, &secret_key);
 
         assert_eq!(transaction, equivalent);
     }
