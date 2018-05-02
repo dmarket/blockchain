@@ -20,8 +20,8 @@ doc = false
 
 [dependencies]
 dmbc = { path = "../dmbc", features = ["fuzzing"] }
-exonum = "0.4"
-exonum-testkit = "0.1"
+exonum = "0.5"
+exonum-testkit = "0.5"
 toml = "0.4.5"
 serde = "1.0"
 serde_derive = "1.0"

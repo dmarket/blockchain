@@ -78,6 +78,7 @@ fn main() {
         status_timeout: 5000,
         peers_timeout: 10_000,
         txs_block_limit: 1000,
+        max_message_len: ConsensusConfig::DEFAULT_MESSAGE_MAX_LEN,
         timeout_adjuster: TimeoutAdjusterConfig::Dynamic {
             min: 200,
             max: 1000,

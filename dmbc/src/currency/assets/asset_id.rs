@@ -173,7 +173,7 @@ impl Error for ParseError {
 }
 
 impl ExonumJson for AssetId {
-    fn serialize_field(&self) -> Result<serde_json::Value, Box<Error>> {
+    fn serialize_field(&self) -> Result<serde_json::value::Value, Box<Error + Send + Sync>> {
         Ok(serde_json::Value::String(self.to_string()))
     }
 

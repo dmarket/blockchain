@@ -1,10 +1,11 @@
 use exonum::api::Api;
 use exonum::blockchain;
 use exonum::blockchain::{ApiContext, ServiceContext, Transaction};
-use exonum::crypto::PublicKey;
+use exonum::crypto::{PublicKey, Hash};
 use exonum::encoding;
 use exonum::encoding::serialize::FromHex;
 use exonum::messages::RawTransaction;
+use exonum::messages::Message;
 use exonum::storage::Fork;
 use exonum::storage::Snapshot;
 use iron::Handler;
@@ -61,6 +62,10 @@ impl blockchain::Service for Service {
 
     fn service_id(&self) -> u16 {
         SERVICE_ID
+    }
+
+    fn state_hash(&self, _snapshot: &Snapshot) -> Vec<Hash> {
+        vec![]
     }
 
     fn tx_from_raw(&self, raw: RawTransaction) -> Result<Box<Transaction>, encoding::Error> {

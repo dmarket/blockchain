@@ -8,7 +8,7 @@ extern crate serde_json;
 extern crate log;
 extern crate env_logger;
 
-use dmbc::currency::assets::{AssetBundle, AssetId};
+use dmbc::currency::assets::AssetId;
 use dmbc::currency::wallet::Wallet as EvoWallet;
 //use dmbc::service::builders::fee;
 //use dmbc::service::builders::transaction;
@@ -16,7 +16,7 @@ use exonum::crypto;
 use exonum::crypto::{PublicKey, SecretKey};
 use exonum::encoding::serialize::FromHex;
 use node_client::EvoClient;
-use serde_json::Value;
+// use serde_json::Value;
 use std::collections::HashMap;
 use std::thread::sleep;
 use std::time::Duration;

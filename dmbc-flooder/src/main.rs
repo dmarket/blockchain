@@ -20,6 +20,7 @@ use serde::Serialize;
 use dmbc::currency::assets::{AssetBundle, AssetId, MetaAsset, TradeAsset};
 use dmbc::currency::transactions::builders::fee;
 use dmbc::currency::transactions::builders::transaction;
+use dmbc::currency::transactions::components::FeeStrategy;
 
 type Wallet = (PublicKey, SecretKey);
 
@@ -130,13 +131,13 @@ impl Flooder {
                 let r_asset = self.pick_asset();
 
                 let tx = transaction::Builder::new()
-                    .keypair(sender.0, sender.1)
+                    .keypair(receiver.0, receiver.1)
                     .tx_exchange()
+                    .sender(sender.0)
                     .sender_add_asset_value(s_asset)
                     .sender_value(9)
-                    .recipient(receiver.0)
                     .recipient_add_asset_value(r_asset)
-                    .fee_strategy(1)
+                    .fee_strategy(FeeStrategy::Recipient)
                     .build();
 
                 serialize(tx)
@@ -151,15 +152,15 @@ impl Flooder {
                 let r_asset = self.pick_asset();
 
                 let tx = transaction::Builder::new()
-                    .keypair(sender.0, sender.1)
+                    .keypair(receiver.0, receiver.1)
                     .tx_exchange_with_intermediary()
                     .intermediary_key_pair(intermediary.0, intermediary.1)
                     .commission(10)
                     .sender_add_asset_value(s_asset)
                     .sender_value(9)
-                    .recipient(receiver.0)
+                    .sender_key_pair(sender.0, sender.1)
                     .recipient_add_asset_value(r_asset)
-                    .fee_strategy(1)
+                    .fee_strategy(FeeStrategy::Recipient)
                     .build();
 
                 serialize(tx)
@@ -181,9 +182,9 @@ impl Flooder {
                 let asset = self.pick_asset();
 
                 let tx = transaction::Builder::new()
-                    .keypair(seller.0, seller.1)
+                    .keypair(buyer.0, buyer.1)
                     .tx_trade_assets()
-                    .buyer(buyer.0)
+                    .seller(seller.0, seller.1)
                     .add_asset_value(TradeAsset::from_bundle(asset, 50))
                     .build();
 
@@ -197,9 +198,9 @@ impl Flooder {
                 let asset = self.pick_asset();
 
                 let tx = transaction::Builder::new()
-                    .keypair(seller.0, seller.1)
+                    .keypair(buyer.0, buyer.1)
                     .tx_trade_assets_with_intermediary()
-                    .buyer(buyer.0)
+                    .seller(seller.0, seller.1)
                     .intermediary_key_pair(intermediary.0, intermediary.1)
                     .commission(1_0000_0000)
                     .add_asset_value(TradeAsset::from_bundle(asset, 50))

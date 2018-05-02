@@ -5,7 +5,6 @@ use exonum::crypto::PublicKey;
 use exonum::messages::Message;
 use exonum::storage::Fork;
 use prometheus::{IntCounter, Histogram};
-use serde_json;
 
 use currency::assets::AssetBundle;
 use currency::configuration::Configuration;
@@ -23,14 +22,13 @@ message! {
     struct Transfer {
         const TYPE = SERVICE_ID;
         const ID = TRANSFER_ID;
-        const SIZE = 96;
 
-        field from:      &PublicKey       [00 => 32]
-        field to:        &PublicKey       [32 => 64]
-        field amount:    u64              [64 => 72]
-        field assets:    Vec<AssetBundle> [72 => 80]
-        field seed:      u64              [80 => 88]
-        field data_info: &str             [88 => 96]
+        from:      &PublicKey,
+        to:        &PublicKey,
+        amount:    u64,
+        assets:    Vec<AssetBundle>,
+        seed:      u64,
+        data_info: &str,
     }
 }
 
@@ -161,9 +159,5 @@ impl Transaction for Transfer {
 
         timer.observe_duration();
         EXECUTE_FINISH_COUNT.inc();
-    }
-
-    fn info(&self) -> serde_json::Value {
-        json!(self)
     }
 }

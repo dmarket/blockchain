@@ -6,10 +6,8 @@ use currency::assets::TradeAsset;
 encoding_struct! {
     /// A bundle of assets with the same id.
     struct AssetBundle {
-        const SIZE = 24;
-
-        field id:     AssetId [0  => 16]
-        field amount: u64     [16 => 24]
+        id:     AssetId,
+        amount: u64,
     }
 }
 

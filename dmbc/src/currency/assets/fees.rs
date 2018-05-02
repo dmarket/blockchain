@@ -1,21 +1,17 @@
 encoding_struct! {
     /// Fee data for specific kind of operations.
     struct Fee {
-        const SIZE = 16;
-
-        field tax:   u64  [0 => 8]
-        field ratio: u64  [8 => 16]
+        tax:   u64,
+        ratio: u64,
     }
 }
 
 encoding_struct! {
     /// Third party fee data, part of `AssetInfo`.
     struct Fees {
-        const SIZE = 24;
-
-        field trade:    Fee [ 0 => 8]
-        field exchange: Fee [ 8 => 16]
-        field transfer: Fee [16 => 24]
+        trade:    Fee,
+        exchange: Fee,
+        transfer: Fee,
     }
 }
 

@@ -1,8 +1,8 @@
 extern crate serde_json;
 
-use mount::Mount;
 use hyper::status::StatusCode;
 use iron_test::{request, response};
+use iron::Handler;
 use iron::headers::{ContentType, Headers};
 
 use exonum::crypto::{self, PublicKey};
@@ -109,8 +109,8 @@ impl DmbcTestKit for ExonumTestKit {
 
 
 pub trait DmbcTestKitApi {
-    fn get_internal_with_status<D>(mount: &Mount, url: &str) -> (StatusCode, D) 
-    where for <'de> D: Deserialize<'de>;
+    fn get_internal_with_status<H, D>(handler: &H, endpoint: &str) -> (StatusCode, D) 
+    where H: Handler, for <'de> D: Deserialize<'de>;
 
     fn get_with_status<D>(&self, endpoint: &str) -> (StatusCode, D)
     where for<'de> D: Deserialize<'de>;
@@ -140,11 +140,11 @@ pub trait DmbcTestKitApi {
 
 impl DmbcTestKitApi for ExonumTestKitApi {
 
-    fn get_internal_with_status<D>(mount: &Mount, endpoint: &str) -> (StatusCode, D) 
-    where for <'de> D: Deserialize<'de>
+    fn get_internal_with_status<H, D>(handler: &H, endpoint: &str) -> (StatusCode, D) 
+    where H: Handler, for <'de> D: Deserialize<'de>
     {
         let url = format!("http://localhost:3000/api/services/{}/{}", SERVICE_NAME, endpoint);
-        let response = request::get(&url, Headers::new(), mount).unwrap();
+        let response = request::get(&url, Headers::new(), handler).unwrap();
         let status = response.status.unwrap();
         let body = response::extract_body_to_string(response);
         (status, serde_json::from_str(&body).unwrap())
@@ -154,7 +154,7 @@ impl DmbcTestKitApi for ExonumTestKitApi {
     where for <'de> D: Deserialize<'de>
     {
         ExonumTestKitApi::get_internal_with_status(
-            self.public_mount(),
+            self.public_handler(),
             endpoint, 
         )
     }
@@ -171,7 +171,7 @@ impl DmbcTestKitApi for ExonumTestKitApi {
                 headers
             },
             &body,
-            self.public_mount(),
+            self.public_handler(),
         ).expect("Cannot send data");
         let status = response.status.unwrap();
         let body = response::extract_body_to_string(response);
@@ -186,7 +186,7 @@ impl DmbcTestKitApi for ExonumTestKitApi {
             &url,
             headers,
             &body,
-            self.public_mount(),
+            self.public_handler(),
         ).expect("Cannot send data");
         let status = response.status.unwrap();
         let body = response::extract_body_to_string(response);
