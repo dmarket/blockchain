@@ -24,8 +24,8 @@ use exonum_testkit::TestKitBuilder;
 
 use dmbc::currency::transactions::builders::fee;
 use dmbc::currency::transactions::builders::transaction;
-use dmbc::currency::transactions::{AddAssets, DeleteAssets, Exchange, Mine, Trade, Transfer,
-                                   ADD_ASSETS_ID, DELETE_ASSETS_ID, EXCHANGE_ID, MINE_ID,
+use dmbc::currency::transactions::{AddAssets, DeleteAssets, Exchange, Trade, Transfer,
+                                   ADD_ASSETS_ID, DELETE_ASSETS_ID, EXCHANGE_ID,
                                    TRADE_ID, TRANSFER_ID};
 use dmbc::currency::Service;
 
@@ -90,7 +90,6 @@ fn tx_from_raw(rm: RawMessage) -> Result<Box<Transaction>, Box<Error>> {
         TRANSFER_ID => Transfer::from_raw(rm)
             .map(|t| t.into())
             .map_err(|e| e.into()),
-        MINE_ID => Mine::from_raw(rm).map(|t| t.into()).map_err(|e| e.into()),
         _ => Err(Box::new(TxFromRawError)),
     }
 }

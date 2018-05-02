@@ -18,9 +18,9 @@ use currency::api::ServiceApi;
 use currency::configuration;
 use currency::configuration::Configuration;
 use currency::status;
-use currency::transactions::{AddAssets, DeleteAssets, Exchange, ExchangeIntermediary, Mine, Trade,
+use currency::transactions::{AddAssets, DeleteAssets, Exchange, ExchangeIntermediary, Trade,
                              TradeIntermediary, Transfer, ADD_ASSETS_ID, DELETE_ASSETS_ID,
-                             EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID, MINE_ID, TRADE_ID,
+                             EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID, TRADE_ID,
                              TRADE_INTERMEDIARY_ID, TRANSFER_ID};
 use currency::wallet;
 use currency::wallet::Wallet;
@@ -74,7 +74,6 @@ impl blockchain::Service for Service {
             DELETE_ASSETS_ID => Box::new(DeleteAssets::from_raw(raw)?),
             EXCHANGE_ID => Box::new(Exchange::from_raw(raw)?),
             EXCHANGE_INTERMEDIARY_ID => Box::new(ExchangeIntermediary::from_raw(raw)?),
-            MINE_ID => Box::new(Mine::from_raw(raw)?),
             TRADE_ID => Box::new(Trade::from_raw(raw)?),
             TRADE_INTERMEDIARY_ID => Box::new(TradeIntermediary::from_raw(raw)?),
             TRANSFER_ID => Box::new(Transfer::from_raw(raw)?),
