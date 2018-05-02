@@ -56,7 +56,7 @@ impl Pipe {
         let mut client = match Client::new(config::config().nats().addresses()) {
             Ok(client) => client,
             Err(e) => {
-                println!("Error when creating NATS client: {:?}", e);
+                warn!("Error when creating NATS client: {}", e);
                 return;
             }
         };
@@ -66,16 +66,16 @@ impl Pipe {
 
         let mut process_pair = |pair: PublishPair| match mode {
             Mode::Publish => match client.publish(&pair.0, pair.1.as_bytes()) {
-                Ok(_) => println!("success published"),
+                Ok(_) => info!("success published"),
                 Err(e) => {
-                    println!("{:?}", e);
-                    println!("Discarding messages for {} seconds.", DISCARD_MODE_SECONDS);
+                    warn!("{:?}", e);
+                    warn!("Discarding messages for {} seconds.", DISCARD_MODE_SECONDS);
                     mode = Mode::Discard(Instant::now());
                 }
             },
             Mode::Discard(begin) if begin.elapsed() < discard_duration => (),
             Mode::Discard(_) => {
-                println!("Accepting messages again.");
+                info!("Accepting messages again.");
                 mode = Mode::Publish;
             }
         };

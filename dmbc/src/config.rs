@@ -127,7 +127,7 @@ impl Api {
                             let mut a = addr;
                             peers.push(a.next().unwrap());
                         }
-                        Err(e) => println!("Error: {:?}", e),
+                        Err(e) => warn!("Error: {}", e),
                     }
                 }
                 peers
