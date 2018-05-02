@@ -13,15 +13,13 @@ encoding_struct! {
     /// Fixed fees to be paid to the genesis wallet when transaction is executed.
     #[derive(Eq, PartialOrd, Ord)]
     struct TransactionFees {
-        const SIZE = 80;
-
-        field recipient:     &PublicKey [0  => 32]
-        field add_assets:           u64 [32 => 40]
-        field add_assets_per_entry: u64 [40 => 48]
-        field delete_assets:        u64 [48 => 56]
-        field exchange:             u64 [56 => 64]
-        field trade:                u64 [64 => 72]
-        field transfer:             u64 [72 => 80]
+        recipient:     &PublicKey,
+        add_assets:           u64,
+        add_assets_per_entry: u64,
+        delete_assets:        u64,
+        exchange:             u64,
+        trade:                u64,
+        transfer:             u64,
     }
 }
 
@@ -64,9 +62,7 @@ encoding_struct! {
     /// Currency service configuration.
     #[derive(Eq, PartialOrd, Ord)]
     struct Configuration {
-        const SIZE = 8;
-
-        field fees: TransactionFees   [0 => 8]
+        fees: TransactionFees,
     }
 }
 

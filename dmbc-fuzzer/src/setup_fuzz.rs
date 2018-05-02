@@ -15,6 +15,7 @@ use std::io::{ErrorKind, Read, Write};
 
 use dmbc::currency::transactions::builders::fee;
 use dmbc::currency::transactions::builders::transaction;
+use dmbc::currency::transactions::components::FeeStrategy;
 use exonum::crypto;
 use exonum::crypto::SecretKey;
 use exonum::storage::StorageValue;
@@ -82,13 +83,13 @@ fn setup() -> Result<(), Box<Error>> {
     tx_file("./fuzz-in/tx_exchange.in")
         .and_then(|mut f| {
             let tx = transaction::Builder::new()
-                .keypair(data.alice, SecretKey::zero())
+                .keypair(data.bob, SecretKey::zero())
                 .tx_exchange()
                 .sender_add_asset("alice_asset", 10)
                 .sender_value(1000)
-                .recipient(data.bob)
+                .sender(data.alice)
                 .recipient_add_asset("bob_asset", 10)
-                .fee_strategy(1)
+                .fee_strategy(FeeStrategy::Recipient)
                 .seed(83)
                 .build()
                 .into_bytes();
@@ -111,9 +112,9 @@ fn setup() -> Result<(), Box<Error>> {
     tx_file("./fuzz-in/tx_trade_assets.in")
         .and_then(|mut f| {
             let tx = transaction::Builder::new()
-                .keypair(data.alice, SecretKey::zero())
+                .keypair(data.bob, SecretKey::zero())
                 .tx_trade_assets()
-                .buyer(data.bob)
+                .seller(data.alice, SecretKey::zero())
                 .add_asset("alice_asset", 10, 9001)
                 .seed(38)
                 .build()

@@ -803,20 +803,34 @@ mod test {
 
     #[test]
     fn not_equal() {
-        unimplemented!();
-
-        /*
         let (public_key, secret_key) = crypto::gen_keypair();
-        let transaction = transaction::Builder::new()
-            .keypair(public_key, secret_key.clone())
-            .tx_mine()
-            .seed(9)
+        let (receiver_key, _) = crypto::gen_keypair();
+
+        let fees_foobar = fee::Builder::new()
+            .trade(10, 10)
+            .exchange(10, 10)
+            .transfer(10, 10)
             .build();
 
-        let equivalent = Mine::new(&public_key, 18, &secret_key);
+        let fees_bazqux = fee::Builder::new()
+            .trade(11, 10)
+            .exchange(11, 10)
+            .transfer(11, 10)
+            .build();
+
+        let asset_foobar = MetaAsset::new(&receiver_key, "foobar", 9, fees_foobar);
+        let asset_bazqux = MetaAsset::new(&receiver_key, "bazqux", 18, fees_bazqux);
+
+        let transaction = transaction::Builder::new()
+            .keypair(public_key, secret_key.clone())
+            .tx_add_assets()
+            .add_asset_value(asset_foobar.clone())
+            .build();
+
+        let assets = vec![asset_bazqux];
+        let equivalent = AddAssets::new(&public_key, assets, 0, &secret_key);
 
         assert_ne!(transaction, equivalent);
-        */
     }
 
     #[test]

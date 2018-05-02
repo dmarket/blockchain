@@ -6,7 +6,6 @@ use exonum::crypto::{PublicKey, Signature};
 use exonum::messages::Message;
 use exonum::storage::Fork;
 use prometheus::{IntCounter, Histogram};
-use serde_json;
 
 use currency::assets::TradeAsset;
 use currency::configuration::Configuration;
@@ -21,13 +20,11 @@ pub const TRADE_ID: u16 = 501;
 
 encoding_struct! {
     struct TradeOffer {
-        const SIZE = 73;
+        buyer: &PublicKey,
+        seller: &PublicKey,
+        assets: Vec<TradeAsset>,
 
-        field buyer: &PublicKey         [00 => 32]
-        field seller: &PublicKey        [32 => 64]
-        field assets: Vec<TradeAsset>   [64 => 72]
-
-        field fee_strategy: u8          [72 => 73]
+        fee_strategy: u8,
     }
 }
 
@@ -36,11 +33,10 @@ message! {
     struct Trade {
         const TYPE = SERVICE_ID;
         const ID = TRADE_ID;
-        const SIZE = 80;
 
-        field offer:              TradeOffer    [00 => 8]
-        field seed:               u64           [8 => 16]
-        field seller_signature:   &Signature    [16 => 80]
+        offer:              TradeOffer,
+        seed:               u64,
+        seller_signature:   &Signature,
     }
 }
 
@@ -282,9 +278,5 @@ impl Transaction for Trade {
 
         timer.observe_duration();
         EXECUTE_FINISH_COUNT.inc();
-    }
-
-    fn info(&self) -> serde_json::Value {
-        json!(self)
     }
 }

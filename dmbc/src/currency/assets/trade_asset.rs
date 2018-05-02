@@ -3,11 +3,9 @@ use currency::assets::{AssetBundle, AssetId};
 encoding_struct! {
     /// Asset representation to used in `trade` transactions.
     struct TradeAsset {
-        const SIZE = 32;
-
-        field id: AssetId [0 => 16]
-        field amount: u64 [16 => 24]
-        field price:  u64 [24 => 32]
+        id: AssetId,
+        amount: u64,
+        price:  u64,
     }
 }
 

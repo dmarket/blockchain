@@ -6,8 +6,8 @@ authors = ["Ilya Sinyakin <sinyakin.ilya@gmail.com>", "Mikola Samardak <niksaak@
 [dependencies]
 dmbc = { path = "../dmbc" }
 hyper = "0.11"
-exonum = "0.4"
-exonum-configuration = "0.4"
+exonum = "0.5"
+exonum-configuration = "0.5"
 futures = "0.1"
 url = "1.6"
 serde = "1.0"

@@ -19,7 +19,7 @@ use std::process;
 
 use exonum::blockchain::Transaction;
 use exonum::crypto::SecretKey;
-use exonum::messages::{MessageBuffer, RawMessage};
+use exonum::messages::{MessageBuffer, RawMessage, Message};
 use exonum_testkit::TestKitBuilder;
 
 use dmbc::currency::transactions::builders::fee;

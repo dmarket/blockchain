@@ -7,10 +7,8 @@ encoding_struct! {
     /// Wallet data.
     #[derive(Eq, PartialOrd, Ord)]
     struct Wallet {
-        const SIZE = 16;
-
-        field balance: u64              [0 => 8]
-        field assets:  Vec<AssetBundle> [8 => 16]
+        balance: u64,
+        assets:  Vec<AssetBundle>,
     }
 }
 

@@ -6,12 +6,10 @@ use currency::error::Error;
 encoding_struct! {
     /// Information about an asset in the network.
     struct AssetInfo {
-        const SIZE = 80;
-
-        field creator: &PublicKey [0  => 32]
-        field origin:  &Hash      [32 => 64]
-        field amount:  u64        [64 => 72]
-        field fees:    Fees       [72 => 80]
+        creator: &PublicKey,
+        origin:  &Hash,
+        amount:  u64,
+        fees:    Fees,
     }
 }
 
