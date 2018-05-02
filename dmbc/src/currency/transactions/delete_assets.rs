@@ -5,7 +5,6 @@ use exonum::crypto::PublicKey;
 use exonum::messages::Message;
 use exonum::storage::Fork;
 use prometheus::{IntCounter, Histogram};
-use serde_json;
 
 use currency::assets;
 use currency::assets::AssetBundle;
@@ -24,11 +23,10 @@ message! {
     struct DeleteAssets {
         const TYPE = SERVICE_ID;
         const ID = DELETE_ASSETS_ID;
-        const SIZE = 48;
 
-        field pub_key:     &PublicKey       [00 => 32]
-        field assets:      Vec<AssetBundle> [32 => 40]
-        field seed:        u64              [40 => 48]
+        pub_key:     &PublicKey,
+        assets:      Vec<AssetBundle>,
+        seed:        u64,
     }
 }
 
@@ -146,9 +144,5 @@ impl Transaction for DeleteAssets {
 
         timer.observe_duration();
         EXECUTE_FINISH_COUNT.inc();
-    }
-
-    fn info(&self) -> serde_json::Value {
-        json!(self)
     }
 }

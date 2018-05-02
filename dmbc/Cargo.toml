@@ -18,8 +18,8 @@ serde_json = "1.0"
 serde_derive = "1.0"
 toml = "0.4.5"
 uuid = { version = "0.5", features = ["v5"] }
-exonum = "0.4"
-exonum-configuration = "0.4"
+exonum = "0.5"
+exonum-configuration = "0.5"
 hyper = "0.10.13"
 unicase = "1.0"
 log = "0.4"
@@ -28,7 +28,7 @@ prometheus = "0.4"
 lazy_static = "1.0"
 
 [dev-dependencies]
-exonum-testkit = "0.1.1"
+exonum-testkit = "0.5"
 mount = "0.4"
 
 [dev-dependencies.iron-test]

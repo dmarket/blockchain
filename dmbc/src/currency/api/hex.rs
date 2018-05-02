@@ -7,6 +7,7 @@ extern crate serde_json;
 
 use exonum::api::Api;
 use exonum::blockchain::Transaction;
+use exonum::messages::Message;
 use hyper::header::ContentType;
 use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;

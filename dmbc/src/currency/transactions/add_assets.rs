@@ -6,7 +6,6 @@ use exonum::crypto::PublicKey;
 use exonum::messages::Message;
 use exonum::storage::Fork;
 use prometheus::{IntCounter, Histogram};
-use serde_json;
 
 use currency::assets;
 use currency::assets::{AssetId, AssetInfo, MetaAsset};
@@ -25,11 +24,10 @@ message!{
     struct AddAssets {
         const TYPE = SERVICE_ID;
         const ID = ADD_ASSETS_ID;
-        const SIZE = 48;
 
-        field pub_key:     &PublicKey     [00 => 32]
-        field meta_assets: Vec<MetaAsset> [32 => 40]
-        field seed:        u64            [40 => 48]
+        pub_key:     &PublicKey,
+        meta_assets: Vec<MetaAsset>,
+        seed:        u64,
     }
 }
 
@@ -178,9 +176,5 @@ impl Transaction for AddAssets {
 
         timer.observe_duration();
         EXECUTE_FINISH_COUNT.inc();
-    }
-
-    fn info(&self) -> serde_json::Value {
-        json!(self)
     }
 }

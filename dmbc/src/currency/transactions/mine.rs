@@ -3,7 +3,6 @@ use exonum::crypto::PublicKey;
 use exonum::messages::Message;
 use exonum::storage::Fork;
 use prometheus::{IntCounter, Histogram};
-use serde_json;
 
 use currency::error::Error;
 use currency::status;
@@ -19,10 +18,9 @@ message! {
     struct Mine {
         const TYPE = SERVICE_ID;
         const ID = MINE_ID;
-        const SIZE = 40;
 
-        field pub_key: &PublicKey [00 => 32]
-        field seed:    u64        [32 => 40]
+        pub_key: &PublicKey,
+        seed:    u64,
     }
 }
 
@@ -93,9 +91,5 @@ impl Transaction for Mine {
 
         timer.observe_duration();
         EXECUTE_FINISH_COUNT.inc();
-    }
-
-    fn info(&self) -> serde_json::Value {
-        json!(self)
     }
 }

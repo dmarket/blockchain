@@ -7,12 +7,10 @@ pub const ASSET_DATA_MAX_LENGTH: usize = 10 * 1024;
 encoding_struct! {
     /// Info for asset to be committed into the network in `add_assets` transaction.
     struct MetaAsset {
-        const SIZE = 56;
-
-        field receiver:  &PublicKey [0  => 32]
-        field data:      &str       [32 => 40]
-        field amount:    u64        [40 => 48]
-        field fees:      Fees       [48 => 56]
+        receiver:  &PublicKey,
+        data:      &str,
+        amount:    u64,
+        fees:      Fees,
     }
 }
 

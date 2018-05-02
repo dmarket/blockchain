@@ -10,7 +10,7 @@ pub fn create_add_asset_tx(wallet: Wallet, assets: Vec<MetaAsset>) -> String {
     let tx = transaction::Builder::new()
         .keypair(wallet.public, wallet.secret.clone())
         .tx_add_assets()
-        .add_assets_value(assets)
+        .add_asset_value(assets[0].clone())
         .build();
 
     serialize(tx)

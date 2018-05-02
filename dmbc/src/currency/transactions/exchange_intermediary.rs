@@ -6,7 +6,6 @@ use exonum::crypto::{PublicKey, Signature};
 use exonum::messages::Message;
 use exonum::storage::Fork;
 use prometheus::{IntCounter, Histogram};
-use serde_json;
 
 use currency::assets::AssetBundle;
 use currency::configuration::Configuration;
@@ -21,18 +20,16 @@ pub const EXCHANGE_INTERMEDIARY_ID: u16 = 602;
 
 encoding_struct! {
     struct ExchangeOfferIntermediary {
-        const SIZE = 97;
+        intermediary:     Intermediary,
 
-        field intermediary:     Intermediary     [00 =>  8]
+        sender:           &PublicKey,
+        sender_assets:    Vec<AssetBundle>,
+        sender_value:     u64,
 
-        field sender:           &PublicKey       [08 => 40]
-        field sender_assets:    Vec<AssetBundle> [40 => 48]
-        field sender_value:     u64              [48 => 56]
+        recipient:        &PublicKey,
+        recipient_assets: Vec<AssetBundle>,
 
-        field recipient:        &PublicKey       [56 => 88]
-        field recipient_assets: Vec<AssetBundle> [88 => 96]
-
-        field fee_strategy:     u8               [96 => 97]
+        fee_strategy:     u8,
     }
 }
 
@@ -41,13 +38,12 @@ message! {
     struct ExchangeIntermediary {
         const TYPE = SERVICE_ID;
         const ID = EXCHANGE_INTERMEDIARY_ID;
-        const SIZE = 152;
 
-        field offer:                  ExchangeOfferIntermediary [0 => 8]
-        field seed:                   u64                       [8 => 16]
-        field sender_signature:       &Signature                [16 => 80]
-        field intermediary_signature: &Signature                [80 => 144]
-        field data_info:              &str                      [144 => 152]
+        offer:                  ExchangeOfferIntermediary,
+        seed:                   u64,
+        sender_signature:       &Signature,
+        intermediary_signature: &Signature,
+        data_info:              &str,
     }
 }
 
@@ -283,9 +279,5 @@ impl Transaction for ExchangeIntermediary {
 
         timer.observe_duration();
         EXECUTE_FINISH_COUNT.inc();
-    }
-
-    fn info(&self) -> serde_json::Value {
-        json!(self)
     }
 }

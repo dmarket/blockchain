@@ -6,7 +6,7 @@ authors = ["Ilya Sinyakin <sinyakin.ilya@gmail.com>", "Mikola Samardak <niksaak@
 [dependencies]
 dmbc = { path = "../dmbc" }
 rand = "*"
-exonum = "0.4"
+exonum = "0.5"
 mio = "*"
 mio_httpc = { version = "0.4", features = ["native"] }
 serde = "*"

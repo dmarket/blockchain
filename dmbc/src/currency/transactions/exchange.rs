@@ -6,7 +6,6 @@ use exonum::crypto::{PublicKey, Signature};
 use exonum::messages::Message;
 use exonum::storage::Fork;
 use prometheus::{IntCounter, Histogram};
-use serde_json;
 
 use currency::assets::AssetBundle;
 use currency::configuration::Configuration;
@@ -21,16 +20,14 @@ pub const EXCHANGE_ID: u16 = 601;
 
 encoding_struct! {
     struct ExchangeOffer {
-        const SIZE = 89;
+        sender:           &PublicKey,
+        sender_assets:    Vec<AssetBundle>,
+        sender_value:     u64,
 
-        field sender:           &PublicKey       [00 => 32]
-        field sender_assets:    Vec<AssetBundle> [32 => 40]
-        field sender_value:     u64              [40 => 48]
+        recipient:        &PublicKey,
+        recipient_assets: Vec<AssetBundle>,
 
-        field recipient:        &PublicKey       [48 => 80]
-        field recipient_assets: Vec<AssetBundle> [80 => 88]
-
-        field fee_strategy:     u8               [88 => 89]
+        fee_strategy:     u8,
     }
 }
 
@@ -39,12 +36,11 @@ message! {
     struct Exchange {
         const TYPE = SERVICE_ID;
         const ID = EXCHANGE_ID;
-        const SIZE = 88;
 
-        field offer:             ExchangeOffer     [00 => 8]
-        field seed:              u64               [8 => 16]
-        field sender_signature:  &Signature        [16 => 80]
-        field data_info:         &str              [80 => 88]
+        offer:             ExchangeOffer,
+        seed:              u64,
+        sender_signature:  &Signature,
+        data_info:         &str,
     }
 }
 
@@ -260,9 +256,5 @@ impl Transaction for Exchange {
 
         timer.observe_duration();
         EXECUTE_FINISH_COUNT.inc();
-    }
-
-    fn info(&self) -> serde_json::Value {
-        json!(self)
     }
 }
