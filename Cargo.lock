@@ -360,6 +360,7 @@ dependencies = [
  "mount 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "nats 0.2.0 (git+https://github.com/jedisct1/rust-nats?rev=21919e5)",
  "params 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "percent-encoding 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "prometheus 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "router 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.39 (registry+https://github.com/rust-lang/crates.io-index)",

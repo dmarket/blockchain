@@ -26,6 +26,7 @@ extern crate uuid;
 extern crate prometheus;
 #[macro_use]
 extern crate lazy_static;
+extern crate percent_encoding;
 
 pub mod config;
 pub mod currency;
