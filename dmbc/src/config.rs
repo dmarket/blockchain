@@ -5,10 +5,8 @@ extern crate toml;
 use std::env;
 use std::fs::File;
 use std::io::prelude::*;
-use std::io::Error;
 use std::net::{SocketAddr, ToSocketAddrs};
 use std::path::Path;
-use std::result::Result;
 
 /// Representation of configuration file contents.
 #[derive(Deserialize, Clone)]
@@ -50,6 +48,16 @@ pub struct Nats {
 #[derive(Deserialize, Clone)]
 pub struct ServiceDiscovery {
     address: Option<String>,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        let mut content = String::new();
+        let path = env::var("CONFIG_PATH").unwrap_or("./etc/config.toml".to_string());
+        let mut f = File::open(Path::new(&path)).unwrap();
+        let _res = f.read_to_string(&mut content);
+        toml::from_str(content.as_str()).unwrap()
+    }
 }
 
 impl Config {
@@ -199,29 +207,13 @@ impl ServiceDiscovery {
     }
 }
 
-/// Load configuration
-///
-/// # Examples
-///
-/// ```no_run
-/// # use dmbc::config;
-/// let api_address = config::read_config().unwrap().api().address();
-/// ```
-pub fn read_config() -> Result<Config, Error> {
-    let mut content = String::new();
-    let path = env::var("CONFIG_PATH").unwrap_or("./etc/config.toml".to_string());
-    let mut f = File::open(Path::new(&path))?;
-    let _res = f.read_to_string(&mut content);
-    Ok(toml::from_str(content.as_str()).unwrap())
-}
-
 lazy_static! {
     static ref CONFIG: Config = {
-        read_config().unwrap()
+        Config::default()
     };
 }
 
-/// Read config from the config file.
+/// Load the configuration from the config file.
 pub fn config() -> Config {
     CONFIG.clone()
 }
