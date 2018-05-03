@@ -27,6 +27,8 @@ extern crate prometheus;
 #[macro_use]
 extern crate lazy_static;
 extern crate percent_encoding;
+extern crate extprim;
 
 pub mod config;
 pub mod currency;
+pub mod decimal;
