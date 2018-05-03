@@ -15,6 +15,7 @@ use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use iron::status;
 use router::Router;
+use percent_encoding::percent_decode;
 
 use currency::api::error::ApiError;
 use currency::assets::AssetId;
@@ -64,9 +65,12 @@ impl Api for AssetInternApi {
                     .find("meta_data")
                     .unwrap()
             };
+            let meta_data = percent_decode(meta_data.as_bytes())
+                .decode_utf8_lossy()
+                .into_owned();
             let result: AssetIdResponse = match public_key_result {
                 Ok(public_key) => {
-                    let id = AssetId::from_data(meta_data, &public_key);
+                    let id = AssetId::from_data(meta_data.as_str(), &public_key);
                     let mut assets = HashMap::<String, String>::new();
                     assets.insert(meta_data.to_string(), id.to_string());
                     Ok(AssetIdResponseBody { assets })

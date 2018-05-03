@@ -26,6 +26,7 @@ log = "0.4"
 chrono = "0.4"
 prometheus = "0.4"
 lazy_static = "1.0"
+percent-encoding = "1.0.1"
 
 [dev-dependencies]
 exonum-testkit = "0.5"
