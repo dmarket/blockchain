@@ -164,3 +164,24 @@ fn intern_assets_batch_ids_invalid_public_key() {
     assert_eq!(status, StatusCode::BadRequest);
     assert_eq!(response, Err(ApiError::WalletHexInvalid));
 }
+
+#[test]
+fn intern_assets_endcoded_query() {
+    let query = "%7B%22gameId%22%3A%22ab99%22%2C%22classId%22%3A%224bd3edf4-4c7e-4847-9475-925aaa06d882%22%2C%22externalId%22%3A%220a09fed0-0a74-51dd-87c7-3848b2fbc595%22%7D";
+    let testkit = TestKit::default();
+    let api = testkit.api();
+    let meta_data = "{\"gameId\":\"ab99\",\"classId\":\"4bd3edf4-4c7e-4847-9475-925aaa06d882\",\"externalId\":\"0a09fed0-0a74-51dd-87c7-3848b2fbc595\"}";
+
+    let (pub_key, _) = crypto::gen_keypair();
+
+    let (status, response): (StatusCode, AssetIdResponse) = api.get_with_status(
+        &format!("/v1/intern/assets/{}/{}", pub_key.to_string(), query),
+    );
+
+    let id = AssetId::from_data(meta_data, &pub_key);
+    let mut assets = HashMap::new();
+    assets.insert(meta_data.to_string(), id.to_string());
+
+    assert_eq!(status, StatusCode::Ok);
+    assert_eq!(response, Ok(AssetIdResponseBody { assets }));
+}   
