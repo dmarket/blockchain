@@ -11,7 +11,7 @@ use std::path::Path;
 use std::result::Result;
 
 /// Representation of configuration file contents.
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 #[warn(unused_must_use)]
 pub struct Config {
     api: Api,
@@ -21,7 +21,7 @@ pub struct Config {
 }
 
 /// Node communications configuration.
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct Api {
     current_node: Option<String>,
     address: Option<String>,
@@ -33,13 +33,13 @@ pub struct Api {
 }
 
 /// Database configuration.
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct Db {
     path: Option<String>,
 }
 
 /// NATS reporting configuration.
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct Nats {
     enabled: Option<bool>,
     addresses: Option<Vec<String>>,
@@ -47,7 +47,7 @@ pub struct Nats {
 }
 
 /// Configuration for communicating with a global service discovery.
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 pub struct ServiceDiscovery {
     address: Option<String>,
 }
@@ -215,9 +215,15 @@ pub fn read_config() -> Result<Config, Error> {
     Ok(toml::from_str(content.as_str()).unwrap())
 }
 
+lazy_static! {
+    static ref CONFIG: Config = {
+        read_config().unwrap()
+    };
+}
+
 /// Read config from the config file.
 pub fn config() -> Config {
-    read_config().unwrap()
+    CONFIG.clone()
 }
 
 #[test]
