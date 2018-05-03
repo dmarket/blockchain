@@ -50,16 +50,6 @@ pub struct ServiceDiscovery {
     address: Option<String>,
 }
 
-impl Default for Config {
-    fn default() -> Self {
-        let mut content = String::new();
-        let path = env::var("CONFIG_PATH").unwrap_or("./etc/config.toml".to_string());
-        let mut f = File::open(Path::new(&path)).unwrap();
-        let _res = f.read_to_string(&mut content);
-        toml::from_str(content.as_str()).unwrap()
-    }
-}
-
 impl Config {
     /// Get `Api` configuration from the config file.
     pub fn api(self) -> Api {
@@ -209,7 +199,11 @@ impl ServiceDiscovery {
 
 lazy_static! {
     static ref CONFIG: Config = {
-        Config::default()
+        let mut content = String::new();
+        let path = env::var("CONFIG_PATH").unwrap_or("./etc/config.toml".to_string());
+        let mut f = File::open(Path::new(&path)).unwrap();
+        let _res = f.read_to_string(&mut content);
+        toml::from_str(content.as_str()).unwrap()
     };
 }
 
