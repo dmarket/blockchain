@@ -37,7 +37,7 @@ fn trade_intermediary_fee_from_recipient() {
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &seller_public_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &seller_public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -109,7 +109,7 @@ fn trade_intermediary_fee_from_sender() {
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &seller_public_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &seller_public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -180,7 +180,7 @@ fn trade_intermediary_fee_from_recipient_and_sender() {
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &seller_public_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &seller_public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -250,7 +250,7 @@ fn trade_intermediary_fee_from_intermediary() {
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &seller_public_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &seller_public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -324,7 +324,7 @@ fn trade_intermediary_asset_not_found() {
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
-    let (asset, _) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &seller_public_key);
+    let (asset, _) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &seller_public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -391,7 +391,7 @@ fn trade_intermediary_insufficient_assets() {
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &seller_public_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &seller_public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -460,7 +460,7 @@ fn trade_intermediary_insufficient_funds() {
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &seller_public_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &seller_public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))

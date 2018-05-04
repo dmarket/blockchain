@@ -48,12 +48,12 @@ fn exchange_intermediary_assets() {
     let (creator_pk, _) = crypto::gen_keypair();
     let (intermediary_pk, intermediary_sk) = crypto::gen_keypair();
 
-    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, senders_units, dmbc_testkit::asset_fees(tax, 0), &creator_pk);
-    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, senders_units, dmbc_testkit::asset_fees(tax, 0), &creator_pk);
-    let (asset3, info3) = dmbc_testkit::create_asset(meta_data3, senders_units, dmbc_testkit::asset_fees(tax, 0), &creator_pk);
-    let (asset4, info4) = dmbc_testkit::create_asset(meta_data4, receiver_units, dmbc_testkit::asset_fees(tax, 0), &creator_pk);
-    let (asset5, info5) = dmbc_testkit::create_asset(meta_data5, receiver_units, dmbc_testkit::asset_fees(tax, 0), &creator_pk);
-    let (asset6, info6) = dmbc_testkit::create_asset(meta_data6, receiver_units, dmbc_testkit::asset_fees(tax, 0), &creator_pk);
+    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, senders_units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &creator_pk);
+    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, senders_units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &creator_pk);
+    let (asset3, info3) = dmbc_testkit::create_asset(meta_data3, senders_units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &creator_pk);
+    let (asset4, info4) = dmbc_testkit::create_asset(meta_data4, receiver_units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &creator_pk);
+    let (asset5, info5) = dmbc_testkit::create_asset(meta_data5, receiver_units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &creator_pk);
+    let (asset6, info6) = dmbc_testkit::create_asset(meta_data6, receiver_units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &creator_pk);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -163,8 +163,8 @@ fn exchange_intermediary_assets_creator_is_sender() {
     let (recipient_pk, recipient_sk) = crypto::gen_keypair();
     let (intermediary_pk, intermediary_sk) = crypto::gen_keypair();
 
-    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, senders_units, dmbc_testkit::asset_fees(tax, 0), &sender_pk);
-    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, receiver_units, dmbc_testkit::asset_fees(tax, 0), &sender_pk);
+    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, senders_units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &sender_pk);
+    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, receiver_units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &sender_pk);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -255,8 +255,8 @@ fn exchange_intermediary_assets_creator_is_intermediary() {
     let (recipient_pk, recipient_sk) = crypto::gen_keypair();
     let (intermediary_pk, intermediary_sk) = crypto::gen_keypair();
 
-    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, senders_units, dmbc_testkit::asset_fees(tax, 0), &intermediary_pk);
-    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, receiver_units, dmbc_testkit::asset_fees(tax, 0), &intermediary_pk);
+    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, senders_units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &intermediary_pk);
+    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, receiver_units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &intermediary_pk);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -346,8 +346,8 @@ fn exchange_intermediary_assets_payer_fee_intermediary() {
     let (recipient_pk, recipient_sk) = crypto::gen_keypair();
     let (intermediary_pk, intermediary_sk) = crypto::gen_keypair();
 
-    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, senders_units, dmbc_testkit::asset_fees(tax, 0), &intermediary_pk);
-    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, receiver_units, dmbc_testkit::asset_fees(tax, 0), &intermediary_pk);
+    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, senders_units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &intermediary_pk);
+    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, receiver_units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &intermediary_pk);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -435,8 +435,8 @@ fn exchange_intermediary_assets_asset_not_found() {
     let (recipient_pk, recipient_sk) = crypto::gen_keypair();
     let (intermediary_pk, intermediary_sk) = crypto::gen_keypair();
 
-    let (asset1, _) = dmbc_testkit::create_asset(meta_data1, senders_units, dmbc_testkit::asset_fees(tax, 0), &intermediary_pk);
-    let (asset2, _) = dmbc_testkit::create_asset(meta_data2, receiver_units, dmbc_testkit::asset_fees(tax, 0), &intermediary_pk);
+    let (asset1, _) = dmbc_testkit::create_asset(meta_data1, senders_units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &intermediary_pk);
+    let (asset2, _) = dmbc_testkit::create_asset(meta_data2, receiver_units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &intermediary_pk);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -505,8 +505,8 @@ fn exchange_intermediary_assets_insufficient_assets() {
     let (recipient_pk, recipient_sk) = crypto::gen_keypair();
     let (intermediary_pk, intermediary_sk) = crypto::gen_keypair();
 
-    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, senders_units, dmbc_testkit::asset_fees(tax, 0), &intermediary_pk);
-    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, receiver_units, dmbc_testkit::asset_fees(tax, 0), &intermediary_pk);
+    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, senders_units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &intermediary_pk);
+    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, receiver_units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &intermediary_pk);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -577,8 +577,8 @@ fn exchange_intermediary_assets_insufficient_funds() {
     let (recipient_pk, recipient_sk) = crypto::gen_keypair();
     let (intermediary_pk, intermediary_sk) = crypto::gen_keypair();
 
-    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, senders_units, dmbc_testkit::asset_fees(tax, 0), &intermediary_pk);
-    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, receiver_units, dmbc_testkit::asset_fees(tax, 0), &intermediary_pk);
+    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, senders_units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &intermediary_pk);
+    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, receiver_units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &intermediary_pk);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))

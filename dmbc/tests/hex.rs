@@ -77,7 +77,7 @@ fn hex_offer_tx_without_offer() {
     let (public_key, secret_key) = crypto::gen_keypair();
     let (receiver_key, _) = crypto::gen_keypair();
 
-    let fees = dmbc_testkit::asset_fees(10, 10);
+    let fees = dmbc_testkit::asset_fees(10, "0.1".parse().unwrap());
     let meta_asset = MetaAsset::new(&receiver_key, "asset", 5, fees);
 
     let tx_add_assets = transaction::Builder::new()

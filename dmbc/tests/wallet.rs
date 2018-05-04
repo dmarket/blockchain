@@ -30,7 +30,7 @@ fn wallet() {
     let meta_data = "asset";
 
     let (pub_key, _) = crypto::gen_keypair();
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &pub_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .add_wallet_value(&pub_key, Wallet::new(balance, vec![]))
@@ -58,8 +58,8 @@ fn wallets() {
     let (pub_key1, _) = crypto::gen_keypair();
     let (pub_key2, _) = crypto::gen_keypair();
 
-    let asset1 = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &pub_key1);
-    let asset2 = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &pub_key2);
+    let asset1 = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &pub_key1);
+    let asset2 = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &pub_key2);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .add_wallet_value(&pub_key1, Wallet::new(balance, vec![]))
@@ -122,8 +122,8 @@ fn wallets_pagination() {
     let (pub_key1, _) = crypto::gen_keypair();
     let (pub_key2, _) = crypto::gen_keypair();
 
-    let asset1 = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &pub_key1);
-    let asset2 = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &pub_key2);
+    let asset1 = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &pub_key1);
+    let asset2 = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &pub_key2);
 
     let testkit = DmbcTestApiBuilder::new()
         .add_asset_to_wallet(&pub_key1, asset1)
@@ -156,9 +156,9 @@ fn wallet_assets() {
     let meta_data2 = "asset2";
 
     let (pub_key, _) = crypto::gen_keypair();
-    let (asset0, info0) = dmbc_testkit::create_asset(meta_data0, units, dmbc_testkit::asset_fees(tax, 0), &pub_key);
-    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, units, dmbc_testkit::asset_fees(tax, 0), &pub_key);
-    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, units, dmbc_testkit::asset_fees(tax, 0), &pub_key);
+    let (asset0, info0) = dmbc_testkit::create_asset(meta_data0, units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &pub_key);
+    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &pub_key);
+    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .add_asset_to_wallet(&pub_key, (asset0.clone(), info0.clone()))
@@ -197,7 +197,7 @@ fn wallet_assets_meta_data() {
     let meta_data = "asset";
 
     let (pub_key, _) = crypto::gen_keypair();
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &pub_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .add_asset_to_wallet(&pub_key, (asset.clone(), info.clone()))
@@ -320,7 +320,7 @@ fn wallet_asset() {
     let units = 6;
     let tax = 11;
     let (pub_key, _) = crypto::gen_keypair();
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &pub_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .add_wallet_value(&pub_key, Wallet::new(0, vec![]))
@@ -344,7 +344,7 @@ fn wallet_asset_whit_info() {
     let units = 6;
     let tax = 11;
     let (pub_key, _) = crypto::gen_keypair();
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &pub_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .add_wallet_value(&pub_key, Wallet::new(0, vec![]))
