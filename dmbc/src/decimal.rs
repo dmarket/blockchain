@@ -20,11 +20,15 @@ const UFRACT64_DIGITS: usize = 16;
 pub struct UFract64(u64);
 
 impl UFract64 {
+    /// Create a new `UFract64` from an array of bytes each representing a
+    /// decimal place.
     pub fn from_digits(digits: [u8; UFRACT64_DIGITS]) -> Self {
         let mut fract = 0u64;
 
         let mut shift = 64;
 
+        // Put each digit into a four bit nibble, with the most significant
+        // nibble in u64 representing the most significant decimal place.
         for digit in &digits {
             debug_assert!(*digit < 10, "Each digit must be less than 10.");
 
@@ -35,6 +39,7 @@ impl UFract64 {
         UFract64(fract)
     }
 
+    /// Get an array of bytes each representing a decimal place.
     pub fn to_digits(&self) -> [u8; UFRACT64_DIGITS] {
         let mut digits = [0u8; UFRACT64_DIGITS];
         for i in 0..UFRACT64_DIGITS {
@@ -43,12 +48,14 @@ impl UFract64 {
         digits
     }
 
+    /// Get the value of a decimal place at index.
     #[inline]
     pub fn digit(&self, index: usize) -> u8 {
         assert!(index < UFRACT64_DIGITS);
         ((self.0 >> ((UFRACT64_DIGITS - 1 - index) * BITS_PER_DIGIT)) & 0xF) as u8
     }
 
+    /// Set the value of a decimal place at index.
     #[inline]
     pub fn set_digit(&mut self, index: usize, digit: u8) {
         assert!(index < 16);
@@ -58,6 +65,7 @@ impl UFract64 {
         self.0 = masked_fract | placed_digit;
     }
 
+    /// True if the number is zero.
     #[inline]
     pub fn is_zero(&self) -> bool {
         self.0 == 0
@@ -94,6 +102,7 @@ impl ToString for UFract64 {
     }
 }
 
+/// An error type representing a failure to parse the fraction.
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct FromStrError;
 
@@ -121,10 +130,7 @@ impl FromStr for UFract64 {
 
         let mut digits = [0u8; UFRACT64_DIGITS];
         for (i, ch) in s.bytes().enumerate() {
-            if i > UFRACT64_DIGITS {
-                return Err(FromStrError);
-            }
-            if !ch.is_ascii_digit() {
+            if i > UFRACT64_DIGITS || !ch.is_ascii_digit() {
                 return Err(FromStrError);
             }
             digits[i] = ch - b'0';
@@ -135,6 +141,8 @@ impl FromStr for UFract64 {
 }
 
 impl<'a> Field<'a> for UFract64 {
+    // Just proxy all the calls to the u64 impl.
+
     fn field_size() -> Offset {
         u64::field_size()
     }
