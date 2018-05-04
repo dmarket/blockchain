@@ -21,6 +21,7 @@ pub struct BlocksApi {
 }
 
 pub type BlocksResponse = Result<Vec<Block>, ApiError>;
+pub type BlockResponse = Result<Option<BlockInfo>, ApiError>;
 
 impl BlocksApi {
 
