@@ -11,6 +11,7 @@ use exonum_testkit::{TestKit as ExonumTestKit, TestKitBuilder, TestKitApi as Exo
 use exonum::encoding::serialize::FromHex;
 use exonum::encoding::serialize::reexport::{Serialize, Deserialize};
 
+use dmbc::decimal::UFract64;
 use dmbc::currency::configuration::Configuration;
 use dmbc::currency::{SERVICE_NAME, Service};
 use dmbc::currency::wallet::{self, Wallet};
@@ -248,7 +249,7 @@ impl DmbcTestKitApi for ExonumTestKitApi {
     }
 }
 
-pub fn asset_fees(t: u64, r: u64) -> Fees {
+pub fn asset_fees(t: u64, r: UFract64) -> Fees {
     fee::Builder::new()
         .trade(t, r)
         .exchange(t, r)

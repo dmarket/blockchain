@@ -807,15 +807,15 @@ mod test {
         let (receiver_key, _) = crypto::gen_keypair();
 
         let fees_foobar = fee::Builder::new()
-            .trade(10, 10)
-            .exchange(10, 10)
-            .transfer(10, 10)
+            .trade(10, "0.1".parse().unwrap())
+            .exchange(10, "0.1".parse().unwrap())
+            .transfer(10, "0.1".parse().unwrap())
             .build();
 
         let fees_bazqux = fee::Builder::new()
-            .trade(11, 10)
-            .exchange(11, 10)
-            .transfer(11, 10)
+            .trade(11, "0.1".parse().unwrap())
+            .exchange(11, "0.1".parse().unwrap())
+            .transfer(11, "0.1".parse().unwrap())
             .build();
 
         let asset_foobar = MetaAsset::new(&receiver_key, "foobar", 9, fees_foobar);
@@ -839,15 +839,15 @@ mod test {
         let (receiver_key, _) = crypto::gen_keypair();
 
         let fees_foobar = fee::Builder::new()
-            .trade(10, 10)
-            .exchange(10, 10)
-            .transfer(10, 10)
+            .trade(10, "0.1".parse().unwrap())
+            .exchange(10, "0.1".parse().unwrap())
+            .transfer(10, "0.1".parse().unwrap())
             .build();
 
         let fees_bazqux = fee::Builder::new()
-            .trade(11, 10)
-            .exchange(11, 10)
-            .transfer(11, 10)
+            .trade(11, "0.1".parse().unwrap())
+            .exchange(11, "0.1".parse().unwrap())
+            .transfer(11, "0.1".parse().unwrap())
             .build();
 
         let asset_foobar = MetaAsset::new(&receiver_key, "foobar", 9, fees_foobar);

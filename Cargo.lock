@@ -352,6 +352,7 @@ dependencies = [
  "exonum 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "exonum-configuration 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "exonum-testkit 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "extprim 1.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "hyper 0.10.13 (registry+https://github.com/rust-lang/crates.io-index)",
  "iron 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "iron-test 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -593,6 +594,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "exonum_libsodium-sys 0.0.16 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.40 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.39 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "extprim"
+version = "1.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "num-traits 0.1.43 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rustc_version 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.39 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -1215,6 +1227,14 @@ dependencies = [
 
 [[package]]
 name = "num-traits"
+version = "0.1.43"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "num-traits 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "num-traits"
 version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
@@ -1589,6 +1609,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "serde"
 version = "1.0.39"
 source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "serde_derive 1.0.39 (registry+https://github.com/rust-lang/crates.io-index)",
+]
 
 [[package]]
 name = "serde_derive"
@@ -2226,6 +2249,7 @@ dependencies = [
 "checksum exonum_profiler 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "7a704c491a596b375ce6db5b32cb9ec2d9a4dad32179378ea29203a7874963e2"
 "checksum exonum_rocksdb 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)" = "168dc3bcd0ee21c469042705c6f29d6646ec168da6f505320670e95ef54575d2"
 "checksum exonum_sodiumoxide 0.0.16 (registry+https://github.com/rust-lang/crates.io-index)" = "1d90eabc959a71df46737638c1596f41d439301661076768837ca4cb8f4ca4f0"
+"checksum extprim 1.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "eb09b6eb24a48a5c57729e4a60980bf538b3662c3bcec04b6c7908d7a0f3d9b9"
 "checksum failure 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "934799b6c1de475a012a02dab0ace1ace43789ee4b99bcfbf1a2e3e8ced5de82"
 "checksum failure_derive 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "c7cdda555bb90c9bb67a3b670a0f42de8e73f5981524123ad8578aafec8ddb8b"
 "checksum filetime 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "08530a39af0bd442c40aabb9e854f442a83bd2403feb1ed58fbe982dec2385f3"
@@ -2294,6 +2318,7 @@ dependencies = [
 "checksum num-integer 0.1.36 (registry+https://github.com/rust-lang/crates.io-index)" = "f8d26da319fb45674985c78f1d1caf99aa4941f785d384a2ae36d0740bc3e2fe"
 "checksum num-iter 0.1.35 (registry+https://github.com/rust-lang/crates.io-index)" = "4b226df12c5a59b63569dd57fafb926d91b385dfce33d8074a412411b689d593"
 "checksum num-rational 0.1.42 (registry+https://github.com/rust-lang/crates.io-index)" = "ee314c74bd753fc86b4780aa9475da469155f3848473a261d2d18e35245a784e"
+"checksum num-traits 0.1.43 (registry+https://github.com/rust-lang/crates.io-index)" = "92e5113e9fd4cc14ded8e499429f396a20f98c772a47cc8622a736e1ec843c31"
 "checksum num-traits 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "dee092fcdf725aee04dd7da1d21debff559237d49ef1cb3e69bcb8ece44c7364"
 "checksum num_cpus 1.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "c51a3322e4bca9d212ad9a158a02abc6934d005490c054a2778df73a70aa0a30"
 "checksum openssl 0.9.24 (registry+https://github.com/rust-lang/crates.io-index)" = "a3605c298474a3aa69de92d21139fb5e2a81688d308262359d85cdd0d12a7985"

@@ -23,7 +23,7 @@ use dmbc::currency::wallet::Wallet;
 
 #[test]
 fn transfer() {
-    let tax = 10;
+    let fixed = 10;
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee);
     let meta_data = "asset";
@@ -33,7 +33,7 @@ fn transfer() {
     let (public_key, secret_key) = crypto::gen_keypair();
     let (recipient_key, _) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &public_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -76,7 +76,7 @@ fn transfer() {
 
 #[test]
 fn transfer_asset_not_found() {
-    let tax = 10;
+    let fixed = 10;
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee);
     let meta_data = "asset";
@@ -86,7 +86,7 @@ fn transfer_asset_not_found() {
     let (public_key, secret_key) = crypto::gen_keypair();
     let (recipient_key, _) = crypto::gen_keypair();
 
-    let (asset, _) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &public_key);
+    let (asset, _) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -127,7 +127,7 @@ fn transfer_asset_not_found() {
 
 #[test]
 fn transfer_insufficient_funds() {
-    let tax = 10;
+    let fixed = 10;
     let transaction_fee = 1000_000_000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee);
     let meta_data = "asset";
@@ -137,7 +137,7 @@ fn transfer_insufficient_funds() {
     let (public_key, secret_key) = crypto::gen_keypair();
     let (recipient_key, _) = crypto::gen_keypair();
 
-    let (asset, _) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &public_key);
+    let (asset, _) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -177,7 +177,7 @@ fn transfer_insufficient_funds() {
 
 #[test]
 fn transfer_insufficient_assets() {
-    let tax = 10;
+    let fixed = 10;
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee);
     let meta_data = "asset";
@@ -187,7 +187,7 @@ fn transfer_insufficient_assets() {
     let (public_key, secret_key) = crypto::gen_keypair();
     let (recipient_key, _) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, 0), &public_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))

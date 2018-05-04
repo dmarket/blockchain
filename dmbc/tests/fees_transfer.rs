@@ -24,7 +24,7 @@ use dmbc::currency::error::Error;
 fn fees_for_transfer() {
     let transaction_fee = 1000;
     let amount = 2;
-    let tax = 10;
+    let fixed = 10;
     let meta_data = "asset";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee);
 
@@ -32,7 +32,7 @@ fn fees_for_transfer() {
     let (recipient_key, _) = crypto::gen_keypair();
     let (sender_pub_key, sender_sec_key) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, amount, dmbc_testkit::asset_fees(tax, 0), &creator_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, amount, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -51,7 +51,7 @@ fn fees_for_transfer() {
     let (status, response) = api.post_fee(&tx_transfer);
 
     let mut expected = HashMap::new();
-    let expected_fee = transaction_fee + amount * tax;
+    let expected_fee = transaction_fee + amount * fixed;
     expected.insert(sender_pub_key, expected_fee);
 
     assert_eq!(status, StatusCode::Ok);
@@ -62,14 +62,14 @@ fn fees_for_transfer() {
 fn fees_for_transfer_sender_is_creator() {
     let transaction_fee = 1000;
     let amount = 2;
-    let tax = 10;
+    let fixed = 10;
     let meta_data = "asset";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee);
 
     let (recipient_key, _) = crypto::gen_keypair();
     let (sender_pub_key, sender_sec_key) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, amount, dmbc_testkit::asset_fees(tax, 0), &sender_pub_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, amount, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &sender_pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -98,7 +98,7 @@ fn fees_for_transfer_sender_is_creator() {
 fn fees_for_transfer_asset_not_found() {
         let transaction_fee = 1000;
     let amount = 2;
-    let tax = 10;
+    let fixed = 10;
     let meta_data = "asset";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee);
 
@@ -106,7 +106,7 @@ fn fees_for_transfer_asset_not_found() {
     let (recipient_key, _) = crypto::gen_keypair();
     let (sender_pub_key, sender_sec_key) = crypto::gen_keypair();
 
-    let (asset, _) = dmbc_testkit::create_asset(meta_data, amount, dmbc_testkit::asset_fees(tax, 0), &creator_key);
+    let (asset, _) = dmbc_testkit::create_asset(meta_data, amount, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))

@@ -124,7 +124,7 @@ impl ThirdPartyFees {
                 .fetch(&asset.id())
                 .ok_or_else(|| Error::AssetNotFound)?;
 
-            let fee = info.fees().exchange().tax() * asset.amount();
+            let fee = info.fees().exchange().fixed() * asset.amount();
             to_third_party
                 .entry(*info.creator())
                 .and_modify(|prev_fee| {
@@ -152,7 +152,7 @@ impl ThirdPartyFees {
                 .fetch(&asset.id())
                 .ok_or_else(|| Error::AssetNotFound)?;
 
-            let fee = info.fees().transfer().tax() * asset.amount();
+            let fee = info.fees().transfer().fixed() * asset.amount();
             to_third_party
                 .entry(*info.creator())
                 .and_modify(|prev_fee| {
