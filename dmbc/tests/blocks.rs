@@ -127,7 +127,7 @@ fn blocks_skip_empty_with_empty_blockchain() {
 
 #[test]
 fn blocks_skip_empty_with_tx_in_blockchain() {
-    let tax = 10;
+    let fixed = 10;
     let meta_data = "asset";
     let units = 3;
     let balance = 100_000;
@@ -145,7 +145,7 @@ fn blocks_skip_empty_with_tx_in_blockchain() {
     let api = testkit.api();
 
     // post the transaction
-    let meta_asset = MetaAsset::new(&receiver_key, meta_data, units, dmbc_testkit::asset_fees(tax, 0));
+    let meta_asset = MetaAsset::new(&receiver_key, meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()));
     let tx_add_assets1 = transaction::Builder::new()
         .keypair(creator_public_key, creator_secret_key.clone())
         .tx_add_assets()
@@ -280,7 +280,7 @@ fn blocks_negative_height() {
 
 #[test]
 fn blocks_height_with_tx_in_blockchain() {
-    let tax = 10;
+    let fixed = 10;
     let meta_data = "asset";
     let units = 3;
     let balance = 100_000;
@@ -298,7 +298,7 @@ fn blocks_height_with_tx_in_blockchain() {
     let api = testkit.api();
 
     // post the transaction
-    let meta_asset = MetaAsset::new(&receiver_key, meta_data, units, dmbc_testkit::asset_fees(tax, 0));
+    let meta_asset = MetaAsset::new(&receiver_key, meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()));
     let tx_add_assets = transaction::Builder::new()
         .keypair(creator_public_key, creator_secret_key.clone())
         .tx_add_assets()
