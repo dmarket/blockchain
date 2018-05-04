@@ -1,8 +1,8 @@
 [package]
 name = "dmbc-fuzzer"
-version = "0.2.0"
+version = "2.0.0"
 authors = ["Mikola Samardak <niksaak@gmail.com>"]
-
+publish = false
 
 [[bin]]
 name = "fuzz"
