@@ -20,10 +20,10 @@ use dmbc::currency::api::asset::AssetResponse;
 fn asset_is_in_blockchain() {
     let meta_data = "asset";
     let units = 2;
-    let tax = 10;
+    let fixed = 10;
     let (public_key, _) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &public_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .add_asset_info(&asset.id(), info.clone())
@@ -43,10 +43,10 @@ fn asset_is_in_blockchain() {
 fn asset_isnt_in_blockchain() {
     let meta_data = "asset";
     let units = 2;
-    let tax = 10;
+    let fixed = 10;
     let (public_key, _) = crypto::gen_keypair();
 
-    let (asset, _) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &public_key);
+    let (asset, _) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .create();

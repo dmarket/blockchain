@@ -25,7 +25,7 @@ use dmbc::currency::assets::TradeAsset;
 #[test]
 fn fees_for_trade_intermediary_recipient() {
     let transaction_fee = 1000;
-    let tax = 10;
+    let fixed = 10;
     let units = 2;
     let price_per_unit = 1000;
     let meta_data = "asset";
@@ -36,7 +36,7 @@ fn fees_for_trade_intermediary_recipient() {
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &creator_pub_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -56,7 +56,7 @@ fn fees_for_trade_intermediary_recipient() {
 
     let (status, response) = api.post_fee(&tx_trade);
     let mut expected = HashMap::new();
-    let expected_fee = transaction_fee + tax * units;
+    let expected_fee = transaction_fee + fixed * units;
     expected.insert(buyer_public_key, expected_fee);
 
     assert_eq!(status, StatusCode::Ok);
@@ -66,7 +66,7 @@ fn fees_for_trade_intermediary_recipient() {
 #[test]
 fn fees_for_trade_intermediary_sender() {
     let transaction_fee = 1000;
-    let tax = 10;
+    let fixed = 10;
     let units = 2;
     let price_per_unit = 1000;
     let meta_data = "asset";
@@ -77,7 +77,7 @@ fn fees_for_trade_intermediary_sender() {
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &creator_pub_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -97,7 +97,7 @@ fn fees_for_trade_intermediary_sender() {
 
     let (status, response) = api.post_fee(&tx_trade);
     let mut expected = HashMap::new();
-    let expected_fee = transaction_fee + tax * units;
+    let expected_fee = transaction_fee + fixed * units;
     expected.insert(seller_public_key, expected_fee);
 
     assert_eq!(status, StatusCode::Ok);
@@ -107,7 +107,7 @@ fn fees_for_trade_intermediary_sender() {
 #[test]
 fn fees_for_trade_intermediary_recipient_and_sender() {
     let transaction_fee = 1000;
-    let tax = 10;
+    let fixed = 10;
     let units = 2;
     let price_per_unit = 1000;
     let meta_data = "asset";
@@ -118,7 +118,7 @@ fn fees_for_trade_intermediary_recipient_and_sender() {
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &creator_pub_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -138,7 +138,7 @@ fn fees_for_trade_intermediary_recipient_and_sender() {
 
     let (status, response) = api.post_fee(&tx_trade);
     let mut expected = HashMap::new();
-    let expected_fee = transaction_fee / 2 + tax * units / 2;
+    let expected_fee = transaction_fee / 2 + fixed * units / 2;
     expected.insert(buyer_public_key, expected_fee);
     expected.insert(seller_public_key, expected_fee);
 
@@ -149,7 +149,7 @@ fn fees_for_trade_intermediary_recipient_and_sender() {
 #[test]
 fn fees_for_trade_intermediary_intermedniary() {
     let transaction_fee = 1000;
-    let tax = 10;
+    let fixed = 10;
     let units = 2;
     let price_per_unit = 1000;
     let meta_data = "asset";
@@ -160,7 +160,7 @@ fn fees_for_trade_intermediary_intermedniary() {
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &creator_pub_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -180,7 +180,7 @@ fn fees_for_trade_intermediary_intermedniary() {
 
     let (status, response) = api.post_fee(&tx_trade);
     let mut expected = HashMap::new();
-    let expected_fee = transaction_fee + tax * units;
+    let expected_fee = transaction_fee + fixed * units;
     expected.insert(intermediary_public_key, expected_fee);
 
     assert_eq!(status, StatusCode::Ok);
@@ -190,7 +190,7 @@ fn fees_for_trade_intermediary_intermedniary() {
 #[test]
 fn fees_for_trade_intermediary_recipient_and_sender_creator() {
     let transaction_fee = 1000;
-    let tax = 10;
+    let fixed = 10;
     let units = 2;
     let price_per_unit = 1000;
     let meta_data = "asset";
@@ -200,7 +200,7 @@ fn fees_for_trade_intermediary_recipient_and_sender_creator() {
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &seller_public_key);
+    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &seller_public_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -221,7 +221,7 @@ fn fees_for_trade_intermediary_recipient_and_sender_creator() {
     let (status, response) = api.post_fee(&tx_trade);
     let mut expected = HashMap::new();
     let expected_seller_fee = transaction_fee / 2;
-    let expected_buyer_fee = transaction_fee / 2 + tax * units / 2;
+    let expected_buyer_fee = transaction_fee / 2 + fixed * units / 2;
     expected.insert(seller_public_key, expected_seller_fee);
     expected.insert(buyer_public_key, expected_buyer_fee);
 
@@ -232,7 +232,7 @@ fn fees_for_trade_intermediary_recipient_and_sender_creator() {
 #[test]
 fn fees_for_trade_intermediary_asset_not_found() {
     let transaction_fee = 1000;
-    let tax = 10;
+    let fixed = 10;
     let units = 2;
     let price_per_unit = 1000;
     let meta_data = "asset";
@@ -243,7 +243,7 @@ fn fees_for_trade_intermediary_asset_not_found() {
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
-    let (asset, _) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(tax, "0.0".parse().unwrap()), &creator_pub_key);
+    let (asset, _) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))

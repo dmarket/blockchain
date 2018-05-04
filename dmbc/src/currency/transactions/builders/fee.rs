@@ -18,23 +18,23 @@ impl Builder {
         }
     }
 
-    pub fn trade(self, tax: u64, fraction: UFract64) -> Self {
+    pub fn trade(self, fixed: u64, fraction: UFract64) -> Self {
         Builder {
-            trade: Some(Fee::new(tax, fraction)),
+            trade: Some(Fee::new(fixed, fraction)),
             ..self
         }
     }
 
-    pub fn exchange(self, tax: u64, fraction: UFract64) -> Self {
+    pub fn exchange(self, fixed: u64, fraction: UFract64) -> Self {
         Builder {
-            exchange: Some(Fee::new(tax, fraction)),
+            exchange: Some(Fee::new(fixed, fraction)),
             ..self
         }
     }
 
-    pub fn transfer(self, tax: u64, fraction: UFract64) -> Self {
+    pub fn transfer(self, fixed: u64, fraction: UFract64) -> Self {
         Builder {
-            transfer: Some(Fee::new(tax, fraction)),
+            transfer: Some(Fee::new(fixed, fraction)),
             ..self
         }
     }
