@@ -1,4 +1,98 @@
 version: 2
+references:
+  pre_setup: &pre_setup
+    run:
+      name: Install System Packages
+      command: |
+        apt-get update
+        apt-get full-upgrade -y
+        apt-get -y install libsodium18 libsodium-dev pkg-config clang unzip cmake make binutils-dev libcurl4-openssl-dev zlib1g-dev libdw-dev libiberty-dev
+
+  setup_rust: &setup_rust
+    run:
+      name: Setup nightly
+      command: |
+        rustup default nightly
+        rustup update
+        rustup show
+
+  build_dev: &build_dev
+    run:
+      name: Build project debug
+      command: |
+        export CC=clang
+        export CXX=clang++
+        cargo build -p dmbc -p dmbc-node -p dmbc-discovery -vv
+
+  build_prod: &build_prod
+    run:
+      name: Build project prod
+      command: |
+        export CC=clang
+        export CXX=clang++
+        cargo build -p dmbc -p dmbc-node -p dmbc-discovery -vv --release
+
+  run_tests: &run_tests
+    run:
+      name: Run Tests
+      command: |
+        export CC=clang
+        export CXX=clang++
+        cargo test --color=always --jobs 2
+
+  save_cache: &save_cache
+    save_cache:
+      key: suntechsoft-dmarket-blockchain-{{ .Branch }}-{{ .Revision }}
+      paths:
+        - "/project/target/debug/dmbc-node"
+        - "/project/target/debug/dmbc-discovery"
+        - "/project/target/release/dmbc-node"
+        - "/project/target/release/dmbc-discovery"
+        - Dockerfile
+        - "/project/etc"
+        - "/root/.cargo/registry"
+
+  restore_cache: &restore_cache
+    restore_cache:
+      key: suntechsoft-dmarket-blockchain-{{ .Branch }}-{{ .Revision }}
+
+  setup_coverage: &setup_coverage
+    run:
+      name: Install Coverage Dependencies
+      command: |
+        wget https://github.com/SimonKagstrom/kcov/archive/v34.zip -O /tmp/kcov.zip
+        unzip /tmp/kcov.zip
+        cd kcov-34
+        cmake .
+        make -j$(nproc)
+        make install
+
+  coverage: &coverage
+    run:
+      name: Generate Coverage
+      command: |
+        TESTS=`find target/debug -maxdepth 1 -type f -executable |  grep -v -E '(dmbc-node|dmbc-discovery|dmbc-flooder|dmbc-fuzzer|dmbc-bot)'`
+        for i in $TESTS; do mkdir -p target/debug/coverage/$i && kcov --verify --include-path dmbc target/debug/coverage/$i $i; done
+        kcov --merge target/debug/coverage/merged/ target/debug/coverage/target/debug/*
+        #kcov --verify --include-path dmbc target/debug/coverage $(find target/debug -maxdepth 1 -type f -executable | grep -v -E '(dmbc-node|dmbc-discovery|dmbc-flooder|dmbc-fuzzer|dmbc-bot)')
+
+  build_dev_image: &build_dev_image
+    run:
+      name: Build and Push docker container
+      command: |
+        VERSION=2.0.$CIRCLE_BUILD_NUM
+        docker build -t globalgames/dmarket-blockchain .
+        docker tag globalgames/dmarket-blockchain globalgames/dmarket-blockchain:$VERSION
+        docker push globalgames/dmarket-blockchain:$VERSION
+
+  build_prod_image: &build_prod_image
+    run:
+      name: Build and Push docker container
+      command: |
+        docker build -t globalgames/dmarket-blockchain . --build-arg TYPE=release
+        docker tag globalgames/dmarket-blockchain globalgames/dmarket-blockchain:$CIRCLE_TAG
+        docker push globalgames/dmarket-blockchain:$CIRCLE_TAG
+
 jobs:
   build:
     working_directory: /project
@@ -7,96 +101,82 @@ jobs:
       - image: rust
 
     steps:
-
-      - run:
-          name: Install System Packages
-          command: |
-            apt-get update
-            apt-get -y install libsodium18 libsodium-dev pkg-config
-            apt-get -y install clang
-            apt-get -y install unzip cmake make binutils-dev libcurl4-openssl-dev zlib1g-dev libdw-dev libiberty-dev
-
-      - run:
-          name: Setup nightly
-          command: |
-            rustup default nightly
-            rustup update
-            rustup show
-
       - checkout
-
-      - restore_cache:
-          key: suntechsoft-dmarket-blockchain-{{ .Branch }}-{{ checksum "Cargo.lock" }}
-
-      - run:
-          name: Build project
-          command: |
-            export CC=clang
-            export CXX=clang++
-            cargo update
-            cargo build -p dmbc -p dmbc-node -p dmbc-discovery -vv
-
-      - save_cache:
-          key: suntechsoft-dmarket-blockchain-{{ .Branch }}-{{ checksum "Cargo.lock" }}
-          paths:
-            - "/project/target"
-            - "/root/.cargo/registry"
-
-#      - run:
-#          name: Run Fmt
-#          command: rustup run nightly rustfmt --write-mode checkstyle
-
-      - run:
-          name: Run Tests
-          command: |
-            export CC=clang
-            export CXX=clang++
-            cargo test --color=always --jobs 2
-
-#      - store_artifacts:
-#          path: /project/report/
-#          destination: artifact-dir
-
-      - run:
-          name: Install Coverage Dependencies
-          command: |
-            wget https://github.com/SimonKagstrom/kcov/archive/v34.zip -O /tmp/kcov.zip
-            unzip /tmp/kcov.zip
-            cd kcov-34
-            cmake .
-            make -j$(nproc)
-            make install
-
-      - run:
-          name: Generate Coverage
-          command: |
-            TESTS=`find target/debug -maxdepth 1 -type f -executable |  grep -v -E '(dmbc-node|dmbc-discovery|dmbc-flooder|dmbc-fuzzer|dmbc-bot)'`
-            for i in $TESTS; do mkdir -p target/debug/coverage/$i && kcov --verify --include-path dmbc target/debug/coverage/$i $i; done
-            kcov --merge target/debug/coverage/merged/ target/debug/coverage/target/debug/*
-            #kcov --verify --include-path dmbc target/debug/coverage $(find target/debug -maxdepth 1 -type f -executable | grep -v -E '(dmbc-node|dmbc-discovery|dmbc-flooder|dmbc-fuzzer|dmbc-bot)')
-
+      - *restore_cache
+      - *pre_setup
+      - *setup_rust
+      - *build_dev
+      - *build_prod
+      - *run_tests
+      - *save_cache
+      - *setup_coverage
+      - *coverage
       - store_artifacts:
           path: target/debug/coverage/merged
 
+  build_dev:
+    working_directory: /project
+    docker:
+      - image: docker:git
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
+    steps:
+      - *restore_cache
       - setup_remote_docker
+      - *build_dev_image
 
-      - run:
-          name: Install Docker client
-          command: |
-            set -x
-            VER="17.03.0-ce"
-            curl -L -o /tmp/docker-$VER.tgz https://get.docker.com/builds/Linux/x86_64/docker-$VER.tgz
-            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
-            mv /tmp/docker/* /usr/bin
+  build_release:
+    working_directory: /project
+    docker:
+      - image: docker:git
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
+    steps:
+      - *restore_cache
+      - setup_remote_docker
+      - *build_prod_image
 
-      # build and test application
-      - run:
-          name: Build and Push api container
-          command: |
-            docker login -u $DOCKER_USER -p $DOCKER_PASS
-            docker build -t globalgames/dmarket-blockchain .
-            docker push globalgames/dmarket-blockchain
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build
+      - build_dev:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
 
+      - build_release:
+          requires:
+            - build
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              #only: /^v\d+.*/
+              only: (v[0-9]+\.[0-9]+\.[0-9]+)
+
+#      - run:
+#          name: Install Docker client
+#          command: |
+#            set -x
+#            VER="17.03.0-ce"
+#            curl -L -o /tmp/docker-$VER.tgz https://get.docker.com/builds/Linux/x86_64/docker-$VER.tgz
+#            tar -xz -C /tmp -f /tmp/docker-$VER.tgz
+#            mv /tmp/docker/* /usr/bin
+#
+#      # build and test application
+#      - run:
+#          name: Build and Push api container
+#          command: |
+#            docker login -u $DOCKER_USER -p $DOCKER_PASS
+#            docker build -t globalgames/dmarket-blockchain .
+#            docker push globalgames/dmarket-blockchain
+#
 #      - run:
 #          name: Deploy
 #          command: |
