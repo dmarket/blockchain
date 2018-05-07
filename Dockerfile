@@ -1,6 +1,6 @@
 FROM debian:stretch
 
-ARG TYPE=degub
+ARG TYPE=debug
 #RUN apt-get update && apt-get -y install libsodium18 libsodium-dev pkg-config
 RUN apt update && apt full-upgrade -y && apt install -y libc++-dev curl libssl1.1
 WORKDIR /src/app
