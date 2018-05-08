@@ -1,7 +1,7 @@
 use exonum::crypto::{PublicKey, Signature};
 
 use assets::AssetBundle;
-use service::SERVICE_ID;
+use rudmbc::SERVICE_ID;
 
 /// Transaction ID.
 pub const EXCHANGE_ID: u16 = 601;

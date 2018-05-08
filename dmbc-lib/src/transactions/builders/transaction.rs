@@ -1,5 +1,5 @@
 use exonum::crypto::{PublicKey, SecretKey};
-use service;
+use rudmbc;
 
 pub struct Builder {
     public_key: Option<PublicKey>,
@@ -36,7 +36,7 @@ impl Builder {
             secret_key: None,
             network_id: 0,
             protocol_version: 0,
-            service_id: service::SERVICE_ID,
+            service_id: rudmbc::SERVICE_ID,
         }
     }
 

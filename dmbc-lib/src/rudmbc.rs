@@ -21,8 +21,6 @@ ffi_fn! {
         message_type: u16,
         error: *mut LibError,
     ) -> *const Builder {
-
-
         let public_key_result = unsafe { CStr::from_ptr(public_key).to_str() };
         let secret_key_result = unsafe { CStr::from_ptr(secret_key).to_str() };
 
@@ -39,15 +37,43 @@ ffi_fn! {
                 }
             },
             Err(err) => {
-                    unsafe {
+                unsafe {
+                    if !error.is_null() {
+                        *error = LibError::new(ErrorKind::Str(err));
+                    }
+                    return ptr::null();
+                }
+            },
+        };
+
+        let secret_key = match secret_key_result {
+            Ok(pk_str) => {
+                match SecretKey::from_hex(pk_str) {
+                    Ok(pk) => pk,
+                    Err(err) => unsafe {
                         if !error.is_null() {
-                            *error = LibError::new(ErrorKind::Str(err));
+                            *error = LibError::new(ErrorKind::Hex(err));
                         }
                         return ptr::null();
+                    },
+                }
+            },
+            Err(err) => {
+                unsafe {
+                    if !error.is_null() {
+                        *error = LibError::new(ErrorKind::Str(err));
                     }
-                },
+                    return ptr::null();
+                }
+            },
         };
 
         return ptr::null();
+    }
+}
+
+ffi_fn! {
+    fn dmbc_free_builder(builder: *const Builder) {
+        unsafe { Box::from_raw(builder as *mut Builder); }
     }
 }

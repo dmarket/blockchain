@@ -1,7 +1,7 @@
 use exonum::crypto::PublicKey;
 
 use assets::MetaAsset;
-use service::SERVICE_ID;
+use rudmbc::SERVICE_ID;
 
 pub const ADD_ASSETS_ID: u16 = 300;
 
