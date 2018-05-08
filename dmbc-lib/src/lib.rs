@@ -6,6 +6,9 @@ extern crate serde_json;
 extern crate extprim;
 extern crate uuid;
 
+#[macro_use]
+mod macros;
+mod error;
 mod transactions;
 mod assets;
 mod decimal;

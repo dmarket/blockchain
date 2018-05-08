@@ -6,5 +6,5 @@ mod trade_intermediary;
 mod trade;
 mod transfer;
 
-mod builders;
-mod components;
+pub mod builders;
+pub mod components;
