@@ -20,7 +20,7 @@ ffi_fn! {
         protocol_version: u8,
         message_type: u16,
         error: *mut LibError,
-    ) -> *const Builder {
+    ) -> *mut Builder {
         let public_key_result = unsafe { CStr::from_ptr(public_key).to_str() };
         let secret_key_result = unsafe { CStr::from_ptr(secret_key).to_str() };
 
@@ -32,7 +32,7 @@ ffi_fn! {
                         if !error.is_null() {
                             *error = LibError::new(ErrorKind::Hex(err));
                         }
-                        return ptr::null();
+                        return ptr::null_mut();
                     },
                 }
             },
@@ -41,7 +41,7 @@ ffi_fn! {
                     if !error.is_null() {
                         *error = LibError::new(ErrorKind::Str(err));
                     }
-                    return ptr::null();
+                    return ptr::null_mut();
                 }
             },
         };
@@ -54,7 +54,7 @@ ffi_fn! {
                         if !error.is_null() {
                             *error = LibError::new(ErrorKind::Hex(err));
                         }
-                        return ptr::null();
+                        return ptr::null_mut();
                     },
                 }
             },
@@ -63,12 +63,12 @@ ffi_fn! {
                     if !error.is_null() {
                         *error = LibError::new(ErrorKind::Str(err));
                     }
-                    return ptr::null();
+                    return ptr::null_mut();
                 }
             },
         };
 
-        return ptr::null();
+        Box::into_raw(Box::new(Builder::new()))
     }
 }
 

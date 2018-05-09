@@ -7,6 +7,7 @@ pub struct Builder {
     network_id: u8,
     protocol_version: u8,
     service_id: u16,
+    message_type: u16,
 }
 
 struct TransactionMetadata {
@@ -15,6 +16,7 @@ struct TransactionMetadata {
     network_id: u8,
     protocol_version: u8,
     service_id: u16,
+    message_type: u16,
 }
 
 impl From<Builder> for TransactionMetadata {
@@ -25,6 +27,7 @@ impl From<Builder> for TransactionMetadata {
             network_id: b.network_id,
             protocol_version: b.protocol_version,
             service_id: b.service_id,
+            message_type: b.message_type,
         }
     }
 }
@@ -37,6 +40,7 @@ impl Builder {
             network_id: 0,
             protocol_version: 0,
             service_id: capi::SERVICE_ID,
+            message_type: 0,
         }
     }
 
@@ -61,6 +65,10 @@ impl Builder {
 
     pub fn service_id(self, service_id: u16) -> Self {
         Builder { service_id, ..self }
+    }
+
+    pub fn message_type(self, message_type: u16) -> Self {
+        Builder { message_type, ..self }
     }
 
     fn validate(&self) -> Result<(), ()> {
