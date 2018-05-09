@@ -1,6 +1,6 @@
 use exonum::crypto::PublicKey;
 
-use rudmbc::SERVICE_ID;
+use capi::SERVICE_ID;
 use assets::AssetBundle;
 
 /// Transaction ID.

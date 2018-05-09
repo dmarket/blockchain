@@ -2,7 +2,7 @@ use exonum::crypto::{PublicKey, Signature};
 
 use transactions::components::Intermediary;
 use assets::AssetBundle;
-use rudmbc::SERVICE_ID;
+use capi::SERVICE_ID;
 
 /// Transaction ID.
 pub const EXCHANGE_INTERMEDIARY_ID: u16 = 602;

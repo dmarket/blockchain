@@ -1,5 +1,5 @@
 use exonum::crypto::{PublicKey, SecretKey};
-use rudmbc;
+use capi;
 
 pub struct Builder {
     public_key: Option<PublicKey>,
@@ -36,7 +36,7 @@ impl Builder {
             secret_key: None,
             network_id: 0,
             protocol_version: 0,
-            service_id: rudmbc::SERVICE_ID,
+            service_id: capi::SERVICE_ID,
         }
     }
 

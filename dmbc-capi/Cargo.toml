@@ -1,10 +1,10 @@
 [package]
-name = "dmbc-lib"
+name = "dmbc-capi"
 version = "0.1.0"
 authors = ["Taras Shchybovyk <tshchybo@gmail.com>"]
 
 [lib]
-name = "dmbc_lib"
+name = "dmbc_capi"
 crate-type = ["staticlib", "cdylib"]
 
 [dependencies]

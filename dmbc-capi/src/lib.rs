@@ -12,7 +12,7 @@ mod error;
 mod transactions;
 mod assets;
 mod decimal;
-mod rudmbc;
+mod capi;
 
-pub use rudmbc::*;
+pub use capi::*;
 pub use error::*;

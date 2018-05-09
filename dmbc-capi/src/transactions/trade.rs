@@ -1,7 +1,7 @@
 use exonum::crypto::{PublicKey, Signature};
 
 use assets::TradeAsset;
-use rudmbc::SERVICE_ID;
+use capi::SERVICE_ID;
 
 /// Transaction ID.
 pub const TRADE_ID: u16 = 501;
