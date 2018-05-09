@@ -21,6 +21,8 @@ use exonum::node::{Node, NodeApiConfig, NodeConfig};
 use exonum::storage::{RocksDB, RocksDBOptions};
 use exonum_configuration::ConfigurationService;
 
+const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+
 const GENESIS_VALIDATOR_PUBLIC: &str =
     "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f";
 const GENESIS_SERVICE_PUBLIC: &str =
@@ -31,8 +33,8 @@ fn main() {
 
     /** Create Keys */
     println!(
-        "Initializing node: {}",
-        config::config().api().current_node()
+        "Initializing node version: v{}",
+        VERSION
     );
 
     let (consensus_public_key, consensus_secret_key) = keyfile::pair("consensus").unwrap();
@@ -74,16 +76,12 @@ fn main() {
     };
 
     let consensus_config = ConsensusConfig {
-        round_timeout: 3000,
+        round_timeout: 3500,
         status_timeout: 5000,
         peers_timeout: 10_000,
-        txs_block_limit: 1000,
+        txs_block_limit: 3000,
         max_message_len: ConsensusConfig::DEFAULT_MESSAGE_MAX_LEN,
-        timeout_adjuster: TimeoutAdjusterConfig::Dynamic {
-            min: 200,
-            max: 1000,
-            threshold: 1,
-        },
+        timeout_adjuster: TimeoutAdjusterConfig::Constant { timeout: 2500},
     };
 
     // Configure Node
