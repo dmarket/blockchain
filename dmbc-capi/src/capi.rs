@@ -13,7 +13,7 @@ use error::{Error as LibError, ErrorKind};
 pub const SERVICE_ID: u16 = 2;
 
 ffi_fn! {
-    fn dmbc_create_builder(
+    fn dmbc_builder_create(
         public_key: *const c_char,
         secret_key: *const c_char,
         network_id: u8,
@@ -73,7 +73,7 @@ ffi_fn! {
 }
 
 ffi_fn! {
-    fn dmbc_free_builder(builder: *const Builder) {
+    fn dmbc_builder_free(builder: *const Builder) {
         unsafe { Box::from_raw(builder as *mut Builder); }
     }
 }
