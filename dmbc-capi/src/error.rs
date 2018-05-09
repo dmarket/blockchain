@@ -16,6 +16,7 @@ pub enum ErrorKind {
     None,
     Str(str::Utf8Error),
     Hex(serialize::FromHexError),
+    Text(String),
 }
 
 impl Error {
@@ -29,7 +30,7 @@ impl Error {
     pub fn is_err(&self) -> bool {
         match self.kind {
             ErrorKind::None => false,
-            ErrorKind::Str(_) | ErrorKind::Hex(_) => true,
+            ErrorKind::Str(_) | ErrorKind::Hex(_) | ErrorKind::Text(_) => true,
         }
     }
 }
@@ -40,6 +41,7 @@ impl fmt::Display for Error {
             ErrorKind::None => write!(f, "no error"),
             ErrorKind::Str(ref e) => e.fmt(f),
             ErrorKind::Hex(ref e) => e.fmt(f),
+            ErrorKind::Text(ref e) => write!(f, "Error: {}", e)
         }
     }
 }

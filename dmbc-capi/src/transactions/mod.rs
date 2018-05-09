@@ -1,4 +1,4 @@
-mod add_assets;
+pub mod add_assets;
 mod delete_assets;
 mod exchange_intermediary;
 mod exchange;
