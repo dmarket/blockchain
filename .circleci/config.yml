@@ -92,6 +92,11 @@ references:
         docker build -t globalgames/dmarket-blockchain . --build-arg TYPE=release
         docker tag globalgames/dmarket-blockchain globalgames/dmarket-blockchain:$CIRCLE_TAG
         docker push globalgames/dmarket-blockchain:$CIRCLE_TAG
+  
+  docker_login: &docker_login
+    run:
+      name: Docker Login
+      command: echo $DOCKER_PASS | docker login --username $DOCKER_USER --password-stdin        
 
 jobs:
   build:
@@ -124,6 +129,7 @@ jobs:
     steps:
       - *restore_cache
       - setup_remote_docker
+      - *docker_login
       - *build_dev_image
 
   build_release:
@@ -136,6 +142,7 @@ jobs:
     steps:
       - *restore_cache
       - setup_remote_docker
+      - *docker_login
       - *build_prod_image
 
 workflows:
