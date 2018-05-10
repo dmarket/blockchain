@@ -17,17 +17,51 @@ int main() {
         if (NULL != msg) {
             fprintf(stderr, "Error occured '%s'\n", msg);
         }
+        goto free_error;
     }
     if (!dmbc_add_assets_set_public_key(builder, public_key, err)) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
             fprintf(stderr, "Error occured %s\n", msg);
         }
-    } else {
-        debug(builder);
+        goto free_builder;
+    } 
+    if (!dmbc_add_assets_set_seed(builder, 102, err)) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, "Error occured %s\n", msg);
+        }
+        goto free_builder;
     }
-    if (NULL != builder) {
-        dmbc_builder_free(builder);
+    dmbc_fees *fees = dmbc_fees_create(10, "0.1", 20, "0.2", 9, "0.999999", err);
+    if (NULL == fees) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, "Error occured %s\n", msg);
+        }
+        goto free_builder;
     }
+    if (!dmbc_add_assets_add_asset(builder, "Asset#10", 10, fees, public_key, err)) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, "Error occured %s\n", msg);
+        }
+        goto free_fee;
+    }
+    if (!dmbc_add_assets_add_asset(builder, "Asset#00", 1000, fees, public_key, err)) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, "Error occured %s\n", msg);
+        }
+        goto free_fee;
+    }
+    
+    debug(builder);
+
+free_fee: 
+    dmbc_fees_free(fees);
+free_builder:
+    dmbc_builder_free(builder);
+free_error:
     dmbc_error_free(err);
 }

@@ -1,5 +1,3 @@
-use std::fmt;
-
 use exonum::crypto::PublicKey;
 
 use assets::MetaAsset;
