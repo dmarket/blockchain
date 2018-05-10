@@ -8,12 +8,12 @@ use prometheus::{IntCounter, Histogram};
 
 use currency::assets;
 use currency::assets::AssetBundle;
-use currency::configuration::Configuration;
 use currency::error::Error;
 use currency::status;
 use currency::transactions::components::FeesCalculator;
 use currency::wallet;
 use currency::SERVICE_ID;
+use currency::service::CONFIGURATION;
 
 /// Transaction ID.
 pub const DELETE_ASSETS_ID: u16 = 400;
@@ -31,8 +31,8 @@ message! {
 }
 
 impl FeesCalculator for DeleteAssets {
-    fn calculate_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error> {
-        let genesis_fees = Configuration::extract(view).fees();
+    fn calculate_fees(&self, _view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error> {
+        let genesis_fees = CONFIGURATION.lock().unwrap().fees();
         let tx_fee = genesis_fees.delete_assets();
 
         let mut fees_table = HashMap::new();
@@ -47,7 +47,7 @@ impl DeleteAssets {
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
         info!("Processing tx: {:?}", self);
 
-        let genesis_fees = Configuration::extract(&*view).fees();
+        let genesis_fees = CONFIGURATION.lock().unwrap().fees();
 
         let genesis_pub = genesis_fees.recipient();
         let creator_pub = self.pub_key();

@@ -8,13 +8,13 @@ use exonum::storage::Fork;
 use prometheus::{IntCounter, Histogram};
 
 use currency::assets::TradeAsset;
-use currency::configuration::Configuration;
 use currency::error::Error;
 use currency::status;
 use currency::transactions::components::Intermediary;
 use currency::transactions::components::{FeeStrategy, FeesCalculator, ThirdPartyFees};
 use currency::wallet;
 use currency::SERVICE_ID;
+use currency::service::CONFIGURATION;
 
 /// Transaction ID.
 pub const TRADE_INTERMEDIARY_ID: u16 = 502;
@@ -47,7 +47,7 @@ message! {
 impl FeesCalculator for TradeIntermediary {
     fn calculate_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error> {
         let offer = self.offer();
-        let genesis_fees = Configuration::extract(view).fees();
+        let genesis_fees = CONFIGURATION.lock().unwrap().fees();
         let mut fees = ThirdPartyFees::new_trade(&*view, &offer.assets())?;
         fees.add_fee(
             offer.intermediary().wallet(),
@@ -116,7 +116,7 @@ impl TradeIntermediary {
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
         info!("Processing tx: {:?}", self);
 
-        let genesis_fees = Configuration::extract(view).fees();
+        let genesis_fees = CONFIGURATION.lock().unwrap().fees();
 
         let offer = self.offer();
 

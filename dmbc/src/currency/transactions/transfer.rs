@@ -7,12 +7,12 @@ use exonum::storage::Fork;
 use prometheus::{IntCounter, Histogram};
 
 use currency::assets::AssetBundle;
-use currency::configuration::Configuration;
 use currency::error::Error;
 use currency::status;
 use currency::transactions::components::{FeesCalculator, ThirdPartyFees};
 use currency::wallet;
 use currency::SERVICE_ID;
+use currency::service::CONFIGURATION;
 
 /// Transaction ID.
 pub const TRANSFER_ID: u16 = 200;
@@ -34,7 +34,7 @@ message! {
 
 impl FeesCalculator for Transfer {
     fn calculate_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error> {
-        let genesis_fees = Configuration::extract(view).fees();
+        let genesis_fees = CONFIGURATION.lock().unwrap().fees();
         let fees = ThirdPartyFees::new_transfer(&*view, self.assets())?;
 
         let mut fees_table = HashMap::new();
@@ -54,7 +54,7 @@ impl FeesCalculator for Transfer {
 
 impl Transfer {
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
-        let genesis_fees = Configuration::extract(view).fees();
+        let genesis_fees = CONFIGURATION.lock().unwrap().fees();
 
         let mut genesis = wallet::Schema(&*view).fetch(genesis_fees.recipient());
 
