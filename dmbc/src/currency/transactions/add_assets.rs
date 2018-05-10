@@ -33,7 +33,7 @@ message!{
 
 impl FeesCalculator for AddAssets {
     fn calculate_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error> {
-        let genesis_fees = CONFIGURATION.lock().unwrap().fees();
+        let genesis_fees = CONFIGURATION.read().unwrap().fees();
         let fees = ThirdPartyFees::new_add_assets(&view, self.meta_assets())?;
 
         let mut fees_table = HashMap::new();
@@ -53,7 +53,7 @@ impl FeesCalculator for AddAssets {
 impl AddAssets {
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
         info!("Processing tx: {:?}", self);
-        let genesis_fees = CONFIGURATION.lock().unwrap().fees();
+        let genesis_fees = CONFIGURATION.read().unwrap().fees();
         let tx_fee = genesis_fees.add_assets();
 
         let genesis_pub = genesis_fees.recipient();

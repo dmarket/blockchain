@@ -11,7 +11,7 @@ use exonum::storage::Snapshot;
 use iron::Handler;
 use router::Router;
 use prometheus::IntGauge;
-use std::sync::Mutex;
+use std::sync::RwLock;
 
 use super::nats;
 use config;
@@ -55,7 +55,7 @@ lazy_static! {
         "Height of the blockchain of the current node in blocks."
     ).unwrap();
 
-    pub static ref CONFIGURATION: Mutex<Configuration> = Mutex::new(Configuration::default());
+    pub static ref CONFIGURATION: RwLock<Configuration> = RwLock::new(Configuration::default());
 }
 
 impl blockchain::Service for Service {
@@ -106,7 +106,7 @@ impl blockchain::Service for Service {
         info!("Block #{}.", last_block.height());
 
         BLOCKCHAIN_HEIGHT.set(last_block.height().0 as i64);
-        *CONFIGURATION.lock().unwrap() = Configuration::extract(ctx.snapshot());
+        *CONFIGURATION.write().unwrap() = Configuration::extract(ctx.snapshot());
 
         let txs = schema.block_txs(last_block.height());
         for hash in txs.iter() {

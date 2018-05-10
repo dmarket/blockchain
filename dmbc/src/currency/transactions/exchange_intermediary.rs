@@ -50,7 +50,7 @@ message! {
 impl FeesCalculator for ExchangeIntermediary {
     fn calculate_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error> {
         let offer = self.offer();
-        let genesis_fee = CONFIGURATION.lock().unwrap().fees().exchange();
+        let genesis_fee = CONFIGURATION.read().unwrap().fees().exchange();
         let mut fees = ThirdPartyFees::new_exchange(
             &*view,
             offer
@@ -110,7 +110,7 @@ impl ExchangeIntermediary {
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
         info!("Processing tx: {:?}", self);
 
-        let genesis_fees = CONFIGURATION.lock().unwrap().fees();
+        let genesis_fees = CONFIGURATION.read().unwrap().fees();
 
         let offer = self.offer();
 

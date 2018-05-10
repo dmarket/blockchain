@@ -32,7 +32,7 @@ message! {
 
 impl FeesCalculator for DeleteAssets {
     fn calculate_fees(&self, _view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error> {
-        let genesis_fees = CONFIGURATION.lock().unwrap().fees();
+        let genesis_fees = CONFIGURATION.read().unwrap().fees();
         let tx_fee = genesis_fees.delete_assets();
 
         let mut fees_table = HashMap::new();
@@ -47,7 +47,7 @@ impl DeleteAssets {
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
         info!("Processing tx: {:?}", self);
 
-        let genesis_fees = CONFIGURATION.lock().unwrap().fees();
+        let genesis_fees = CONFIGURATION.read().unwrap().fees();
 
         let genesis_pub = genesis_fees.recipient();
         let creator_pub = self.pub_key();

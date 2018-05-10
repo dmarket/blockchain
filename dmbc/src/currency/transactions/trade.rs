@@ -43,7 +43,7 @@ message! {
 impl FeesCalculator for Trade {
     fn calculate_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error> {
         let offer = self.offer();
-        let genesis_fees = CONFIGURATION.lock().unwrap().fees();
+        let genesis_fees = CONFIGURATION.read().unwrap().fees();
         let fees = ThirdPartyFees::new_trade(&*view, &offer.assets())?;
         let fee_strategy =
             FeeStrategy::try_from(offer.fee_strategy()).expect("fee strategy must be valid");
@@ -108,7 +108,7 @@ impl Trade {
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
         info!("Processing tx: {:?}", self);
 
-        let genesis_fees = CONFIGURATION.lock().unwrap().fees();
+        let genesis_fees = CONFIGURATION.read().unwrap().fees();
 
         let offer = self.offer();
         let fee_strategy =
