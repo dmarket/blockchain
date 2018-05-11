@@ -3,9 +3,10 @@ use std::ffi::CStr;
 use std::mem;
 use std::str::FromStr;
 
-use libc::{c_char, c_void};
+use libc::{c_char, c_void, size_t};
 use exonum::crypto::PublicKey;
 use exonum::encoding::serialize::FromHex;
+use exonum::messages::Message;
 
 use assets::{Fee, Fees};
 use decimal::UFract64;
@@ -43,6 +44,11 @@ impl BuilderContext {
         }
         Ok(())
     }
+}
+
+fn hex_string(bytes: Vec<u8>) -> String {
+    let strs: Vec<String> = bytes.iter().map(|b| format!("{:02x}", b)).collect();
+    strs.join("")
 }
 
 fn parse_str<'a>(string: *const c_char) -> Result<&'a str, Error> {
@@ -98,6 +104,82 @@ ffi_fn! {
                 message_type
             })
         )
+    }
+}
+
+ffi_fn! {
+    fn dmbc_builder_tx_create(
+        context: *mut BuilderContext,
+        length: *mut size_t,
+        error: *mut Error,
+    ) -> *const u8 {
+        let context = match BuilderContext::from_ptr(context) {
+            Ok(context) => context,
+            Err(err) => {
+                unsafe {
+                    if !error.is_null() {
+                        *error = err;
+                    }
+                    return ptr::null();
+                }
+            }
+        };
+
+        let mut bytes = match context.message_type {
+            ADD_ASSETS_ID => {
+                let builder: &mut AddAssetBuilder = unsafe { mem::transmute(context.context_ptr) };
+                match builder.build() {
+                    Ok(tx) => { tx.raw().body().to_vec()},
+                    Err(err) => {
+                        unsafe {
+                            if !error.is_null() {
+                                *error = err;
+                            }
+                            return ptr::null();
+                        }
+                    }
+                }
+            }
+            _ => {
+                unsafe {
+                    if !error.is_null() {
+                        *error = Error::new(ErrorKind::Text("Unknown context, not implemented".to_string()));
+                    }
+                    return ptr::null();
+                }
+            }
+        };
+
+        if length.is_null() {
+            unsafe {
+                if !error.is_null() {
+                    *error = Error::new(ErrorKind::Text("length argument is null".to_string()));
+                }
+                return ptr::null();
+            }
+        }
+        
+        bytes.shrink_to_fit();
+        let to_print = hex_string(bytes.clone());
+        println!("{}", to_print);
+
+        assert!(bytes.len() == bytes.capacity());
+        let ptr = bytes.as_ptr();
+        let length = unsafe { &mut *length };
+        let len = bytes.len() as size_t;
+        *length = len;
+
+        mem::forget(bytes);
+        ptr
+    }
+}
+
+ffi_fn! {
+    fn dmbc_builder_tx_free(ptr: *mut u8, len: size_t) {
+        let len = len as usize;
+        unsafe {
+            drop(Vec::from_raw_parts(ptr, len, len));
+        }
     }
 }
 

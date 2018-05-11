@@ -19,19 +19,22 @@ dmbc_builder *dmbc_builder_create(
     uint8_t protocol_version,
     uint16_t service_id,
     uint16_t message_type,
-    dmbc_error *error);
+    dmbc_error *error
+);
 
 void dmbc_builder_free(dmbc_builder *builder);
 
 bool dmbc_add_assets_set_public_key(
     dmbc_builder *builder, 
     const char *public_key, 
-    dmbc_error *error);
+    dmbc_error *error
+);
 
 bool dmbc_add_assets_set_seed(
     dmbc_builder *builder, 
     uint64_t seed, 
-    dmbc_error *error);
+    dmbc_error *error
+);
 
 bool dmbc_add_assets_add_asset(
     dmbc_builder *builder,
@@ -39,7 +42,16 @@ bool dmbc_add_assets_add_asset(
     uint64_t amount,
     dmbc_fees *fees,
     const char *receiver_key,
-    dmbc_error *error);
+    dmbc_error *error
+);
+
+uint8_t *dmbc_builder_tx_create(
+    dmbc_builder *builder,
+    size_t *length,
+    dmbc_error *error
+);
+
+void dmbc_builder_tx_free(uint8_t *pointer, size_t length);
 
 dmbc_fees *dmbc_fees_create(
     uint64_t trade_fixed, 
@@ -48,7 +60,8 @@ dmbc_fees *dmbc_fees_create(
     const char *exchange_fraction,
     uint64_t transfer_fixed, 
     const char *transfer_fraction,
-    dmbc_error *error);
+    dmbc_error *error
+);
 
 void dmbc_fees_free(dmbc_fees *fees);
 

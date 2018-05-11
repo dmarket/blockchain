@@ -7,6 +7,30 @@
 #define DEBUG false
 #endif
 
+int bytes_to_hex(const uint8_t *in, size_t insz,
+                 char *out, size_t outsz) {
+    if (outsz % 2 != 0 || outsz / 2 != insz) {
+        return -1;
+    }
+    
+    const uint8_t * pin = in;
+    const char * hex = "0123456789abcdef";
+    char * pout = out;
+    for(; pin < in+insz; pout +=2, pin++){
+        pout[0] = hex[(*pin>>4) & 0xF];
+        pout[1] = hex[ *pin     & 0xF];
+        if (pout + 2 - out > (int)outsz){
+            /* Better to truncate output string than overflow buffer */
+            /* it would be still better to either return a status */
+            /* or ensure the target buffer is large enough and it never happen */
+            break;
+        }
+    }
+    pout[-1] = 0;
+    return 0;
+}
+
+
 int main() {
     const char *public_key = "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f";
 
@@ -56,8 +80,25 @@ int main() {
         goto free_fee;
     }
     
-    debug(builder);
+    // debug(builder);
+    size_t length = 0;
+    uint8_t *buffer = dmbc_builder_tx_create(builder, &length, err);
+    if (NULL == buffer) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, "Error occured %s\n", msg);
+        }
+        goto free_fee;
+    }
 
+    char hex[346*2 + 1] = { 0 };
+    bytes_to_hex(buffer, length, hex, sizeof(hex) / sizeof(char) - 1);
+
+    fprintf(stdout, "\nlength is %lu\n", length);
+    fprintf(stdout, "\n the HEX \n%s\n", hex);
+
+free_tx:
+    dmbc_builder_tx_free(buffer, length);
 free_fee: 
     dmbc_fees_free(fees);
 free_builder:

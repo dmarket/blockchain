@@ -64,9 +64,6 @@ ffi_fn! {
         let cmsg = match CString::new(format!("{}", err)) {
             Ok(msg) => msg,
             Err(err) => {
-                // I guess this can probably happen if the regex itself has a
-                // NUL, and that NUL re-occurs in the context presented by the
-                // error message. In this case, just show as much as we can.
                 let nul = err.nul_position();
                 let msg = err.into_vec();
                 CString::new(msg[0..nul].to_owned()).unwrap()

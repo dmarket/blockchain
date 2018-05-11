@@ -3,6 +3,8 @@ use exonum::crypto::{PublicKey, SecretKey};
 use assets::{Fees, MetaAsset};
 use transactions::add_assets::AddAssets;
 
+use error::{Error, ErrorKind};
+
 pub struct Builder {
     network_id: u8,
     protocol_version: u8,
@@ -75,25 +77,25 @@ impl AddAssetBuilder {
         self.seed = seed;
     }
 
-    pub fn build(self) -> Result<AddAssets, ()> {
+    pub fn build(&self) -> Result<AddAssets, Error> {
         match self.validate() {
             Ok(_) => { 
                 let tx = AddAssets::new(
                     &self.public_key.unwrap(),
-                    self.assets,
+                    self.assets.clone(),
                     self.seed,
                     &SecretKey::zero(),
                 );
                 Ok(tx)
             },
-            Err(_) => Err(()),
+            Err(err) => Err(err),
         }
     }
 
-    fn validate(&self) -> Result<(), ()>{
+    fn validate(&self) -> Result<(), Error>{
         match self.public_key {
             Some(_) => Ok(()),
-            None => Err(()),
+            None => Err(Error::new(ErrorKind::Text("Public key isn't set".to_string()))),
         }
     }
 }
