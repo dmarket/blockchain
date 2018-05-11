@@ -38,7 +38,7 @@ references:
       command: |
         export CC=clang
         export CXX=clang++
-        cargo test --color=always --jobs 2
+        cargo test --color=always --jobs 2 -- --test-threads=1
 
   save_cache: &save_cache
     save_cache:
@@ -72,7 +72,7 @@ references:
       name: Generate Coverage
       command: |
         TESTS=`find target/debug -maxdepth 1 -type f -executable |  grep -v -E '(dmbc-node|dmbc-discovery|dmbc-flooder|dmbc-fuzzer|dmbc-bot)'`
-        for i in $TESTS; do mkdir -p target/debug/coverage/$i && kcov --verify --include-path dmbc target/debug/coverage/$i $i; done
+        for i in $TESTS; do mkdir -p target/debug/coverage/$i && kcov --verify --include-path dmbc target/debug/coverage/$i $i --test-threads=1; done
         kcov --merge target/debug/coverage/merged/ target/debug/coverage/target/debug/*
         #kcov --verify --include-path dmbc target/debug/coverage $(find target/debug -maxdepth 1 -type f -executable | grep -v -E '(dmbc-node|dmbc-discovery|dmbc-flooder|dmbc-fuzzer|dmbc-bot)')
 
