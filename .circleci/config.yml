@@ -54,7 +54,10 @@ references:
 
   restore_cache: &restore_cache
     restore_cache:
-      key: suntechsoft-dmarket-blockchain-{{ .Branch }}-{{ .Revision }}
+      keys:
+        - suntechsoft-dmarket-blockchain-{{ .Branch }}-{{ .Revision }}
+        - suntechsoft-dmarket-blockchain-{{ .Branch }}
+        - suntechsoft-dmarket-blockchain
 
   setup_coverage: &setup_coverage
     run:
