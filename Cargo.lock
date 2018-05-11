@@ -437,6 +437,7 @@ dependencies = [
 name = "dmbc-node"
 version = "2.0.0"
 dependencies = [
+ "clap 2.31.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "curl 0.4.12 (registry+https://github.com/rust-lang/crates.io-index)",
  "dmbc 2.0.0",
  "exonum 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",

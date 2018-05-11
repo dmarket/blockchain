@@ -5,11 +5,13 @@ extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
+extern crate clap;
 
 extern crate dmbc;
 
 mod keyfile;
 mod net_config;
+mod flag;
 
 use dmbc::config;
 use dmbc::currency::Service;
