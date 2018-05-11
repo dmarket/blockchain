@@ -161,7 +161,7 @@ workflows:
               only: master
       - build_release:
           requires:
-            - build_release
+            - build
           filters:
             tags:
               only: /^v.*/
