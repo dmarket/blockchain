@@ -152,7 +152,7 @@ workflows:
       - build:
           filters:
             tags:
-              only: /.*/
+              only: /^v.*/
       - build_dev:
           requires:
             - build
