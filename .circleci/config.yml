@@ -162,9 +162,9 @@ workflows:
             - build
           filters:
             branches:
-	    	ignore: /.*/
+	      ignore: /.*/
       	    tags:
-	    	only: /^v.*/
+	      only: /^v.*/
             #tags:
               #only: /^v\d+.*/
               #only: /^v[0-9]+\.[0-9]+\.[0-9]+/
