@@ -99,7 +99,7 @@ references:
       command: echo $DOCKER_PASS | docker login --username $DOCKER_USER --password-stdin        
 
 jobs:
-  build:
+  build_debug:
     working_directory: /project
 
     docker:
@@ -111,6 +111,24 @@ jobs:
       - *pre_setup
       - *setup_rust
       - *build_dev
+      - *run_tests
+      - *save_cache
+      - *setup_coverage
+      - *coverage
+      - store_artifacts:
+          path: target/debug/coverage/merged
+
+  build_release:
+    working_directory: /project
+
+    docker:
+      - image: rust
+
+    steps:
+      - checkout
+      - *restore_cache
+      - *pre_setup
+      - *setup_rust
       - *build_prod
       - *run_tests
       - *save_cache
@@ -119,7 +137,8 @@ jobs:
       - store_artifacts:
           path: target/debug/coverage/merged
 
-  build_dev:
+
+  build_docker_dev:
     working_directory: /project
     docker:
       - image: docker:git
@@ -132,7 +151,7 @@ jobs:
       - *docker_login
       - *build_dev_image
 
-  build_release:
+  build_docker_release:
     working_directory: /project
     docker:
       - image: docker:git
@@ -147,25 +166,34 @@ jobs:
 
 workflows:
   version: 2
-  build:
+  debug:
     jobs:
-      - build
-      - build_dev:
+      - build_debug:
+          filters:
+            tags:
+              ignore: /.*/
+      - build_docker_dev:
           requires:
-            - build
+            - build_debug
           filters:
             branches:
               only: master
-
+  release:
+    jobs:
       - build_release:
-          requires:
-            - build
           filters:
             branches:
               ignore: /.*/
             tags:
-              #only: /^v\d+.*/
-              only: (v[0-9]+\.[0-9]+\.[0-9]+)
+              only: /^v.*/
+      - build_docker_release:
+          requires:
+            - build_release
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
 
 #      - run:
 #          name: Install Docker client

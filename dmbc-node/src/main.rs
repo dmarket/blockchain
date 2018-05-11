@@ -5,11 +5,13 @@ extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde_json;
+extern crate clap;
 
 extern crate dmbc;
 
 mod keyfile;
 mod net_config;
+mod flag;
 
 use dmbc::config;
 use dmbc::currency::Service;
@@ -21,7 +23,7 @@ use exonum::node::{Node, NodeApiConfig, NodeConfig};
 use exonum::storage::{RocksDB, RocksDBOptions};
 use exonum_configuration::ConfigurationService;
 
-const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+pub const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
 const GENESIS_VALIDATOR_PUBLIC: &str =
     "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f";
@@ -29,6 +31,11 @@ const GENESIS_SERVICE_PUBLIC: &str =
     "68e774a4339cccfae644dcf3e44360839c84a6475c7d2943ed59b81d7eb6e9f0";
 
 fn main() {
+    let _f = match flag::parse() {
+        Some(f) => f,
+        None => ::std::process::exit(0)
+    };
+
     exonum::helpers::init_logger().unwrap();
 
     /** Create Keys */
