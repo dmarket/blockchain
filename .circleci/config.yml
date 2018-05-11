@@ -161,9 +161,13 @@ workflows:
           requires:
             - build
           filters:
-            tags:
+            branches:
+              ignore: /.*/
+      	    tags:
+	            only: /^v.*/
+            #tags:
               #only: /^v\d+.*/
-              only: /^v[0-9]+\.[0-9]+\.[0-9]+/
+              #only: /^v[0-9]+\.[0-9]+\.[0-9]+/
 
 #      - run:
 #          name: Install Docker client
