@@ -1,4 +1,7 @@
 [workspace]
-members = ["dmbc", "dmbc-node", "dmbc-fuzzer", "dmbc-discovery", "dmbc-flooder", "dmbc-bot"]
-default-members = ["dmbc", "dmbc-node", "dmbc-discovery"]
+members = ["dmbc", "dmbc-node", "dmbc-fuzzer", "dmbc-discovery", "dmbc-flooder", "dmbc-bot", "dep/exonum"]
+default-members = ["dmbc", "dmbc-node", "dmbc-discovery", "dep/exonum"]
 
+[patch.crates-io]
+exonum = { path = "dep/exonum" }
+prometheus = { git = "https://github.com/niksaak/rust-prometheus", rev="abd94f8" }
