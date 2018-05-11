@@ -156,18 +156,14 @@ workflows:
           filters:
             branches:
               only: master
-
       - build_release:
           requires:
             - build
           filters:
-            branches:
-	          ignore: /.*/
             tags:
-	          only: /^v.*/
-            #tags:
-              #only: /^v\d+.*/
-              #only: /^v[0-9]+\.[0-9]+\.[0-9]+/
+              only: /^v.*/
+            branches:
+              ignore: /.*/
 
 #      - run:
 #          name: Install Docker client
