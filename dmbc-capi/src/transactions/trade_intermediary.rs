@@ -2,7 +2,7 @@ use exonum::crypto::{PublicKey, Signature};
 
 use assets::TradeAsset;
 use transactions::components::Intermediary;
-use capi::SERVICE_ID;
+use transactions::components::service::SERVICE_ID;
 
 /// Transaction ID.
 pub const TRADE_INTERMEDIARY_ID: u16 = 502;

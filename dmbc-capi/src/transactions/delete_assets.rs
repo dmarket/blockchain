@@ -1,6 +1,6 @@
 use exonum::crypto::PublicKey;
 
-use capi::SERVICE_ID;
+use transactions::components::service::SERVICE_ID;
 use assets::AssetBundle;
 
 /// Transaction ID.

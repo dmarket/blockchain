@@ -1,7 +1,7 @@
 use exonum::crypto::PublicKey;
 
 use assets::MetaAsset;
-use capi::SERVICE_ID;
+use transactions::components::service::SERVICE_ID;
 
 pub const ADD_ASSETS_ID: u16 = 300;
 

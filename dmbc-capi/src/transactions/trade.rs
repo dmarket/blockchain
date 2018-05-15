@@ -1,7 +1,7 @@
 use exonum::crypto::{PublicKey, Signature};
 
 use assets::TradeAsset;
-use capi::SERVICE_ID;
+use transactions::components::service::SERVICE_ID;
 
 /// Transaction ID.
 pub const TRADE_ID: u16 = 501;

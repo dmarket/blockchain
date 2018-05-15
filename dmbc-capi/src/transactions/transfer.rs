@@ -1,7 +1,7 @@
 use exonum::crypto::PublicKey;
 
 use assets::AssetBundle;
-use capi::SERVICE_ID;
+use transactions::components::service::SERVICE_ID;
 
 /// Transaction ID.
 pub const TRANSFER_ID: u16 = 200;
