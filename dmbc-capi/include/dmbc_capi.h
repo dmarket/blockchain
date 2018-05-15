@@ -18,6 +18,14 @@ typedef struct dmbc_intermediary dmbc_intermediary;
 
 typedef struct dmbc_error dmbc_error;
 
+#define TRANSFER_ID 200
+#define ADD_ASSETS_ID 300
+#define DELETE_ASSETS_ID 400
+#define TRADE_ID 501
+#define TRADE_INTERMEDIARY_ID 502
+#define EXCHANGE_ID 601
+#define EXCHANGE_INTERMEDIARY_ID 602
+
 /*
     BUILDER
 */
@@ -79,6 +87,39 @@ bool dmbc_delete_assets_set_seed(
 );
 
 bool dmbc_delete_assets_add_asset(
+    dmbc_builder *builder,
+    dmbc_asset *asset,
+    dmbc_error *error
+);
+
+/*
+    Transfer
+*/
+bool dmbc_transfer_set_from_public_key(
+    dmbc_builder *builder,
+    const char *public_key,
+    dmbc_error *error
+);
+
+bool dmbc_transfer_set_to_public_key(
+    dmbc_builder *builder,
+    const char *public_key,
+    dmbc_error *error
+);
+
+bool dmbc_transfer_set_seed(
+    dmbc_builder *builder,
+    uint64_t seed,
+    dmbc_error *error
+);
+
+bool dmbc_transfer_set_amount(
+    dmbc_builder *builder,
+    uint64_t amount,
+    dmbc_error *error
+);
+
+bool dmbc_transfer_add_asset(
     dmbc_builder *builder,
     dmbc_asset *asset,
     dmbc_error *error

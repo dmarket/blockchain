@@ -13,21 +13,16 @@ pub struct Builder {
     service_id: u16,
 }
 
-pub trait TransactionBuilder<T> {
-    fn build(&self) -> Result<T, Error>;
-}
-
-
 #[derive(Debug, Clone)]
-struct TransactionMetadata {
+struct TransactionHeader {
     network_id: u8,
     protocol_version: u8,
     service_id: u16,
 }
 
-impl From<Builder> for TransactionMetadata {
+impl From<Builder> for TransactionHeader {
     fn from(b: Builder) -> Self {
-        TransactionMetadata {
+        TransactionHeader {
             network_id: b.network_id,
             protocol_version: b.protocol_version,
             service_id: b.service_id,
@@ -59,16 +54,17 @@ impl Builder {
 
 #[derive(Debug, Clone)]
 pub struct AddAssetBuilder {
-    meta: TransactionMetadata,
+    header: TransactionHeader,
     public_key: Option<PublicKey>,
     assets: Vec<MetaAsset>,
     seed: u64,
 }
 
 impl AddAssetBuilder {
-    fn new(meta: TransactionMetadata) -> Self {
+    fn new(header: TransactionHeader
+) -> Self {
         AddAssetBuilder {
-            meta,
+            header,
             public_key: None,
             assets: Vec::new(),
             seed: 0,
@@ -98,10 +94,8 @@ impl AddAssetBuilder {
             None => Err(Error::new(ErrorKind::Text("Public key isn't set".to_string()))),
         }
     }
-}
 
-impl TransactionBuilder<AddAssets> for AddAssetBuilder {
-    fn build(&self) -> Result<AddAssets, Error> {
+    pub fn build(&self) -> Result<AddAssets, Error> {
         self.validate()?;
         Ok(
             AddAssets::new(
@@ -116,16 +110,17 @@ impl TransactionBuilder<AddAssets> for AddAssetBuilder {
 
 #[derive(Clone, Debug)]
 pub struct DelAssetBuilder {
-    meta: TransactionMetadata,
+    header: TransactionHeader,
     public_key: Option<PublicKey>,
     assets: Vec<AssetBundle>,
     seed: u64,
 }
 
 impl DelAssetBuilder {
-    fn new(meta: TransactionMetadata) -> Self {
+    fn new(header: TransactionHeader
+) -> Self {
         DelAssetBuilder {
-            meta,
+            header,
             public_key: None,
             assets: Vec::new(),
             seed: 0,
@@ -150,10 +145,8 @@ impl DelAssetBuilder {
             None => Err(Error::new(ErrorKind::Text("Public key isn't set".to_string()))),
         }
     }
-}
 
-impl TransactionBuilder<DeleteAssets> for DelAssetBuilder {
-    fn build(&self) -> Result<DeleteAssets, Error> {
+    pub fn build(&self) -> Result<DeleteAssets, Error> {
         self.validate()?;
         Ok(
             DeleteAssets::new(
@@ -168,7 +161,7 @@ impl TransactionBuilder<DeleteAssets> for DelAssetBuilder {
 
 #[derive(Clone, Debug)]
 pub struct TransferBuilder {
-    meta: TransactionMetadata,
+    header: TransactionHeader,
     from: Option<PublicKey>,
     to: Option<PublicKey>,
     amount: u64,
@@ -178,9 +171,10 @@ pub struct TransferBuilder {
 }
 
 impl TransferBuilder {
-    fn new(meta: TransactionMetadata) -> Self {
+    fn new(header: TransactionHeader
+) -> Self {
         TransferBuilder {
-            meta,
+            header,
             from: None,
             to: None,
             amount: 0,
@@ -221,10 +215,8 @@ impl TransferBuilder {
             (_, None) => Err(Error::new(ErrorKind::Text("`to` public key isn't set".to_string()))),
         }
     }
-}
 
-impl TransactionBuilder<Transfer> for TransferBuilder {
-    fn build(&self) -> Result<Transfer, Error> {
+    pub fn build(&self) -> Result<Transfer, Error> {
         self.verify()?;
 
         Ok(

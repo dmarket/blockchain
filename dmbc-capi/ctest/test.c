@@ -8,52 +8,39 @@
 #define DEBUG false
 #endif
 
-int bytes_to_hex(const uint8_t *in, size_t insz,
-                 char *out, size_t outsz) {
-    if (outsz % 2 != 0 || outsz / 2 != insz) {
-        return -1;
+const char *error_msg = "Error occured '%s'\n";
+const char *output = "\nTransaction length is %lu hex %s\n\n\n\n";
+
+void print_hex(const uint8_t *hex, size_t length) {
+    for (int i = 0; i < length; ++i) {
+        fprintf(stdout, "%02x", hex[i]);
     }
-    
-    const uint8_t * pin = in;
-    const char * hex = "0123456789abcdef";
-    char * pout = out;
-    for(; pin < in+insz; pout +=2, pin++){
-        pout[0] = hex[(*pin>>4) & 0xF];
-        pout[1] = hex[ *pin     & 0xF];
-        if (pout + 2 - out > (int)outsz){
-            /* Better to truncate output string than overflow buffer */
-            /* it would be still better to either return a status */
-            /* or ensure the target buffer is large enough and it never happen */
-            break;
-        }
-    }
-    pout[-1] = 0;
-    return 0;
+    puts("");
 }
 
 void add_assets() {
     const char *public_key = "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f";
 
     dmbc_error *err = dmbc_error_new();
-    dmbc_builder *builder = dmbc_builder_create(0, 0, 2, 300, err);
+    dmbc_builder *builder = dmbc_builder_create(0, 0, 2, ADD_ASSETS_ID, err);
     if (NULL == builder) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
-            fprintf(stderr, "Error occured '%s'\n", msg);
+            fprintf(stderr, error_msg, msg);
         }
         goto free_error;
     }
     if (!dmbc_add_assets_set_public_key(builder, public_key, err)) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
-            fprintf(stderr, "Error occured %s\n", msg);
+            fprintf(stderr, error_msg, msg);
         }
         goto free_builder;
     } 
     if (!dmbc_add_assets_set_seed(builder, 102, err)) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
-            fprintf(stderr, "Error occured %s\n", msg);
+            fprintf(stderr, error_msg, msg);
         }
         goto free_builder;
     }
@@ -61,21 +48,21 @@ void add_assets() {
     if (NULL == fees) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
-            fprintf(stderr, "Error occured %s\n", msg);
+            fprintf(stderr, error_msg, msg);
         }
         goto free_builder;
     }
     if (!dmbc_add_assets_add_asset(builder, "Asset#10", 10, fees, public_key, err)) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
-            fprintf(stderr, "Error occured %s\n", msg);
+            fprintf(stderr, error_msg, msg);
         }
         goto free_fee;
     }
     if (!dmbc_add_assets_add_asset(builder, "Asset#00", 1000, fees, public_key, err)) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
-            fprintf(stderr, "Error occured %s\n", msg);
+            fprintf(stderr, error_msg, msg);
         }
         goto free_fee;
     }
@@ -85,18 +72,12 @@ void add_assets() {
     if (NULL == buffer) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
-            fprintf(stderr, "Error occured %s\n", msg);
+            fprintf(stderr, error_msg, msg);
         }
         goto free_fee;
     }
 
-    char *hex = malloc(length * 2 + 1);
-    bytes_to_hex(buffer, length, hex, length * 2 + 1);
-
-    fprintf(stdout, "\nlength is %lu\n", length);
-    fprintf(stdout, "\n the HEX \n%s\n", hex);
-
-    free(hex);
+    print_hex(buffer, length);
 
     dmbc_builder_tx_free(buffer, length);
 free_fee: 
@@ -111,25 +92,25 @@ void delete_assets() {
     const char *public_key = "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f";
 
     dmbc_error *err = dmbc_error_new();
-    dmbc_builder *builder = dmbc_builder_create(0, 0, 2, 400, err);
+    dmbc_builder *builder = dmbc_builder_create(0, 0, 2, DELETE_ASSETS_ID, err);
     if (NULL == builder) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
-            fprintf(stderr, "Error occured '%s'\n", msg);
+            fprintf(stderr, error_msg, msg);
         }
         goto free_error;
     }
     if (!dmbc_delete_assets_set_public_key(builder, public_key, err)) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
-            fprintf(stderr, "Error occured %s\n", msg);
+            fprintf(stderr, error_msg, msg);
         }
         goto free_builder;
     } 
     if (!dmbc_delete_assets_set_seed(builder, 102, err)) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
-            fprintf(stderr, "Error occured %s\n", msg);
+            fprintf(stderr, error_msg, msg);
         }
         goto free_builder;
     }
@@ -137,36 +118,108 @@ void delete_assets() {
     if (NULL == asset) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
-            fprintf(stderr, "Error occured %s\n", msg);
+            fprintf(stderr, error_msg, msg);
         }
         goto free_builder;
     }
     if (!dmbc_delete_assets_add_asset(builder, asset, err)) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
-            fprintf(stderr, "Error occured %s\n", msg);
+            fprintf(stderr, error_msg, msg);
         }
         goto free_asset;
     }
     
-    debug(builder);
+
     size_t length = 0;
     uint8_t *buffer = dmbc_builder_tx_create(builder, &length, err);
     if (NULL == buffer) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
-            fprintf(stderr, "Error occured %s\n", msg);
+            fprintf(stderr, error_msg, msg);
         }
         goto free_asset;
     }
 
-    char *hex = malloc(length * 2 + 1);
-    bytes_to_hex(buffer, length, hex, length * 2 + 1);
+    print_hex(buffer, length);
 
-    fprintf(stdout, "\nlength is %lu\n", length);
-    fprintf(stdout, "\n the HEX \n%s\n", hex);
+    dmbc_builder_tx_free(buffer, length);
+free_asset: 
+    dmbc_asset_free(asset);
+free_builder:
+    dmbc_builder_free(builder);
+free_error:
+    dmbc_error_free(err);
+}
 
-    free(hex);
+void transfer() {
+    const char *from_public_key = "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f";
+    const char *to_public_key = "00098e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411000";
+
+    dmbc_error *err = dmbc_error_new();
+    dmbc_builder *builder = dmbc_builder_create(0, 0, 2, TRANSFER_ID, err);
+    if (NULL == builder) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, error_msg, msg);
+        }
+        goto free_error;
+    }
+    if (!dmbc_transfer_set_from_public_key(builder, from_public_key, err)) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, error_msg, msg);
+        }
+        goto free_builder;
+    } 
+    if (!dmbc_transfer_set_to_public_key(builder, to_public_key, err)) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, error_msg, msg);
+        }
+        goto free_builder;
+    } 
+    if (!dmbc_transfer_set_seed(builder, 102, err)) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, error_msg, msg);
+        }
+        goto free_builder;
+    }
+    if (!dmbc_transfer_set_amount(builder, 10000000, err)) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, error_msg, msg);
+        }
+        goto free_builder;
+    }
+    dmbc_asset *asset = dmbc_asset_create("00001111222233334444555566667777", 10, err);
+    if (NULL == asset) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, error_msg, msg);
+        }
+        goto free_builder;
+    }
+    if (!dmbc_transfer_add_asset(builder, asset, err)) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, error_msg, msg);
+        }
+        goto free_asset;
+    }
+    
+    size_t length = 0;
+    uint8_t *buffer = dmbc_builder_tx_create(builder, &length, err);
+    if (NULL == buffer) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, error_msg, msg);
+        }
+        goto free_asset;
+    }
+
+    print_hex(buffer, length);
 
     dmbc_builder_tx_free(buffer, length);
 free_asset: 
@@ -180,4 +233,5 @@ free_error:
 int main() {
     add_assets();
     delete_assets();
+    transfer();
 }

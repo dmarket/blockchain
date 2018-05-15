@@ -5,7 +5,6 @@ use libc::{c_void, size_t};
 use exonum::messages::Message;
 
 use transactions::builders::transaction::{Builder, AddAssetBuilder, DelAssetBuilder, TransferBuilder};
-use transactions::builders::transaction::TransactionBuilder;
 use transactions::add_assets::ADD_ASSETS_ID;
 use transactions::delete_assets::DELETE_ASSETS_ID;
 use transactions::transfer::TRANSFER_ID;
@@ -182,17 +181,18 @@ ffi_fn! {
             }
         }
         
-        bytes.shrink_to_fit();
-        let to_print = hex_string(bytes.clone());
-        println!("{}", to_print);
+        // bytes.shrink_to_fit();
+        // let to_print = hex_string(bytes.clone());
+        // println!("{}", to_print);
 
         assert!(bytes.len() == bytes.capacity());
-        let ptr = bytes.as_ptr();
         let length = unsafe { &mut *length };
         let len = bytes.len() as size_t;
         *length = len;
 
+        let ptr = bytes.as_ptr();
         mem::forget(bytes);
+
         ptr
     }
 }
