@@ -6,28 +6,31 @@ use capi::common::parse_asset_id;
 
 use error::Error;
 
-fn dmbc_asset_create(
-    id: *const c_char,
-    amount: u64,  
-    error: *mut Error,
-) -> *mut AssetBundle {
-    let asset_id = match parse_asset_id(id) {
-        Ok(id) => id,
-        Err(err) => {
-            unsafe {
-                if !error.is_null() {
-                    *error = err;
+ffi_fn! {
+    fn dmbc_asset_create(
+        id: *const c_char,
+        amount: u64,  
+        error: *mut Error,
+    ) -> *mut AssetBundle {
+        let asset_id = match parse_asset_id(id) {
+            Ok(id) => id,
+            Err(err) => {
+                println!("{:?}", err);
+                unsafe {
+                    if !error.is_null() {
+                        *error = err;
+                    }
+                    return ptr::null_mut();
                 }
-                return ptr::null_mut();
             }
-        }
-    };
+        };
 
-   Box::into_raw(
-        Box::new(
-            AssetBundle::new(asset_id, amount)
+    Box::into_raw(
+            Box::new(
+                AssetBundle::new(asset_id, amount)
+            )
         )
-    )
+    }
 }
 
 ffi_fn! {

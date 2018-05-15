@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "dmbc_capi.h"
 
@@ -30,8 +31,7 @@ int bytes_to_hex(const uint8_t *in, size_t insz,
     return 0;
 }
 
-
-int main() {
+void add_assets() {
     const char *public_key = "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f";
 
     dmbc_error *err = dmbc_error_new();
@@ -80,7 +80,6 @@ int main() {
         goto free_fee;
     }
     
-    // debug(builder);
     size_t length = 0;
     uint8_t *buffer = dmbc_builder_tx_create(builder, &length, err);
     if (NULL == buffer) {
@@ -91,13 +90,14 @@ int main() {
         goto free_fee;
     }
 
-    char hex[346*2 + 1] = { 0 };
-    bytes_to_hex(buffer, length, hex, sizeof(hex) / sizeof(char) - 1);
+    char *hex = malloc(length * 2 + 1);
+    bytes_to_hex(buffer, length, hex, length * 2 + 1);
 
     fprintf(stdout, "\nlength is %lu\n", length);
     fprintf(stdout, "\n the HEX \n%s\n", hex);
 
-free_tx:
+    free(hex);
+
     dmbc_builder_tx_free(buffer, length);
 free_fee: 
     dmbc_fees_free(fees);
@@ -105,4 +105,79 @@ free_builder:
     dmbc_builder_free(builder);
 free_error:
     dmbc_error_free(err);
+}
+
+void delete_assets() {
+    const char *public_key = "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f";
+
+    dmbc_error *err = dmbc_error_new();
+    dmbc_builder *builder = dmbc_builder_create(0, 0, 2, 400, err);
+    if (NULL == builder) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, "Error occured '%s'\n", msg);
+        }
+        goto free_error;
+    }
+    if (!dmbc_delete_assets_set_public_key(builder, public_key, err)) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, "Error occured %s\n", msg);
+        }
+        goto free_builder;
+    } 
+    if (!dmbc_delete_assets_set_seed(builder, 102, err)) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, "Error occured %s\n", msg);
+        }
+        goto free_builder;
+    }
+    dmbc_asset *asset = dmbc_asset_create("00001111222233334444555566667777", 10, err);
+    if (NULL == asset) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, "Error occured %s\n", msg);
+        }
+        goto free_builder;
+    }
+    if (!dmbc_delete_assets_add_asset(builder, asset, err)) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, "Error occured %s\n", msg);
+        }
+        goto free_asset;
+    }
+    
+    debug(builder);
+    size_t length = 0;
+    uint8_t *buffer = dmbc_builder_tx_create(builder, &length, err);
+    if (NULL == buffer) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, "Error occured %s\n", msg);
+        }
+        goto free_asset;
+    }
+
+    char *hex = malloc(length * 2 + 1);
+    bytes_to_hex(buffer, length, hex, length * 2 + 1);
+
+    fprintf(stdout, "\nlength is %lu\n", length);
+    fprintf(stdout, "\n the HEX \n%s\n", hex);
+
+    free(hex);
+
+    dmbc_builder_tx_free(buffer, length);
+free_asset: 
+    dmbc_asset_free(asset);
+free_builder:
+    dmbc_builder_free(builder);
+free_error:
+    dmbc_error_free(err);
+}
+
+int main() {
+    add_assets();
+    delete_assets();
 }

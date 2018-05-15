@@ -33,8 +33,8 @@ pub fn parse_asset_id(asset_id: *const c_char) -> Result<AssetId, Error> {
     let asset_id_str = parse_str(asset_id)?;
     match AssetId::from_hex(asset_id_str) {
         Ok(asset_id) => Ok(asset_id),
-        Err(err) => Err(
-            Error::new(ErrorKind::Asset(err))
-        )
+        Err(err) => {
+            Err(Error::new(ErrorKind::Asset(err)))
+        }
     }
 }

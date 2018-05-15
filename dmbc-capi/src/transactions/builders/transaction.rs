@@ -102,6 +102,7 @@ impl AddAssetBuilder {
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct DelAssetBuilder {
     meta: TransactionMetadata,
     public_key: Option<PublicKey>,

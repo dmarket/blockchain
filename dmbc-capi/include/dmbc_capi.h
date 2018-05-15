@@ -87,10 +87,11 @@ bool dmbc_delete_assets_add_asset(
 */
 dmbc_asset *dmbc_asset_create(
     const char *id,
-    uint64_t amount
+    uint64_t amount,
+    dmbc_error *error
 );
 
-void dmbc_asset_fee(dmbc_asset *asset);
+void dmbc_asset_free(dmbc_asset *asset);
 
 /*
     FEES
