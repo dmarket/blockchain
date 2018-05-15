@@ -6,6 +6,7 @@ extern crate bodyparser;
 #[macro_use]
 extern crate exonum;
 extern crate exonum_configuration;
+extern crate exonum_rocksdb;
 #[cfg(test)]
 extern crate exonum_testkit;
 extern crate hyper;
