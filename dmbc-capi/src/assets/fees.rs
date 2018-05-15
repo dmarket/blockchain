@@ -1,3 +1,4 @@
+use std::mem;
 use decimal;
 
 encoding_struct! {
@@ -14,5 +15,11 @@ encoding_struct! {
         trade:    Fee,
         exchange: Fee,
         transfer: Fee,
+    }
+}
+
+impl Fees {
+    pub fn from_ptr<'a>(ptr: *const Fees) -> &'a Self {
+        unsafe { mem::transmute(ptr) }
     }
 }

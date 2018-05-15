@@ -4,9 +4,11 @@ use std::mem;
 use libc::{c_void, size_t};
 use exonum::messages::Message;
 
-use transactions::builders::transaction::{Builder, AddAssetBuilder, DelAssetBuilder};
+use transactions::builders::transaction::{Builder, AddAssetBuilder, DelAssetBuilder, TransferBuilder};
+use transactions::builders::transaction::TransactionBuilder;
 use transactions::add_assets::ADD_ASSETS_ID;
 use transactions::delete_assets::DELETE_ASSETS_ID;
+use transactions::transfer::TRANSFER_ID;
 use capi::common::hex_string;
 
 use error::{Error, ErrorKind};
@@ -37,6 +39,14 @@ impl BuilderContext {
         }
         Ok(())
     }
+
+    pub fn unwrap_mut<T>(&self) -> &mut T {
+        unsafe { mem::transmute(self.context_ptr) }
+    }
+
+    pub fn unwrap<T>(&self) -> &T {
+        unsafe { mem::transmute(self.context_ptr) }
+    }
 }
 
 ffi_fn! {
@@ -51,14 +61,19 @@ ffi_fn! {
         let context_ptr: *mut c_void = match message_type {
             ADD_ASSETS_ID => {
                 let builder = Builder::new(network_id, protocol_version, service_id)
-                    .tx_add_asset();
+                    .tx_add_assets();
                 unsafe { mem::transmute(Box::new(builder)) }
             },
             DELETE_ASSETS_ID => {
                 let builder = Builder::new(network_id, protocol_version, service_id)
-                    .tx_delete_asset();
+                    .tx_delete_assets();
                 unsafe { mem::transmute(Box::new(builder)) }
-            }
+            },
+            TRANSFER_ID => {
+                let builder = Builder::new(network_id, protocol_version, service_id)
+                    .tx_transfer();
+                unsafe { mem::transmute(Box::new(builder)) }
+            },
             _ => {
                 unsafe {
                     if !error.is_null() {
@@ -107,7 +122,7 @@ ffi_fn! {
 
         let mut bytes = match context.message_type {
             ADD_ASSETS_ID => {
-                let builder: &mut AddAssetBuilder = unsafe { mem::transmute(context.context_ptr) };
+                let builder: &mut AddAssetBuilder = context.unwrap_mut();
                 match builder.build() {
                     Ok(tx) => { tx.raw().body().to_vec() },
                     Err(err) => {
@@ -121,7 +136,21 @@ ffi_fn! {
                 }
             },
             DELETE_ASSETS_ID => {
-                let builder: &mut DelAssetBuilder = unsafe { mem::transmute(context.context_ptr) };
+                let builder: &mut DelAssetBuilder = context.unwrap_mut();
+                match builder.build() {
+                    Ok(tx) => { tx.raw().body().to_vec() },
+                    Err(err) => {
+                        unsafe {
+                            if !error.is_null() {
+                                *error = err;
+                            }
+                            return ptr::null();
+                        }
+                    }
+                }
+            },
+            TRANSFER_ID => {
+                let builder: &mut TransferBuilder = context.unwrap_mut();
                 match builder.build() {
                     Ok(tx) => { tx.raw().body().to_vec() },
                     Err(err) => {

@@ -1,8 +1,7 @@
-use std::mem;
-
 use transactions::builders::transaction::*;
 use transactions::add_assets::ADD_ASSETS_ID;
 use transactions::delete_assets::DELETE_ASSETS_ID;
+use transactions::transfer::TRANSFER_ID;
 use capi::builder::BuilderContext;
 
 ffi_fn! {
@@ -10,11 +9,15 @@ ffi_fn! {
         let context = unsafe { &*context };
         match context.message_type {
             ADD_ASSETS_ID => {
-                let builder: &mut AddAssetBuilder = unsafe { mem::transmute(context.context_ptr) };
+                let builder: &mut AddAssetBuilder = context.unwrap_mut();
                 println!("{:?}", builder);
             },
             DELETE_ASSETS_ID => {
-                let builder: &mut DelAssetBuilder = unsafe { mem::transmute(context.context_ptr) };
+                let builder: &mut DelAssetBuilder = context.unwrap_mut();
+                println!("{:?}", builder);
+            },
+            TRANSFER_ID => {
+                let builder: &mut TransferBuilder = context.unwrap_mut();
                 println!("{:?}", builder);
             },
             _ => {

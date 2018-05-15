@@ -1,5 +1,3 @@
-use std::mem;
-
 use libc::c_char;
 
 use capi::builder::BuilderContext;
@@ -53,7 +51,7 @@ ffi_fn! {
             }
         };
 
-        let builder: &mut AddAssetBuilder = unsafe { mem::transmute(context.context_ptr) };
+        let builder: &mut AddAssetBuilder = context.unwrap_mut();
         builder.public_key(public_key);
         true
     }
@@ -90,7 +88,7 @@ ffi_fn! {
             }
         }
 
-        let builder: &mut AddAssetBuilder = unsafe { mem::transmute(context.context_ptr) };
+        let builder: &mut AddAssetBuilder = context.unwrap_mut();
         builder.seed(seed);
         return true
     }
@@ -137,7 +135,7 @@ ffi_fn! {
                 return false;
             }
         } 
-        let fees: &Fees = unsafe { mem::transmute(fees) };
+        let fees = Fees::from_ptr(fees);
 
         let receiver_key = match parse_public_key(receiver_key) {
             Ok(pk) => pk,
@@ -163,7 +161,7 @@ ffi_fn! {
             }
         };
 
-        let builder: &mut AddAssetBuilder = unsafe { mem::transmute(context.context_ptr) };
+        let builder: &mut AddAssetBuilder = context.unwrap_mut();
         builder.add_asset(name, count, fees.clone(), &receiver_key);
 
         true
