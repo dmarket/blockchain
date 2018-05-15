@@ -1,6 +1,7 @@
 extern crate curl;
 extern crate exonum;
 extern crate exonum_configuration;
+extern crate exonum_rocksdb;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
@@ -22,6 +23,7 @@ use exonum::encoding::serialize::FromHex;
 use exonum::node::{Node, NodeApiConfig, NodeConfig};
 use exonum::storage::{RocksDB, RocksDBOptions};
 use exonum_configuration::ConfigurationService;
+use exonum_rocksdb::DBCompressionType;
 
 pub const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
@@ -126,6 +128,8 @@ fn main() {
     // Initialize database
     let mut options = RocksDBOptions::default();
     options.create_if_missing(true);
+    options.enable_statistics();
+    options.set_compression_type(DBCompressionType::Zlib);
     let path = config::config().db().path();
     let db = Box::new(RocksDB::open(path, &options).unwrap());
 

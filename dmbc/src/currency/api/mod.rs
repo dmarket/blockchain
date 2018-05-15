@@ -7,6 +7,7 @@ pub mod error;
 pub mod fees;
 pub mod hex;
 pub mod metrics;
+pub mod db_stats;
 pub mod transaction;
 pub mod wallet;
 pub mod blocks;
@@ -30,6 +31,7 @@ use self::assets_intern::AssetInternApi;
 use self::fees::FeesApi;
 use self::hex::HexApi;
 use self::metrics::MetricsApi;
+use self::db_stats::DbStatsApi;
 use self::blocks::BlocksApi;
 use self::params::{FromValue, Params};
 use self::transaction::TransactionApi;
@@ -138,6 +140,9 @@ impl Api for ServiceApi {
         api.wire(router);
 
         let api = MetricsApi {};
+        api.wire(router);
+
+        let api = DbStatsApi {};
         api.wire(router);
 
         let api = FeesApi {
