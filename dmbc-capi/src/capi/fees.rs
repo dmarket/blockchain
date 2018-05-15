@@ -1,11 +1,11 @@
 use std::ptr; 
-use std::ffi::CStr;
 use std::str::FromStr;
 
 use libc::c_char;
 
 use decimal::UFract64;
 use assets::{Fee, Fees};
+use capi::common::parse_str;
 
 use error::{Error, ErrorKind};
 
@@ -14,26 +14,16 @@ fn dmbc_fee_create(
     fraction: *const c_char, 
     error: *mut Error,
 ) -> Option<Fee> {
-    if fraction.is_null() {
-        unsafe {
-            if !error.is_null() {
-                *error = Error::new(ErrorKind::Text("fraction is nul".to_string()));
-            }
-            return None
-        }
-    }
-
-    let fraction_result = unsafe { CStr::from_ptr(fraction).to_str() };
-    let fraction_str = match fraction_result {
+    let fraction_str = match parse_str(fraction) {
         Ok(fraction_str) => fraction_str,
         Err(err) => {
-            unsafe {
-                if !error.is_null() {
-                    *error = Error::new(ErrorKind::Utf8(err));
+                unsafe {
+                    if !error.is_null() {
+                        *error = err;
+                    }
+                    return None;
                 }
-                return None
             }
-        },
     };
 
     let fraction = match UFract64::from_str(fraction_str) {

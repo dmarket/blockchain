@@ -1,7 +1,8 @@
 use exonum::crypto::{PublicKey, SecretKey};
 
-use assets::{Fees, MetaAsset};
+use assets::{Fees, MetaAsset, AssetBundle};
 use transactions::add_assets::AddAssets;
+use transactions::delete_assets::DeleteAssets;
 
 use error::{Error, ErrorKind};
 
@@ -39,6 +40,10 @@ impl Builder {
 
     pub fn tx_add_asset(self) -> AddAssetBuilder {
         AddAssetBuilder::new(self.into())
+    }
+
+    pub fn tx_delete_asset(self) -> DelAssetBuilder {
+        DelAssetBuilder::new(self.into())
     }
 }
 
@@ -78,21 +83,67 @@ impl AddAssetBuilder {
     }
 
     pub fn build(&self) -> Result<AddAssets, Error> {
-        match self.validate() {
-            Ok(_) => { 
-                let tx = AddAssets::new(
-                    &self.public_key.unwrap(),
-                    self.assets.clone(),
-                    self.seed,
-                    &SecretKey::zero(),
-                );
-                Ok(tx)
-            },
-            Err(err) => Err(err),
+        self.validate()?;
+        Ok(
+            AddAssets::new(
+                &self.public_key.unwrap(),
+                self.assets.clone(),
+                self.seed,
+                &SecretKey::zero(),
+            )
+        )
+    }
+
+    fn validate(&self) -> Result<(), Error> {
+        match self.public_key {
+            Some(_) => Ok(()),
+            None => Err(Error::new(ErrorKind::Text("Public key isn't set".to_string()))),
+        }
+    }
+}
+
+pub struct DelAssetBuilder {
+    meta: TransactionMetadata,
+    public_key: Option<PublicKey>,
+    assets: Vec<AssetBundle>,
+    seed: u64,
+}
+
+impl DelAssetBuilder {
+    fn new(meta: TransactionMetadata) -> Self {
+        DelAssetBuilder {
+            meta,
+            public_key: None,
+            assets: Vec::new(),
+            seed: 0,
         }
     }
 
-    fn validate(&self) -> Result<(), Error>{
+    pub fn public_key(&mut self, public_key: PublicKey) {
+        self.public_key = Some(public_key);
+    }
+
+    pub fn add_asset(&mut self, asset: AssetBundle) {
+        self.assets.push(asset);
+    }
+
+    pub fn seed(&mut self, seed: u64) {
+        self.seed = seed;
+    }
+
+    pub fn build(&self) -> Result<DeleteAssets, Error> {
+        self.validate()?;
+        Ok(
+            DeleteAssets::new(
+                &self.public_key.unwrap(),
+                self.assets.clone(),
+                self.seed,
+                &SecretKey::zero(),
+            )
+        )
+    }
+
+    fn validate(&self) -> Result<(), Error> {
         match self.public_key {
             Some(_) => Ok(()),
             None => Err(Error::new(ErrorKind::Text("Public key isn't set".to_string()))),

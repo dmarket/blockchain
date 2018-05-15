@@ -4,8 +4,9 @@ use std::mem;
 use libc::{c_void, size_t};
 use exonum::messages::Message;
 
-use transactions::builders::transaction::{Builder, AddAssetBuilder};
+use transactions::builders::transaction::{Builder, AddAssetBuilder, DelAssetBuilder};
 use transactions::add_assets::ADD_ASSETS_ID;
+use transactions::delete_assets::DELETE_ASSETS_ID;
 use capi::common::hex_string;
 
 use error::{Error, ErrorKind};
@@ -53,6 +54,11 @@ ffi_fn! {
                     .tx_add_asset();
                 unsafe { mem::transmute(Box::new(builder)) }
             },
+            DELETE_ASSETS_ID => {
+                let builder = Builder::new(network_id, protocol_version, service_id)
+                    .tx_delete_asset();
+                unsafe { mem::transmute(Box::new(builder)) }
+            }
             _ => {
                 unsafe {
                     if !error.is_null() {
@@ -103,7 +109,21 @@ ffi_fn! {
             ADD_ASSETS_ID => {
                 let builder: &mut AddAssetBuilder = unsafe { mem::transmute(context.context_ptr) };
                 match builder.build() {
-                    Ok(tx) => { tx.raw().body().to_vec()},
+                    Ok(tx) => { tx.raw().body().to_vec() },
+                    Err(err) => {
+                        unsafe {
+                            if !error.is_null() {
+                                *error = err;
+                            }
+                            return ptr::null();
+                        }
+                    }
+                }
+            },
+            DELETE_ASSETS_ID => {
+                let builder: &mut DelAssetBuilder = unsafe { mem::transmute(context.context_ptr) };
+                match builder.build() {
+                    Ok(tx) => { tx.raw().body().to_vec() },
                     Err(err) => {
                         unsafe {
                             if !error.is_null() {

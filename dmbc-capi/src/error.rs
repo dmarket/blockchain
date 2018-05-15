@@ -4,6 +4,7 @@ use ::std::str;
 
 use ::libc::c_char;
 use exonum::encoding::serialize;
+use assets::AssetIdError;
 
 #[derive(Debug)]
 pub struct Error {
@@ -17,6 +18,7 @@ pub enum ErrorKind {
     Utf8(str::Utf8Error),
     Hex(serialize::FromHexError),
     Text(String),
+    Asset(AssetIdError),
 }
 
 impl Error {
@@ -30,7 +32,7 @@ impl Error {
     pub fn is_err(&self) -> bool {
         match self.kind {
             ErrorKind::None => false,
-            ErrorKind::Utf8(_) | ErrorKind::Hex(_) | ErrorKind::Text(_) => true,
+            ErrorKind::Utf8(_) | ErrorKind::Hex(_) | ErrorKind::Text(_) | ErrorKind::Asset(_) => true,
         }
     }
 }
@@ -41,7 +43,8 @@ impl fmt::Display for Error {
             ErrorKind::None => write!(f, "no error"),
             ErrorKind::Utf8(ref e) => e.fmt(f),
             ErrorKind::Hex(ref e) => e.fmt(f),
-            ErrorKind::Text(ref e) => write!(f, "Error: {}", e)
+            ErrorKind::Text(ref e) => write!(f, "Error: {}", e),
+            ErrorKind::Asset(ref e) => e.fmt(f),
         }
     }
 }
