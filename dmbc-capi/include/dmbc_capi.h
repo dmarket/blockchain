@@ -14,6 +14,8 @@ typedef struct dmbc_asset dmbc_asset;
 
 typedef struct dmbc_fees dmbc_fees;
 
+typedef struct dmbc_intermediary dmbc_intermediary;
+
 typedef struct dmbc_error dmbc_error;
 
 /*
@@ -107,6 +109,16 @@ dmbc_fees *dmbc_fees_create(
 );
 
 void dmbc_fees_free(dmbc_fees *fees);
+
+/*
+    Intemediary
+*/
+dmbc_intermediary *dmbc_intermediary_create(
+    const char *public_key,
+    uint64_t commission
+);
+
+void dmbc_intermediary_free(dmbc_intermediary *intermediary);
 
 /*
     ERROR

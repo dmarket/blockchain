@@ -15,7 +15,6 @@ ffi_fn! {
         let asset_id = match parse_asset_id(id) {
             Ok(id) => id,
             Err(err) => {
-                println!("{:?}", err);
                 unsafe {
                     if !error.is_null() {
                         *error = err;
