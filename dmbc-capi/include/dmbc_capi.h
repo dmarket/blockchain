@@ -8,6 +8,8 @@
 extern "C" {
 #endif
 
+typedef struct dmbc_tx_add_asset dmbc_tx_add_asset;
+
 typedef struct dmbc_builder dmbc_builder;
 
 typedef struct dmbc_asset dmbc_asset;
@@ -54,27 +56,31 @@ uint8_t *dmbc_builder_tx_create(
 
 void dmbc_builder_tx_free(uint8_t *tx_ptr, size_t length);
 
+void dmbc_bytes_free(uint8_t *bytes, size_t length);
+
 /*
     ADD ASSET
 */
-bool dmbc_add_assets_set_public_key(
-    dmbc_builder *builder, 
-    const char *public_key, 
+dmbc_tx_add_asset *dmbc_tx_add_asset_create(
+    const char *public_key,
+    uint64_t seed,
     dmbc_error *error
 );
 
-bool dmbc_add_assets_set_seed(
-    dmbc_builder *builder, 
-    uint64_t seed, 
-    dmbc_error *error
-);
+void dmbc_tx_add_asset_free(dmbc_tx_add_asset *tx);
 
-bool dmbc_add_assets_add_asset(
-    dmbc_builder *builder,
+bool dmbc_tx_add_assets_add_asset(
+    dmbc_tx_add_asset *tx,
     const char *name, 
     uint64_t amount,
     dmbc_fees *fees,
     const char *receiver_key,
+    dmbc_error *error
+);
+
+uint8_t *dmbc_tx_add_assets_into_bytes(
+    dmbc_tx_add_asset *tx, 
+    size_t *length, 
     dmbc_error *error
 );
 

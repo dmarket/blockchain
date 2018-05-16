@@ -1,46 +1,56 @@
-use libc::c_char;
+use std::ptr;
+use std::mem;
 
-use capi::builder::BuilderContext;
+use libc::{c_char, size_t};
+use exonum::messages::Message;
+
 use capi::common::*;
-use assets::Fees;
-use transactions::add_assets::ADD_ASSETS_ID;
-use transactions::builders::transaction::AddAssetBuilder;
+use assets::{Fees, MetaAsset};
+use transactions::add_assets::{ADD_ASSETS_ID, AddAssetWrapper};
 
 use error::{Error, ErrorKind};
 
 ffi_fn! {
-    fn dmbc_add_assets_set_public_key(
-        context: *mut BuilderContext, 
-        public_key: *const c_char, 
-        error: *mut Error
-    ) -> bool {
-
-        let context = match BuilderContext::from_ptr(context) {
-            Ok(context) => context,
+    fn dmbc_tx_add_asset_create(
+        public_key: *const c_char,
+        seed: u64,
+        error: *mut Error,
+    ) -> *mut AddAssetWrapper {
+        let public_key = match parse_public_key(public_key) {
+            Ok(public_key) => public_key,
             Err(err) => {
                 unsafe {
                     if !error.is_null() {
                         *error = err;
                     }
-                    return false
+                    return ptr::null_mut();
                 }
             }
         };
 
-        match context.guard(ADD_ASSETS_ID) {
-            Ok(_) => {},
-            Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return false
-                }
-            }
-        }
+        Box::into_raw(Box::new(AddAssetWrapper::new(&public_key, seed)))
+    }
+}
 
-        let public_key = match parse_public_key(public_key) {
-            Ok(pk) => pk,
+ffi_fn! {
+    fn dmbc_tx_add_asset_free(wrapper: *const AddAssetWrapper) {
+        if !wrapper.is_null() {
+            unsafe { Box::from_raw(wrapper as *mut AddAssetWrapper); }
+        }
+    }
+}
+
+ffi_fn! {
+    fn dmbc_tx_add_assets_add_asset(
+        wrapper: *mut AddAssetWrapper,
+        name: *const c_char,
+        count: u64,
+        fees: *const Fees,
+        receiver_key: *const c_char,
+        error: *mut Error,
+    ) -> bool {
+        let wrapper = match AddAssetWrapper::from_ptr(wrapper) {
+            Ok(wrapper) => wrapper,
             Err(err) => {
                 unsafe {
                     if !error.is_null() {
@@ -50,82 +60,6 @@ ffi_fn! {
                 }
             }
         };
-
-        let builder: &mut AddAssetBuilder = context.unwrap_mut();
-        builder.public_key(public_key);
-        true
-    }
-}
-
-ffi_fn! {
-    fn dmbc_add_assets_set_seed(
-        context: *mut BuilderContext,
-        seed: u64,
-        error: *mut Error,
-    ) -> bool {
-
-        let context = match BuilderContext::from_ptr(context) {
-            Ok(context) => context,
-            Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return false
-                }
-            }
-        };
-
-        match context.guard(ADD_ASSETS_ID) {
-            Ok(_) => {},
-            Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return false
-                }
-            }
-        }
-
-        let builder: &mut AddAssetBuilder = context.unwrap_mut();
-        builder.seed(seed);
-        return true
-    }
-}
-
-ffi_fn! {
-    fn dmbc_add_assets_add_asset(
-        context: *mut BuilderContext,
-        name: *const c_char,
-        count: u64,
-        fees: *const Fees,
-        receiver_key: *const c_char,
-        error: *mut Error,
-    ) -> bool {
-        let context = match BuilderContext::from_ptr(context) {
-            Ok(context) => context,
-            Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return false
-                }
-            }
-        };
-
-        match context.guard(ADD_ASSETS_ID) {
-            Ok(_) => {},
-            Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return false
-                }
-            }
-        }
 
         if fees.is_null() {
             unsafe {
@@ -161,9 +95,41 @@ ffi_fn! {
             }
         };
 
-        let builder: &mut AddAssetBuilder = context.unwrap_mut();
-        builder.add_asset(name, count, fees.clone(), &receiver_key);
+
+        let meta = MetaAsset::new(&receiver_key, name, count, fees.clone());
+        wrapper.add_asset(meta);
 
         true
+    }
+}
+
+ffi_fn! {
+    fn dmbc_tx_add_assets_into_bytes(
+        wrapper: *mut AddAssetWrapper,
+        length: *mut size_t,
+        error: *mut Error,
+    ) -> *const u8 {
+        let wrapper = match AddAssetWrapper::from_ptr(wrapper) {
+            Ok(wrapper) => wrapper,
+            Err(err) => {
+                unsafe {
+                    if !error.is_null() {
+                        *error = err;
+                    }
+                    return ptr::null();
+                }
+            }
+        };
+
+        let bytes = wrapper.unwrap().raw().body().to_vec();
+        assert!(bytes.len() == bytes.capacity());
+        let length = unsafe { &mut *length };
+        let len = bytes.len() as size_t;
+        *length = len;
+
+        let ptr = bytes.as_ptr();
+        mem::forget(bytes);
+
+        ptr
     }
 }

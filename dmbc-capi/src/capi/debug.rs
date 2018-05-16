@@ -8,10 +8,6 @@ ffi_fn! {
     fn debug(context: *const BuilderContext) {
         let context = unsafe { &*context };
         match context.message_type {
-            ADD_ASSETS_ID => {
-                let builder: &mut AddAssetBuilder = context.unwrap_mut();
-                println!("{:?}", builder);
-            },
             DELETE_ASSETS_ID => {
                 let builder: &mut DelAssetBuilder = context.unwrap_mut();
                 println!("{:?}", builder);

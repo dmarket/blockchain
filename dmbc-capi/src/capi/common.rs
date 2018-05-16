@@ -1,6 +1,6 @@
 use std::ffi::CStr;
 
-use libc::c_char;
+use libc::{c_char, size_t};
 use exonum::crypto::PublicKey;
 use exonum::encoding::serialize::FromHex;
 use assets::AssetId;
@@ -35,6 +35,15 @@ pub fn parse_asset_id(asset_id: *const c_char) -> Result<AssetId, Error> {
         Ok(asset_id) => Ok(asset_id),
         Err(err) => {
             Err(Error::new(ErrorKind::Asset(err)))
+        }
+    }
+}
+
+ffi_fn! {
+    fn dmbc_bytes_free(ptr: *mut u8, len: size_t) {
+        let len = len as usize;
+        unsafe {
+            drop(Vec::from_raw_parts(ptr, len, len));
         }
     }
 }

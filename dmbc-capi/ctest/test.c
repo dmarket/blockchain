@@ -22,27 +22,13 @@ void add_assets() {
     const char *public_key = "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f";
 
     dmbc_error *err = dmbc_error_new();
-    dmbc_builder *builder = dmbc_builder_create(0, 0, 2, ADD_ASSETS_ID, err);
-    if (NULL == builder) {
+    dmbc_tx_add_asset *tx = dmbc_tx_add_asset_create(public_key, 123, err);
+    if (NULL == tx) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
             fprintf(stderr, error_msg, msg);
         }
         goto free_error;
-    }
-    if (!dmbc_add_assets_set_public_key(builder, public_key, err)) {
-        const char *msg = dmbc_error_message(err);
-        if (NULL != msg) {
-            fprintf(stderr, error_msg, msg);
-        }
-        goto free_builder;
-    } 
-    if (!dmbc_add_assets_set_seed(builder, 102, err)) {
-        const char *msg = dmbc_error_message(err);
-        if (NULL != msg) {
-            fprintf(stderr, error_msg, msg);
-        }
-        goto free_builder;
     }
     dmbc_fees *fees = dmbc_fees_create(10, "0.1", 20, "0.2", 9, "0.999999", err);
     if (NULL == fees) {
@@ -50,16 +36,16 @@ void add_assets() {
         if (NULL != msg) {
             fprintf(stderr, error_msg, msg);
         }
-        goto free_builder;
+        goto free_tx;
     }
-    if (!dmbc_add_assets_add_asset(builder, "Asset#10", 10, fees, public_key, err)) {
+    if (!dmbc_tx_add_assets_add_asset(tx, "Asset#10", 10, fees, public_key, err)) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
             fprintf(stderr, error_msg, msg);
         }
         goto free_fee;
     }
-    if (!dmbc_add_assets_add_asset(builder, "Asset#00", 1000, fees, public_key, err)) {
+    if (!dmbc_tx_add_assets_add_asset(tx, "Asset#00", 1000, fees, public_key, err)) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
             fprintf(stderr, error_msg, msg);
@@ -68,7 +54,7 @@ void add_assets() {
     }
     
     size_t length = 0;
-    uint8_t *buffer = dmbc_builder_tx_create(builder, &length, err);
+    uint8_t *buffer = dmbc_tx_add_assets_into_bytes(tx, &length, err);
     if (NULL == buffer) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
@@ -79,11 +65,11 @@ void add_assets() {
 
     print_hex(buffer, length);
 
-    dmbc_builder_tx_free(buffer, length);
+    dmbc_bytes_free(buffer, length);
 free_fee: 
     dmbc_fees_free(fees);
-free_builder:
-    dmbc_builder_free(builder);
+free_tx:
+    dmbc_tx_add_asset_free(tx);
 free_error:
     dmbc_error_free(err);
 }
@@ -92,27 +78,27 @@ void delete_assets() {
     const char *public_key = "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f";
 
     dmbc_error *err = dmbc_error_new();
-    dmbc_builder *builder = dmbc_builder_create(0, 0, 2, DELETE_ASSETS_ID, err);
-    if (NULL == builder) {
+    dmbc_builder *tx = dmbc_builder_create(0, 0, 2, DELETE_ASSETS_ID, err);
+    if (NULL == tx) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
             fprintf(stderr, error_msg, msg);
         }
         goto free_error;
     }
-    if (!dmbc_delete_assets_set_public_key(builder, public_key, err)) {
+    if (!dmbc_delete_assets_set_public_key(tx, public_key, err)) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
             fprintf(stderr, error_msg, msg);
         }
-        goto free_builder;
+        goto free_tx;
     } 
-    if (!dmbc_delete_assets_set_seed(builder, 102, err)) {
+    if (!dmbc_delete_assets_set_seed(tx, 102, err)) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
             fprintf(stderr, error_msg, msg);
         }
-        goto free_builder;
+        goto free_tx;
     }
     dmbc_asset *asset = dmbc_asset_create("00001111222233334444555566667777", 10, err);
     if (NULL == asset) {
@@ -120,9 +106,9 @@ void delete_assets() {
         if (NULL != msg) {
             fprintf(stderr, error_msg, msg);
         }
-        goto free_builder;
+        goto free_tx;
     }
-    if (!dmbc_delete_assets_add_asset(builder, asset, err)) {
+    if (!dmbc_delete_assets_add_asset(tx, asset, err)) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
             fprintf(stderr, error_msg, msg);
@@ -132,7 +118,7 @@ void delete_assets() {
     
 
     size_t length = 0;
-    uint8_t *buffer = dmbc_builder_tx_create(builder, &length, err);
+    uint8_t *buffer = dmbc_builder_tx_create(tx, &length, err);
     if (NULL == buffer) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
@@ -146,8 +132,8 @@ void delete_assets() {
     dmbc_builder_tx_free(buffer, length);
 free_asset: 
     dmbc_asset_free(asset);
-free_builder:
-    dmbc_builder_free(builder);
+free_tx:
+    dmbc_builder_free(tx);
 free_error:
     dmbc_error_free(err);
 }
@@ -157,41 +143,41 @@ void transfer() {
     const char *to_public_key = "00098e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411000";
 
     dmbc_error *err = dmbc_error_new();
-    dmbc_builder *builder = dmbc_builder_create(0, 0, 2, TRANSFER_ID, err);
-    if (NULL == builder) {
+    dmbc_builder *tx = dmbc_builder_create(0, 0, 2, TRANSFER_ID, err);
+    if (NULL == tx) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
             fprintf(stderr, error_msg, msg);
         }
         goto free_error;
     }
-    if (!dmbc_transfer_set_from_public_key(builder, from_public_key, err)) {
+    if (!dmbc_transfer_set_from_public_key(tx, from_public_key, err)) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
             fprintf(stderr, error_msg, msg);
         }
-        goto free_builder;
+        goto free_tx;
     } 
-    if (!dmbc_transfer_set_to_public_key(builder, to_public_key, err)) {
+    if (!dmbc_transfer_set_to_public_key(tx, to_public_key, err)) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
             fprintf(stderr, error_msg, msg);
         }
-        goto free_builder;
+        goto free_tx;
     } 
-    if (!dmbc_transfer_set_seed(builder, 102, err)) {
+    if (!dmbc_transfer_set_seed(tx, 102, err)) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
             fprintf(stderr, error_msg, msg);
         }
-        goto free_builder;
+        goto free_tx;
     }
-    if (!dmbc_transfer_set_amount(builder, 10000000, err)) {
+    if (!dmbc_transfer_set_amount(tx, 10000000, err)) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
             fprintf(stderr, error_msg, msg);
         }
-        goto free_builder;
+        goto free_tx;
     }
     dmbc_asset *asset = dmbc_asset_create("00001111222233334444555566667777", 10, err);
     if (NULL == asset) {
@@ -199,9 +185,9 @@ void transfer() {
         if (NULL != msg) {
             fprintf(stderr, error_msg, msg);
         }
-        goto free_builder;
+        goto free_tx;
     }
-    if (!dmbc_transfer_add_asset(builder, asset, err)) {
+    if (!dmbc_transfer_add_asset(tx, asset, err)) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
             fprintf(stderr, error_msg, msg);
@@ -210,7 +196,7 @@ void transfer() {
     }
     
     size_t length = 0;
-    uint8_t *buffer = dmbc_builder_tx_create(builder, &length, err);
+    uint8_t *buffer = dmbc_builder_tx_create(tx, &length, err);
     if (NULL == buffer) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
@@ -224,8 +210,8 @@ void transfer() {
     dmbc_builder_tx_free(buffer, length);
 free_asset: 
     dmbc_asset_free(asset);
-free_builder:
-    dmbc_builder_free(builder);
+free_tx:
+    dmbc_builder_free(tx);
 free_error:
     dmbc_error_free(err);
 }
@@ -283,10 +269,12 @@ free_error:
 }
 
 int main() {
-#if 0
     add_assets();
+#if 0
+    
     delete_assets();
     transfer();
-#endif
     exchange_offer();
+#endif
+    
 }
