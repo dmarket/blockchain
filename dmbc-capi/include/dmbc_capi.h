@@ -16,6 +16,8 @@ typedef struct dmbc_fees dmbc_fees;
 
 typedef struct dmbc_intermediary dmbc_intermediary;
 
+typedef struct dmbc_exchange_offer dmbc_exchange_offer;
+
 typedef struct dmbc_error dmbc_error;
 
 #define TRANSFER_ID 200
@@ -25,6 +27,11 @@ typedef struct dmbc_error dmbc_error;
 #define TRADE_INTERMEDIARY_ID 502
 #define EXCHANGE_ID 601
 #define EXCHANGE_INTERMEDIARY_ID 602
+
+#define FEE_STRATEGY_RECIPIENT 1
+#define FEE_STRATEGY_SENDER 2
+#define FEE_STRATEGY_BOTH 3
+#define FEE_STRATEGY_INTERMEDIARY 4
 
 /*
     BUILDER
@@ -124,6 +131,39 @@ bool dmbc_transfer_add_asset(
     dmbc_asset *asset,
     dmbc_error *error
 );
+
+/*
+    Exchnage offer
+*/
+dmbc_exchange_offer *dmbc_exchange_offer_create(
+    const char *sender_key,
+    uint64_t sender_amount,
+    const char *recipient_key,
+    u_int8_t fee_strategy,
+    dmbc_error *error
+);
+
+void dmbc_exchange_offer_free(dmbc_exchange_offer *offer);
+
+bool dmbc_exchange_offer_recipient_add_asset(
+    dmbc_exchange_offer *offer,
+    dmbc_asset *asset,
+    dmbc_error *error
+);
+
+bool dmbc_exchange_offer_sender_add_asset(
+    dmbc_exchange_offer *offer,
+    dmbc_asset *asset,
+    dmbc_error *error
+);
+
+uint8_t* dmbc_exchange_offer_into_bytes(
+    dmbc_exchange_offer *offer,
+    size_t *length,
+    dmbc_error *error
+);
+
+void dmbc_exchange_offer_bytes_free(uint8_t *tx_ptr, size_t length);
 
 /*
     Asset

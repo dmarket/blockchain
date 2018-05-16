@@ -119,7 +119,7 @@ ffi_fn! {
             }
         };
 
-        let mut bytes = match context.message_type {
+        let bytes = match context.message_type {
             ADD_ASSETS_ID => {
                 let builder: &mut AddAssetBuilder = context.unwrap_mut();
                 match builder.build() {
