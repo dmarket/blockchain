@@ -128,41 +128,13 @@ void transfer() {
     const char *to_public_key = "00098e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411000";
 
     dmbc_error *err = dmbc_error_new();
-    dmbc_builder *tx = dmbc_builder_create(0, 0, 2, TRANSFER_ID, err);
+    dmbc_tx_transfer *tx = dmbc_tx_transfer_create(from_public_key, to_public_key, 10000, 123, "HELLO", err);
     if (NULL == tx) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
             fprintf(stderr, error_msg, msg);
         }
         goto free_error;
-    }
-    if (!dmbc_transfer_set_from_public_key(tx, from_public_key, err)) {
-        const char *msg = dmbc_error_message(err);
-        if (NULL != msg) {
-            fprintf(stderr, error_msg, msg);
-        }
-        goto free_tx;
-    } 
-    if (!dmbc_transfer_set_to_public_key(tx, to_public_key, err)) {
-        const char *msg = dmbc_error_message(err);
-        if (NULL != msg) {
-            fprintf(stderr, error_msg, msg);
-        }
-        goto free_tx;
-    } 
-    if (!dmbc_transfer_set_seed(tx, 102, err)) {
-        const char *msg = dmbc_error_message(err);
-        if (NULL != msg) {
-            fprintf(stderr, error_msg, msg);
-        }
-        goto free_tx;
-    }
-    if (!dmbc_transfer_set_amount(tx, 10000000, err)) {
-        const char *msg = dmbc_error_message(err);
-        if (NULL != msg) {
-            fprintf(stderr, error_msg, msg);
-        }
-        goto free_tx;
     }
     dmbc_asset *asset = dmbc_asset_create("00001111222233334444555566667777", 10, err);
     if (NULL == asset) {
@@ -172,7 +144,7 @@ void transfer() {
         }
         goto free_tx;
     }
-    if (!dmbc_transfer_add_asset(tx, asset, err)) {
+    if (!dmbc_tx_transfer_add_asset(tx, asset, err)) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
             fprintf(stderr, error_msg, msg);
@@ -181,7 +153,7 @@ void transfer() {
     }
     
     size_t length = 0;
-    uint8_t *buffer = dmbc_builder_tx_create(tx, &length, err);
+    uint8_t *buffer = dmbc_tx_transfer_into_bytes(tx, &length, err);
     if (NULL == buffer) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
@@ -192,11 +164,11 @@ void transfer() {
 
     print_hex(buffer, length);
 
-    dmbc_builder_tx_free(buffer, length);
+    dmbc_bytes_free(buffer, length);
 free_asset: 
     dmbc_asset_free(asset);
 free_tx:
-    dmbc_builder_free(tx);
+    dmbc_tx_transfer_free(tx);
 free_error:
     dmbc_error_free(err);
 }
@@ -254,11 +226,11 @@ free_error:
 }
 
 int main() {
-    delete_assets();
 #if 0
+    delete_assets();
     add_assets();
-    transfer();
     exchange_offer();
 #endif
+    transfer();
     
 }

@@ -8,11 +8,11 @@
 extern "C" {
 #endif
 
+typedef struct dmbc_tx_transfer dmbc_tx_transfer;
+
 typedef struct dmbc_tx_add_assets dmbc_tx_add_assets;
 
 typedef struct dmbc_tx_delete_assets dmbc_tx_delete_assets;
-
-typedef struct dmbc_builder dmbc_builder;
 
 typedef struct dmbc_asset dmbc_asset;
 
@@ -24,39 +24,10 @@ typedef struct dmbc_exchange_offer dmbc_exchange_offer;
 
 typedef struct dmbc_error dmbc_error;
 
-#define TRANSFER_ID 200
-#define ADD_ASSETS_ID 300
-#define DELETE_ASSETS_ID 400
-#define TRADE_ID 501
-#define TRADE_INTERMEDIARY_ID 502
-#define EXCHANGE_ID 601
-#define EXCHANGE_INTERMEDIARY_ID 602
-
 #define FEE_STRATEGY_RECIPIENT 1
 #define FEE_STRATEGY_SENDER 2
 #define FEE_STRATEGY_BOTH 3
 #define FEE_STRATEGY_INTERMEDIARY 4
-
-/*
-    BUILDER
-*/
-dmbc_builder *dmbc_builder_create(
-    uint8_t network_id,
-    uint8_t protocol_version,
-    uint16_t service_id,
-    uint16_t message_type,
-    dmbc_error *error
-);
-
-void dmbc_builder_free(dmbc_builder *builder);
-
-uint8_t *dmbc_builder_tx_create(
-    dmbc_builder *builder,
-    size_t *length,
-    dmbc_error *error
-);
-
-void dmbc_builder_tx_free(uint8_t *tx_ptr, size_t length);
 
 void dmbc_bytes_free(uint8_t *bytes, size_t length);
 
@@ -112,33 +83,26 @@ uint8_t *dmbc_tx_delete_assets_into_bytes(
 /*
     Transfer
 */
-bool dmbc_transfer_set_from_public_key(
-    dmbc_builder *builder,
-    const char *public_key,
-    dmbc_error *error
-);
-
-bool dmbc_transfer_set_to_public_key(
-    dmbc_builder *builder,
-    const char *public_key,
-    dmbc_error *error
-);
-
-bool dmbc_transfer_set_seed(
-    dmbc_builder *builder,
-    uint64_t seed,
-    dmbc_error *error
-);
-
-bool dmbc_transfer_set_amount(
-    dmbc_builder *builder,
+dmbc_tx_transfer *dmbc_tx_transfer_create(
+    const char *from, 
+    const char *to, 
     uint64_t amount,
+    uint64_t seed, 
+    const char *memo,
     dmbc_error *error
 );
 
-bool dmbc_transfer_add_asset(
-    dmbc_builder *builder,
+void dmbc_tx_transfer_free(dmbc_tx_transfer *tx);
+
+bool dmbc_tx_transfer_add_asset(
+    dmbc_tx_transfer *tx,
     dmbc_asset *asset,
+    dmbc_error *error
+);
+
+uint8_t *dmbc_tx_transfer_into_bytes(
+    dmbc_tx_transfer *tx,
+    size_t *length,
     dmbc_error *error
 );
 
@@ -219,11 +183,6 @@ dmbc_error *dmbc_error_new();
 const char *dmbc_error_message(dmbc_error *error);
 
 void dmbc_error_free(dmbc_error *error);
-
-/*
-    DEBUG
-*/
-void debug(dmbc_builder *builder);
 
 #ifdef __cplusplus
 }

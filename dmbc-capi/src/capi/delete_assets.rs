@@ -4,7 +4,6 @@ use std::mem;
 use libc::{c_char, size_t};
 use exonum::messages::Message;
 
-use capi::builder::BuilderContext;
 use capi::common::*;
 use assets::AssetBundle;
 use transactions::delete_assets::DeleteAssetsWrapper;

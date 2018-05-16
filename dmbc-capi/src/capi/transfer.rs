@@ -1,242 +1,84 @@
-use libc::c_char;
+use std::ptr;
+use std::mem;
 
-use capi::builder::BuilderContext;
+use libc::{c_char, size_t};
+use exonum::messages::Message;
+
 use capi::common::*;
 use assets::AssetBundle;
-use transactions::transfer::TRANSFER_ID;
-use transactions::builders::transaction::TransferBuilder;
+use transactions::transfer::TransferWrapper;
 
 use error::{Error, ErrorKind};
 
 ffi_fn! {
-    fn dmbc_transfer_set_from_public_key(
-        context: *mut BuilderContext, 
-        public_key: *const c_char, 
-        error: *mut Error
-    ) -> bool {
-
-        let context = match BuilderContext::from_ptr(context) {
-            Ok(context) => context,
-            Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return false
-                }
-            }
-        };
-
-        match context.guard(TRANSFER_ID) {
-            Ok(_) => {},
-            Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return false
-                }
-            }
-        }
-
-        let public_key = match parse_public_key(public_key) {
-            Ok(pk) => pk,
-            Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return false;
-                }
-            }
-        };
-
-        let builder: &mut TransferBuilder = context.unwrap_mut();
-        builder.from(public_key);
-        true
-    }
-}
-
-ffi_fn! {
-    fn dmbc_transfer_set_to_public_key(
-        context: *mut BuilderContext, 
-        public_key: *const c_char, 
-        error: *mut Error
-    ) -> bool {
-
-        let context = match BuilderContext::from_ptr(context) {
-            Ok(context) => context,
-            Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return false
-                }
-            }
-        };
-
-        match context.guard(TRANSFER_ID) {
-            Ok(_) => {},
-            Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return false
-                }
-            }
-        }
-
-        let public_key = match parse_public_key(public_key) {
-            Ok(pk) => pk,
-            Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return false;
-                }
-            }
-        };
-
-        let builder: &mut TransferBuilder = context.unwrap_mut();
-        builder.to(public_key);
-        true
-    }
-}
-
-ffi_fn! {
-    fn dmbc_transfer_set_seed(
-        context: *mut BuilderContext,
+    fn dmbc_tx_transfer_create(
+        from: *const c_char, 
+        to: *const c_char,
+        amout: u64,
         seed: u64,
+        data_info: *const c_char, 
         error: *mut Error,
-    ) -> bool {
-
-        let context = match BuilderContext::from_ptr(context) {
-            Ok(context) => context,
-            Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return false
-                }
-            }
-        };
-
-        match context.guard(TRANSFER_ID) {
-            Ok(_) => {},
-            Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return false
-                }
-            }
-        }
-
-        let builder: &mut TransferBuilder = context.unwrap_mut();
-        builder.seed(seed);
-        return true
-    }
-}
-
-ffi_fn! {
-    fn dmbc_transfer_set_amount(
-        context: *mut BuilderContext,
-        amount: u64,
-        error: *mut Error,
-    ) -> bool {
-
-        let context = match BuilderContext::from_ptr(context) {
-            Ok(context) => context,
-            Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return false
-                }
-            }
-        };
-
-        match context.guard(TRANSFER_ID) {
-            Ok(_) => {},
-            Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return false
-                }
-            }
-        }
-
-        let builder: &mut TransferBuilder = context.unwrap_mut();
-        builder.amount(amount);
-        return true
-    }
-}
-
-ffi_fn! {
-    fn dmbc_transfer_set_info(
-        context: *mut BuilderContext,
-        info: *const c_char,
-        error: *mut Error,
-    ) -> bool {
-        let context = match BuilderContext::from_ptr(context) {
-            Ok(context) => context,
-            Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return false
-                }
-            }
-        };
-
-        match context.guard(TRANSFER_ID) {
-            Ok(_) => {},
-            Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return false
-                }
-            }
-        }
-
-        let info = match parse_str(info) {
+    ) -> *mut TransferWrapper {
+        let from = match parse_public_key(from) {
             Ok(pk) => pk,
             Err(err) => {
                 unsafe {
                     if !error.is_null() {
                         *error = err;
                     }
-                    return false;
+                    return ptr::null_mut();
                 }
             }
         };
 
-        let builder: &mut TransferBuilder = context.unwrap_mut();
-        builder.data_info(info);
+        let to = match parse_public_key(to) {
+            Ok(pk) => pk,
+            Err(err) => {
+                unsafe {
+                    if !error.is_null() {
+                        *error = err;
+                    }
+                    return ptr::null_mut();
+                }
+            }
+        };
 
-        true
+        let data_info = match parse_str(data_info) {
+            Ok(pk) => pk,
+            Err(err) => {
+                unsafe {
+                    if !error.is_null() {
+                        *error = err;
+                    }
+                    return ptr::null_mut();
+                }
+            }
+        };
+
+        Box::into_raw(
+            Box::new(
+                TransferWrapper::new(&from, &to, amout, seed, data_info)
+            )
+        )
     }
 }
 
 ffi_fn! {
-    fn dmbc_transfer_add_asset(
-        context: *mut BuilderContext,
+    fn dmbc_tx_transfer_free(wrapper: *const TransferWrapper) {
+        if !wrapper.is_null() {
+            unsafe { Box::from_raw(wrapper as *mut TransferWrapper); }
+        }
+    }
+}
+
+ffi_fn! {
+    fn dmbc_tx_transfer_add_asset(
+        wrapper: *mut TransferWrapper,
         asset: *const AssetBundle,
         error: *mut Error,
     ) -> bool {
-        let context = match BuilderContext::from_ptr(context) {
-            Ok(context) => context,
+        let wrapper = match TransferWrapper::from_ptr(wrapper) {
+            Ok(wrapper) => wrapper,
             Err(err) => {
                 unsafe {
                     if !error.is_null() {
@@ -246,18 +88,6 @@ ffi_fn! {
                 }
             }
         };
-
-        match context.guard(TRANSFER_ID) {
-            Ok(_) => {},
-            Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return false
-                }
-            }
-        }
 
         if asset.is_null() {
             unsafe {
@@ -269,9 +99,39 @@ ffi_fn! {
         } 
 
         let asset = AssetBundle::from_ptr(asset);
-        let builder: &mut TransferBuilder = context.unwrap_mut();
-        builder.add_asset(asset.clone());
+        wrapper.add_asset(asset.clone());
 
         true
+    }
+}
+
+ffi_fn! {
+    fn dmbc_tx_transfer_into_bytes(
+        wrapper: *mut TransferWrapper,
+        length: *mut size_t,
+        error: *mut Error,
+    ) -> *const u8 {
+        let wrapper = match TransferWrapper::from_ptr(wrapper) {
+            Ok(wrapper) => wrapper,
+            Err(err) => {
+                unsafe {
+                    if !error.is_null() {
+                        *error = err;
+                    }
+                    return ptr::null();
+                }
+            }
+        };
+
+        let bytes = wrapper.unwrap().raw().body().to_vec();
+        assert!(bytes.len() == bytes.capacity());
+        let length = unsafe { &mut *length };
+        let len = bytes.len() as size_t;
+        *length = len;
+
+        let ptr = bytes.as_ptr();
+        mem::forget(bytes);
+
+        ptr
     }
 }
