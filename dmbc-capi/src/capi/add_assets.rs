@@ -6,12 +6,12 @@ use exonum::messages::Message;
 
 use capi::common::*;
 use assets::{Fees, MetaAsset};
-use transactions::add_assets::{ADD_ASSETS_ID, AddAssetWrapper};
+use transactions::add_assets::AddAssetWrapper;
 
 use error::{Error, ErrorKind};
 
 ffi_fn! {
-    fn dmbc_tx_add_asset_create(
+    fn dmbc_tx_add_assets_create(
         public_key: *const c_char,
         seed: u64,
         error: *mut Error,

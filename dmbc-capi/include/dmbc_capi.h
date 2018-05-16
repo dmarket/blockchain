@@ -8,7 +8,9 @@
 extern "C" {
 #endif
 
-typedef struct dmbc_tx_add_asset dmbc_tx_add_asset;
+typedef struct dmbc_tx_add_assets dmbc_tx_add_assets;
+
+typedef struct dmbc_tx_delete_assets dmbc_tx_delete_assets;
 
 typedef struct dmbc_builder dmbc_builder;
 
@@ -61,16 +63,16 @@ void dmbc_bytes_free(uint8_t *bytes, size_t length);
 /*
     ADD ASSET
 */
-dmbc_tx_add_asset *dmbc_tx_add_asset_create(
+dmbc_tx_add_assets *dmbc_tx_add_assets_create(
     const char *public_key,
     uint64_t seed,
     dmbc_error *error
 );
 
-void dmbc_tx_add_asset_free(dmbc_tx_add_asset *tx);
+void dmbc_tx_add_asset_free(dmbc_tx_add_assets *tx);
 
 bool dmbc_tx_add_assets_add_asset(
-    dmbc_tx_add_asset *tx,
+    dmbc_tx_add_assets *tx,
     const char *name, 
     uint64_t amount,
     dmbc_fees *fees,
@@ -79,7 +81,7 @@ bool dmbc_tx_add_assets_add_asset(
 );
 
 uint8_t *dmbc_tx_add_assets_into_bytes(
-    dmbc_tx_add_asset *tx, 
+    dmbc_tx_add_assets *tx, 
     size_t *length, 
     dmbc_error *error
 );
@@ -87,21 +89,23 @@ uint8_t *dmbc_tx_add_assets_into_bytes(
 /*
     Delete Assets
 */
-bool dmbc_delete_assets_set_public_key(
-    dmbc_builder *builder,
+dmbc_tx_delete_assets *dmbc_tx_delete_assets_create(
     const char *public_key,
-    dmbc_error *error
-);
-
-bool dmbc_delete_assets_set_seed(
-    dmbc_builder *builder,
     uint64_t seed,
     dmbc_error *error
 );
 
-bool dmbc_delete_assets_add_asset(
-    dmbc_builder *builder,
+void dmbc_tx_delete_assets_free(dmbc_tx_delete_assets *tx);
+
+bool dmbc_tx_delete_assets_add_asset(
+    dmbc_tx_delete_assets *tx,
     dmbc_asset *asset,
+    dmbc_error *error
+);
+
+uint8_t *dmbc_tx_delete_assets_into_bytes(
+    dmbc_tx_delete_assets *tx, 
+    size_t *length, 
     dmbc_error *error
 );
 

@@ -4,8 +4,7 @@ use std::mem;
 use libc::{c_void, size_t};
 use exonum::messages::Message;
 
-use transactions::builders::transaction::{Builder, DelAssetBuilder, TransferBuilder};
-use transactions::add_assets::ADD_ASSETS_ID;
+use transactions::builders::transaction::{Builder, TransferBuilder};
 use transactions::delete_assets::DELETE_ASSETS_ID;
 use transactions::transfer::TRANSFER_ID;
 use capi::common::hex_string;
@@ -58,11 +57,6 @@ ffi_fn! {
     ) -> *mut BuilderContext {
 
         let context_ptr: *mut c_void = match message_type {
-            DELETE_ASSETS_ID => {
-                let builder = Builder::new(network_id, protocol_version, service_id)
-                    .tx_delete_assets();
-                unsafe { mem::transmute(Box::new(builder)) }
-            },
             TRANSFER_ID => {
                 let builder = Builder::new(network_id, protocol_version, service_id)
                     .tx_transfer();
@@ -115,20 +109,6 @@ ffi_fn! {
         };
 
         let bytes = match context.message_type {
-            DELETE_ASSETS_ID => {
-                let builder: &mut DelAssetBuilder = context.unwrap_mut();
-                match builder.build() {
-                    Ok(tx) => { tx.raw().body().to_vec() },
-                    Err(err) => {
-                        unsafe {
-                            if !error.is_null() {
-                                *error = err;
-                            }
-                            return ptr::null();
-                        }
-                    }
-                }
-            },
             TRANSFER_ID => {
                 let builder: &mut TransferBuilder = context.unwrap_mut();
                 match builder.build() {

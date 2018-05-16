@@ -1,44 +1,22 @@
-use libc::c_char;
+use std::ptr;
+use std::mem;
+
+use libc::{c_char, size_t};
+use exonum::messages::Message;
 
 use capi::builder::BuilderContext;
 use capi::common::*;
 use assets::AssetBundle;
-use transactions::delete_assets::DELETE_ASSETS_ID;
-use transactions::builders::transaction::DelAssetBuilder;
+use transactions::delete_assets::DeleteAssetsWrapper;
 
 use error::{Error, ErrorKind};
 
 ffi_fn! {
-    fn dmbc_delete_assets_set_public_key(
-        context: *mut BuilderContext, 
+    fn dmbc_tx_delete_assets_create(
         public_key: *const c_char, 
-        error: *mut Error
-    ) -> bool {
-
-        let context = match BuilderContext::from_ptr(context) {
-            Ok(context) => context,
-            Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return false
-                }
-            }
-        };
-
-        match context.guard(DELETE_ASSETS_ID) {
-            Ok(_) => {},
-            Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return false
-                }
-            }
-        }
-
+        seed: u64,
+        error: *mut Error,
+    ) -> *mut DeleteAssetsWrapper {
         let public_key = match parse_public_key(public_key) {
             Ok(pk) => pk,
             Err(err) => {
@@ -46,62 +24,31 @@ ffi_fn! {
                     if !error.is_null() {
                         *error = err;
                     }
-                    return false;
+                    return ptr::null_mut();
                 }
             }
         };
 
-        let builder: &mut DelAssetBuilder = context.unwrap_mut();
-        builder.public_key(public_key);
-        true
+        Box::into_raw(Box::new(DeleteAssetsWrapper::new(&public_key, seed)))
     }
 }
 
 ffi_fn! {
-    fn dmbc_delete_assets_set_seed(
-        context: *mut BuilderContext,
-        seed: u64,
-        error: *mut Error,
-    ) -> bool {
-
-        let context = match BuilderContext::from_ptr(context) {
-            Ok(context) => context,
-            Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return false
-                }
-            }
-        };
-
-        match context.guard(DELETE_ASSETS_ID) {
-            Ok(_) => {},
-            Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return false
-                }
-            }
+    fn dmbc_tx_delete_assets_free(wrapper: *const DeleteAssetsWrapper) {
+        if !wrapper.is_null() {
+            unsafe { Box::from_raw(wrapper as *mut DeleteAssetsWrapper); }
         }
-
-        let builder: &mut DelAssetBuilder = context.unwrap_mut();
-        builder.seed(seed);
-        return true
     }
 }
 
 ffi_fn! {
-    fn dmbc_delete_assets_add_asset(
-        context: *mut BuilderContext,
+    fn dmbc_tx_delete_assets_add_asset(
+        wrapper: *mut DeleteAssetsWrapper,
         asset: *const AssetBundle,
         error: *mut Error,
     ) -> bool {
-        let context = match BuilderContext::from_ptr(context) {
-            Ok(context) => context,
+        let wrapper = match DeleteAssetsWrapper::from_ptr(wrapper) {
+            Ok(wrapper) => wrapper,
             Err(err) => {
                 unsafe {
                     if !error.is_null() {
@@ -111,18 +58,6 @@ ffi_fn! {
                 }
             }
         };
-
-        match context.guard(DELETE_ASSETS_ID) {
-            Ok(_) => {},
-            Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return false
-                }
-            }
-        }
 
         if asset.is_null() {
             unsafe {
@@ -134,9 +69,39 @@ ffi_fn! {
         } 
 
         let asset = AssetBundle::from_ptr(asset);
-        let builder: &mut DelAssetBuilder = context.unwrap_mut();
-        builder.add_asset(asset.clone());
+        wrapper.add_asset(asset.clone());
 
         true
+    }
+}
+
+ffi_fn! {
+    fn dmbc_tx_delete_assets_into_bytes(
+        wrapper: *mut DeleteAssetsWrapper,
+        length: *mut size_t,
+        error: *mut Error,
+    ) -> *const u8 {
+        let wrapper = match DeleteAssetsWrapper::from_ptr(wrapper) {
+            Ok(wrapper) => wrapper,
+            Err(err) => {
+                unsafe {
+                    if !error.is_null() {
+                        *error = err;
+                    }
+                    return ptr::null();
+                }
+            }
+        };
+
+        let bytes = wrapper.unwrap().raw().body().to_vec();
+        assert!(bytes.len() == bytes.capacity());
+        let length = unsafe { &mut *length };
+        let len = bytes.len() as size_t;
+        *length = len;
+
+        let ptr = bytes.as_ptr();
+        mem::forget(bytes);
+
+        ptr
     }
 }

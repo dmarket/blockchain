@@ -1,7 +1,6 @@
 use exonum::crypto::{PublicKey, SecretKey};
 
 use assets::{AssetBundle};
-use transactions::add_assets::AddAssets;
 use transactions::delete_assets::DeleteAssets;
 use transactions::transfer::Transfer;
 
@@ -38,64 +37,8 @@ impl Builder {
             service_id,
         }
     }
-
-    pub fn tx_delete_assets(self) -> DelAssetBuilder {
-        DelAssetBuilder::new(self.into())
-    }
-
     pub fn tx_transfer(self) -> TransferBuilder {
         TransferBuilder::new(self.into())
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct DelAssetBuilder {
-    header: TransactionHeader,
-    public_key: Option<PublicKey>,
-    assets: Vec<AssetBundle>,
-    seed: u64,
-}
-
-impl DelAssetBuilder {
-    fn new(header: TransactionHeader
-) -> Self {
-        DelAssetBuilder {
-            header,
-            public_key: None,
-            assets: Vec::new(),
-            seed: 0,
-        }
-    }
-
-    pub fn public_key(&mut self, public_key: PublicKey) {
-        self.public_key = Some(public_key);
-    }
-
-    pub fn add_asset(&mut self, asset: AssetBundle) {
-        self.assets.push(asset);
-    }
-
-    pub fn seed(&mut self, seed: u64) {
-        self.seed = seed;
-    }
-
-    fn validate(&self) -> Result<(), Error> {
-        match self.public_key {
-            Some(_) => Ok(()),
-            None => Err(Error::new(ErrorKind::Text("Public key isn't set".to_string()))),
-        }
-    }
-
-    pub fn build(&self) -> Result<DeleteAssets, Error> {
-        self.validate()?;
-        Ok(
-            DeleteAssets::new(
-                &self.public_key.unwrap(),
-                self.assets.clone(),
-                self.seed,
-                &SecretKey::zero(),
-            )
-        )
     }
 }
 
