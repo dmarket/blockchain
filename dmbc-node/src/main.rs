@@ -32,9 +32,6 @@ const GENESIS_VALIDATOR_PUBLIC: &str =
 const GENESIS_SERVICE_PUBLIC: &str =
     "68e774a4339cccfae644dcf3e44360839c84a6475c7d2943ed59b81d7eb6e9f0";
 
-// Maximum allowed byte length for transaction. Based on 
-const MAX_MESSAGE_LENGTH: u32 = 17408;
-
 fn main() {
     let _f = match flag::parse() {
         Some(f) => f,
@@ -92,7 +89,7 @@ fn main() {
         status_timeout: 5000,
         peers_timeout: 10_000,
         txs_block_limit: 3000,
-        max_message_len: MAX_MESSAGE_LENGTH,
+        max_message_len: ConsensusConfig::DEFAULT_MESSAGE_MAX_LEN,
         timeout_adjuster: TimeoutAdjusterConfig::Constant { timeout: 2500},
     };
 

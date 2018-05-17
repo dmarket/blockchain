@@ -18,6 +18,7 @@ use dmbc::currency::configuration::{Configuration, TransactionFees};
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::assets::{MetaAsset, AssetBundle, AssetInfo};
 use dmbc::currency::error::Error;
+use dmbc::currency::api::error::ApiError;
 use dmbc::currency::api::transaction::TransactionResponse;
 use dmbc::currency::wallet::Wallet;
 
@@ -421,7 +422,7 @@ fn add_assets_insufficient_funds() {
         .keypair(public_key, secret_key.clone())
         .tx_add_assets()
         .add_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()))
-        .seed(85)
+        .seed(99)
         .build();
     
     let tx_hash = tx_add_assets.hash();
@@ -435,4 +436,49 @@ fn add_assets_insufficient_funds() {
 
     let (_, tx_status) = api.get_tx_status(&tx_add_assets);
     assert_eq!(tx_status, Ok(Err(Error::InsufficientFunds)));
+}
+
+#[test]
+fn add_assets_transaction_too_large() {
+    let fixed = 10;
+    let meta_data = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+    let units = 1;
+    let kinds = 100;
+    let balance = 100_000;
+    let transaction_fee = 10;
+    let per_asset_fee = 4;
+    let config_fees = TransactionFees::with_default_key(transaction_fee, per_asset_fee, 0, 0, 0, 0);
+
+    let (creator_public_key, creator_secret_key) = crypto::gen_keypair();
+    let (receiver_key, _) = crypto::gen_keypair();
+
+    let mut testkit = DmbcTestApiBuilder::new()
+        .with_configuration(Configuration::new(config_fees))
+        .add_wallet_value(&creator_public_key, Wallet::new(balance, vec![]))
+        .create();
+    let api = testkit.api();
+
+    // post the transaction
+    let mut tx_add_assets = transaction::Builder::new()
+        .keypair(creator_public_key, creator_secret_key)
+        .tx_add_assets()
+        .seed(85);
+
+    for n in 0..kinds {
+        let meta_data_kind = meta_data.to_string() + &n.to_string();
+        let meta_asset = MetaAsset::new(&receiver_key, &meta_data_kind, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()));
+        tx_add_assets = tx_add_assets.add_asset_value(meta_asset);
+    }
+
+    let tx_add_assets = tx_add_assets.build();
+
+    let (status, response) = api.post_tx(&tx_add_assets);
+    testkit.create_block();
+
+    // check post response
+    assert_eq!(status, StatusCode::BadRequest);
+    assert_eq!(response, Ok(Err(Error::InvalidTransaction)));
+
+    let (_, tx_status) = api.get_tx_status(&tx_add_assets);
+    assert_eq!(tx_status, Err(ApiError::TransactionNotFound));
 }
