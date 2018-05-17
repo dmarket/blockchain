@@ -10,6 +10,7 @@ encoding_struct! {
         origin:  &Hash,
         amount:  u64,
         fees:    Fees,
+        data:    &str,
     }
 }
 
@@ -23,8 +24,9 @@ impl AssetInfo {
         let fees = self.fees();
         let creator = self.creator();
         let origin = self.origin();
+        let data = self.data();
 
-        if fees != other.fees() || creator != other.creator() {
+        if fees != other.fees() || creator != other.creator() || data != other.data() {
             return Err(Error::InvalidAssetInfo);
         }
 
@@ -33,6 +35,7 @@ impl AssetInfo {
             origin,
             self.amount() + other.amount(),
             fees,
+            data,
         ))
     }
 
@@ -51,6 +54,7 @@ impl AssetInfo {
             self.origin(),
             self.amount() - amount,
             self.fees(),
+            self.data(),
         ))
     }
 }

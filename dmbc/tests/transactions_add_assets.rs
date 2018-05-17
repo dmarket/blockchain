@@ -136,7 +136,7 @@ fn add_assets_mine_existing_asset_to_receivers_non_empty_wallet() {
     assert!(creator.assets_count == 0);
 
     let updated_asset = AssetBundle::new(asset.id(), asset.amount() * 2);
-    let updated_info = AssetInfo::new(info.creator(), info.origin(), info.amount() * 2, info.fees());
+    let updated_info = AssetInfo::new(info.creator(), info.origin(), info.amount() * 2, info.fees(), info.data());
 
     // check receiver wallet
     let receiver_assets = api.get_wallet_assets(&receiver_key);
@@ -192,7 +192,7 @@ fn add_assets_mine_existing_asset_to_creators_empty_wallet() {
 
     // check creator wallet
     let asset = AssetBundle::new(asset.id(), asset.amount());
-    let updated_info = AssetInfo::new(info.creator(), info.origin(), info.amount() * 2, info.fees());
+    let updated_info = AssetInfo::new(info.creator(), info.origin(), info.amount() * 2, info.fees(), info.data());
 
     let creator = api.get_wallet(&creator_public_key);
     let creators_assets = api.get_wallet_assets(&creator_public_key);
@@ -263,7 +263,7 @@ fn add_assets_mine_existing_asset_to_creator_and_receiver() {
     // check creator wallet
     let creators_asset = AssetBundle::new(asset.id(), asset.amount());
     let receiver_asset = AssetBundle::new(asset.id(), asset.amount() * 2);
-    let updated_info = AssetInfo::new(info.creator(), info.origin(), info.amount() * 3, info.fees());
+    let updated_info = AssetInfo::new(info.creator(), info.origin(), info.amount() * 3, info.fees(), info.data());
 
     let creator = api.get_wallet(&creator_public_key);
     let creators_assets = api.get_wallet_assets(&creator_public_key);
