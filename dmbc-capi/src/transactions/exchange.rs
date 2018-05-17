@@ -1,4 +1,4 @@
-use exonum::crypto::{PublicKey, Signature};
+use exonum::crypto::{PublicKey, Signature, SecretKey};
 
 use assets::AssetBundle;
 use transactions::components::service::SERVICE_ID;
@@ -83,9 +83,49 @@ message! {
         const TYPE = SERVICE_ID;
         const ID = EXCHANGE_ID;
 
-        builder:             ExchangeOffer,
+        offer:             ExchangeOffer,
         seed:              u64,
         sender_signature:  &Signature,
         data_info:         &str,
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct ExchangeWrapper {
+    offer:             ExchangeOffer,
+    seed:              u64,
+    signature:         Signature,
+    data_info:         String,
+}
+
+impl ExchangeWrapper {
+    pub fn new(offer: ExchangeOffer, seed: u64, signature: &Signature, data_info: &str) -> Self {
+        ExchangeWrapper {
+            offer: offer,
+            seed: seed,
+            signature: *signature,
+            data_info: data_info.to_string(),
+        }
+    }
+
+    pub fn from_ptr<'a>(wrapper: *mut ExchangeWrapper) -> Result<&'a mut ExchangeWrapper, Error> {
+        if wrapper.is_null() {
+            return Err(
+                Error::new(
+                    ErrorKind::Text("transactionx isn't initialized".to_string())
+                )
+            );
+        }
+        Ok( unsafe { &mut *wrapper } )
+    }
+
+    pub fn unwrap(&self) -> Exchange {
+        Exchange::new(
+            self.offer.clone(),
+            self.seed,
+            &self.signature,
+            self.data_info.as_str(),
+            &SecretKey::zero(),
+        )
     }
 }

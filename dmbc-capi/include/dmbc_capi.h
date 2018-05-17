@@ -22,6 +22,8 @@ typedef struct dmbc_intermediary dmbc_intermediary;
 
 typedef struct dmbc_exchange_offer dmbc_exchange_offer;
 
+typedef struct dmbc_tx_exchange dmbc_tx_exchange;
+
 typedef struct dmbc_error dmbc_error;
 
 #define FEE_STRATEGY_RECIPIENT 1
@@ -137,7 +139,21 @@ uint8_t* dmbc_exchange_offer_into_bytes(
     dmbc_error *error
 );
 
-void dmbc_exchange_offer_bytes_free(uint8_t *tx_ptr, size_t length);
+dmbc_tx_exchange *dmbc_tx_exchange_create(
+    dmbc_exchange_offer *offer,
+    const char *signature,
+    uint64_t seed,
+    const char *memo,
+    dmbc_error *error
+);
+
+void dmbc_tx_exchange_free(dmbc_tx_exchange *tx);
+
+uint8_t * dmbc_tx_exchange_into_bytes(
+    dmbc_tx_exchange *tx,
+    size_t *length,
+    dmbc_error *error
+);
 
 /*
     Asset

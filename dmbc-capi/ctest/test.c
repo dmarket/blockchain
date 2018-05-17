@@ -173,7 +173,7 @@ free_error:
     dmbc_error_free(err);
 }
 
-void exchange_offer() {
+void exchange() {
     const char *sender_public_key = "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f";
     const char *recipient_public_key = "00098e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411000";
 
@@ -203,9 +203,9 @@ void exchange_offer() {
         goto free_asset;
     }
 
-    size_t length = 0;
-    uint8_t *buffer = dmbc_exchange_offer_into_bytes(offer, &length, err);
-    if (NULL == buffer) {
+    const char *signature = "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f";
+    dmbc_tx_exchange *tx = dmbc_tx_exchange_create(offer, signature, 432, "EXCHANGE", err);
+    if (NULL == tx) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
             fprintf(stderr, error_msg, msg);
@@ -213,10 +213,21 @@ void exchange_offer() {
         goto free_asset;
     }
 
+    size_t length = 0;
+    uint8_t *buffer = dmbc_tx_exchange_into_bytes(tx, &length, err);
+    if (NULL == buffer) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, error_msg, msg);
+        }
+        goto free_tx;
+    }
+
     print_hex(buffer, length);
 
-    dmbc_exchange_offer_bytes_free(buffer, length);
-
+    dmbc_bytes_free(buffer, length);
+free_tx:
+    dmbc_tx_exchange_free(tx);
 free_asset:
     dmbc_asset_free(asset);
 free_offer:
@@ -229,8 +240,7 @@ int main() {
 #if 0
     delete_assets();
     add_assets();
-    exchange_offer();
-#endif
     transfer();
-    
+#endif
+    exchange();
 }
