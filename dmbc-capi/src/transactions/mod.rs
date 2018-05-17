@@ -1,6 +1,6 @@
 pub mod add_assets;
 pub mod delete_assets;
-mod exchange_intermediary;
+pub mod exchange_intermediary;
 pub mod exchange;
 mod trade_intermediary;
 mod trade;

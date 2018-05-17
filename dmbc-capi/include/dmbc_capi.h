@@ -24,6 +24,10 @@ typedef struct dmbc_exchange_offer dmbc_exchange_offer;
 
 typedef struct dmbc_tx_exchange dmbc_tx_exchange;
 
+typedef struct dmbc_exchange_offer_intermediary dmbc_exchange_offer_intermediary;
+
+typedef struct dmbc_tx_exchange_intermediary dmbc_tx_exchange_intermediary;
+
 typedef struct dmbc_error dmbc_error;
 
 #define FEE_STRATEGY_RECIPIENT 1
@@ -151,6 +155,55 @@ void dmbc_tx_exchange_free(dmbc_tx_exchange *tx);
 
 uint8_t * dmbc_tx_exchange_into_bytes(
     dmbc_tx_exchange *tx,
+    size_t *length,
+    dmbc_error *error
+);
+
+/*
+    Exchnage Intermediary offer
+*/
+dmbc_exchange_offer_intermediary *dmbc_exchange_offer_intermediary_create(
+    dmbc_intermediary *intermediary,
+    const char *sender_key,
+    uint64_t sender_amount,
+    const char *recipient_key,
+    u_int8_t fee_strategy,
+    dmbc_error *error
+);
+
+void dmbc_exchange_offer_intermediary_free(dmbc_exchange_offer_intermediary *offer);
+
+bool dmbc_exchange_offer_intermediary_recipient_add_asset(
+    dmbc_exchange_offer_intermediary *offer,
+    dmbc_asset *asset,
+    dmbc_error *error
+);
+
+bool dmbc_exchange_offer_intermediary_sender_add_asset(
+    dmbc_exchange_offer_intermediary *offer,
+    dmbc_asset *asset,
+    dmbc_error *error
+);
+
+uint8_t* dmbc_exchange_offer_intermediary_into_bytes(
+    dmbc_exchange_offer_intermediary *offer,
+    size_t *length,
+    dmbc_error *error
+);
+
+dmbc_tx_exchange_intermediary *dmbc_tx_exchange_intermediary_create(
+    dmbc_exchange_offer_intermediary *offer,
+    const char *sender_signature,
+    const char *intermediary_signature,
+    uint64_t seed,
+    const char *memo,
+    dmbc_error *error
+);
+
+void dmbc_tx_exchange_intermediary_free(dmbc_tx_exchange_intermediary *tx);
+
+uint8_t * dmbc_tx_exchange_intermediary_into_bytes(
+    dmbc_tx_exchange_intermediary *tx,
     size_t *length,
     dmbc_error *error
 );

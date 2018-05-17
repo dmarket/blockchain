@@ -236,11 +236,88 @@ free_error:
     dmbc_error_free(err);
 }
 
+void exchange_intermediary() {
+    const char *sender_public_key = "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f";
+    const char *recipient_public_key = "00098e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411000";
+    const char *intermediary_key = "22298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411999";
+
+    dmbc_error *err = dmbc_error_new();
+    dmbc_intermediary *intermediary = dmbc_intermediary_create(intermediary_key, 888);
+    if (NULL == intermediary) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, error_msg, msg);
+        }
+        goto free_error;
+    }
+
+    dmbc_exchange_offer_intermediary *offer = dmbc_exchange_offer_intermediary_create(intermediary, sender_public_key, 10000, recipient_public_key, 1, err);
+    if (NULL == offer) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, error_msg, msg);
+        }
+        goto free_intermediary;
+    }
+    dmbc_asset *asset = dmbc_asset_create("00001111222233334444555566667777", 10, err);
+    if (NULL == asset) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, error_msg, msg);
+        }
+        goto free_offer;
+    }
+
+    if (!dmbc_exchange_offer_intermediary_recipient_add_asset(offer, asset, err)) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, error_msg, msg);
+        }
+        goto free_asset;
+    }
+
+    const char *signature = "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f";
+    const char *intermediary_signature = "22298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c41199922298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411999";
+    dmbc_tx_exchange_intermediary *tx = dmbc_tx_exchange_intermediary_create(offer, signature, intermediary_signature, 432, "EXCHANGE_i", err);
+    if (NULL == tx) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, error_msg, msg);
+        }
+        goto free_asset;
+    }
+
+    size_t length = 0;
+    uint8_t *buffer = dmbc_tx_exchange_intermediary_into_bytes(tx, &length, err);
+    if (NULL == buffer) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, error_msg, msg);
+        }
+        goto free_tx;
+    }
+
+    print_hex(buffer, length);
+
+    dmbc_bytes_free(buffer, length);
+free_tx:
+    dmbc_tx_exchange_intermediary_free(tx);
+free_asset:
+    dmbc_asset_free(asset);
+free_offer:
+    dmbc_exchange_offer_intermediary_free(offer);
+free_intermediary:
+    dmbc_intermediary_free(intermediary);
+free_error:
+    dmbc_error_free(err);
+}
+
 int main() {
 #if 0
     delete_assets();
     add_assets();
     transfer();
-#endif
     exchange();
+#endif
+    exchange_intermediary();
 }
