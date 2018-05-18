@@ -7,3 +7,5 @@ pub mod intermediary;
 pub mod transfer;
 pub mod exchange;
 pub mod exchange_intermediary;
+pub mod trade_asset;
+pub mod trade;

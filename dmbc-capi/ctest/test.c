@@ -312,12 +312,76 @@ free_error:
     dmbc_error_free(err);
 }
 
+void trade() {
+    const char *seller_public_key = "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f";
+    const char *buyer_public_key = "00098e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411000";
+
+    dmbc_error *err = dmbc_error_new();
+    dmbc_trade_offer *offer = dmbc_trade_offer_create(seller_public_key, buyer_public_key, 1, err);
+    if (NULL == offer) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, error_msg, msg);
+        }
+        goto free_error;
+    }
+    dmbc_trade_asset *asset = dmbc_trade_asset_create("00001111222233334444555566667777", 23, 6666, err);
+    if (NULL == asset) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, error_msg, msg);
+        }
+        goto free_offer;
+    }
+    if (!dmbc_trade_offer_add_asset(offer, asset, err)) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, error_msg, msg);
+        }
+        goto free_asset;
+    }
+
+    const char *signature = "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f";
+    dmbc_tx_trade *tx = dmbc_tx_trade_create(offer, signature, 756, err);
+    if (NULL == tx) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, error_msg, msg);
+        }
+        goto free_asset;
+    }
+
+    size_t length = 0;
+    uint8_t *buffer = dmbc_tx_trade_into_bytes(tx, &length, err);
+    if (NULL == buffer) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, error_msg, msg);
+        }
+        goto free_tx;
+    }
+
+    print_hex(buffer, length);
+
+    dmbc_bytes_free(buffer, length);
+
+free_tx:
+    dmbc_tx_trade_free(tx);
+free_asset:
+    dmbc_trade_asset_free(asset);
+free_offer:
+    dmbc_trade_offer_free(offer);
+free_error:
+    dmbc_error_free(err);
+}
+
 int main() {
 #if 0
     delete_assets();
     add_assets();
     transfer();
     exchange();
-#endif
     exchange_intermediary();
+#endif
+    trade();
 }

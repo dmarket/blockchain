@@ -1,3 +1,4 @@
+use std::mem;
 use assets::AssetId;
 
 encoding_struct! {
@@ -6,5 +7,11 @@ encoding_struct! {
         id: AssetId,
         amount: u64,
         price:  u64,
+    }
+}
+
+impl TradeAsset {
+    pub fn from_ptr<'a>(ptr: *const TradeAsset) -> &'a Self {
+        unsafe { mem::transmute(ptr) }
     }
 }
