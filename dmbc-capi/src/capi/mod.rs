@@ -9,3 +9,4 @@ pub mod exchange;
 pub mod exchange_intermediary;
 pub mod trade_asset;
 pub mod trade;
+pub mod trade_intermediary;

@@ -32,7 +32,11 @@ typedef struct dmbc_tx_exchange_intermediary dmbc_tx_exchange_intermediary;
 
 typedef struct dmbc_trade_offer dmbc_trade_offer;
 
+typedef struct dmbc_trade_offer_intermediary dmbc_trade_offer_intermediary;
+
 typedef struct dmbc_tx_trade dmbc_tx_trade;
+
+typedef struct dmbc_tx_trade_intermediary dmbc_tx_trade_intermediary;
 
 typedef struct dmbc_error dmbc_error;
 
@@ -253,6 +257,47 @@ uint8_t *dmbc_tx_trade_into_bytes(
     dmbc_error *error
 );
 
+/*
+    Trade Intermediary
+*/
+dmbc_trade_offer_intermediary *dmbc_trade_offer_intermediary_create(
+    dmbc_intermediary *intermediary,
+    const char *seller_key,
+    const char *buyer_key,
+    u_int8_t fee_strategy,
+    dmbc_error *error
+);
+
+void dmbc_trade_offer_intermediary_free(dmbc_trade_offer_intermediary *offer);
+
+bool dmbc_trade_offer_intermediary_add_asset(
+    dmbc_trade_offer_intermediary *offer,
+    dmbc_trade_asset *asset,
+    dmbc_error *error
+);
+
+uint8_t *dmbc_trade_offer_intermediary_into_bytes(
+    dmbc_trade_offer_intermediary *offer,
+    size_t *length,
+    dmbc_error *error
+);
+
+dmbc_tx_trade_intermediary *dmbc_tx_trade_intermediary_create(
+    dmbc_trade_offer_intermediary *offer,
+    const char *seller_signature,
+    const char *intermediary_signature,
+    uint64_t seed,
+    const char *memo,
+    dmbc_error *error
+);
+
+void dmbc_tx_trade_intermediary_free(dmbc_tx_trade_intermediary *tx);
+
+uint8_t *dmbc_tx_trade_intermediary_into_bytes(
+    dmbc_tx_trade_intermediary *tx,
+    size_t *length,
+    dmbc_error *error
+);
 
 /*
     Asset
