@@ -98,15 +98,6 @@ impl SystemApi {
                 },
             )
     }
-
-    fn get_healthcheck_info(&self) -> HealthCheckInfo {
-        let net_height = *self.shared_api_state.net_height.read().unwrap();
-        let last_block = self.blockchain.last_block().clone();
-        HealthCheckInfo {
-            connectivity: !self.shared_api_state.peers_info().is_empty(),
-            overtake: net_height > last_block.height(),
-        }
-    }
 }
 
 impl Api for SystemApi {
