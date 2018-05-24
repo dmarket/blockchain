@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use serde_json;
 use router::Router;
 use iron::prelude::*;
 
@@ -21,6 +22,9 @@ use crypto::Hash;
 use explorer::{BlockchainExplorer, TxInfo};
 use api::{Api, ApiError};
 use encoding::serialize::FromHex;
+use iron::status;
+use iron::headers::AccessControlAllowOrigin;
+use hyper::header::ContentType;
 
 #[derive(Serialize)]
 struct MemPoolTxInfo {
@@ -44,6 +48,7 @@ struct MemPoolInfo {
 #[derive(Deserialize, Serialize, Clone, Debug, PartialEq)]
 pub struct HealthCheckInfo {
     pub connectivity: bool,
+    pub overtake: bool,
 }
 
 /// Public system API.
@@ -95,7 +100,12 @@ impl SystemApi {
     }
 
     fn get_healthcheck_info(&self) -> HealthCheckInfo {
-        HealthCheckInfo { connectivity: !self.shared_api_state.peers_info().is_empty() }
+        let net_height = *self.shared_api_state.net_height.read().unwrap();
+        let last_block = self.blockchain.last_block().clone();
+        HealthCheckInfo {
+            connectivity: !self.shared_api_state.peers_info().is_empty(),
+            overtake: net_height > last_block.height(),
+        }
     }
 }
 
@@ -129,8 +139,27 @@ impl Api for SystemApi {
 
         let self_ = self.clone();
         let healthcheck = move |_: &mut Request| {
-            let info = self_.get_healthcheck_info();
-            self_.ok_response(&::serde_json::to_value(info).unwrap())
+            let net_height = *self_.shared_api_state.net_height.read().unwrap();
+            let last_block = self_.blockchain.last_block().clone();
+            let (status, code) = if net_height > last_block.height() {
+                (true, status::ServiceUnavailable)
+            } else {
+                (false, status::Ok)
+            };
+
+            let info = HealthCheckInfo {
+                connectivity: !self_.shared_api_state.peers_info().is_empty(),
+                overtake: status,
+            };
+            let json = &::serde_json::to_value(info).unwrap();
+            let mut resp = Response::with((
+                code,
+                serde_json::to_string_pretty(json).unwrap(),
+            ));
+            resp.headers.set(ContentType::json());
+            resp.headers.set(AccessControlAllowOrigin::Any);
+
+            Ok(resp)
         };
 
         router.get("/v1/mempool", mempool_info, "mempool");

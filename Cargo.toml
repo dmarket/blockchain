@@ -7,5 +7,4 @@ default-members = ["dmbc-node", "dmbc-discovery"]
 
 [patch.crates-io]
 exonum = { path = "dep/exonum" }
-exonum_librocksdb-sys = { path = "dep/exonum_librocksdb-sys" }
 prometheus = { git = "https://github.com/niksaak/rust-prometheus", rev="abd94f8" }
