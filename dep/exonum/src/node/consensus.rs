@@ -30,6 +30,7 @@ impl NodeHandler {
     pub fn handle_consensus(&mut self, msg: ConsensusMessage) {
         // Ignore messages from previous and future height
         if msg.height() < self.state.height() || msg.height() > self.state.height().next() {
+            self.api_state.update_net_height(msg.height());
             warn!(
                 "Received consensus message from other height: msg.height={}, self.height={}",
                 msg.height(),

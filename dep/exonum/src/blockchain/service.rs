@@ -326,6 +326,7 @@ impl ApiNodeState {
 #[derive(Clone, Debug)]
 pub struct SharedNodeState {
     state: Arc<RwLock<ApiNodeState>>,
+    pub net_height: Arc<RwLock<Height>>,
     /// Timeout to update api state.
     pub state_update_timeout: Milliseconds,
 }
@@ -335,7 +336,14 @@ impl SharedNodeState {
     pub fn new(state_update_timeout: Milliseconds) -> SharedNodeState {
         SharedNodeState {
             state: Arc::new(RwLock::new(ApiNodeState::new())),
+            net_height: Arc::new(RwLock::new(Height(0))),
             state_update_timeout,
+        }
+    }
+
+    pub fn update_net_height(&self, h: Height) {
+        if *self.net_height.read().unwrap() < h {
+            *self.net_height.write().unwrap() = h;
         }
     }
     /// Return list of connected sockets
