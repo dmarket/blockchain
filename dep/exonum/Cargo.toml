@@ -12,7 +12,7 @@
 
 [package]
 name = "exonum"
-version = "0.5.1"
+version = "0.5.2"
 authors = ["The Exonum Team <exonum@bitfury.com>"]
 description = "An extensible framework for blockchain software projects."
 homepage = "https://exonum.com/"

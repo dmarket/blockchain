@@ -1,6 +1,6 @@
 [package]
 name = "dmbc-node"
-version = "2.0.1"
+version = "2.1.1"
 authors = ["Ilya Sinyakin <sinyakin.ilya@gmail.com>", "Mikola Samardak <niksaak@gmail.com>" ,"Taras Shchybovyk <tshchybo@gmail.com>"]
 publish = false
 
