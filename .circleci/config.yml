@@ -38,7 +38,7 @@ references:
       command: |
         export CC=clang
         export CXX=clang++
-        cargo test --color=always --jobs 2 -- --test-threads=1
+        cargo test -p dmbc --color=always --jobs 2 -- --test-threads=1
 
   save_cache: &save_cache
     save_cache:
