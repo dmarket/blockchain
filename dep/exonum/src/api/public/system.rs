@@ -25,6 +25,7 @@ use encoding::serialize::FromHex;
 use iron::status;
 use iron::headers::AccessControlAllowOrigin;
 use hyper::header::ContentType;
+use helpers::Height;
 
 #[derive(Serialize)]
 struct MemPoolTxInfo {
@@ -49,6 +50,8 @@ struct MemPoolInfo {
 pub struct HealthCheckInfo {
     pub connectivity: bool,
     pub overtake: bool,
+    pub net_height: Height,
+    pub current_height: Height,
 }
 
 /// Public system API.
@@ -141,6 +144,8 @@ impl Api for SystemApi {
             let info = HealthCheckInfo {
                 connectivity: !self_.shared_api_state.peers_info().is_empty(),
                 overtake: status,
+                net_height,
+                current_height: last_block.height(),
             };
             let json = &::serde_json::to_value(info).unwrap();
             let mut resp = Response::with((
