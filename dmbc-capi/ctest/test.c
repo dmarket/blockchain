@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "dmbc_capi.h"
+#include "cjson.h"
 
 #ifndef DEBUG
 #define DEBUG false
@@ -33,11 +34,59 @@ void write_hex_to_file(const char *fname, uint8_t *hex, size_t length) {
     fclose(f);
 }
 
+cJSON * read_inputs(const char *fname) {
+    FILE *f = fopen(fname, "r");
+
+    if (NULL == f) {
+        fprintf(stderr, "Error opening file %s\n", fname);
+        exit(1);
+    }
+
+    fseek(f, 0, SEEK_END);
+    size_t string_size = ftell(f);
+    rewind(f);
+
+    char *buffer = (char *)malloc(sizeof(char) * (string_size + 1));
+    size_t read_size = fread(buffer, sizeof(char), string_size, f);
+    buffer[string_size] = '\0';
+
+    if (string_size != read_size) {
+        free(buffer);
+        buffer = NULL;
+        fclose(f);
+        fprintf(stderr, "Error reading file %s\n", fname);
+        exit(1);
+    }
+
+    fclose(f);
+
+    cJSON *inputs = cJSON_Parse(buffer);
+    if (NULL == inputs) {
+        const char *error_ptr = cJSON_GetErrorPtr();
+        if (error_ptr != NULL)
+        {
+            fprintf(stderr, "Error before: %s\n", error_ptr);
+        }
+        exit(1);
+    }
+
+    free(buffer);
+
+    return inputs;
+}
+
 void add_assets() {
-    const char *public_key = "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f";
+    const cJSON *inputs = read_inputs("./inputs/add_assets.json");
+    const cJSON *pub_key_json = cJSON_GetObjectItemCaseSensitive(inputs, "public_key");
+    const cJSON *seed_json = cJSON_GetObjectItemCaseSensitive(inputs, "seed");
+    const cJSON *assets = cJSON_GetObjectItemCaseSensitive(inputs, "assets");
+    const cJSON *asset = NULL;
+
+    uint64_t seed = seed_json->valueint;
+    const char *public_key = pub_key_json->valuestring;
 
     dmbc_error *err = dmbc_error_new();
-    dmbc_tx_add_assets *tx = dmbc_tx_add_assets_create(public_key, 123, err);
+    dmbc_tx_add_assets *tx = dmbc_tx_add_assets_create(public_key, seed, err);
     if (NULL == tx) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
@@ -45,27 +94,59 @@ void add_assets() {
         }
         goto free_error;
     }
-    dmbc_fees *fees = dmbc_fees_create(10, "0.1", 20, "0.2", 9, "0.999999", err);
-    if (NULL == fees) {
-        const char *msg = dmbc_error_message(err);
-        if (NULL != msg) {
-            fprintf(stderr, error_msg, msg);
+
+    cJSON_ArrayForEach(asset, assets) {
+        const cJSON *fees_json = cJSON_GetObjectItemCaseSensitive(asset, "fees");
+        const cJSON *trade_json = cJSON_GetObjectItemCaseSensitive(fees_json, "trade");
+        const cJSON *exchange_json = cJSON_GetObjectItemCaseSensitive(fees_json, "exchange");
+        const cJSON *transfer_json = cJSON_GetObjectItemCaseSensitive(fees_json, "transfer");
+
+        const cJSON *trade_fixed = cJSON_GetObjectItemCaseSensitive(trade_json, "fixed");
+        const cJSON *trade_ratio = cJSON_GetObjectItemCaseSensitive(trade_json, "ratio");
+        const cJSON *exchange_fixed = cJSON_GetObjectItemCaseSensitive(exchange_json, "fixed");
+        const cJSON *exchange_ratio = cJSON_GetObjectItemCaseSensitive(exchange_json, "ratio");
+        const cJSON *transfer_fixed = cJSON_GetObjectItemCaseSensitive(transfer_json, "fixed");
+        const cJSON *transfer_ratio = cJSON_GetObjectItemCaseSensitive(transfer_json, "ratio");
+
+        dmbc_fees *fees = dmbc_fees_create(
+            trade_fixed->valueint, 
+            trade_ratio->valuestring,
+            exchange_fixed->valueint,
+            exchange_ratio->valuestring,
+            transfer_fixed->valueint,
+            transfer_ratio->valuestring,
+            err
+        );
+
+        if (NULL == fees) {
+            const char *msg = dmbc_error_message(err);
+            if (NULL != msg) {
+                fprintf(stderr, error_msg, msg);
+            }
+            goto free_tx;
         }
-        goto free_tx;
-    }
-    if (!dmbc_tx_add_assets_add_asset(tx, "Asset#10", 10, fees, public_key, err)) {
-        const char *msg = dmbc_error_message(err);
-        if (NULL != msg) {
-            fprintf(stderr, error_msg, msg);
+
+        const cJSON *data = cJSON_GetObjectItemCaseSensitive(asset, "data");
+        const cJSON *amount = cJSON_GetObjectItemCaseSensitive(asset, "amount");
+        const cJSON *receiver = cJSON_GetObjectItemCaseSensitive(asset, "receiver");
+
+        if (!dmbc_tx_add_assets_add_asset(
+            tx, 
+            data->valuestring, 
+            amount->valueint, 
+            fees, 
+            receiver->valuestring, 
+            err)
+        ) {
+            const char *msg = dmbc_error_message(err);
+            if (NULL != msg) {
+                fprintf(stderr, error_msg, msg);
+            }
+            dmbc_fees_free(fees);
+            goto free_tx;
         }
-        goto free_fee;
-    }
-    if (!dmbc_tx_add_assets_add_asset(tx, "Asset#00", 1000, fees, public_key, err)) {
-        const char *msg = dmbc_error_message(err);
-        if (NULL != msg) {
-            fprintf(stderr, error_msg, msg);
-        }
-        goto free_fee;
+
+        dmbc_fees_free(fees);
     }
     
     size_t length = 0;
@@ -75,18 +156,18 @@ void add_assets() {
         if (NULL != msg) {
             fprintf(stderr, error_msg, msg);
         }
-        goto free_fee;
+        goto free_tx;
     }
 
     write_hex_to_file("./output/add_assets.txt", buffer, length);
 
     dmbc_bytes_free(buffer, length);
-free_fee: 
-    dmbc_fees_free(fees);
 free_tx:
     dmbc_tx_add_asset_free(tx);
 free_error:
     dmbc_error_free(err);
+
+    cJSON_Delete(inputs);
 }
 
 void delete_assets() {

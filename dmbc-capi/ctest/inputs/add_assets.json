@@ -1,0 +1,26 @@
+{
+    "public_key": "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f",
+    "seed": 123,
+    "assets": [
+        { 
+            "data": "Asset#10",
+            "amount": 10,
+            "fees": {
+                "trade" : { "fixed": 10, "fraction": "0.1" },
+                "exchange": { "fixed": 20, "fraction": "0.2" },
+                "transfer": { "fixed": 9, "fraction": "0.99999" }
+            },
+            "receiver": "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f"
+        },
+        { 
+            "data": "Asset#20",
+            "amount": 1000,
+            "fees": {
+                "trade" : { "fixed": 10, "fraction": "0.1" },
+                "exchange": { "fixed": 20, "fraction": "0.2" },
+                "transfer": { "fixed": 9, "fraction": "0.99999" }
+            },
+            "receiver": "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f"
+        }
+    ]
+}
