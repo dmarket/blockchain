@@ -10,12 +10,27 @@
 
 const char *error_msg = "Error occured '%s'\n";
 const char *output = "\nTransaction length is %lu hex %s\n";
+const char *output_fodler = "output\\";
 
 void print_hex(const uint8_t *hex, size_t length) {
     for (int i = 0; i < length; ++i) {
         fprintf(stdout, "%02x", hex[i]);
     }
     puts("");
+}
+
+void write_hex_to_file(const char *fname, uint8_t *hex, size_t length) {
+    FILE *f = fopen(fname, "w");
+    if (NULL == f) {
+        fprintf(stderr, "Error opening file %s\n", fname);
+        exit(1);
+    }
+
+    for (int i = 0; i < length; ++i) {
+        fprintf(f, "%02x", hex[i]);
+    }
+
+    fclose(f);
 }
 
 void add_assets() {
@@ -63,7 +78,7 @@ void add_assets() {
         goto free_fee;
     }
 
-    print_hex(buffer, length);
+    write_hex_to_file("./output/add_assets.txt", buffer, length);
 
     dmbc_bytes_free(buffer, length);
 free_fee: 
@@ -449,14 +464,47 @@ free_error:
     dmbc_error_free(err);
 }
 
-int main() {
-#if 0
-    delete_assets();
-    add_assets();
-    transfer();
-    exchange();
-    exchange_intermediary();
-    trade();
-#endif
-    trade_intermediary();
+int main(int argc, char *argv[]) {
+    const char *usage = "Please specify the transaction type: app TRANSACTION\nTRANSACTIONS:\n\n \
+    add_assets\n \
+    delete_assets\n \
+    transfer\n \
+    exchange\n \
+    exchange_intermediary\n \
+    trade\n \
+    trade_intermediary\n";
+
+    if (argc < 2) {
+        puts(usage);
+        return -1;
+    }
+    const char *tx_names[] = {
+        "add_assets",
+        "delete_assets",
+        "transfer",
+        "exchange",
+        "exchange_intermediary",
+        "trade",
+        "trade_intermediary"
+    };
+
+    void (*fs[])(void) = {
+        add_assets,
+        delete_assets,
+        transfer,
+        exchange,
+        exchange_intermediary,
+        trade,
+        trade_intermediary
+    };
+
+    for (int i = 0; i < 7; ++i) {
+        if (strcmp(argv[1], tx_names[i]) == 0) {
+            fs[i]();
+            return 0;
+        }
+    }
+
+    puts(usage);
+    return -1;
 }
