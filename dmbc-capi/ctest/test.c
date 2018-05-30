@@ -96,25 +96,26 @@ void add_assets() {
     }
 
     cJSON_ArrayForEach(asset, assets) {
+
         const cJSON *fees_json = cJSON_GetObjectItemCaseSensitive(asset, "fees");
         const cJSON *trade_json = cJSON_GetObjectItemCaseSensitive(fees_json, "trade");
         const cJSON *exchange_json = cJSON_GetObjectItemCaseSensitive(fees_json, "exchange");
         const cJSON *transfer_json = cJSON_GetObjectItemCaseSensitive(fees_json, "transfer");
 
         const cJSON *trade_fixed = cJSON_GetObjectItemCaseSensitive(trade_json, "fixed");
-        const cJSON *trade_ratio = cJSON_GetObjectItemCaseSensitive(trade_json, "ratio");
+        const cJSON *trade_fraction = cJSON_GetObjectItemCaseSensitive(trade_json, "fraction");
         const cJSON *exchange_fixed = cJSON_GetObjectItemCaseSensitive(exchange_json, "fixed");
-        const cJSON *exchange_ratio = cJSON_GetObjectItemCaseSensitive(exchange_json, "ratio");
+        const cJSON *exchange_fraction = cJSON_GetObjectItemCaseSensitive(exchange_json, "fraction");
         const cJSON *transfer_fixed = cJSON_GetObjectItemCaseSensitive(transfer_json, "fixed");
-        const cJSON *transfer_ratio = cJSON_GetObjectItemCaseSensitive(transfer_json, "ratio");
+        const cJSON *transfer_fraction = cJSON_GetObjectItemCaseSensitive(transfer_json, "fraction");
 
         dmbc_fees *fees = dmbc_fees_create(
             trade_fixed->valueint, 
-            trade_ratio->valuestring,
+            trade_fraction->valuestring,
             exchange_fixed->valueint,
-            exchange_ratio->valuestring,
+            exchange_fraction->valuestring,
             transfer_fixed->valueint,
-            transfer_ratio->valuestring,
+            transfer_fraction->valuestring,
             err
         );
 
@@ -159,7 +160,7 @@ void add_assets() {
         goto free_tx;
     }
 
-    write_hex_to_file("./output/add_assets.txt", buffer, length);
+    write_hex_to_file("./output/add_assets", buffer, length);
 
     dmbc_bytes_free(buffer, length);
 free_tx:

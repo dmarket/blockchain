@@ -1,0 +1,4 @@
+ctest/test
+ctest/output/*
+ctest/__pycache__
+/.idea/*

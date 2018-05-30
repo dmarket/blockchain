@@ -1,14 +1,9 @@
 extern crate dmbc;
 extern crate exonum;
 
-use std::process::Command;
-use std::env;
-use std::fs::File;
-use std::io::BufReader;
-use std::io::prelude::*;
+pub mod utils;
 
-use exonum::crypto;
-use exonum::crypto::PublicKey;
+use exonum::crypto::{PublicKey, SecretKey};
 use exonum::encoding::serialize::FromHex;
 use exonum::blockchain::Transaction;
 
@@ -22,42 +17,37 @@ pub fn hex_string(bytes: Vec<u8>) -> String {
 
 #[test]
 fn capi_add_assets() {
-    let current_dir = env::current_dir().unwrap();
-    let current_dir = current_dir.as_path();
-    
-    let output = Command::new("./compile.sh")
-        .current_dir(current_dir.join("ctest"))
-        .output();
-    assert!(output.is_ok());
+    let contents = utils::run("add_assets");
+    let inputs = utils::read_inputs("add_assets").unwrap();
 
-    let output = Command::new("./test")
-        .current_dir(current_dir.join("ctest"))
-        .arg("add_assets")
-        .output();
-    assert!(output.is_ok());
+    let public = PublicKey::from_hex(inputs["public_key"].as_str().unwrap());
 
-    let file = File::open(current_dir.join("ctest").join("output").join("add_assets.txt"));
-    assert!(file.is_ok());
-
-    let mut buf_reader = BufReader::new(file.unwrap());
-    let mut contents = String::new();
-    let res = buf_reader.read_to_string(&mut contents);
-    assert!(res.is_ok());
-
-    let (_, secret) = crypto::gen_keypair();
-    let fees = fee::Builder::new()
-        .trade(10, "0.1".parse().unwrap())
-        .exchange(20, "0.2".parse().unwrap())
-        .transfer(9, "0.999999".parse().unwrap())
-        .build();
-    let public = PublicKey::from_hex("4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f");
-    let tx = transaction::Builder::new()
-        .keypair(public.unwrap(), secret)
+    let mut builder = transaction::Builder::new()
+        .keypair(public.unwrap(), SecretKey::zero())
         .tx_add_assets()
-        .add_asset("Asset#10", 10, fees.clone())
-        .add_asset("Asset#00", 1000, fees)
-        .seed(123)
-        .build();
+        .seed(inputs["seed"].as_u64().unwrap());
+    for asset in inputs["assets"].as_array().unwrap() {
+        let fees_json = asset["fees"].as_object().unwrap();
+        let trade = fees_json["trade"].as_object().unwrap();
+        let exchange = fees_json["exchange"].as_object().unwrap();
+        let transfer = fees_json["transfer"].as_object().unwrap();
+
+        let fees = fee::Builder::new()
+            .trade(trade["fixed"].as_u64().unwrap(), trade["fraction"].as_str().unwrap().parse().unwrap())
+            .exchange(exchange["fixed"].as_u64().unwrap(), exchange["fraction"].as_str().unwrap().parse().unwrap())
+            .transfer(transfer["fixed"].as_u64().unwrap(), transfer["fraction"].as_str().unwrap().parse().unwrap())
+            .build();
+
+        let receiver = PublicKey::from_hex(asset["receiver"].as_str().unwrap());
+        builder.add_asset_receiver_ref(
+            receiver.unwrap(),
+            asset["data"].as_str().unwrap(), 
+            asset["amount"].as_u64().unwrap(), 
+            fees
+        );
+    }
+
+    let tx = builder.build();
 
     let tx: Box<Transaction> = tx.into();
     let hex = hex_string(tx.raw().body().to_vec());

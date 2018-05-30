@@ -155,6 +155,10 @@ impl AddAssetBuilder {
         self
     }
 
+    pub fn add_asset_value_ref(&mut self, asset: MetaAsset) {
+        self.assets.push(asset);
+    }
+
     pub fn add_asset_receiver(
         self,
         receiver: PublicKey,
@@ -164,6 +168,17 @@ impl AddAssetBuilder {
     ) -> Self {
         let asset = MetaAsset::new(&receiver, name, count, fees);
         self.add_asset_value(asset)
+    }
+
+    pub fn add_asset_receiver_ref(
+        &mut self,
+        receiver: PublicKey,
+        name: &str,
+        count: u64,
+        fees: Fees,
+    ) {
+        let asset = MetaAsset::new(&receiver, name, count, fees);
+        self.add_asset_value_ref(asset);
     }
 
     pub fn seed(self, seed: u64) -> Self {
