@@ -51,3 +51,8 @@ pub fn read_inputs(tx_name: &str) -> Result<Value, Error> {
     let v: Value = serde_json::from_str(&contents)?;
     Ok(v)
 }
+
+pub fn hex_string(bytes: Vec<u8>) -> String {
+    let strs: Vec<String> = bytes.iter().map(|b| format!("{:02x}", b)).collect();
+    strs.join("")
+}

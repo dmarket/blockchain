@@ -223,6 +223,10 @@ impl DelAssetBuilder {
         self
     }
 
+    pub fn add_asset_value_ref(&mut self, asset: AssetBundle) {
+        self.assets.push(asset);
+    }
+
     pub fn seed(self, seed: u64) -> Self {
         DelAssetBuilder { seed, ..self }
     }

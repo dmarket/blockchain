@@ -10,11 +10,6 @@ use exonum::blockchain::Transaction;
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::transactions::builders::fee;
 
-pub fn hex_string(bytes: Vec<u8>) -> String {
-    let strs: Vec<String> = bytes.iter().map(|b| format!("{:02x}", b)).collect();
-    strs.join("")
-}
-
 #[test]
 fn capi_add_assets() {
     let contents = utils::run("add_assets");
@@ -50,7 +45,7 @@ fn capi_add_assets() {
     let tx = builder.build();
 
     let tx: Box<Transaction> = tx.into();
-    let hex = hex_string(tx.raw().body().to_vec());
+    let hex = utils::hex_string(tx.raw().body().to_vec());
 
     assert_eq!(contents, hex);
 }

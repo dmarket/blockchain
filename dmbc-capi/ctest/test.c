@@ -76,7 +76,7 @@ cJSON * read_inputs(const char *fname) {
 }
 
 void add_assets() {
-    const cJSON *inputs = read_inputs("./inputs/add_assets.json");
+    cJSON *inputs = read_inputs("./inputs/add_assets.json");
     const cJSON *pub_key_json = cJSON_GetObjectItemCaseSensitive(inputs, "public_key");
     const cJSON *seed_json = cJSON_GetObjectItemCaseSensitive(inputs, "seed");
     const cJSON *assets = cJSON_GetObjectItemCaseSensitive(inputs, "assets");
@@ -172,10 +172,17 @@ free_error:
 }
 
 void delete_assets() {
-    const char *public_key = "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f";
+    cJSON *inputs = read_inputs("./inputs/delete_assets.json");
+    const cJSON *pub_key_json = cJSON_GetObjectItemCaseSensitive(inputs, "public_key");
+    const cJSON *seed_json = cJSON_GetObjectItemCaseSensitive(inputs, "seed");
+    const cJSON *assets = cJSON_GetObjectItemCaseSensitive(inputs, "assets");
+    const cJSON *asset = NULL;
+
+    uint64_t seed = seed_json->valueint;
+    const char *public_key = pub_key_json->valuestring;
 
     dmbc_error *err = dmbc_error_new();
-    dmbc_tx_delete_assets *tx = dmbc_tx_delete_assets_create(public_key, 123, err);
+    dmbc_tx_delete_assets *tx = dmbc_tx_delete_assets_create(public_key, seed, err);
     if (NULL == tx) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
@@ -183,20 +190,30 @@ void delete_assets() {
         }
         goto free_error;
     }
-    dmbc_asset *asset = dmbc_asset_create("00001111222233334444555566667777", 10, err);
-    if (NULL == asset) {
-        const char *msg = dmbc_error_message(err);
-        if (NULL != msg) {
-            fprintf(stderr, error_msg, msg);
+
+    cJSON_ArrayForEach(asset, assets) {
+        cJSON *id = cJSON_GetObjectItemCaseSensitive(asset, "id");
+        cJSON *amount = cJSON_GetObjectItemCaseSensitive(asset, "amount");
+
+        dmbc_asset *asset = dmbc_asset_create(id->valuestring, amount->valueint, err);
+        if (NULL == asset) {
+            const char *msg = dmbc_error_message(err);
+            if (NULL != msg) {
+                fprintf(stderr, error_msg, msg);
+            }
+            goto free_tx;
         }
-        goto free_tx;
-    }
-    if (!dmbc_tx_delete_assets_add_asset(tx, asset, err)) {
-        const char *msg = dmbc_error_message(err);
-        if (NULL != msg) {
-            fprintf(stderr, error_msg, msg);
+
+        if (!dmbc_tx_delete_assets_add_asset(tx, asset, err)) {
+            const char *msg = dmbc_error_message(err);
+            if (NULL != msg) {
+                fprintf(stderr, error_msg, msg);
+            }
+            dmbc_asset_free(asset);
+            goto free_tx;
         }
-        goto free_asset;
+
+        dmbc_asset_free(asset);
     }
     
     size_t length = 0;
@@ -206,18 +223,18 @@ void delete_assets() {
         if (NULL != msg) {
             fprintf(stderr, error_msg, msg);
         }
-        goto free_asset;
+        goto free_tx;
     }
 
-    print_hex(buffer, length);
+    write_hex_to_file("./output/delete_assets", buffer, length);
 
     dmbc_bytes_free(buffer, length);
-free_asset: 
-    dmbc_asset_free(asset);
 free_tx:
     dmbc_tx_delete_assets_free(tx);
 free_error:
     dmbc_error_free(err);
+
+    cJSON_Delete(inputs);
 }
 
 void transfer() {
