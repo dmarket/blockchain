@@ -22,7 +22,7 @@ impl MetaAsset {
 
     /// Create an `AssetInfo` from this `MetaAsset`.
     pub fn to_info(&self, creator: &PublicKey, origin: &Hash) -> AssetInfo {
-        AssetInfo::new(creator, origin, self.amount(), self.fees())
+        AssetInfo::new(creator, origin, self.amount(), self.fees(), self.data())
     }
 
     /// Create an `AssetBundle` from this `MetaAsset`.

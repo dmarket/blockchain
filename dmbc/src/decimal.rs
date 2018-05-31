@@ -124,7 +124,7 @@ impl FromStr for UFract64 {
     fn from_str(s: &str) -> Result<Self, FromStrError> {
         let mut s = s;
 
-        if &s.as_bytes()[..2] == b"0." {
+        if s.len() > 2 && &s.as_bytes()[..2] == b"0." {
             s = s.split_at(2).1;
         }
 
@@ -213,6 +213,21 @@ mod test {
         let digits = [1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 3, 4, 5, 6, 7];
         let fract_1 = UFract64::from_digits(digits);
         let fract_2 = "0.1234567891234567".parse().unwrap();
+        assert_eq!(fract_1, fract_2);
+    }
+
+    #[test]
+    fn from_string_single_zero() {
+        let digits = [0; 16];
+        let fract_1 = UFract64::from_digits(digits);
+        let fract_2 = "0".parse().unwrap();
+        assert_eq!(fract_1, fract_2);
+    }
+
+    #[test]
+    fn from_string_single_digit() {
+        let fract_1: UFract64 = "9".parse().unwrap();
+        let fract_2: UFract64 = "0.9".parse().unwrap();
         assert_eq!(fract_1, fract_2);
     }
 

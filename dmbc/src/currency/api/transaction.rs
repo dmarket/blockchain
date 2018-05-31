@@ -9,6 +9,7 @@ use exonum::api::Api;
 use exonum::blockchain::{Blockchain, Transaction};
 use exonum::crypto::Hash;
 use exonum::encoding::serialize::FromHex;
+use exonum::messages::Message;
 use exonum::node::{ApiSender, TransactionSend};
 use hyper::header::ContentType;
 use iron::headers::AccessControlAllowOrigin;
@@ -23,6 +24,8 @@ use currency::transactions::{AddAssets, DeleteAssets, Exchange, ExchangeIntermed
                              TradeIntermediary, Transfer};
 
 use currency::error::Error;
+
+const MAX_TRANSACTION_LENGTH: usize = 17408;
 
 #[derive(Clone)]
 pub struct TransactionApi {
@@ -40,6 +43,20 @@ pub enum TransactionRequest {
     TradeIntermediary(TradeIntermediary),
     Exchange(Exchange),
     ExchangeIntermediary(ExchangeIntermediary),
+}
+
+impl TransactionRequest {
+    fn len(&self) -> usize {
+        match self {
+            &TransactionRequest::Transfer(ref trans) => trans.raw().len(),
+            &TransactionRequest::AddAssets(ref trans) => trans.raw().len(),
+            &TransactionRequest::DeleteAssets(ref trans) => trans.raw().len(),
+            &TransactionRequest::Trade(ref trans) => trans.raw().len(),
+            &TransactionRequest::TradeIntermediary(ref trans) => trans.raw().len(),
+            &TransactionRequest::Exchange(ref trans) => trans.raw().len(),
+            &TransactionRequest::ExchangeIntermediary(ref trans) => trans.raw().len(),
+        }
+    }
 }
 
 impl Into<Box<Transaction>> for TransactionRequest {
@@ -99,6 +116,9 @@ impl Api for TransactionApi {
             POST_REQUESTS.inc();
 
             let s: TxPostResponse = match req.get::<bodyparser::Struct<TransactionRequest>>() {
+                Ok(Some(ref transaction)) if transaction.len() > MAX_TRANSACTION_LENGTH => {
+                    Ok(Err(Error::InvalidTransaction))
+                }
                 Ok(Some(transaction)) => {
                     let tx: Box<Transaction> = transaction.into();
                     let tx_hash = tx.hash();
