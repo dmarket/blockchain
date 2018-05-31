@@ -568,11 +568,24 @@ free_error:
 }
 
 void trade() {
-    const char *seller_public_key = "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f";
-    const char *buyer_public_key = "00098e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411000";
+    cJSON *inputs = read_inputs("./inputs/trade.json");
+    const cJSON *offer_json = cJSON_GetObjectItemCaseSensitive(inputs, "offer");
+
+    const cJSON *seller_key_json = cJSON_GetObjectItemCaseSensitive(offer_json, "seller");
+    const cJSON *buyer_key_json = cJSON_GetObjectItemCaseSensitive(offer_json, "buyer");
+    const cJSON *assets_json = cJSON_GetObjectItemCaseSensitive(offer_json, "assets");
+    const cJSON *fee_strategy_json = cJSON_GetObjectItemCaseSensitive(offer_json, "fee_strategy");
+
+    const cJSON *seed_json = cJSON_GetObjectItemCaseSensitive(inputs, "seed");
+    const cJSON *seller_signature_json = cJSON_GetObjectItemCaseSensitive(inputs, "seller_signature");
+
+    const cJSON *asset = NULL;
+
+    const char *seller_public_key = seller_key_json->valuestring;
+    const char *buyer_public_key = buyer_key_json->valuestring;
 
     dmbc_error *err = dmbc_error_new();
-    dmbc_trade_offer *offer = dmbc_trade_offer_create(seller_public_key, buyer_public_key, 1, err);
+    dmbc_trade_offer *offer = dmbc_trade_offer_create(seller_public_key, buyer_public_key, fee_strategy_json->valueint, err);
     if (NULL == offer) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
@@ -580,30 +593,41 @@ void trade() {
         }
         goto free_error;
     }
-    dmbc_trade_asset *asset = dmbc_trade_asset_create("00001111222233334444555566667777", 23, 6666, err);
-    if (NULL == asset) {
-        const char *msg = dmbc_error_message(err);
-        if (NULL != msg) {
-            fprintf(stderr, error_msg, msg);
+
+    cJSON_ArrayForEach(asset, assets_json) {
+        cJSON *id = cJSON_GetObjectItemCaseSensitive(asset, "id");
+        cJSON *amount = cJSON_GetObjectItemCaseSensitive(asset, "amount");
+        cJSON *price = cJSON_GetObjectItemCaseSensitive(asset, "price");
+
+        dmbc_trade_asset *asset = dmbc_trade_asset_create(id->valuestring, amount->valueint, price->valueint, err);
+        if (NULL == asset) {
+            const char *msg = dmbc_error_message(err);
+            if (NULL != msg) {
+                fprintf(stderr, error_msg, msg);
+            }
+            goto free_offer;
         }
-        goto free_offer;
-    }
-    if (!dmbc_trade_offer_add_asset(offer, asset, err)) {
-        const char *msg = dmbc_error_message(err);
-        if (NULL != msg) {
-            fprintf(stderr, error_msg, msg);
+
+        if (!dmbc_trade_offer_add_asset(offer, asset, err)) {
+            const char *msg = dmbc_error_message(err);
+            if (NULL != msg) {
+                fprintf(stderr, error_msg, msg);
+            }
+            dmbc_trade_asset_free(asset);
+            goto free_offer;
         }
-        goto free_asset;
+
+        dmbc_trade_asset_free(asset);
     }
 
-    const char *signature = "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f";
-    dmbc_tx_trade *tx = dmbc_tx_trade_create(offer, signature, 756, err);
+    const char *signature = seller_signature_json->valuestring;
+    dmbc_tx_trade *tx = dmbc_tx_trade_create(offer, signature, seed_json->valueint, err);
     if (NULL == tx) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
             fprintf(stderr, error_msg, msg);
         }
-        goto free_asset;
+        goto free_offer;
     }
 
     size_t length = 0;
@@ -616,18 +640,18 @@ void trade() {
         goto free_tx;
     }
 
-    print_hex(buffer, length);
+    write_hex_to_file("./output/trade", buffer, length);
 
     dmbc_bytes_free(buffer, length);
 
 free_tx:
     dmbc_tx_trade_free(tx);
-free_asset:
-    dmbc_trade_asset_free(asset);
 free_offer:
     dmbc_trade_offer_free(offer);
 free_error:
     dmbc_error_free(err);
+
+    cJSON_Delete(inputs);
 }
 
 void trade_intermediary() {

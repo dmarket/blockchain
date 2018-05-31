@@ -1,0 +1,14 @@
+{
+    "offer": {
+        "buyer": "00098e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411000",
+        "seller": "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f",
+        "assets": [{
+            "id": "00001111222233334444555566667777",
+            "amount": 23,
+            "price": 6666
+        }],
+        "fee_strategy": 1
+    },
+    "seed": 742,
+    "seller_signature": "cc67e458df68fb146b61f0f097e3804c74cca1f8d7ec194d4b973adf4b702fd660bd0460be268450c21513c9dcfb44af067c59351267b26cbec445ffbd772405"
+}
