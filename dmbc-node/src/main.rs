@@ -127,6 +127,11 @@ fn main() {
     // Initialize database
     let mut options = RocksDBOptions::default();
     options.create_if_missing(true);
+    options.enable_statistics();
+    if cfg!(target_os = "linux") {
+        use exonum_rocksdb::DBCompressionType;
+        options.set_compression_type(DBCompressionType::Zlib);
+    }
     let path = config::config().db().path();
     let db = Box::new(RocksDB::open(path, &options).unwrap());
 

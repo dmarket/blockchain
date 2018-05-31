@@ -32,7 +32,6 @@ fn build_rocksdb() {
     build.opt_level(3);
 
     build.define("NDEBUG", Some("1"));
-    build.define("ZLIB",Some("1"));
     build.define("SNAPPY", Some("1"));
 
     let mut lib_sources = include_str!("rocksdb_lib_sources.txt")
@@ -54,6 +53,7 @@ fn build_rocksdb() {
     }
     if cfg!(target_os = "linux") {
         build.define("OS_LINUX", Some("1"));
+        build.define("ZLIB",Some("1"));
         build.define("ROCKSDB_PLATFORM_POSIX", Some("1"));
         build.define("ROCKSDB_LIB_IO_POSIX", Some("1"));
         // COMMON_FLAGS="$COMMON_FLAGS -fno-builtin-memcmp"
@@ -202,8 +202,9 @@ fn get_sources(git_path: &str, rev: &str) {
 }
 
 fn main() {
-    assert!(try_to_find_lib("zlib"), "Unable to link with zlib!");
-
+    if cfg!(target_os = "linux") {
+        assert!(try_to_find_lib("zlib"), "Unable to link with zlib!");
+    }
     if !try_to_find_lib("libsnappy") {
         if read_dir("snappy").is_err() {
             get_sources("https://github.com/google/snappy.git", "513df5fb5a2d51146f409141f9eb8736935cc486");
