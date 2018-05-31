@@ -34,7 +34,7 @@ pub struct ExchangeOfferWrapper {
 }
 
 impl ExchangeOfferWrapper {
-    pub fn new(sender: & PublicKey, sender_value: u64, recipient: & PublicKey, fee_strategy: u8) -> Self {
+    pub fn new(sender: &PublicKey, sender_value: u64, recipient: &PublicKey, fee_strategy: u8) -> Self {
         ExchangeOfferWrapper {
             sender: *sender,
             sender_assets: Vec::new(),

@@ -306,6 +306,10 @@ impl ExchangeBuilder {
         self
     }
 
+    pub fn sender_add_asset_value_ref(&mut self, asset: AssetBundle) {
+        self.sender_assets.push(asset);
+    }
+
     pub fn sender_value(self, sender_value: u64) -> Self {
         ExchangeBuilder {
             sender_value,
@@ -321,6 +325,10 @@ impl ExchangeBuilder {
     pub fn recipient_add_asset_value(mut self, asset: AssetBundle) -> Self {
         self.recipient_assets.push(asset);
         self
+    }
+
+    pub fn recipient_add_asset_value_ref(&mut self, asset: AssetBundle) {
+        self.recipient_assets.push(asset);
     }
 
     pub fn fee_strategy(self, fee_strategy: FeeStrategy) -> Self {

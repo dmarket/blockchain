@@ -309,11 +309,28 @@ free_error:
 }
 
 void exchange() {
-    const char *sender_public_key = "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f";
-    const char *recipient_public_key = "00098e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411000";
+    cJSON *inputs = read_inputs("./inputs/exchange.json");
+    const cJSON *offer_json = cJSON_GetObjectItemCaseSensitive(inputs, "offer");
+    const cJSON *sender_key_json = cJSON_GetObjectItemCaseSensitive(offer_json, "sender");
+    const cJSON *recipient_key_json = cJSON_GetObjectItemCaseSensitive(offer_json, "recipient");
+    const cJSON *recipient_assets = cJSON_GetObjectItemCaseSensitive(offer_json, "recipient_assets");
+    const cJSON *sender_assets = cJSON_GetObjectItemCaseSensitive(offer_json, "sender_assets");
+    const cJSON *sender_value_json = cJSON_GetObjectItemCaseSensitive(offer_json, "sender_value");
+    const cJSON *fee_strategy_json = cJSON_GetObjectItemCaseSensitive(offer_json, "fee_strategy");
+
+    const cJSON *memo = cJSON_GetObjectItemCaseSensitive(inputs, "memo");
+    const cJSON *seed_json = cJSON_GetObjectItemCaseSensitive(inputs, "seed");
+    const cJSON *signature = cJSON_GetObjectItemCaseSensitive(inputs, "sender_signature");
+
+    const cJSON *asset = NULL;
+
+    const char *sender_public_key = sender_key_json->valuestring;
+    const char *recipient_public_key = recipient_key_json->valuestring;
+    uint64_t sender_value = sender_value_json->valueint;
+    u_int8_t fee_strategy = fee_strategy_json->valueint;
 
     dmbc_error *err = dmbc_error_new();
-    dmbc_exchange_offer *offer = dmbc_exchange_offer_create(sender_public_key, 10000, recipient_public_key, 1, err);
+    dmbc_exchange_offer *offer = dmbc_exchange_offer_create(sender_public_key, sender_value, recipient_public_key, fee_strategy, err);
     if (NULL == offer) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
@@ -321,31 +338,64 @@ void exchange() {
         }
         goto free_error;
     }
-    dmbc_asset *asset = dmbc_asset_create("00001111222233334444555566667777", 10, err);
-    if (NULL == asset) {
-        const char *msg = dmbc_error_message(err);
-        if (NULL != msg) {
-            fprintf(stderr, error_msg, msg);
+
+    cJSON_ArrayForEach(asset, recipient_assets) {
+        cJSON *id = cJSON_GetObjectItemCaseSensitive(asset, "id");
+        cJSON *amount = cJSON_GetObjectItemCaseSensitive(asset, "amount");
+
+        dmbc_asset *asset = dmbc_asset_create(id->valuestring, amount->valueint, err);
+        if (NULL == asset) {
+            const char *msg = dmbc_error_message(err);
+            if (NULL != msg) {
+                fprintf(stderr, error_msg, msg);
+            }
+            goto free_offer;
         }
-        goto free_offer;
+
+        if (!dmbc_exchange_offer_recipient_add_asset(offer, asset, err)) {
+            const char *msg = dmbc_error_message(err);
+            if (NULL != msg) {
+                fprintf(stderr, error_msg, msg);
+            }
+            dmbc_asset_free(asset);
+            goto free_offer;
+        }
+
+        dmbc_asset_free(asset);
     }
 
-    if (!dmbc_exchange_offer_recipient_add_asset(offer, asset, err)) {
-        const char *msg = dmbc_error_message(err);
-        if (NULL != msg) {
-            fprintf(stderr, error_msg, msg);
+    cJSON_ArrayForEach(asset, sender_assets) {
+        cJSON *id = cJSON_GetObjectItemCaseSensitive(asset, "id");
+        cJSON *amount = cJSON_GetObjectItemCaseSensitive(asset, "amount");
+
+        dmbc_asset *asset = dmbc_asset_create(id->valuestring, amount->valueint, err);
+        if (NULL == asset) {
+            const char *msg = dmbc_error_message(err);
+            if (NULL != msg) {
+                fprintf(stderr, error_msg, msg);
+            }
+            goto free_offer;
         }
-        goto free_asset;
+
+        if (!dmbc_exchange_offer_sender_add_asset(offer, asset, err)) {
+            const char *msg = dmbc_error_message(err);
+            if (NULL != msg) {
+                fprintf(stderr, error_msg, msg);
+            }
+            dmbc_asset_free(asset);
+            goto free_offer;
+        }
+
+        dmbc_asset_free(asset);
     }
 
-    const char *signature = "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f";
-    dmbc_tx_exchange *tx = dmbc_tx_exchange_create(offer, signature, 432, "EXCHANGE", err);
+    dmbc_tx_exchange *tx = dmbc_tx_exchange_create(offer, signature->valuestring, seed_json->valueint, memo->valuestring, err);
     if (NULL == tx) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
             fprintf(stderr, error_msg, msg);
         }
-        goto free_asset;
+        goto free_offer;
     }
 
     size_t length = 0;
@@ -358,17 +408,17 @@ void exchange() {
         goto free_tx;
     }
 
-    print_hex(buffer, length);
+    write_hex_to_file("./output/exchange", buffer, length);
 
     dmbc_bytes_free(buffer, length);
 free_tx:
     dmbc_tx_exchange_free(tx);
-free_asset:
-    dmbc_asset_free(asset);
 free_offer:
     dmbc_exchange_offer_free(offer);
 free_error:
     dmbc_error_free(err);
+
+    cJSON_Delete(inputs);
 }
 
 void exchange_intermediary() {
