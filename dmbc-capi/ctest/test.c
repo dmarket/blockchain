@@ -422,12 +422,33 @@ free_error:
 }
 
 void exchange_intermediary() {
-    const char *sender_public_key = "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f";
-    const char *recipient_public_key = "00098e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411000";
-    const char *intermediary_key = "22298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411999";
+    cJSON *inputs = read_inputs("./inputs/exchange_intermediary.json");
+    const cJSON *offer_json = cJSON_GetObjectItemCaseSensitive(inputs, "offer");
+
+    const cJSON *intemediary_json = cJSON_GetObjectItemCaseSensitive(offer_json, "intermediary");
+    const cJSON *interm_wallet = cJSON_GetObjectItemCaseSensitive(intemediary_json, "wallet");
+    const cJSON *interm_commission = cJSON_GetObjectItemCaseSensitive(intemediary_json, "commission");
+
+    const cJSON *sender_key_json = cJSON_GetObjectItemCaseSensitive(offer_json, "sender");
+    const cJSON *recipient_key_json = cJSON_GetObjectItemCaseSensitive(offer_json, "recipient");
+    const cJSON *recipient_assets = cJSON_GetObjectItemCaseSensitive(offer_json, "recipient_assets");
+    const cJSON *sender_assets = cJSON_GetObjectItemCaseSensitive(offer_json, "sender_assets");
+    const cJSON *sender_value_json = cJSON_GetObjectItemCaseSensitive(offer_json, "sender_value");
+    const cJSON *fee_strategy_json = cJSON_GetObjectItemCaseSensitive(offer_json, "fee_strategy");
+
+    const cJSON *memo = cJSON_GetObjectItemCaseSensitive(inputs, "memo");
+    const cJSON *seed_json = cJSON_GetObjectItemCaseSensitive(inputs, "seed");
+    const cJSON *sender_signature_json = cJSON_GetObjectItemCaseSensitive(inputs, "sender_signature");
+    const cJSON *intermediary_signature_json = cJSON_GetObjectItemCaseSensitive(inputs, "intermediary_signature");
+
+    const cJSON *asset = NULL;
+
+    const char *sender_public_key = sender_key_json->valuestring;
+    const char *recipient_public_key = recipient_key_json->valuestring;
+    const char *intermediary_key = interm_wallet->valuestring;
 
     dmbc_error *err = dmbc_error_new();
-    dmbc_intermediary *intermediary = dmbc_intermediary_create(intermediary_key, 888);
+    dmbc_intermediary *intermediary = dmbc_intermediary_create(intermediary_key, interm_commission->valueint);
     if (NULL == intermediary) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
@@ -436,7 +457,14 @@ void exchange_intermediary() {
         goto free_error;
     }
 
-    dmbc_exchange_offer_intermediary *offer = dmbc_exchange_offer_intermediary_create(intermediary, sender_public_key, 10000, recipient_public_key, 1, err);
+    dmbc_exchange_offer_intermediary *offer = dmbc_exchange_offer_intermediary_create(
+        intermediary, 
+        sender_public_key, 
+        sender_value_json->valueint, 
+        recipient_public_key, 
+        fee_strategy_json->valueint,
+        err
+    );
     if (NULL == offer) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
@@ -444,32 +472,74 @@ void exchange_intermediary() {
         }
         goto free_intermediary;
     }
-    dmbc_asset *asset = dmbc_asset_create("00001111222233334444555566667777", 10, err);
-    if (NULL == asset) {
-        const char *msg = dmbc_error_message(err);
-        if (NULL != msg) {
-            fprintf(stderr, error_msg, msg);
+
+    cJSON_ArrayForEach(asset, recipient_assets) {
+        cJSON *id = cJSON_GetObjectItemCaseSensitive(asset, "id");
+        cJSON *amount = cJSON_GetObjectItemCaseSensitive(asset, "amount");
+
+        dmbc_asset *asset = dmbc_asset_create(id->valuestring, amount->valueint, err);
+        if (NULL == asset) {
+            const char *msg = dmbc_error_message(err);
+            if (NULL != msg) {
+                fprintf(stderr, error_msg, msg);
+            }
+            goto free_offer;
         }
-        goto free_offer;
+
+        if (!dmbc_exchange_offer_intermediary_recipient_add_asset(offer, asset, err)) {
+            const char *msg = dmbc_error_message(err);
+            if (NULL != msg) {
+                fprintf(stderr, error_msg, msg);
+            }
+            dmbc_asset_free(asset);
+            goto free_offer;
+        }
+
+        dmbc_asset_free(asset);
     }
 
-    if (!dmbc_exchange_offer_intermediary_recipient_add_asset(offer, asset, err)) {
-        const char *msg = dmbc_error_message(err);
-        if (NULL != msg) {
-            fprintf(stderr, error_msg, msg);
+    cJSON_ArrayForEach(asset, sender_assets) {
+        cJSON *id = cJSON_GetObjectItemCaseSensitive(asset, "id");
+        cJSON *amount = cJSON_GetObjectItemCaseSensitive(asset, "amount");
+
+        dmbc_asset *asset = dmbc_asset_create(id->valuestring, amount->valueint, err);
+        if (NULL == asset) {
+            const char *msg = dmbc_error_message(err);
+            if (NULL != msg) {
+                fprintf(stderr, error_msg, msg);
+            }
+            goto free_offer;
         }
-        goto free_asset;
+
+        if (!dmbc_exchange_offer_intermediary_sender_add_asset(offer, asset, err)) {
+            const char *msg = dmbc_error_message(err);
+            if (NULL != msg) {
+                fprintf(stderr, error_msg, msg);
+            }
+            dmbc_asset_free(asset);
+            goto free_offer;
+        }
+
+        dmbc_asset_free(asset);
     }
 
-    const char *signature = "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f";
-    const char *intermediary_signature = "22298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c41199922298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411999";
-    dmbc_tx_exchange_intermediary *tx = dmbc_tx_exchange_intermediary_create(offer, signature, intermediary_signature, 432, "EXCHANGE_i", err);
+    const char *signature = sender_signature_json->valuestring;
+    const char *intermediary_signature = intermediary_signature_json->valuestring;
+
+    dmbc_tx_exchange_intermediary *tx = dmbc_tx_exchange_intermediary_create(
+        offer, 
+        signature, 
+        intermediary_signature, 
+        seed_json->valueint, 
+        memo->valuestring, 
+        err
+    );
     if (NULL == tx) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
             fprintf(stderr, error_msg, msg);
         }
-        goto free_asset;
+        goto free_offer;
     }
 
     size_t length = 0;
@@ -482,19 +552,19 @@ void exchange_intermediary() {
         goto free_tx;
     }
 
-    print_hex(buffer, length);
+    write_hex_to_file("./output/exchange_intermediary", buffer, length);
 
     dmbc_bytes_free(buffer, length);
 free_tx:
     dmbc_tx_exchange_intermediary_free(tx);
-free_asset:
-    dmbc_asset_free(asset);
 free_offer:
     dmbc_exchange_offer_intermediary_free(offer);
 free_intermediary:
     dmbc_intermediary_free(intermediary);
 free_error:
     dmbc_error_free(err);
+
+    cJSON_Delete(inputs);
 }
 
 void trade() {
