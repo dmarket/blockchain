@@ -681,6 +681,10 @@ impl TradeIntermediaryBuilder {
         self
     }
 
+    pub fn add_asset_value_ref(&mut self, asset: TradeAsset) {
+        self.assets.push(asset);
+    }
+
     pub fn fee_strategy(self, fee_strategy: FeeStrategy) -> Self {
         TradeIntermediaryBuilder {
             fee_strategy,
