@@ -129,7 +129,7 @@ dmbc_exchange_offer *dmbc_exchange_offer_create(
     const char *sender_key,
     uint64_t sender_amount,
     const char *recipient_key,
-    u_int8_t fee_strategy,
+    uint8_t fee_strategy,
     dmbc_error *error
 );
 
@@ -177,7 +177,7 @@ dmbc_exchange_offer_intermediary *dmbc_exchange_offer_intermediary_create(
     const char *sender_key,
     uint64_t sender_amount,
     const char *recipient_key,
-    u_int8_t fee_strategy,
+    uint8_t fee_strategy,
     dmbc_error *error
 );
 
@@ -224,7 +224,7 @@ uint8_t * dmbc_tx_exchange_intermediary_into_bytes(
 dmbc_trade_offer *dmbc_trade_offer_create(
     const char *seller_key,
     const char *buyer_key,
-    u_int8_t fee_strategy,
+    uint8_t fee_strategy,
     dmbc_error *error
 );
 
@@ -264,7 +264,7 @@ dmbc_trade_offer_intermediary *dmbc_trade_offer_intermediary_create(
     dmbc_intermediary *intermediary,
     const char *seller_key,
     const char *buyer_key,
-    u_int8_t fee_strategy,
+    uint8_t fee_strategy,
     dmbc_error *error
 );
 
