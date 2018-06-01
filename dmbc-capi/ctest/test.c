@@ -813,6 +813,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    fprintf(stdout, "Unknown transaction: %s\n", argv[1]);
     puts(usage);
     return -1;
 }

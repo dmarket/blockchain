@@ -14,14 +14,17 @@ pub fn run(tx_name: &str) -> String {
 
     let output = Command::new("./compile.sh")
         .current_dir(current_dir.join("ctest"))
-        .output();
-    assert!(output.is_ok());
+        .output()
+        .expect("failed to compile capi test executable.");;
+    assert!(output.status.success(), format!("compilation failed {:?}", output));
 
     let output = Command::new("./test")
         .current_dir(current_dir.join("ctest"))
         .arg(tx_name)
-        .output();
-    assert!(output.is_ok());
+        .output()
+        .expect("failed to run test executable");
+    assert!(output.status.success(), format!("running test failed{:?}", output));
+
 
     let file_path = current_dir.join("ctest").join("output").join(tx_name);
     let file = File::open(file_path);
