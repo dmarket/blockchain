@@ -14,7 +14,8 @@ const char *output = "\nTransaction length is %lu hex %s\n";
 const char *output_fodler = "output\\";
 
 void print_hex(const uint8_t *hex, size_t length) {
-    for (int i = 0; i < length; ++i) {
+    int i = 0;
+    for (i = 0; i < length; ++i) {
         fprintf(stdout, "%02x", hex[i]);
     }
     puts("");
@@ -26,8 +27,9 @@ void write_hex_to_file(const char *fname, uint8_t *hex, size_t length) {
         fprintf(stderr, "Error opening file %s\n", fname);
         exit(1);
     }
+    int i = 0;
 
-    for (int i = 0; i < length; ++i) {
+    for (i = 0; i < length; ++i) {
         fprintf(f, "%02x", hex[i]);
     }
 
@@ -327,7 +329,7 @@ void exchange() {
     const char *sender_public_key = sender_key_json->valuestring;
     const char *recipient_public_key = recipient_key_json->valuestring;
     uint64_t sender_value = sender_value_json->valueint;
-    u_int8_t fee_strategy = fee_strategy_json->valueint;
+    uint8_t fee_strategy = fee_strategy_json->valueint;
 
     dmbc_error *err = dmbc_error_new();
     dmbc_exchange_offer *offer = dmbc_exchange_offer_create(sender_public_key, sender_value, recipient_public_key, fee_strategy, err);
@@ -805,8 +807,9 @@ int main(int argc, char *argv[]) {
         trade,
         trade_intermediary
     };
+    int i = 0;
 
-    for (int i = 0; i < 7; ++i) {
+    for (i = 0; i < 7; ++i) {
         if (strcmp(argv[1], tx_names[i]) == 0) {
             fs[i]();
             return 0;
