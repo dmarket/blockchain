@@ -370,5 +370,9 @@ def to_bytes(buffer, size):
     return bytes(ffi.buffer(buffer, size))
 
 
+def ffi():
+    return ffi
+
+
 if __name__ == "__main__":
     load_lib()

@@ -18,6 +18,13 @@ seed = 123
 # create add_assets transaction (
 tx = lib.dmbc_tx_add_assets_create(public_key, seed, error)
 
+# shows how to parse errors.
+if tx == lib.ffi().NULL:
+    message = lib.ffi().new("const char *")
+    lib.dmbc_error_message(message)
+    print(message)
+    exit(1)
+
 # create fees object
 fees = lib.dmbc_fees_create(10, "0.1".encode('ascii'), 20, "0.2".encode('ascii'), 9, "0.99999".encode('ascii'), error)
 
