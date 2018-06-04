@@ -77,8 +77,8 @@ cJSON * read_inputs(const char *fname) {
     return inputs;
 }
 
-void add_assets() {
-    cJSON *inputs = read_inputs("./inputs/add_assets.json");
+void add_assets(const char *input_file, const char *output_file) {
+    cJSON *inputs = read_inputs(input_file);
     const cJSON *pub_key_json = cJSON_GetObjectItemCaseSensitive(inputs, "public_key");
     const cJSON *seed_json = cJSON_GetObjectItemCaseSensitive(inputs, "seed");
     const cJSON *assets = cJSON_GetObjectItemCaseSensitive(inputs, "assets");
@@ -162,7 +162,7 @@ void add_assets() {
         goto free_tx;
     }
 
-    write_hex_to_file("./output/add_assets", buffer, length);
+    write_hex_to_file(output_file, buffer, length);
 
     dmbc_bytes_free(buffer, length);
 free_tx:
@@ -173,8 +173,8 @@ free_error:
     cJSON_Delete(inputs);
 }
 
-void delete_assets() {
-    cJSON *inputs = read_inputs("./inputs/delete_assets.json");
+void delete_assets(const char *input_file, const char *output_file) {
+    cJSON *inputs = read_inputs(input_file);
     const cJSON *pub_key_json = cJSON_GetObjectItemCaseSensitive(inputs, "public_key");
     const cJSON *seed_json = cJSON_GetObjectItemCaseSensitive(inputs, "seed");
     const cJSON *assets = cJSON_GetObjectItemCaseSensitive(inputs, "assets");
@@ -228,7 +228,7 @@ void delete_assets() {
         goto free_tx;
     }
 
-    write_hex_to_file("./output/delete_assets", buffer, length);
+    write_hex_to_file(output_file, buffer, length);
 
     dmbc_bytes_free(buffer, length);
 free_tx:
@@ -239,8 +239,8 @@ free_error:
     cJSON_Delete(inputs);
 }
 
-void transfer() {
-    cJSON *inputs = read_inputs("./inputs/transfer.json");
+void transfer(const char *input_file, const char *output_file) {
+    cJSON *inputs = read_inputs(input_file);
     const cJSON *from_key_json = cJSON_GetObjectItemCaseSensitive(inputs, "from");
     const cJSON *to_key_json = cJSON_GetObjectItemCaseSensitive(inputs, "to");
     const cJSON *seed_json = cJSON_GetObjectItemCaseSensitive(inputs, "seed");
@@ -299,7 +299,7 @@ void transfer() {
         goto free_tx;
     }
 
-    write_hex_to_file("./output/transfer", buffer, length);
+    write_hex_to_file(output_file, buffer, length);
 
     dmbc_bytes_free(buffer, length);
 free_tx:
@@ -310,8 +310,8 @@ free_error:
     cJSON_Delete(inputs);
 }
 
-void exchange() {
-    cJSON *inputs = read_inputs("./inputs/exchange.json");
+void exchange(const char *input_file, const char *output_file) {
+    cJSON *inputs = read_inputs(input_file);
     const cJSON *offer_json = cJSON_GetObjectItemCaseSensitive(inputs, "offer");
     const cJSON *sender_key_json = cJSON_GetObjectItemCaseSensitive(offer_json, "sender");
     const cJSON *recipient_key_json = cJSON_GetObjectItemCaseSensitive(offer_json, "recipient");
@@ -410,7 +410,7 @@ void exchange() {
         goto free_tx;
     }
 
-    write_hex_to_file("./output/exchange", buffer, length);
+    write_hex_to_file(output_file, buffer, length);
 
     dmbc_bytes_free(buffer, length);
 free_tx:
@@ -423,8 +423,8 @@ free_error:
     cJSON_Delete(inputs);
 }
 
-void exchange_intermediary() {
-    cJSON *inputs = read_inputs("./inputs/exchange_intermediary.json");
+void exchange_intermediary(const char *input_file, const char *output_file) {
+    cJSON *inputs = read_inputs(input_file);
     const cJSON *offer_json = cJSON_GetObjectItemCaseSensitive(inputs, "offer");
 
     const cJSON *intemediary_json = cJSON_GetObjectItemCaseSensitive(offer_json, "intermediary");
@@ -554,7 +554,7 @@ void exchange_intermediary() {
         goto free_tx;
     }
 
-    write_hex_to_file("./output/exchange_intermediary", buffer, length);
+    write_hex_to_file(output_file, buffer, length);
 
     dmbc_bytes_free(buffer, length);
 free_tx:
@@ -569,8 +569,8 @@ free_error:
     cJSON_Delete(inputs);
 }
 
-void trade() {
-    cJSON *inputs = read_inputs("./inputs/trade.json");
+void trade(const char *input_file, const char *output_file) {
+    cJSON *inputs = read_inputs(input_file);
     const cJSON *offer_json = cJSON_GetObjectItemCaseSensitive(inputs, "offer");
 
     const cJSON *seller_key_json = cJSON_GetObjectItemCaseSensitive(offer_json, "seller");
@@ -642,7 +642,7 @@ void trade() {
         goto free_tx;
     }
 
-    write_hex_to_file("./output/trade", buffer, length);
+    write_hex_to_file(output_file, buffer, length);
 
     dmbc_bytes_free(buffer, length);
 
@@ -656,8 +656,8 @@ free_error:
     cJSON_Delete(inputs);
 }
 
-void trade_intermediary() {
-    cJSON *inputs = read_inputs("./inputs/trade_intermediary.json");
+void trade_intermediary(const char *input_file, const char *output_file) {
+    cJSON *inputs = read_inputs(input_file);
     const cJSON *offer_json = cJSON_GetObjectItemCaseSensitive(inputs, "offer");
 
     const cJSON *intermediary_json = cJSON_GetObjectItemCaseSensitive(offer_json, "intermediary");
@@ -758,7 +758,7 @@ void trade_intermediary() {
         goto free_tx;
     }
 
-    write_hex_to_file("./output/trade_intermediary", buffer, length);
+    write_hex_to_file(output_file, buffer, length);
 
     dmbc_bytes_free(buffer, length);
 
@@ -775,7 +775,7 @@ free_error:
 }
 
 int main(int argc, char *argv[]) {
-    const char *usage = "Please specify the transaction type: app TRANSACTION\nTRANSACTIONS:\n\n \
+    const char *usage = "Please specify the transaction type: app TRANSACTION input output\nTRANSACTIONS:\n\n \
     add_assets\n \
     delete_assets\n \
     transfer\n \
@@ -784,7 +784,7 @@ int main(int argc, char *argv[]) {
     trade\n \
     trade_intermediary\n";
 
-    if (argc < 2) {
+    if (argc < 4) {
         puts(usage);
         return -1;
     }
@@ -798,7 +798,7 @@ int main(int argc, char *argv[]) {
         "trade_intermediary"
     };
 
-    void (*fs[])(void) = {
+    void (*fs[])(const char *, const char *) = {
         add_assets,
         delete_assets,
         transfer,
@@ -811,7 +811,7 @@ int main(int argc, char *argv[]) {
 
     for (i = 0; i < 7; ++i) {
         if (strcmp(argv[1], tx_names[i]) == 0) {
-            fs[i]();
+            fs[i](argv[2], argv[3]);
             return 0;
         }
     }
