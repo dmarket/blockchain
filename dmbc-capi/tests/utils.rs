@@ -13,7 +13,7 @@ pub fn run(tx_name: &str) -> String {
     let current_dir = current_dir.as_path();
     let input_file = current_dir.join("ctest").join("inputs").join(tx_name.to_owned() + ".json");
     let mut outpit_file = env::temp_dir();
-    outpit_file.push("test_foo.txt");
+    outpit_file.push(tx_name.to_owned() + ".txt");
 
     let output = Command::new("./compile.sh")
         .current_dir(current_dir.join("ctest"))
@@ -38,7 +38,7 @@ pub fn run(tx_name: &str) -> String {
     let res = buf_reader.read_to_string(&mut contents);
     assert!(res.is_ok());
 
-    assert!(fs::remove_file(outpit_file).is_ok());
+    // assert!(fs::remove_file(outpit_file).is_ok());
 
     contents
 }
