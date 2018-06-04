@@ -1,15 +1,11 @@
 import binascii
 import libwrapper
-from nacl import bindings as c
 import nacl.signing
 
-# generate key-pair
-pk, sk = c.crypto_sign_keypair()
+# generate key pair
+signing_key = nacl.signing.SigningKey.generate()
+public_key = binascii.hexlify(bytes(signing_key.verify_key))
 
-secret_key = binascii.hexlify(sk)
-public_key = binascii.hexlify(pk)
-
-print("secret key: {}".format(secret_key))
 print("public key: {}".format(public_key))
 
 # load dmbc-capi library
@@ -37,15 +33,16 @@ raw_buffer = lib.dmbc_tx_add_assets_into_bytes(tx, length, error)
 byte_buffer = libwrapper.to_bytes(raw_buffer, length[0])
 
 # sign the data
-raw_signed = c.crypto_sign(byte_buffer, sk)
+signed = signing_key.sign(byte_buffer)
+print("signature {}".format(binascii.hexlify(signed.signature)))
 
-# get signature from signed message
-crypto_sign_BYTES = nacl.bindings.crypto_sign_BYTES
-signature = raw_signed[:crypto_sign_BYTES]
+# verify signed message
+verify_key = signing_key.verify_key
+message = verify_key.verify(signed.message, signed.signature)
 
+assert message == byte_buffer
 
-
-# NOTE: in order to avoid memory leaks all objects received from lib ralls
+# NOTE: in order to avoid memory leaks all objects received from lib calls
 # free raw buffer
 lib.dmbc_bytes_free(raw_buffer, length[0])
 

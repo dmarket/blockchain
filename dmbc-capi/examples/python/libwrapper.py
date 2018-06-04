@@ -9,7 +9,6 @@ ffi = FFI()
 def load_lib():
     lib = ffi.dlopen("./libdmbc_capi.dylib")
 
-    print(lib)
     ffi.cdef('''
     typedef struct dmbc_tx_transfer dmbc_tx_transfer;
     

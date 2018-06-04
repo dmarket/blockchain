@@ -38,7 +38,7 @@ pub fn run(tx_name: &str) -> String {
     let res = buf_reader.read_to_string(&mut contents);
     assert!(res.is_ok());
 
-    // assert!(fs::remove_file(outpit_file).is_ok());
+    assert!(fs::remove_file(outpit_file).is_ok());
 
     contents
 }
