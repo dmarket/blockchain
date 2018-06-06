@@ -15,7 +15,7 @@ pub fn run(tx_name: &str) -> String {
     let mut outpit_file = env::temp_dir();
     outpit_file.push(tx_name.to_owned() + ".txt");
 
-    let output = Command::new("./compile.sh")
+    let output = Command::new("./compile_tests.sh")
         .current_dir(current_dir.join("ctest"))
         .output()
         .expect("failed to compile capi test executable.");
