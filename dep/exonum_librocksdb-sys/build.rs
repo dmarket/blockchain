@@ -97,6 +97,7 @@ fn build_rocksdb() {
         build.flag("-EHsc");
     } else {
         build.flag("-std=c++11");
+        build.flag("-w");
     }
 
     for file in lib_sources {
@@ -122,6 +123,7 @@ fn build_snappy() {
     } else {
         build.flag("-std=c++11");
         build.flag("-fPIC");
+        build.flag("-w");
     }
 
     build.file("snappy/snappy.cc");
