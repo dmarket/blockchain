@@ -19,10 +19,9 @@ seed = 123
 tx = lib.dmbc_tx_add_assets_create(public_key, seed, error)
 
 # shows how to parse errors.
-if tx == lib.ffi().NULL:
-    message = lib.ffi().new("const char *")
-    lib.dmbc_error_message(message)
-    print(message)
+if tx == libwrapper.ffi().NULL:
+    msg = libwrapper.ffi().string(lib.dmbc_error_message(error))
+    print(msg)
     exit(1)
 
 # create fees object
@@ -33,11 +32,11 @@ lib.dmbc_tx_add_assets_add_asset(tx, "Asset#10".encode('ascii'), 10, fees, publi
 lib.dmbc_tx_add_assets_add_asset(tx, "Asset#00".encode('ascii'), 10000, fees, public_key, error)
 
 # convert transaction into raw buffer
-length = libwrapper.make_size_variable()
+length = libwrapper.ffi().new("size_t *")
 raw_buffer = lib.dmbc_tx_add_assets_into_bytes(tx, length, error)
 
 # convert to python compatible byte array type
-byte_buffer = libwrapper.to_bytes(raw_buffer, length[0])
+byte_buffer = bytes(libwrapper.ffi().buffer(raw_buffer, length[0]))
 
 # sign the data
 signed = signing_key.sign(byte_buffer)
