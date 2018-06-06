@@ -22,7 +22,7 @@ references:
       command: |
         export CC=clang
         export CXX=clang++
-        cargo build -p dmbc -p dmbc-node -p dmbc-discovery -vv
+        cargo build -p dmbc -p dmbc-node -p dmbc-discovery -p dmbc-capi -vv
 
   build_prod: &build_prod
     run:
@@ -30,7 +30,7 @@ references:
       command: |
         export CC=clang
         export CXX=clang++
-        cargo build -p dmbc -p dmbc-node -p dmbc-discovery -vv --release
+        cargo build -p dmbc -p dmbc-node -p dmbc-discovery -p dmbc-capi -vv --release
 
   run_tests: &run_tests
     run:
@@ -38,7 +38,7 @@ references:
       command: |
         export CC=clang
         export CXX=clang++
-        cargo test -p dmbc --color=always --jobs 2 -- --test-threads=1
+        cargo test -p dmbc -p dmbc-capi --color=always --jobs 2 -- --test-threads=1
 
   save_cache: &save_cache
     save_cache:
@@ -74,7 +74,7 @@ references:
     run:
       name: Generate Coverage
       command: |
-        TESTS=`find target/debug -maxdepth 1 -type f -executable |  grep -v -E '(dmbc-node|dmbc-discovery|dmbc-flooder|dmbc-fuzzer|dmbc-bot)'`
+        TESTS=`find target/debug -maxdepth 1 -type f -executable |  grep -v -E '(dmbc-node|dmbc-discovery|dmbc-flooder|dmbc-fuzzer|dmbc-bot|dmbc_capi)'`
         for i in $TESTS; do mkdir -p target/debug/coverage/$i && kcov --verify --include-path dmbc target/debug/coverage/$i $i --test-threads=1; done
         kcov --merge target/debug/coverage/merged/ target/debug/coverage/target/debug/*
         #kcov --verify --include-path dmbc target/debug/coverage $(find target/debug -maxdepth 1 -type f -executable | grep -v -E '(dmbc-node|dmbc-discovery|dmbc-flooder|dmbc-fuzzer|dmbc-bot)')

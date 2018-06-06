@@ -1,0 +1,20 @@
+{
+    "offer": {
+        "intermediary": {
+            "wallet": "22298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411999",
+            "commission": 1230
+        },
+        "buyer": "00098e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411000",
+        "seller": "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f",
+        "assets": [{
+            "id": "00001111222233334444555566667777",
+            "amount": 23,
+            "price": 6666
+        }],
+        "fee_strategy": 1
+    },
+    "seed": 742,
+    "seller_signature": "4a14e5155a7676ffca5e81da8032c6453cba4155acc1562da99e1b372cff794bb74fa08b617ddeb9079d2221fd7b6f0e8d9272a8be25d89db4179c036cfd1c0b",
+    "intermediary_signature": "4a14e5155a7676ffca5e81da8032c6453cba4155acc1562da99e1b372cff794bb74fa08b617ddeb9079d2221fd7b6f0e8d9272a8be25d89db4179c036cfd1c0b",
+    "memo": "Testing CAPI trade with intermediary"
+}

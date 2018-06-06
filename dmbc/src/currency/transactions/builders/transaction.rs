@@ -155,6 +155,10 @@ impl AddAssetBuilder {
         self
     }
 
+    pub fn add_asset_value_ref(&mut self, asset: MetaAsset) {
+        self.assets.push(asset);
+    }
+
     pub fn add_asset_receiver(
         self,
         receiver: PublicKey,
@@ -164,6 +168,17 @@ impl AddAssetBuilder {
     ) -> Self {
         let asset = MetaAsset::new(&receiver, name, count, fees);
         self.add_asset_value(asset)
+    }
+
+    pub fn add_asset_receiver_ref(
+        &mut self,
+        receiver: PublicKey,
+        name: &str,
+        count: u64,
+        fees: Fees,
+    ) {
+        let asset = MetaAsset::new(&receiver, name, count, fees);
+        self.add_asset_value_ref(asset);
     }
 
     pub fn seed(self, seed: u64) -> Self {
@@ -206,6 +221,10 @@ impl DelAssetBuilder {
     pub fn add_asset_value(mut self, asset: AssetBundle) -> Self {
         self.assets.push(asset);
         self
+    }
+
+    pub fn add_asset_value_ref(&mut self, asset: AssetBundle) {
+        self.assets.push(asset);
     }
 
     pub fn seed(self, seed: u64) -> Self {
@@ -287,6 +306,10 @@ impl ExchangeBuilder {
         self
     }
 
+    pub fn sender_add_asset_value_ref(&mut self, asset: AssetBundle) {
+        self.sender_assets.push(asset);
+    }
+
     pub fn sender_value(self, sender_value: u64) -> Self {
         ExchangeBuilder {
             sender_value,
@@ -302,6 +325,10 @@ impl ExchangeBuilder {
     pub fn recipient_add_asset_value(mut self, asset: AssetBundle) -> Self {
         self.recipient_assets.push(asset);
         self
+    }
+
+    pub fn recipient_add_asset_value_ref(&mut self, asset: AssetBundle) {
+        self.recipient_assets.push(asset);
     }
 
     pub fn fee_strategy(self, fee_strategy: FeeStrategy) -> Self {
@@ -404,6 +431,10 @@ impl ExchangeIntermediaryBuilder {
         self
     }
 
+    pub fn sender_add_asset_value_ref(&mut self, asset: AssetBundle) {
+        self.sender_assets.push(asset);
+    }
+
     pub fn sender_value(self, sender_value: u64) -> Self {
         ExchangeIntermediaryBuilder {
             sender_value,
@@ -439,6 +470,10 @@ impl ExchangeIntermediaryBuilder {
     pub fn recipient_add_asset_value(mut self, asset: AssetBundle) -> Self {
         self.recipient_assets.push(asset);
         self
+    }
+
+    pub fn recipient_add_asset_value_ref(&mut self, asset:AssetBundle) {
+        self.recipient_assets.push(asset);
     }
 
     pub fn fee_strategy(self, fee_strategy: FeeStrategy) -> Self {
@@ -539,6 +574,10 @@ impl TradeBuilder {
     pub fn add_asset_value(mut self, asset: TradeAsset) -> Self {
         self.assets.push(asset);
         self
+    }
+
+    pub fn add_asset_value_ref(&mut self, asset: TradeAsset) {
+        self.assets.push(asset);
     }
 
     pub fn fee_strategy(self, fee_strategy: FeeStrategy) -> Self {
@@ -642,6 +681,10 @@ impl TradeIntermediaryBuilder {
         self
     }
 
+    pub fn add_asset_value_ref(&mut self, asset: TradeAsset) {
+        self.assets.push(asset);
+    }
+
     pub fn fee_strategy(self, fee_strategy: FeeStrategy) -> Self {
         TradeIntermediaryBuilder {
             fee_strategy,
@@ -743,6 +786,10 @@ impl TransferBuilder {
     pub fn add_asset_value(mut self, asset: AssetBundle) -> Self {
         self.assets.push(asset);
         self
+    }
+
+    pub fn add_asset_value_ref(&mut self, asset: AssetBundle) {
+        self.assets.push(asset);
     }
 
     pub fn seed(self, seed: u64) -> Self {
