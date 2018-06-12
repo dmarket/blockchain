@@ -1,52 +1,31 @@
 extern crate futures;
 extern crate hyper;
-extern crate tokio_core;
-extern crate tokio_timer;
-
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
-
 extern crate exonum;
 extern crate exonum_configuration;
-
 extern crate toml;
+#[macro_use]
+extern crate lazy_static;
+extern crate tokio;
 
 mod config;
+mod nodes;
 mod sd;
 
-use futures::future;
-use futures::{Future, Stream};
-use hyper::server::Http;
-
-use sd::ServiceDiscovery;
+use futures::Future;
+use hyper::server::Server;
+use hyper::service;
 
 fn main() {
     let addr = config::get().listen_address().parse().unwrap();
-    let mut core = tokio_core::reactor::Core::new().unwrap();
-    let server = core.handle();
-    let client = core.handle();
 
-    let discovery = ServiceDiscovery::new(client.clone());
+    let server = Server::bind(&addr)
+        .serve(|| service::service_fn(sd::new))
+        .map_err(|e| eprintln!("serve failed: {}", e));
 
-    let serve = Http::new()
-        .serve_addr_handle(&addr, &server, move || Ok(discovery.clone()))
-        .unwrap();
-
-    let server2 = server.clone();
-    server.spawn(
-        serve
-            .for_each(move |conn| {
-                server2.spawn(
-                    conn.map(|_| ())
-                        .map_err(|err| eprintln!("Serve error: {:?}", err)),
-                );
-                Ok(())
-            })
-            .map_err(|_| ()),
-    );
-
-    core.run(future::empty::<(), ()>()).unwrap();
+    hyper::rt::run(server);
 }

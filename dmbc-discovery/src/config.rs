@@ -18,10 +18,6 @@ impl Config {
     pub fn listen_address(&self) -> &str {
         self.listen_address.as_ref().unwrap()
     }
-
-    pub fn peers_path(&self) -> &str {
-        self.peers_path.as_ref().unwrap()
-    }
 }
 
 pub fn get() -> &'static Config {
