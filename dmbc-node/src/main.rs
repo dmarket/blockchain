@@ -48,17 +48,21 @@ fn main() {
     let (consensus_public_key, consensus_secret_key) = keyfile::pair("consensus").unwrap();
     let (service_public_key, service_secret_key) = keyfile::pair("service").unwrap();
 
-    let public_api = config::config().api().address().parse().unwrap();
-    let private_api = config::config().api().private_address().parse().unwrap();
-    let peer_address = config::config().api().peer_address().parse().unwrap();
+    let public_api = config::config().api().address();
+    let private_api = config::config().api().private_address();
+    let peer_address = config::config().api().peer_address();
 
-    let info = net_config::ValidatorInfo {
-        public: public_api,
-        private: private_api,
-        peer: peer_address,
-        consensus: consensus_public_key,
-        service: service_public_key,
-    };
+    let info = net_config::ValidatorInfo(
+        net_config::NodeKeys {
+            consensus: consensus_public_key,
+            service: service_public_key,
+        },
+        net_config::NodeInfo {
+            public: public_api.clone(),
+            private: private_api.clone(),
+            peer: peer_address.clone(),
+        },
+    );
     eprintln!("Node info: {:?}", &info);
 
     let is_validator = config::config().api().is_validator();
@@ -100,12 +104,15 @@ fn main() {
 
     let genesis = GenesisConfig::new_with_consensus(consensus_config, validators.into_iter());
     let api_cfg = NodeApiConfig {
-        public_api_address: Some(public_api),
-        private_api_address: Some(private_api),
+        public_api_address: Some(public_api.parse().unwrap()),
+        private_api_address: Some(private_api.parse().unwrap()),
         ..Default::default()
     };
 
-    let peer_addrs = peers.iter().map(|(_, p)| p.peer).collect();
+    let peer_addrs = peers
+        .iter()
+        .map(|(_, info)| info.peer.parse().unwrap())
+        .collect();
 
     // Complete node configuration
     let node_cfg = NodeConfig {

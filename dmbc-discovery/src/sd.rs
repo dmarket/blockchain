@@ -11,29 +11,8 @@ use nodes::{NodeInfo, NodeKeys};
 
 const _PROPOSE_HEIGHT_INCREMENT: u64 = 25; // TODO
 
-#[derive(Debug, Hash, Serialize, Deserialize, Eq, PartialEq, Clone)]
-pub struct ValidatorInfo {
-    public: String,
-    private: String,
-    peer: String,
-    consensus: PublicKey,
-    service: PublicKey,
-}
-
-impl ValidatorInfo {
-    fn into_kv(self) -> (NodeKeys, NodeInfo) {
-        let keys = NodeKeys {
-            consensus: self.consensus,
-            service: self.service,
-        };
-        let info = NodeInfo {
-            public: self.public,
-            private: self.private,
-            peer: self.peer,
-        };
-        (keys, info)
-    }
-}
+#[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
+pub struct ValidatorInfo(NodeKeys, NodeInfo);
 
 pub type ResponseFuture = Box<Future<Item = Response<Body>, Error = hyper::Error> + Send + 'static>;
 
@@ -66,7 +45,8 @@ fn get_nodes() -> ResponseFuture {
     }
 }
 
-fn update_peer(_info: ValidatorInfo) -> ResponseFuture {
+fn update_peer(vi: ValidatorInfo) -> ResponseFuture {
+    nodes::update(vi.0, vi.1);
     Box::new(future::ok(Response::new(Body::empty())))
 }
 

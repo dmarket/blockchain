@@ -16,36 +16,55 @@ pub struct NodeInfo {
     pub peer: String,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct NodeState {
+    pub height: u64,
+    pub is_validator: bool,
+}
+
+impl Default for NodeState {
+    fn default() -> Self {
+        NodeState {
+            height: 0,
+            is_validator: false,
+        }
+    }
+}
+
 lazy_static! {
-    static ref NODES: RwLock<HashMap<NodeKeys, NodeInfo>> = RwLock::new(HashMap::with_capacity(4));
+    static ref INFOS: RwLock<HashMap<NodeKeys, NodeInfo>> = RwLock::new(HashMap::with_capacity(4));
+    static ref STATES: RwLock<HashMap<NodeKeys, NodeState>> = RwLock::new(HashMap::with_capacity(4));
 }
 
 const UNABLE_TO_LOCK_ERROR: &'static str = "unable to lock";
 
-pub fn put(keys: NodeKeys, info: NodeInfo) -> bool {
-    NODES
+pub fn update(keys: NodeKeys, info: NodeInfo) -> bool {
+    STATES
+        .write()
+        .expect(UNABLE_TO_LOCK_ERROR)
+        .entry(keys)
+        .or_insert_default();
+
+    INFOS
         .write()
         .expect(UNABLE_TO_LOCK_ERROR)
         .insert(keys, info)
         .is_some()
 }
 
-pub fn get(keys: NodeKeys) -> Option<NodeInfo> {
-    NODES
+pub fn state(keys: NodeKeys) -> Option<NodeState> {
+    STATES
         .read()
         .expect(UNABLE_TO_LOCK_ERROR)
         .get(&keys)
-        .cloned()
 }
 
-pub fn has(keys: NodeKeys) -> bool {
-    NODES
+pub fn list() -> Vec<(NodeKeys, NodeInfo)> {
+    INFOS
         .read()
         .expect(UNABLE_TO_LOCK_ERROR)
-        .get(&keys)
-        .is_some()
+        .iter()
+        .map(|(k, v)| (*k, v.clone()))
+        .collect()
 }
 
-pub fn list() -> HashMap<NodeKeys, NodeInfo> {
-    NODES.read().expect(UNABLE_TO_LOCK_ERROR).clone()
-}
