@@ -87,7 +87,8 @@ references:
         VERSION=`docker run --rm -ti globalgames/dmarket-blockchain /src/app/dmbc-node -v | awk '{print $3}'`
         TAG=$VERSION-$CIRCLE_BUILD_NUM
         docker tag globalgames/dmarket-blockchain globalgames/dmarket-blockchain:$TAG
-        docker push globalgames/dmarket-blockchain:$TAG
+        docker tag globalgames/dmarket-blockchain globalgames/dmarket-blockchain:latest
+        docker push globalgames/dmarket-blockchain
 
   build_prod_image: &build_prod_image
     run:
