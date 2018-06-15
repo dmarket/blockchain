@@ -27,6 +27,8 @@ encoding_struct! {
         assets:       Vec<TradeAsset>,
 
         fee_strategy: u8,
+        seed:         u64,
+        data_info:    &str,
     }
 }
 
@@ -37,10 +39,8 @@ message! {
         const ID = TRADE_INTERMEDIARY_ID;
 
         offer:                  TradeOfferIntermediary,
-        seed:                   u64,
         seller_signature:       &Signature,
         intermediary_signature: &Signature,
-        data_info:              &str,
     }
 }
 

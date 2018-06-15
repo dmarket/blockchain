@@ -28,6 +28,8 @@ encoding_struct! {
         recipient_assets: Vec<AssetBundle>,
 
         fee_strategy:     u8,
+        seed:              u64,
+        data_info:         &str,
     }
 }
 
@@ -38,9 +40,7 @@ message! {
         const ID = EXCHANGE_ID;
 
         offer:             ExchangeOffer,
-        seed:              u64,
         sender_signature:  &Signature,
-        data_info:         &str,
     }
 }
 

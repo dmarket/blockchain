@@ -331,14 +331,14 @@ impl ExchangeBuilder {
             &self.meta.public_key,
             self.recipient_assets,
             self.fee_strategy as u8,
+            self.seed,
+            &self.data_info.unwrap_or_default(),
         );
         let sender_signature =
             crypto::sign(&offer.clone().into_bytes(), &self.sender_secret.unwrap());
         Exchange::new(
             offer,
-            self.seed,
             &sender_signature,
-            &self.data_info.unwrap_or_default(),
             &self.meta.secret_key,
         )
     }
@@ -473,6 +473,8 @@ impl ExchangeIntermediaryBuilder {
             &self.meta.public_key,
             self.recipient_assets,
             self.fee_strategy as u8,
+            self.seed,
+            &self.data_info.unwrap_or_default(),
         );
         let sender_signature = crypto::sign(
             &offer.clone().into_bytes(),
@@ -484,10 +486,8 @@ impl ExchangeIntermediaryBuilder {
         );
         ExchangeIntermediary::new(
             offer,
-            self.seed,
             &sender_signature,
             &intermediary_signature,
-            &self.data_info.unwrap_or_default(),
             &self.meta.secret_key,
         )
     }
@@ -508,6 +508,8 @@ pub struct TradeBuilder {
     data_for_assets: Vec<(String, u64, u64)>,
     fee_strategy: FeeStrategy,
     seed: u64,
+    data_info: Option<String>,
+
 }
 
 impl TradeBuilder {
@@ -520,6 +522,7 @@ impl TradeBuilder {
             data_for_assets: Vec::new(),
             fee_strategy: FeeStrategy::Recipient,
             seed: 0,
+            data_info: None,
         }
     }
 
@@ -552,6 +555,13 @@ impl TradeBuilder {
         TradeBuilder { seed, ..self }
     }
 
+    pub fn data_info(self, data_info: &str) -> Self {
+        TradeBuilder {
+            data_info: Some(data_info.to_string()),
+            ..self
+        }
+    }
+
     pub fn build(mut self) -> Trade {
         self.verify();
 
@@ -566,9 +576,11 @@ impl TradeBuilder {
             &self.seller_public.unwrap(),
             self.assets,
             self.fee_strategy as u8,
+            self.seed,
+            &self.data_info.unwrap_or_default(),
         );
         let signature = crypto::sign(&offer.clone().into_bytes(), &self.seller_secret.unwrap());
-        Trade::new(offer, self.seed, &signature, &self.meta.secret_key)
+        Trade::new(offer, &signature, &self.meta.secret_key)
     }
 
     fn verify(&self) {
@@ -678,6 +690,8 @@ impl TradeIntermediaryBuilder {
             &self.seller_public.unwrap(),
             self.assets,
             self.fee_strategy as u8,
+            self.seed,
+            &self.data_info.unwrap_or_default(),
         );
         let seller_signature =
             crypto::sign(&offer.clone().into_bytes(), &self.seller_secret.unwrap());
@@ -687,10 +701,8 @@ impl TradeIntermediaryBuilder {
         );
         TradeIntermediary::new(
             offer,
-            self.seed,
             &seller_signature,
             &intermediary_signature,
-            &self.data_info.unwrap_or_default(),
             &self.meta.secret_key,
         )
     }
@@ -911,9 +923,11 @@ mod test {
             &recipient_pk,
             vec![recipient_asset.clone()],
             1,
+            1,
+            "test_exchange",
         );
         let sender_signature = crypto::sign(&offer.clone().into_bytes(), &sender_sk.clone());
-        let equivalent = Exchange::new(offer, 1, &sender_signature, "test_exchange", &recipient_sk);
+        let equivalent = Exchange::new(offer, &sender_signature, &recipient_sk);
 
         assert_eq!(transaction, equivalent);
     }
@@ -951,15 +965,15 @@ mod test {
             &recipient_pk,
             vec![recipient_asset.clone()],
             1,
+            1,
+            "test_exchange",
         );
         let sender_signature = crypto::sign(&offer.clone().into_bytes(), &sender_sk);
         let intermediary_signature = crypto::sign(&offer.clone().into_bytes(), &intermediary_sk);
         let equivalent = ExchangeIntermediary::new(
             offer,
-            1,
             &sender_signature,
             &intermediary_signature,
-            "test_exchange",
             &recipient_sk,
         );
 
@@ -979,6 +993,7 @@ mod test {
             .seller(seller_public, seller_secret.clone())
             .fee_strategy(FeeStrategy::Recipient)
             .seed(1)
+            .data_info("test_trade")
             .build();
 
         let offer = TradeOffer::new(
@@ -986,9 +1001,11 @@ mod test {
             &seller_public,
             vec![trade_asset],
             FeeStrategy::Recipient as u8,
+            1,
+            "test_trade",
         );
         let signature = crypto::sign(&offer.clone().into_bytes(), &seller_secret);
-        let equivalent = Trade::new(offer, 1, &signature, &secret_key);
+        let equivalent = Trade::new(offer, &signature, &secret_key);
 
         assert_eq!(transaction, equivalent);
     }
@@ -1019,16 +1036,16 @@ mod test {
             &seller_public_key,
             vec![trade_asset],
             FeeStrategy::Recipient as u8,
+            1,
+            "trade_test",
         );
         let seller_signature = crypto::sign(&offer.clone().into_bytes(), &seller_secret_key);
         let intermediary_signature =
             crypto::sign(&offer.clone().into_bytes(), &intermediary_secret_key);
         let equivalent = TradeIntermediary::new(
             offer,
-            1,
             &seller_signature,
             &intermediary_signature,
-            "trade_test",
             &buyer_secret_key,
         );
 
