@@ -1,0 +1,17 @@
+{
+    "offer": {
+        "sender": "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f",
+        "sender_assets": [],
+        "sender_value": 10000,
+
+        "recipient": "00098e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411000",
+        "recipient_assets": [{
+            "id": "00001111222233334444555566667777",
+            "amount": 10
+        }],
+        "fee_strategy": 1
+    },
+    "seed": 22,
+    "sender_signature": "63eb6cac0d073b6db2157e6ad8fa33981c126d2a09530b25d5072be67dc3ab509009e603184a031a5d7564b2b0d5f5a7ba5f84f50651ebc9ac6592535c3cff0a",
+    "memo": "CAPI Exchange Test"
+}

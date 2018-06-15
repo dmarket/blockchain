@@ -1,0 +1,11 @@
+{
+    "from": "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f",
+    "to": "00098e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c41100f",
+    "amount": 1000,
+    "memo": "Testing CAPI",
+    "seed": 321,
+    "assets": [{
+        "id": "00001111222233334444555566667777",
+        "amount": 10
+    }]
+}

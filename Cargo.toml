@@ -2,8 +2,8 @@
 debug = true
 
 [workspace]
-members = ["dmbc", "dmbc-node", "dmbc-fuzzer", "dmbc-discovery", "dmbc-flooder", "dmbc-bot", "dep/exonum", "dep/exonum", "dep/exonum_librocksdb-sys"]
-default-members = ["dmbc-node", "dmbc-discovery"]
+members = ["dmbc", "dmbc-node", "dmbc-fuzzer", "dmbc-discovery", "dmbc-flooder", "dmbc-bot", "dmbc-capi", "dep/exonum", "dep/exonum_librocksdb-sys"]
+default-members = ["dmbc", "dmbc-node", "dmbc-discovery", "dmbc-capi"]
 
 [patch.crates-io]
 exonum = { path = "dep/exonum" }

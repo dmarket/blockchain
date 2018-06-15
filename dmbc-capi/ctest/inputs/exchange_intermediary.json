@@ -1,0 +1,22 @@
+{
+    "offer": {
+        "intermediary": {
+            "wallet": "22298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411999",
+            "commission": 888
+        },
+        "sender": "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f",
+        "sender_assets": [],
+        "sender_value": 10000,
+
+        "recipient": "00098e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411000",
+        "recipient_assets": [{
+            "id": "00001111222233334444555566667777",
+            "amount": 10
+        }],
+        "fee_strategy": 1
+    },
+    "seed": 999,
+    "sender_signature": "2f433eeaefbc0ba3800c76be8f5ad30e5f7a29b02a82a6b121c55b63d3cf014fc53226e811364e75a94e597f08185e09bf42e931179e2c2b6991a42b6b1e350c",
+    "intermediary_signature": "2f433eeaefbc0ba3800c76be8f5ad30e5f7a29b02a82a6b121c55b63d3cf014fc53226e811364e75a94e597f08185e09bf42e931179e2c2b6991a42b6b1e350c",
+    "memo": "Testing CAPI for exchange intermediary"
+}
