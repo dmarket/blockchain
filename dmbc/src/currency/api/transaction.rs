@@ -20,8 +20,9 @@ use router::Router;
 
 use currency::api::error::ApiError;
 use currency::status;
-use currency::transactions::{AddAssets, DeleteAssets, Exchange, ExchangeIntermediary, Trade,
-                             TradeIntermediary, Transfer};
+use currency::transactions::{
+    AddAssets, DeleteAssets, Exchange, ExchangeIntermediary, Trade, TradeIntermediary, Transfer,
+};
 
 use currency::error::Error;
 
@@ -130,7 +131,8 @@ impl Api for TransactionApi {
                 Ok(None) => Err(ApiError::EmptyRequestBody),
                 Err(_) => Err(ApiError::IncorrectRequest),
             };
-            let ss = s.clone()
+            let ss = s
+                .clone()
                 .ok()
                 .map(|r| {
                     r.err()

@@ -36,7 +36,9 @@ pub struct BranchNode {
 
 impl BranchNode {
     pub fn empty() -> BranchNode {
-        BranchNode { raw: vec![0; BRANCH_NODE_SIZE] }
+        BranchNode {
+            raw: vec![0; BRANCH_NODE_SIZE],
+        }
     }
 
     pub fn child_hash(&self, kind: ChildKind) -> &Hash {
@@ -85,7 +87,9 @@ impl StorageValue for BranchNode {
     }
 
     fn from_bytes(value: Cow<[u8]>) -> Self {
-        BranchNode { raw: value.into_owned() }
+        BranchNode {
+            raw: value.into_owned(),
+        }
     }
 
     fn hash(&self) -> Hash {

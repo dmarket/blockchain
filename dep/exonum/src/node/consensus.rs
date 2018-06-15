@@ -14,14 +14,16 @@
 
 use std::collections::HashSet;
 
-use crypto::{Hash, PublicKey};
 use blockchain::{Schema, Transaction};
-use messages::{BlockRequest, BlockResponse, ConsensusMessage, Message, Precommit, Prevote,
-               PrevotesRequest, Propose, ProposeRequest, RawTransaction, TransactionsRequest};
-use helpers::{Height, Round, ValidatorId};
-use storage::Patch;
-use node::{NodeHandler, RequestData};
+use crypto::{Hash, PublicKey};
 use events::InternalRequest;
+use helpers::{Height, Round, ValidatorId};
+use messages::{
+    BlockRequest, BlockResponse, ConsensusMessage, Message, Precommit, Prevote, PrevotesRequest,
+    Propose, ProposeRequest, RawTransaction, TransactionsRequest,
+};
+use node::{NodeHandler, RequestData};
+use storage::Patch;
 
 // TODO reduce view invocations (ECR-171)
 impl NodeHandler {
@@ -243,12 +245,8 @@ impl NodeHandler {
             }
 
             // Commit block
-            self.state.add_block(
-                block_hash,
-                patch,
-                tx_hashes,
-                block.proposer_id(),
-            );
+            self.state
+                .add_block(block_hash, patch, tx_hashes, block.proposer_id());
         }
         self.commit(block_hash, msg.precommits().iter(), None);
         self.request_next_block();
@@ -340,11 +338,8 @@ impl NodeHandler {
     ) {
         // Check if propose is known.
         if self.state.propose(propose_hash).is_none() {
-            self.state.add_unknown_propose_with_precommits(
-                round,
-                *propose_hash,
-                *block_hash,
-            );
+            self.state
+                .add_unknown_propose_with_precommits(round, *propose_hash, *block_hash);
             return;
         }
 
@@ -369,8 +364,7 @@ impl NodeHandler {
         // Execute block and get state hash
         let our_block_hash = self.execute(propose_hash);
         assert_eq!(
-            &our_block_hash,
-            block_hash,
+            &our_block_hash, block_hash,
             "Our block_hash different from precommits one."
         );
 
@@ -459,19 +453,17 @@ impl NodeHandler {
                 .commit(block_state.patch(), block_hash, precommits)
                 .unwrap();
             // Update node state
-            self.state.update_config(
-                Schema::new(&self.blockchain.snapshot()).actual_configuration(),
-            );
+            self.state
+                .update_config(Schema::new(&self.blockchain.snapshot()).actual_configuration());
             // Update state to new height
             let block_hash = self.blockchain.last_hash();
-            self.state.new_height(
-                &block_hash,
-                self.system_state.current_time(),
-            );
+            self.state
+                .new_height(&block_hash, self.system_state.current_time());
             (block_state.txs().len(), block_state.proposer_id())
         };
 
-        let mempool_size = self.state
+        let mempool_size = self
+            .state
             .transactions()
             .read()
             .expect("Expected read lock")
@@ -531,7 +523,8 @@ impl NodeHandler {
         };
 
         profiler_span!("Make sure that it is new transaction", {
-            if self.state
+            if self
+                .state
                 .transactions()
                 .read()
                 .expect("Expected read lock")
@@ -567,7 +560,8 @@ impl NodeHandler {
         let hash = msg.hash();
 
         // Make sure that it is new transaction
-        if self.state
+        if self
+            .state
             .transactions()
             .read()
             .expect("Expected read lock")
@@ -667,7 +661,8 @@ impl NodeHandler {
             if self.state.have_prevote(round) {
                 return;
             }
-            let pool_len = self.state
+            let pool_len = self
+                .state
                 .transactions()
                 .read()
                 .expect("Expected read lock")
@@ -677,7 +672,8 @@ impl NodeHandler {
 
             let round = self.state.round();
             let max_count = ::std::cmp::min(self.txs_block_limit() as usize, pool_len);
-            let txs: Vec<Hash> = self.state
+            let txs: Vec<Hash> = self
+                .state
                 .transactions()
                 .read()
                 .expect("Expected read lock")
@@ -715,18 +711,17 @@ impl NodeHandler {
             self.add_request_timeout(data.clone(), Some(peer));
 
             let message = match *data {
-                RequestData::Propose(ref propose_hash) => {
-                    ProposeRequest::new(
-                        self.state.consensus_public_key(),
-                        &peer,
-                        self.state.height(),
-                        propose_hash,
-                        self.state.consensus_secret_key(),
-                    ).raw()
-                        .clone()
-                }
+                RequestData::Propose(ref propose_hash) => ProposeRequest::new(
+                    self.state.consensus_public_key(),
+                    &peer,
+                    self.state.height(),
+                    propose_hash,
+                    self.state.consensus_secret_key(),
+                ).raw()
+                    .clone(),
                 RequestData::Transactions(ref propose_hash) => {
-                    let txs: Vec<_> = self.state
+                    let txs: Vec<_> = self
+                        .state
                         .propose(propose_hash)
                         .unwrap()
                         .unknown_txs()
@@ -741,27 +736,23 @@ impl NodeHandler {
                     ).raw()
                         .clone()
                 }
-                RequestData::Prevotes(round, ref propose_hash) => {
-                    PrevotesRequest::new(
-                        self.state.consensus_public_key(),
-                        &peer,
-                        self.state.height(),
-                        round,
-                        propose_hash,
-                        self.state.known_prevotes(round, propose_hash),
-                        self.state.consensus_secret_key(),
-                    ).raw()
-                        .clone()
-                }
-                RequestData::Block(height) => {
-                    BlockRequest::new(
-                        self.state.consensus_public_key(),
-                        &peer,
-                        height,
-                        self.state.consensus_secret_key(),
-                    ).raw()
-                        .clone()
-                }
+                RequestData::Prevotes(round, ref propose_hash) => PrevotesRequest::new(
+                    self.state.consensus_public_key(),
+                    &peer,
+                    self.state.height(),
+                    round,
+                    propose_hash,
+                    self.state.known_prevotes(round, propose_hash),
+                    self.state.consensus_secret_key(),
+                ).raw()
+                    .clone(),
+                RequestData::Block(height) => BlockRequest::new(
+                    self.state.consensus_public_key(),
+                    &peer,
+                    height,
+                    self.state.consensus_secret_key(),
+                ).raw()
+                    .clone(),
             };
             trace!("Send request {:?} to peer {:?}", data, peer);
             self.send_to_peer(peer, &message);
@@ -779,9 +770,11 @@ impl NodeHandler {
             proposer_id,
             height,
             tx_hashes,
-            &self.state.transactions().read().expect(
-                "Expected read lock",
-            ),
+            &self
+                .state
+                .transactions()
+                .read()
+                .expect("Expected read lock"),
         )
     }
 
@@ -801,12 +794,8 @@ impl NodeHandler {
         let (block_hash, patch) =
             self.create_block(propose.validator(), propose.height(), tx_hashes.as_slice());
         // Save patch
-        self.state.add_block(
-            block_hash,
-            patch,
-            tx_hashes,
-            propose.validator(),
-        );
+        self.state
+            .add_block(block_hash, patch, tx_hashes, propose.validator());
         self.state
             .propose_mut(propose_hash)
             .unwrap()
@@ -844,7 +833,8 @@ impl NodeHandler {
     /// node tries to catch up with other nodes' height.
     pub fn request_next_block(&mut self) {
         // TODO randomize next peer (ECR-171)
-        let heights: Vec<_> = self.state
+        let heights: Vec<_> = self
+            .state
             .nodes_with_bigger_height()
             .into_iter()
             .cloned()
@@ -868,9 +858,10 @@ impl NodeHandler {
 
     /// Broadcasts the `Prevote` message to all peers.
     pub fn broadcast_prevote(&mut self, round: Round, propose_hash: &Hash) -> bool {
-        let validator_id = self.state.validator_id().expect(
-            "called broadcast_prevote in Auditor node.",
-        );
+        let validator_id = self
+            .state
+            .validator_id()
+            .expect("called broadcast_prevote in Auditor node.");
         let locked_round = self.state.locked_round();
         let prevote = Prevote::new(
             validator_id,
@@ -888,9 +879,10 @@ impl NodeHandler {
 
     /// Broadcasts the `Precommit` message to all peers.
     pub fn broadcast_precommit(&mut self, round: Round, propose_hash: &Hash, block_hash: &Hash) {
-        let validator_id = self.state.validator_id().expect(
-            "called broadcast_precommit in Auditor node.",
-        );
+        let validator_id = self
+            .state
+            .validator_id()
+            .expect("called broadcast_precommit in Auditor node.");
         let precommit = Precommit::new(
             validator_id,
             self.state.height(),
@@ -925,12 +917,7 @@ impl NodeHandler {
                 return Err("Several precommits from one validator in block".to_string());
             }
 
-            self.verify_precommit(
-                block_hash,
-                block_height,
-                round,
-                precommit,
-            )?;
+            self.verify_precommit(block_hash, block_height, round, precommit)?;
         }
 
         Ok(())

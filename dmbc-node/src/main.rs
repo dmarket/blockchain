@@ -5,14 +5,14 @@ extern crate exonum_rocksdb;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
-extern crate serde_json;
 extern crate clap;
+extern crate serde_json;
 
 extern crate dmbc;
 
+mod flag;
 mod keyfile;
 mod net_config;
-mod flag;
 
 use dmbc::config;
 use dmbc::currency::Service;
@@ -34,16 +34,13 @@ const GENESIS_SERVICE_PUBLIC: &str =
 fn main() {
     let _f = match flag::parse() {
         Some(f) => f,
-        None => ::std::process::exit(0)
+        None => ::std::process::exit(0),
     };
 
     exonum::helpers::init_logger().unwrap();
 
     /** Create Keys */
-    println!(
-        "Initializing node version: v{}",
-        VERSION
-    );
+    println!("Initializing node version: v{}", VERSION);
 
     let (consensus_public_key, consensus_secret_key) = keyfile::pair("consensus").unwrap();
     let (service_public_key, service_secret_key) = keyfile::pair("service").unwrap();
@@ -93,7 +90,7 @@ fn main() {
         peers_timeout: 10_000,
         txs_block_limit: 3000,
         max_message_len: ConsensusConfig::DEFAULT_MESSAGE_MAX_LEN,
-        timeout_adjuster: TimeoutAdjusterConfig::Constant { timeout: 2500},
+        timeout_adjuster: TimeoutAdjusterConfig::Constant { timeout: 2500 },
     };
 
     // Configure Node

@@ -96,7 +96,7 @@ impl ThirdPartyFees {
                 .fetch(&asset.id())
                 .ok_or_else(|| Error::AssetNotFound)?;
 
-            let fee = info.fees().trade().for_price(asset.price()) * asset.amount() ;
+            let fee = info.fees().trade().for_price(asset.price()) * asset.amount();
             to_third_party
                 .entry(*info.creator())
                 .and_modify(|prev_fee| {
@@ -203,7 +203,8 @@ impl ThirdPartyFees {
     ) -> Result<HashMap<PublicKey, Wallet>, Error> {
         let mut payer = wallet::Schema(&*view).fetch(&payer_key);
 
-        let mut updated_wallets = self.0
+        let mut updated_wallets = self
+            .0
             .iter()
             .filter(|&(key, _)| key != payer_key)
             .map(|(key, fee)| {

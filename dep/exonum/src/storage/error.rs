@@ -14,8 +14,8 @@
 
 //! An implementation of `Error` type.
 
-use std::fmt;
 use std::error;
+use std::fmt;
 
 /// The error type for I/O operations with storage.
 #[derive(Debug, Clone)]
@@ -34,7 +34,9 @@ impl Error {
     /// let error = Error::new("Oh no!");
     /// ```
     pub fn new<T: Into<String>>(message: T) -> Error {
-        Error { message: message.into() }
+        Error {
+            message: message.into(),
+        }
     }
 }
 

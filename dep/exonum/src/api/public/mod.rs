@@ -14,8 +14,8 @@
 
 //! Public part of the Exonum rest api.
 
-pub use self::system::{SystemApi, HealthCheckInfo};
 pub use self::blockchain_explorer::ExplorerApi;
+pub use self::system::{HealthCheckInfo, SystemApi};
 
-mod system;
 mod blockchain_explorer;
+mod system;

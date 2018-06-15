@@ -1,5 +1,5 @@
-use std::mem;
 use decimal;
+use std::mem;
 
 encoding_struct! {
     /// Fee data for specific kind of operations.

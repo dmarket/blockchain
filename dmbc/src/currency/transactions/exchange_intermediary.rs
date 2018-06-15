@@ -5,15 +5,17 @@ use exonum::crypto;
 use exonum::crypto::{PublicKey, Signature};
 use exonum::messages::Message;
 use exonum::storage::Fork;
-use prometheus::{IntCounter, Histogram};
+use prometheus::{Histogram, IntCounter};
 
 use currency::assets::AssetBundle;
 use currency::error::Error;
+use currency::service::CONFIGURATION;
 use currency::status;
-use currency::transactions::components::{FeeStrategy, FeesCalculator, Intermediary, ThirdPartyFees};
+use currency::transactions::components::{
+    FeeStrategy, FeesCalculator, Intermediary, ThirdPartyFees,
+};
 use currency::wallet;
 use currency::{Service, SERVICE_ID};
-use currency::service::CONFIGURATION;
 
 /// Transaction ID.
 pub const EXCHANGE_INTERMEDIARY_ID: u16 = 602;
@@ -60,7 +62,7 @@ impl FeesCalculator for ExchangeIntermediary {
         )?;
         fees.add_fee(
             offer.intermediary().wallet(),
-            offer.intermediary().commission()
+            offer.intermediary().commission(),
         );
         let fee_strategy =
             FeeStrategy::try_from(offer.fee_strategy()).expect("fee strategy must be valid");

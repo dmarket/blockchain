@@ -1,10 +1,10 @@
-use ::std::ffi::CString;
-use ::std::fmt;
-use ::std::str;
+use std::ffi::CString;
+use std::fmt;
+use std::str;
 
-use ::libc::c_char;
-use exonum::encoding::serialize;
 use assets::AssetIdError;
+use exonum::encoding::serialize;
+use libc::c_char;
 
 #[derive(Debug)]
 pub struct Error {
@@ -32,7 +32,9 @@ impl Error {
     pub fn is_err(&self) -> bool {
         match self.kind {
             ErrorKind::None => false,
-            ErrorKind::Utf8(_) | ErrorKind::Hex(_) | ErrorKind::Text(_) | ErrorKind::Asset(_) => true,
+            ErrorKind::Utf8(_) | ErrorKind::Hex(_) | ErrorKind::Text(_) | ErrorKind::Asset(_) => {
+                true
+            }
         }
     }
 }

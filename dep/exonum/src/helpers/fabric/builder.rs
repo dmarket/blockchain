@@ -12,21 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::collections::HashMap;
+use std::ffi::OsString;
 use std::fmt;
 use std::panic::{self, PanicInfo};
-use std::ffi::OsString;
-use std::collections::HashMap;
 
 use blockchain::Service;
 use node::Node;
 
-use super::internal::{CollectedCommand, Feedback};
 use super::clap_backend::ClapBackend;
-use super::ServiceFactory;
-use super::details::{Run, RunDev, Finalize, GenerateNodeConfig, GenerateCommonConfig,
-                     GenerateTestnet};
+use super::details::{
+    Finalize, GenerateCommonConfig, GenerateNodeConfig, GenerateTestnet, Run, RunDev,
+};
+use super::internal::{CollectedCommand, Feedback};
 use super::keys;
 use super::CommandName;
+use super::ServiceFactory;
 
 /// `NodeBuilder` is a high level object,
 /// usable for fast prototyping and creating app from services list.
@@ -71,10 +72,11 @@ impl NodeBuilder {
         match ClapBackend::execute(&self.commands) {
             Feedback::RunNode(ref ctx) => {
                 let db = Run::db_helper(ctx);
-                let config = ctx.get(keys::NODE_CONFIG).expect(
-                    "could not find node_config",
-                );
-                let services: Vec<Box<Service>> = self.service_factories
+                let config = ctx
+                    .get(keys::NODE_CONFIG)
+                    .expect("could not find node_config");
+                let services: Vec<Box<Service>> = self
+                    .service_factories
                     .into_iter()
                     .map(|mut factory| factory.make_service(ctx))
                     .collect();
@@ -89,12 +91,10 @@ impl NodeBuilder {
     fn panic_hook(info: &PanicInfo) {
         let msg = match info.payload().downcast_ref::<&'static str>() {
             Some(s) => *s,
-            None => {
-                match info.payload().downcast_ref::<String>() {
-                    Some(s) => &s[..],
-                    None => "Box<Any>",
-                }
-            }
+            None => match info.payload().downcast_ref::<String>() {
+                Some(s) => &s[..],
+                None => "Box<Any>",
+            },
         };
         println!("error: {}", msg);
     }

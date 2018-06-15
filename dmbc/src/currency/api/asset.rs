@@ -37,7 +37,8 @@ lazy_static! {
     static ref INFO_REQUESTS: IntCounter =
         register_int_counter!("dmbc_asset_api_info_requests_total", "AssetInfo requests.").unwrap();
     static ref INFO_RESPONSES: IntCounter =
-        register_int_counter!("dmbc_asset_api_info_responses_total", "AssetInfo response.").unwrap();
+        register_int_counter!("dmbc_asset_api_info_responses_total", "AssetInfo response.")
+            .unwrap();
 }
 
 impl Api for AssetApi {

@@ -33,7 +33,8 @@ impl Default for NodeState {
 
 lazy_static! {
     static ref INFOS: RwLock<HashMap<NodeKeys, NodeInfo>> = RwLock::new(HashMap::with_capacity(4));
-    static ref STATES: RwLock<HashMap<NodeKeys, NodeState>> = RwLock::new(HashMap::with_capacity(4));
+    static ref STATES: RwLock<HashMap<NodeKeys, NodeState>> =
+        RwLock::new(HashMap::with_capacity(4));
 }
 
 const UNABLE_TO_LOCK_ERROR: &'static str = "unable to lock";
@@ -43,7 +44,7 @@ pub fn update(keys: NodeKeys, info: NodeInfo) -> bool {
         .write()
         .expect(UNABLE_TO_LOCK_ERROR)
         .entry(keys)
-        .or_insert_default();
+        .or_default();
 
     INFOS
         .write()
@@ -57,6 +58,7 @@ pub fn state(keys: NodeKeys) -> Option<NodeState> {
         .read()
         .expect(UNABLE_TO_LOCK_ERROR)
         .get(&keys)
+        .cloned()
 }
 
 pub fn list() -> Vec<(NodeKeys, NodeInfo)> {
@@ -67,4 +69,3 @@ pub fn list() -> Vec<(NodeKeys, NodeInfo)> {
         .map(|(k, v)| (*k, v.clone()))
         .collect()
 }
-

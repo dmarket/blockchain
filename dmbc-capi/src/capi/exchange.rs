@@ -1,13 +1,13 @@
-use std::ptr;
 use std::mem;
+use std::ptr;
 
-use libc::{c_char, size_t};
-use exonum::storage::StorageValue;
 use exonum::messages::Message;
+use exonum::storage::StorageValue;
+use libc::{c_char, size_t};
 
 use assets::AssetBundle;
-use transactions::exchange::{ExchangeOfferWrapper, ExchangeWrapper};
 use capi::common::*;
+use transactions::exchange::{ExchangeOfferWrapper, ExchangeWrapper};
 
 use error::{Error, ErrorKind};
 
@@ -81,7 +81,7 @@ ffi_fn! {
                 }
                 return false;
             }
-        } 
+        }
 
         let asset = AssetBundle::from_ptr(asset);
         wrapper.add_recipient_asset(asset.clone());
@@ -114,7 +114,7 @@ ffi_fn! {
                 }
                 return false;
             }
-        } 
+        }
 
         let asset = AssetBundle::from_ptr(asset);
         wrapper.add_sender_asset(asset.clone());
@@ -124,7 +124,7 @@ ffi_fn! {
 
 ffi_fn! {
     fn dmbc_exchange_offer_into_bytes(
-        wrapper: *mut ExchangeOfferWrapper, 
+        wrapper: *mut ExchangeOfferWrapper,
         length: *mut size_t,
         error: *mut Error
     ) -> *const u8 {
@@ -155,7 +155,7 @@ ffi_fn! {
 
 ffi_fn! {
     fn dmbc_tx_exchange_create(
-        wrapper: *mut ExchangeOfferWrapper, 
+        wrapper: *mut ExchangeOfferWrapper,
         signature: *const c_char,
         seed: u64,
         memo: *const c_char,

@@ -1,6 +1,5 @@
 use std::error::Error;
 
-use exonum::crypto::PublicKey;
 use futures::{future, Future, Stream};
 use hyper;
 use hyper::{Body, Method, Request, Response, StatusCode};
@@ -8,8 +7,6 @@ use serde_json as json;
 
 use nodes;
 use nodes::{NodeInfo, NodeKeys};
-
-const _PROPOSE_HEIGHT_INCREMENT: u64 = 25; // TODO
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub struct ValidatorInfo(NodeKeys, NodeInfo);
@@ -38,7 +35,7 @@ fn get_nodes() -> ResponseFuture {
             Box::new(future::ok(
                 Response::builder()
                     .status(StatusCode::IM_A_TEAPOT)
-                    .body(json::to_string_pretty(&json!{()}).unwrap().into())
+                    .body(Body::empty())
                     .unwrap(),
             ))
         }
@@ -64,4 +61,3 @@ fn post_node(body: Body) -> ResponseFuture {
         });
     Box::new(post)
 }
-

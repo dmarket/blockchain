@@ -3,12 +3,12 @@ extern crate exonum;
 
 pub mod utils;
 
+use exonum::blockchain::Transaction;
 use exonum::crypto::{PublicKey, SecretKey};
 use exonum::encoding::serialize::FromHex;
-use exonum::blockchain::Transaction;
 
+use dmbc::currency::assets::{AssetBundle, AssetId};
 use dmbc::currency::transactions::builders::transaction;
-use dmbc::currency::assets::{AssetId, AssetBundle};
 use dmbc::currency::transactions::components::FeeStrategy;
 
 #[test]
@@ -34,7 +34,7 @@ fn capi_exchange() {
         .seed(seed)
         .data_info(memo);
 
-    for asset in offer["recipient_assets"].as_array().unwrap() {        
+    for asset in offer["recipient_assets"].as_array().unwrap() {
         let id = AssetId::from_hex(asset["id"].as_str().unwrap());
 
         let amount = asset["amount"].as_u64().unwrap();

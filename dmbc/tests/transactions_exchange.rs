@@ -4,24 +4,24 @@ extern crate exonum_testkit;
 extern crate hyper;
 extern crate iron;
 extern crate iron_test;
-extern crate serde_json;
 extern crate mount;
+extern crate serde_json;
 
 pub mod dmbc_testkit;
 
-use hyper::status::StatusCode;
-use exonum::messages::Message;
-use exonum::crypto;
 use dmbc_testkit::{DmbcTestApiBuilder, DmbcTestKitApi};
+use exonum::crypto;
+use exonum::messages::Message;
+use hyper::status::StatusCode;
 
-use dmbc::currency::configuration::{Configuration, TransactionFees};
-use dmbc::currency::transactions::builders::transaction;
-use dmbc::currency::assets::AssetBundle;
 use dmbc::currency::api::error::ApiError;
-use dmbc::currency::error::Error;
 use dmbc::currency::api::transaction::TransactionResponse;
-use dmbc::currency::wallet::Wallet;
+use dmbc::currency::assets::AssetBundle;
+use dmbc::currency::configuration::{Configuration, TransactionFees};
+use dmbc::currency::error::Error;
+use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::transactions::components::FeeStrategy;
+use dmbc::currency::wallet::Wallet;
 
 #[test]
 fn exchange_assets_fee_from_recipient() {
@@ -46,12 +46,42 @@ fn exchange_assets_fee_from_recipient() {
     let (recipient_pk, recipient_sk) = crypto::gen_keypair();
     let (creator_pk, _) = crypto::gen_keypair();
 
-    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, senders_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, senders_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset3, info3) = dmbc_testkit::create_asset(meta_data3, senders_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset4, info4) = dmbc_testkit::create_asset(meta_data4, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset5, info5) = dmbc_testkit::create_asset(meta_data5, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset6, info6) = dmbc_testkit::create_asset(meta_data6, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
+    let (asset1, info1) = dmbc_testkit::create_asset(
+        meta_data1,
+        senders_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset2, info2) = dmbc_testkit::create_asset(
+        meta_data2,
+        senders_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset3, info3) = dmbc_testkit::create_asset(
+        meta_data3,
+        senders_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset4, info4) = dmbc_testkit::create_asset(
+        meta_data4,
+        receiver_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset5, info5) = dmbc_testkit::create_asset(
+        meta_data5,
+        receiver_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset6, info6) = dmbc_testkit::create_asset(
+        meta_data6,
+        receiver_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -98,13 +128,12 @@ fn exchange_assets_fee_from_recipient() {
     let genesis_wallet = api.get_wallet(&dmbc_testkit::default_genesis_key());
     let creator_wallet = api.get_wallet(&creator_pk);
 
-    let asset_fee = 
-        senders_units * fixed +
-        sender_unit_exchange * fixed +
-        senders_units * fixed +
-        receiver_units * fixed +
-        recipient_unit_exchange * fixed +
-        recipient_unit_exchange * fixed;
+    let asset_fee = senders_units * fixed
+        + sender_unit_exchange * fixed
+        + senders_units * fixed
+        + receiver_units * fixed
+        + recipient_unit_exchange * fixed
+        + recipient_unit_exchange * fixed;
     let expected_senders_balance = others_balance;
     let expected_recipient_balance = others_balance - transaction_fee - asset_fee;
     let expected_genesis_balance = genesis_balance + transaction_fee;
@@ -115,25 +144,35 @@ fn exchange_assets_fee_from_recipient() {
     assert_eq!(genesis_wallet.balance, expected_genesis_balance);
     assert_eq!(creator_wallet.balance, expected_creator_balance);
 
-    let recipient_assets = api.get_wallet_assets(&recipient_pk).iter().map(|a| a.into()).collect::<Vec<AssetBundle>>();
-    let sender_assets = api.get_wallet_assets(&sender_pk).iter().map(|a| a.into()).collect::<Vec<AssetBundle>>();
+    let recipient_assets = api
+        .get_wallet_assets(&recipient_pk)
+        .iter()
+        .map(|a| a.into())
+        .collect::<Vec<AssetBundle>>();
+    let sender_assets = api
+        .get_wallet_assets(&sender_pk)
+        .iter()
+        .map(|a| a.into())
+        .collect::<Vec<AssetBundle>>();
 
-    assert_eq!(sender_assets, 
+    assert_eq!(
+        sender_assets,
         vec![
             AssetBundle::new(asset2.id(), senders_units - sender_unit_exchange),
             AssetBundle::new(asset4.id(), receiver_units),
             AssetBundle::new(asset5.id(), recipient_unit_exchange),
-            AssetBundle::new(asset6.id(), recipient_unit_exchange)
+            AssetBundle::new(asset6.id(), recipient_unit_exchange),
         ]
     );
 
-    assert_eq!(recipient_assets,
+    assert_eq!(
+        recipient_assets,
         vec![
             AssetBundle::new(asset5.id(), receiver_units - recipient_unit_exchange),
             AssetBundle::new(asset6.id(), receiver_units - recipient_unit_exchange),
             AssetBundle::new(asset1.id(), senders_units),
             AssetBundle::new(asset2.id(), sender_unit_exchange),
-            AssetBundle::new(asset3.id(), senders_units)
+            AssetBundle::new(asset3.id(), senders_units),
         ]
     );
 }
@@ -161,12 +200,42 @@ fn exchange_assets_fee_from_sender() {
     let (recipient_pk, recipient_sk) = crypto::gen_keypair();
     let (creator_pk, _) = crypto::gen_keypair();
 
-    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, senders_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, senders_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset3, info3) = dmbc_testkit::create_asset(meta_data3, senders_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset4, info4) = dmbc_testkit::create_asset(meta_data4, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset5, info5) = dmbc_testkit::create_asset(meta_data5, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset6, info6) = dmbc_testkit::create_asset(meta_data6, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
+    let (asset1, info1) = dmbc_testkit::create_asset(
+        meta_data1,
+        senders_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset2, info2) = dmbc_testkit::create_asset(
+        meta_data2,
+        senders_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset3, info3) = dmbc_testkit::create_asset(
+        meta_data3,
+        senders_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset4, info4) = dmbc_testkit::create_asset(
+        meta_data4,
+        receiver_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset5, info5) = dmbc_testkit::create_asset(
+        meta_data5,
+        receiver_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset6, info6) = dmbc_testkit::create_asset(
+        meta_data6,
+        receiver_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -213,13 +282,12 @@ fn exchange_assets_fee_from_sender() {
     let genesis_wallet = api.get_wallet(&dmbc_testkit::default_genesis_key());
     let creator_wallet = api.get_wallet(&creator_pk);
 
-    let asset_fee = 
-        senders_units * fixed +
-        sender_unit_exchange * fixed +
-        senders_units * fixed +
-        receiver_units * fixed +
-        recipient_unit_exchange * fixed +
-        recipient_unit_exchange * fixed;
+    let asset_fee = senders_units * fixed
+        + sender_unit_exchange * fixed
+        + senders_units * fixed
+        + receiver_units * fixed
+        + recipient_unit_exchange * fixed
+        + recipient_unit_exchange * fixed;
     let expected_senders_balance = others_balance - transaction_fee - asset_fee;
     let expected_recipient_balance = others_balance;
     let expected_genesis_balance = genesis_balance + transaction_fee;
@@ -230,25 +298,35 @@ fn exchange_assets_fee_from_sender() {
     assert_eq!(genesis_wallet.balance, expected_genesis_balance);
     assert_eq!(creator_wallet.balance, expected_creator_balance);
 
-    let recipient_assets = api.get_wallet_assets(&recipient_pk).iter().map(|a| a.into()).collect::<Vec<AssetBundle>>();
-    let sender_assets = api.get_wallet_assets(&sender_pk).iter().map(|a| a.into()).collect::<Vec<AssetBundle>>();
+    let recipient_assets = api
+        .get_wallet_assets(&recipient_pk)
+        .iter()
+        .map(|a| a.into())
+        .collect::<Vec<AssetBundle>>();
+    let sender_assets = api
+        .get_wallet_assets(&sender_pk)
+        .iter()
+        .map(|a| a.into())
+        .collect::<Vec<AssetBundle>>();
 
-    assert_eq!(sender_assets, 
+    assert_eq!(
+        sender_assets,
         vec![
             AssetBundle::new(asset2.id(), senders_units - sender_unit_exchange),
             AssetBundle::new(asset4.id(), receiver_units),
             AssetBundle::new(asset5.id(), recipient_unit_exchange),
-            AssetBundle::new(asset6.id(), recipient_unit_exchange)
+            AssetBundle::new(asset6.id(), recipient_unit_exchange),
         ]
     );
 
-    assert_eq!(recipient_assets,
+    assert_eq!(
+        recipient_assets,
         vec![
             AssetBundle::new(asset5.id(), receiver_units - recipient_unit_exchange),
             AssetBundle::new(asset6.id(), receiver_units - recipient_unit_exchange),
             AssetBundle::new(asset1.id(), senders_units),
             AssetBundle::new(asset2.id(), sender_unit_exchange),
-            AssetBundle::new(asset3.id(), senders_units)
+            AssetBundle::new(asset3.id(), senders_units),
         ]
     );
 }
@@ -276,12 +354,42 @@ fn exchange_assets_fee_from_recipient_and_sender() {
     let (recipient_pk, recipient_sk) = crypto::gen_keypair();
     let (creator_pk, _) = crypto::gen_keypair();
 
-    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, senders_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, senders_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset3, info3) = dmbc_testkit::create_asset(meta_data3, senders_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset4, info4) = dmbc_testkit::create_asset(meta_data4, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset5, info5) = dmbc_testkit::create_asset(meta_data5, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset6, info6) = dmbc_testkit::create_asset(meta_data6, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
+    let (asset1, info1) = dmbc_testkit::create_asset(
+        meta_data1,
+        senders_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset2, info2) = dmbc_testkit::create_asset(
+        meta_data2,
+        senders_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset3, info3) = dmbc_testkit::create_asset(
+        meta_data3,
+        senders_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset4, info4) = dmbc_testkit::create_asset(
+        meta_data4,
+        receiver_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset5, info5) = dmbc_testkit::create_asset(
+        meta_data5,
+        receiver_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset6, info6) = dmbc_testkit::create_asset(
+        meta_data6,
+        receiver_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -328,13 +436,12 @@ fn exchange_assets_fee_from_recipient_and_sender() {
     let genesis_wallet = api.get_wallet(&dmbc_testkit::default_genesis_key());
     let creator_wallet = api.get_wallet(&creator_pk);
 
-    let asset_fee = 
-        senders_units * fixed +
-        sender_unit_exchange * fixed +
-        senders_units * fixed +
-        receiver_units * fixed +
-        recipient_unit_exchange * fixed +
-        recipient_unit_exchange * fixed;
+    let asset_fee = senders_units * fixed
+        + sender_unit_exchange * fixed
+        + senders_units * fixed
+        + receiver_units * fixed
+        + recipient_unit_exchange * fixed
+        + recipient_unit_exchange * fixed;
     let expected_balance = others_balance - transaction_fee / 2 - asset_fee / 2;
     let expected_genesis_balance = genesis_balance + transaction_fee;
     let expected_creator_balance = creators_balance + asset_fee;
@@ -344,25 +451,35 @@ fn exchange_assets_fee_from_recipient_and_sender() {
     assert_eq!(genesis_wallet.balance, expected_genesis_balance);
     assert_eq!(creator_wallet.balance, expected_creator_balance);
 
-    let recipient_assets = api.get_wallet_assets(&recipient_pk).iter().map(|a| a.into()).collect::<Vec<AssetBundle>>();
-    let sender_assets = api.get_wallet_assets(&sender_pk).iter().map(|a| a.into()).collect::<Vec<AssetBundle>>();
+    let recipient_assets = api
+        .get_wallet_assets(&recipient_pk)
+        .iter()
+        .map(|a| a.into())
+        .collect::<Vec<AssetBundle>>();
+    let sender_assets = api
+        .get_wallet_assets(&sender_pk)
+        .iter()
+        .map(|a| a.into())
+        .collect::<Vec<AssetBundle>>();
 
-    assert_eq!(sender_assets, 
+    assert_eq!(
+        sender_assets,
         vec![
             AssetBundle::new(asset2.id(), senders_units - sender_unit_exchange),
             AssetBundle::new(asset4.id(), receiver_units),
             AssetBundle::new(asset5.id(), recipient_unit_exchange),
-            AssetBundle::new(asset6.id(), recipient_unit_exchange)
+            AssetBundle::new(asset6.id(), recipient_unit_exchange),
         ]
     );
 
-    assert_eq!(recipient_assets,
+    assert_eq!(
+        recipient_assets,
         vec![
             AssetBundle::new(asset5.id(), receiver_units - recipient_unit_exchange),
             AssetBundle::new(asset6.id(), receiver_units - recipient_unit_exchange),
             AssetBundle::new(asset1.id(), senders_units),
             AssetBundle::new(asset2.id(), sender_unit_exchange),
-            AssetBundle::new(asset3.id(), senders_units)
+            AssetBundle::new(asset3.id(), senders_units),
         ]
     );
 }
@@ -390,12 +507,42 @@ fn exchange_assets_invalid_tx() {
     let (recipient_pk, recipient_sk) = crypto::gen_keypair();
     let (creator_pk, _) = crypto::gen_keypair();
 
-    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, senders_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, senders_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset3, info3) = dmbc_testkit::create_asset(meta_data3, senders_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset4, info4) = dmbc_testkit::create_asset(meta_data4, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset5, info5) = dmbc_testkit::create_asset(meta_data5, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset6, info6) = dmbc_testkit::create_asset(meta_data6, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
+    let (asset1, info1) = dmbc_testkit::create_asset(
+        meta_data1,
+        senders_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset2, info2) = dmbc_testkit::create_asset(
+        meta_data2,
+        senders_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset3, info3) = dmbc_testkit::create_asset(
+        meta_data3,
+        senders_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset4, info4) = dmbc_testkit::create_asset(
+        meta_data4,
+        receiver_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset5, info5) = dmbc_testkit::create_asset(
+        meta_data5,
+        receiver_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset6, info6) = dmbc_testkit::create_asset(
+        meta_data6,
+        receiver_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -473,12 +620,42 @@ fn exchange_assets_insufficient_funds() {
     let (recipient_pk, recipient_sk) = crypto::gen_keypair();
     let (creator_pk, _) = crypto::gen_keypair();
 
-    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, senders_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, senders_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset3, info3) = dmbc_testkit::create_asset(meta_data3, senders_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset4, info4) = dmbc_testkit::create_asset(meta_data4, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset5, info5) = dmbc_testkit::create_asset(meta_data5, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset6, info6) = dmbc_testkit::create_asset(meta_data6, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
+    let (asset1, info1) = dmbc_testkit::create_asset(
+        meta_data1,
+        senders_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset2, info2) = dmbc_testkit::create_asset(
+        meta_data2,
+        senders_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset3, info3) = dmbc_testkit::create_asset(
+        meta_data3,
+        senders_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset4, info4) = dmbc_testkit::create_asset(
+        meta_data4,
+        receiver_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset5, info5) = dmbc_testkit::create_asset(
+        meta_data5,
+        receiver_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset6, info6) = dmbc_testkit::create_asset(
+        meta_data6,
+        receiver_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -557,12 +734,42 @@ fn exchange_assets_assets_not_found() {
     let (recipient_pk, recipient_sk) = crypto::gen_keypair();
     let (creator_pk, _) = crypto::gen_keypair();
 
-    let (asset1, _) = dmbc_testkit::create_asset(meta_data1, senders_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, senders_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset3, info3) = dmbc_testkit::create_asset(meta_data3, senders_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset4, info4) = dmbc_testkit::create_asset(meta_data4, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset5, info5) = dmbc_testkit::create_asset(meta_data5, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset6, info6) = dmbc_testkit::create_asset(meta_data6, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
+    let (asset1, _) = dmbc_testkit::create_asset(
+        meta_data1,
+        senders_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset2, info2) = dmbc_testkit::create_asset(
+        meta_data2,
+        senders_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset3, info3) = dmbc_testkit::create_asset(
+        meta_data3,
+        senders_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset4, info4) = dmbc_testkit::create_asset(
+        meta_data4,
+        receiver_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset5, info5) = dmbc_testkit::create_asset(
+        meta_data5,
+        receiver_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset6, info6) = dmbc_testkit::create_asset(
+        meta_data6,
+        receiver_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -642,12 +849,42 @@ fn exchange_assets_insufficient_assets() {
     let (recipient_pk, recipient_sk) = crypto::gen_keypair();
     let (creator_pk, _) = crypto::gen_keypair();
 
-    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, senders_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, senders_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset3, info3) = dmbc_testkit::create_asset(meta_data3, senders_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset4, info4) = dmbc_testkit::create_asset(meta_data4, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset5, info5) = dmbc_testkit::create_asset(meta_data5, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
-    let (asset6, info6) = dmbc_testkit::create_asset(meta_data6, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
+    let (asset1, info1) = dmbc_testkit::create_asset(
+        meta_data1,
+        senders_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset2, info2) = dmbc_testkit::create_asset(
+        meta_data2,
+        senders_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset3, info3) = dmbc_testkit::create_asset(
+        meta_data3,
+        senders_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset4, info4) = dmbc_testkit::create_asset(
+        meta_data4,
+        receiver_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset5, info5) = dmbc_testkit::create_asset(
+        meta_data5,
+        receiver_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
+    let (asset6, info6) = dmbc_testkit::create_asset(
+        meta_data6,
+        receiver_units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pk,
+    );
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -670,7 +907,7 @@ fn exchange_assets_insufficient_assets() {
         .sender_secret(sender_sk)
         .fee_strategy(FeeStrategy::Sender)
         .sender_add_asset_value(AssetBundle::new(asset1.id(), senders_units))
-        .sender_add_asset_value(AssetBundle::new(asset2.id(), sender_unit_exchange*3))
+        .sender_add_asset_value(AssetBundle::new(asset2.id(), sender_unit_exchange * 3))
         .sender_add_asset_value(AssetBundle::new(asset3.id(), senders_units))
         .recipient_add_asset_value(AssetBundle::new(asset4.id(), receiver_units))
         .recipient_add_asset_value(AssetBundle::new(asset5.id(), recipient_unit_exchange))

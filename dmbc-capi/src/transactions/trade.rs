@@ -1,4 +1,4 @@
-use exonum::crypto::{PublicKey, Signature, SecretKey};
+use exonum::crypto::{PublicKey, SecretKey, Signature};
 
 use assets::TradeAsset;
 use transactions::components::service::SERVICE_ID;
@@ -37,27 +37,27 @@ impl TradeOfferWrapper {
         }
     }
 
-    pub fn from_ptr<'a>(builder: *mut TradeOfferWrapper) -> Result<&'a mut TradeOfferWrapper, Error> {
+    pub fn from_ptr<'a>(
+        builder: *mut TradeOfferWrapper,
+    ) -> Result<&'a mut TradeOfferWrapper, Error> {
         if builder.is_null() {
-            return Err(
-                Error::new(
-                    ErrorKind::Text("Offer isn't initialized".to_string())
-                )
-            );
+            return Err(Error::new(ErrorKind::Text(
+                "Offer isn't initialized".to_string(),
+            )));
         }
-        Ok( unsafe { &mut *builder } )
+        Ok(unsafe { &mut *builder })
     }
 
     pub fn add_asset(&mut self, asset: TradeAsset) {
-         self.assets.push(asset);
+        self.assets.push(asset);
     }
 
     pub fn unwrap(&self) -> TradeOffer {
         TradeOffer::new(
-            &self.buyer, 
-            &self.seller, 
-            self.assets.clone(), 
-            self.fee_strategy
+            &self.buyer,
+            &self.seller,
+            self.assets.clone(),
+            self.fee_strategy,
         )
     }
 }
@@ -76,9 +76,9 @@ message! {
 
 #[derive(Clone, Debug)]
 pub struct TradeWrapper {
-    offer:              TradeOffer,
-    seed:               u64,
-    seller_signature:   Signature,
+    offer: TradeOffer,
+    seed: u64,
+    seller_signature: Signature,
 }
 
 impl TradeWrapper {
@@ -92,13 +92,11 @@ impl TradeWrapper {
 
     pub fn from_ptr<'a>(wrapper: *mut TradeWrapper) -> Result<&'a mut TradeWrapper, Error> {
         if wrapper.is_null() {
-            return Err(
-                Error::new(
-                    ErrorKind::Text("transaction isn't initialized".to_string())
-                )
-            );
+            return Err(Error::new(ErrorKind::Text(
+                "transaction isn't initialized".to_string(),
+            )));
         }
-        Ok( unsafe { &mut *wrapper } )
+        Ok(unsafe { &mut *wrapper })
     }
 
     pub fn unwrap(&self) -> Trade {

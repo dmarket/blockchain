@@ -1,8 +1,8 @@
-use exonum::crypto::{PublicKey, Signature, SecretKey};
+use exonum::crypto::{PublicKey, SecretKey, Signature};
 
 use assets::TradeAsset;
-use transactions::components::Intermediary;
 use transactions::components::service::SERVICE_ID;
+use transactions::components::Intermediary;
 
 use error::{Error, ErrorKind};
 
@@ -23,15 +23,20 @@ encoding_struct! {
 #[derive(Clone, Debug)]
 pub struct TradeOfferIntermediaryWrapper {
     intermediary: Intermediary,
-    buyer:        PublicKey,
-    seller:       PublicKey,
-    assets:       Vec<TradeAsset>,
+    buyer: PublicKey,
+    seller: PublicKey,
+    assets: Vec<TradeAsset>,
 
     fee_strategy: u8,
 }
 
 impl TradeOfferIntermediaryWrapper {
-    pub fn new(intermediary: Intermediary, seller: &PublicKey, buyer: &PublicKey, fee_strategy: u8) -> Self {
+    pub fn new(
+        intermediary: Intermediary,
+        seller: &PublicKey,
+        buyer: &PublicKey,
+        fee_strategy: u8,
+    ) -> Self {
         TradeOfferIntermediaryWrapper {
             intermediary: intermediary,
             buyer: *buyer,
@@ -41,28 +46,28 @@ impl TradeOfferIntermediaryWrapper {
         }
     }
 
-    pub fn from_ptr<'a>(builder: *mut TradeOfferIntermediaryWrapper) -> Result<&'a mut TradeOfferIntermediaryWrapper, Error> {
+    pub fn from_ptr<'a>(
+        builder: *mut TradeOfferIntermediaryWrapper,
+    ) -> Result<&'a mut TradeOfferIntermediaryWrapper, Error> {
         if builder.is_null() {
-            return Err(
-                Error::new(
-                    ErrorKind::Text("Offer isn't initialized".to_string())
-                )
-            );
+            return Err(Error::new(ErrorKind::Text(
+                "Offer isn't initialized".to_string(),
+            )));
         }
-        Ok( unsafe { &mut *builder } )
+        Ok(unsafe { &mut *builder })
     }
 
     pub fn add_asset(&mut self, asset: TradeAsset) {
-         self.assets.push(asset);
+        self.assets.push(asset);
     }
 
     pub fn unwrap(&self) -> TradeOfferIntermediary {
         TradeOfferIntermediary::new(
             self.intermediary.clone(),
-            &self.buyer, 
-            &self.seller, 
-            self.assets.clone(), 
-            self.fee_strategy
+            &self.buyer,
+            &self.seller,
+            self.assets.clone(),
+            self.fee_strategy,
         )
     }
 }
@@ -83,33 +88,39 @@ message! {
 
 #[derive(Clone, Debug)]
 pub struct TradeIntermediaryWrapper {
-    offer:                  TradeOfferIntermediary,
-    seed:                   u64,
-    seller_signature:       Signature,
+    offer: TradeOfferIntermediary,
+    seed: u64,
+    seller_signature: Signature,
     intermediary_signature: Signature,
-    data_info:              String,
+    data_info: String,
 }
 
 impl TradeIntermediaryWrapper {
-    pub fn new(offer: TradeOfferIntermediary, seed: u64, seller_signature: &Signature, intermediary_signature: &Signature, data_info: &str) -> Self {
+    pub fn new(
+        offer: TradeOfferIntermediary,
+        seed: u64,
+        seller_signature: &Signature,
+        intermediary_signature: &Signature,
+        data_info: &str,
+    ) -> Self {
         TradeIntermediaryWrapper {
             offer: offer,
             seed: seed,
             seller_signature: *seller_signature,
             intermediary_signature: *intermediary_signature,
-            data_info: data_info.to_string()
+            data_info: data_info.to_string(),
         }
     }
 
-    pub fn from_ptr<'a>(wrapper: *mut TradeIntermediaryWrapper) -> Result<&'a mut TradeIntermediaryWrapper, Error> {
+    pub fn from_ptr<'a>(
+        wrapper: *mut TradeIntermediaryWrapper,
+    ) -> Result<&'a mut TradeIntermediaryWrapper, Error> {
         if wrapper.is_null() {
-            return Err(
-                Error::new(
-                    ErrorKind::Text("transaction isn't initialized".to_string())
-                )
-            );
+            return Err(Error::new(ErrorKind::Text(
+                "transaction isn't initialized".to_string(),
+            )));
         }
-        Ok( unsafe { &mut *wrapper } )
+        Ok(unsafe { &mut *wrapper })
     }
 
     pub fn unwrap(&self) -> TradeIntermediary {

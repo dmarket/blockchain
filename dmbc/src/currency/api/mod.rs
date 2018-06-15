@@ -3,14 +3,14 @@
 
 pub mod asset;
 pub mod assets_intern;
+pub mod blocks;
+pub mod db_stats;
 pub mod error;
 pub mod fees;
 pub mod hex;
 pub mod metrics;
-pub mod db_stats;
 pub mod transaction;
 pub mod wallet;
-pub mod blocks;
 
 extern crate params;
 
@@ -28,11 +28,11 @@ use unicase::UniCase;
 
 use self::asset::AssetApi;
 use self::assets_intern::AssetInternApi;
+use self::blocks::BlocksApi;
+use self::db_stats::DbStatsApi;
 use self::fees::FeesApi;
 use self::hex::HexApi;
 use self::metrics::MetricsApi;
-use self::db_stats::DbStatsApi;
-use self::blocks::BlocksApi;
 use self::params::{FromValue, Params};
 use self::transaction::TransactionApi;
 use self::wallet::WalletApi;

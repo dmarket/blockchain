@@ -1,16 +1,16 @@
 use exonum::api::Api;
 use exonum::blockchain;
 use exonum::blockchain::{ApiContext, ServiceContext, Transaction};
-use exonum::crypto::{PublicKey, Hash};
+use exonum::crypto::{Hash, PublicKey};
 use exonum::encoding;
 use exonum::encoding::serialize::FromHex;
-use exonum::messages::RawTransaction;
 use exonum::messages::Message;
+use exonum::messages::RawTransaction;
 use exonum::storage::Fork;
 use exonum::storage::Snapshot;
 use iron::Handler;
-use router::Router;
 use prometheus::IntGauge;
+use router::Router;
 use std::sync::RwLock;
 
 use super::nats;
@@ -19,10 +19,11 @@ use currency::api::ServiceApi;
 use currency::configuration;
 use currency::configuration::Configuration;
 use currency::status;
-use currency::transactions::{AddAssets, DeleteAssets, Exchange, ExchangeIntermediary, Trade,
-                             TradeIntermediary, Transfer, ADD_ASSETS_ID, DELETE_ASSETS_ID,
-                             EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID, TRADE_ID,
-                             TRADE_INTERMEDIARY_ID, TRANSFER_ID};
+use currency::transactions::{
+    AddAssets, DeleteAssets, Exchange, ExchangeIntermediary, Trade, TradeIntermediary, Transfer,
+    ADD_ASSETS_ID, DELETE_ASSETS_ID, EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID, TRADE_ID,
+    TRADE_INTERMEDIARY_ID, TRANSFER_ID,
+};
 use currency::wallet;
 use currency::wallet::Wallet;
 use serde_json;
@@ -54,7 +55,6 @@ lazy_static! {
         "dmbc_blockchain_height_blocks",
         "Height of the blockchain of the current node in blocks."
     ).unwrap();
-
     pub static ref CONFIGURATION: RwLock<Configuration> = RwLock::new(Configuration::default());
 }
 

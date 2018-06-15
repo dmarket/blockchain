@@ -17,49 +17,48 @@
 //! For more information see the project readme.
 
 #![deny(missing_debug_implementations)]
-
-#![cfg_attr(feature="flame_profile", feature(plugin, custom_attribute))]
-#![cfg_attr(feature="flame_profile", plugin(exonum_flamer))]
+#![cfg_attr(feature = "flame_profile", feature(plugin, custom_attribute))]
+#![cfg_attr(feature = "flame_profile", plugin(exonum_flamer))]
 
 #[macro_use]
 extern crate exonum_profiler;
 #[macro_use]
 extern crate log;
 extern crate byteorder;
-extern crate exonum_sodiumoxide as sodiumoxide;
 extern crate exonum_rocksdb as rocksdb;
+extern crate exonum_sodiumoxide as sodiumoxide;
 
 extern crate rand;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
-extern crate serde_json;
-extern crate toml;
-extern crate hex;
 extern crate bit_vec;
-extern crate vec_map;
+extern crate colored;
+extern crate env_logger;
+extern crate hex;
+extern crate serde_json;
 #[cfg(test)]
 extern crate tempdir;
-extern crate env_logger;
-extern crate colored;
 extern crate term;
+extern crate toml;
+extern crate vec_map;
 #[macro_use(crate_version, crate_authors)]
 extern crate clap;
+extern crate atty;
+extern crate bytes;
+extern crate cookie;
+extern crate futures;
 extern crate hyper;
 extern crate iron;
 extern crate iron_cors;
-extern crate router;
-extern crate params;
-extern crate cookie;
 extern crate mount;
-extern crate atty;
-extern crate bytes;
-extern crate futures;
-#[cfg(any(test, feature = "long_benchmarks"))]
-extern crate tokio_timer;
+extern crate params;
+extern crate router;
 extern crate tokio_core;
 extern crate tokio_io;
 extern crate tokio_retry;
+#[cfg(any(test, feature = "long_benchmarks"))]
+extern crate tokio_timer;
 
 #[macro_use]
 pub mod encoding;
@@ -67,11 +66,11 @@ pub mod encoding;
 pub mod messages;
 #[macro_use]
 pub mod helpers;
+pub mod api;
+pub mod blockchain;
 pub mod crypto;
 #[doc(hidden)]
 pub mod events;
+pub mod explorer;
 pub mod node;
 pub mod storage;
-pub mod blockchain;
-pub mod explorer;
-pub mod api;

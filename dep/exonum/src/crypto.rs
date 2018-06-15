@@ -18,26 +18,26 @@
 //! [sodiumoxide rust bindings](https://github.com/dnaq/sodiumoxide).
 
 use std::default::Default;
-use std::ops::{Index, Range, RangeFrom, RangeFull, RangeTo};
 use std::fmt;
+use std::ops::{Index, Range, RangeFrom, RangeFull, RangeTo};
 
-use sodiumoxide::crypto::sign::ed25519::{gen_keypair as gen_keypair_sodium, keypair_from_seed,
-                                         sign_detached, verify_detached,
-                                         PublicKey as PublicKeySodium,
-                                         SecretKey as SecretKeySodium, Seed as SeedSodium,
-                                         Signature as SignatureSodium, State as SignState};
-use sodiumoxide::crypto::hash::sha256::{hash as hash_sodium, Digest, State as HashState};
-use sodiumoxide;
-use serde::{Serialize, Serializer};
 use serde::de::{self, Deserialize, Deserializer, Visitor};
+use serde::{Serialize, Serializer};
+use sodiumoxide;
+use sodiumoxide::crypto::hash::sha256::{hash as hash_sodium, Digest, State as HashState};
+use sodiumoxide::crypto::sign::ed25519::{
+    gen_keypair as gen_keypair_sodium, keypair_from_seed, sign_detached, verify_detached,
+    PublicKey as PublicKeySodium, SecretKey as SecretKeySodium, Seed as SeedSodium,
+    Signature as SignatureSodium, State as SignState,
+};
 
 use encoding::serialize::FromHex;
 
-pub use sodiumoxide::crypto::sign::ed25519::{PUBLICKEYBYTES as PUBLIC_KEY_LENGTH,
-                                             SECRETKEYBYTES as SECRET_KEY_LENGTH,
-                                             SEEDBYTES as SEED_LENGTH,
-                                             SIGNATUREBYTES as SIGNATURE_LENGTH};
 pub use sodiumoxide::crypto::hash::sha256::DIGESTBYTES as HASH_SIZE;
+pub use sodiumoxide::crypto::sign::ed25519::{
+    PUBLICKEYBYTES as PUBLIC_KEY_LENGTH, SECRETKEYBYTES as SECRET_KEY_LENGTH,
+    SEEDBYTES as SEED_LENGTH, SIGNATUREBYTES as SIGNATURE_LENGTH,
+};
 
 /// The size to crop the string in debug messages.
 const BYTES_IN_DEBUG: usize = 4;
@@ -430,53 +430,53 @@ implement_private_sodium_wrapper! {
 }
 
 macro_rules! implement_serde {
-($name:ident) => (
-    impl $crate::encoding::serialize::FromHex for $name {
-        type Error = $crate::encoding::serialize::FromHexError;
+    ($name:ident) => {
+        impl $crate::encoding::serialize::FromHex for $name {
+            type Error = $crate::encoding::serialize::FromHexError;
 
-        fn from_hex<T: AsRef<[u8]>>(v: T) -> Result<Self, Self::Error> {
-            let bytes = Vec::<u8>::from_hex(v)?;
-            if let Some(self_value) = Self::from_slice(bytes.as_ref()) {
-                Ok(self_value)
-            } else {
-                Err($crate::encoding::serialize::FromHexError::InvalidStringLength)
+            fn from_hex<T: AsRef<[u8]>>(v: T) -> Result<Self, Self::Error> {
+                let bytes = Vec::<u8>::from_hex(v)?;
+                if let Some(self_value) = Self::from_slice(bytes.as_ref()) {
+                    Ok(self_value)
+                } else {
+                    Err($crate::encoding::serialize::FromHexError::InvalidStringLength)
+                }
             }
         }
-    }
 
-    impl Serialize for $name
-    {
-        fn serialize<S>(&self, ser:S) -> Result<S::Ok, S::Error>
-        where S: Serializer
-        {
-            let hex_string = $crate::encoding::serialize::encode_hex(&self[..]);
-            ser.serialize_str(&hex_string)
-        }
-    }
-
-    impl<'de> Deserialize<'de> for $name
-    {
-        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer<'de>
-        {
-            struct HexVisitor;
-
-            impl<'v> Visitor<'v> for HexVisitor
+        impl Serialize for $name {
+            fn serialize<S>(&self, ser: S) -> Result<S::Ok, S::Error>
+            where
+                S: Serializer,
             {
-                type Value = $name;
-                fn expecting (&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-                    write!(fmt, "expecting str.")
-                }
-                fn visit_str<E>(self, s: &str) -> Result<Self::Value, E>
-                where E: de::Error
-                {
-                    $name::from_hex(s).map_err(|_| de::Error::custom("Invalid hex"))
-                }
+                let hex_string = $crate::encoding::serialize::encode_hex(&self[..]);
+                ser.serialize_str(&hex_string)
             }
-            deserializer.deserialize_str(HexVisitor)
         }
-    }
-    )
+
+        impl<'de> Deserialize<'de> for $name {
+            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+            where
+                D: Deserializer<'de>,
+            {
+                struct HexVisitor;
+
+                impl<'v> Visitor<'v> for HexVisitor {
+                    type Value = $name;
+                    fn expecting(&self, fmt: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+                        write!(fmt, "expecting str.")
+                    }
+                    fn visit_str<E>(self, s: &str) -> Result<Self::Value, E>
+                    where
+                        E: de::Error,
+                    {
+                        $name::from_hex(s).map_err(|_| de::Error::custom("Invalid hex"))
+                    }
+                }
+                deserializer.deserialize_str(HexVisitor)
+            }
+        }
+    };
 }
 
 implement_serde! {Hash}
@@ -486,35 +486,36 @@ implement_serde! {Seed}
 implement_serde! {Signature}
 
 macro_rules! implement_index_traits {
-    ($newtype:ident) => (
+    ($newtype:ident) => {
         impl Index<Range<usize>> for $newtype {
             type Output = [u8];
             fn index(&self, _index: Range<usize>) -> &[u8] {
-                let inner  = &self.0;
+                let inner = &self.0;
                 inner.0.index(_index)
             }
         }
         impl Index<RangeTo<usize>> for $newtype {
             type Output = [u8];
             fn index(&self, _index: RangeTo<usize>) -> &[u8] {
-                let inner  = &self.0;
+                let inner = &self.0;
                 inner.0.index(_index)
             }
         }
         impl Index<RangeFrom<usize>> for $newtype {
             type Output = [u8];
             fn index(&self, _index: RangeFrom<usize>) -> &[u8] {
-                let inner  = &self.0;
+                let inner = &self.0;
                 inner.0.index(_index)
             }
         }
         impl Index<RangeFull> for $newtype {
             type Output = [u8];
             fn index(&self, _index: RangeFull) -> &[u8] {
-                let inner  = &self.0;
+                let inner = &self.0;
                 inner.0.index(_index)
             }
-        })
+        }
+    };
 }
 implement_index_traits! {Hash}
 implement_index_traits! {PublicKey}
@@ -531,10 +532,11 @@ impl Default for Hash {
 
 #[cfg(test)]
 mod tests {
-    use serde_json;
+    use super::{
+        gen_keypair, hash, Hash, HashStream, PublicKey, SecretKey, Seed, SignStream, Signature,
+    };
     use encoding::serialize::FromHex;
-    use super::{gen_keypair, hash, Hash, HashStream, PublicKey, SecretKey, Seed, SignStream,
-                Signature};
+    use serde_json;
 
     #[test]
     fn test_hash() {

@@ -14,22 +14,22 @@
 
 #![feature(test)]
 #![allow(dead_code)]
-extern crate test;
+extern crate exonum;
 extern crate rand;
 extern crate tempdir;
-extern crate exonum;
+extern crate test;
 
 #[cfg(all(test, feature = "long_benchmarks"))]
 mod tests {
     use std::collections::HashSet;
 
-    use test::Bencher;
-    use rand::{Rng, thread_rng, XorShiftRng, SeedableRng};
-    use tempdir::TempDir;
-    use exonum::storage::{Database, MemoryDB};
-    use exonum::storage::{RocksDB, RocksDBOptions};
-    use exonum::storage::{ProofMapIndex, ProofListIndex};
     use exonum::storage::proof_map_index::PROOF_MAP_KEY_SIZE as KEY_SIZE;
+    use exonum::storage::{Database, MemoryDB};
+    use exonum::storage::{ProofListIndex, ProofMapIndex};
+    use exonum::storage::{RocksDB, RocksDBOptions};
+    use rand::{thread_rng, Rng, SeedableRng, XorShiftRng};
+    use tempdir::TempDir;
+    use test::Bencher;
 
     const NAME: &str = "name";
 
@@ -82,8 +82,10 @@ mod tests {
         let mut storage = db.fork();
         let mut table = ProofMapIndex::new(NAME, &mut storage);
 
-        b.iter(|| for item in &data {
-            table.put(&item.0, item.1.clone());
+        b.iter(|| {
+            for item in &data {
+                table.put(&item.0, item.1.clone());
+            }
         });
     }
 
@@ -115,8 +117,10 @@ mod tests {
             table.put(&item.0, item.1.clone());
         }
 
-        b.iter(|| for item in &data {
-            table.put(&item.0, item.1.clone());
+        b.iter(|| {
+            for item in &data {
+                table.put(&item.0, item.1.clone());
+            }
         });
     }
 

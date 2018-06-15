@@ -34,10 +34,12 @@ pub fn connect(
 ) -> Result<HashMap<NodeKeys, NodeInfo>, Box<Error>> {
     let discovery = config::config().service_discovery().address();
 
-    let nodes = receive_nodes(&discovery)?;
-    if nodes.contains_key(&info.0) || !is_validator {
+    let mut nodes = receive_nodes(&discovery)?;
+    if !is_validator {
         return Ok(nodes);
     }
+
+    nodes.remove(&info.0);
 
     send_node(&discovery, info)?;
 

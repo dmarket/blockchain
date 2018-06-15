@@ -1,15 +1,15 @@
-use std::ptr; 
+use std::ptr;
 
-use libc::c_char;
 use assets::AssetBundle;
 use capi::common::parse_asset_id;
+use libc::c_char;
 
 use error::Error;
 
 ffi_fn! {
     fn dmbc_asset_create(
         id: *const c_char,
-        amount: u64,  
+        amount: u64,
         error: *mut Error,
     ) -> *mut AssetBundle {
         let asset_id = match parse_asset_id(id) {

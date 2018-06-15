@@ -5,16 +5,16 @@ use exonum::blockchain::Transaction;
 use exonum::crypto::PublicKey;
 use exonum::messages::Message;
 use exonum::storage::Fork;
-use prometheus::{IntCounter, Histogram};
+use prometheus::{Histogram, IntCounter};
 
 use currency::assets;
 use currency::assets::{AssetId, AssetInfo, MetaAsset};
 use currency::error::Error;
+use currency::service::CONFIGURATION;
 use currency::status;
 use currency::transactions::components::{FeesCalculator, ThirdPartyFees};
 use currency::wallet;
 use currency::SERVICE_ID;
-use currency::service::CONFIGURATION;
 
 /// Transaction ID.
 pub const ADD_ASSETS_ID: u16 = 300;

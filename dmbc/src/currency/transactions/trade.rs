@@ -5,15 +5,15 @@ use exonum::crypto;
 use exonum::crypto::{PublicKey, Signature};
 use exonum::messages::Message;
 use exonum::storage::Fork;
-use prometheus::{IntCounter, Histogram};
+use prometheus::{Histogram, IntCounter};
 
 use currency::assets::TradeAsset;
 use currency::error::Error;
+use currency::service::CONFIGURATION;
 use currency::status;
 use currency::transactions::components::{FeeStrategy, FeesCalculator, ThirdPartyFees};
 use currency::wallet;
 use currency::SERVICE_ID;
-use currency::service::CONFIGURATION;
 
 /// Transaction ID.
 pub const TRADE_ID: u16 = 501;
@@ -94,11 +94,12 @@ impl Trade {
         let mut wallet_buyer = wallet::Schema(&*view).fetch(self.offer().buyer());
         let mut wallet_seller = wallet::Schema(&*view).fetch(self.offer().seller());
 
-        let assets = self.offer()
-                    .assets()
-                    .into_iter()
-                    .map(|a| a.to_bundle())
-                    .collect::<Vec<_>>();
+        let assets = self
+            .offer()
+            .assets()
+            .into_iter()
+            .map(|a| a.to_bundle())
+            .collect::<Vec<_>>();
 
         wallet::move_assets(&mut wallet_seller, &mut wallet_buyer, &assets)?;
 

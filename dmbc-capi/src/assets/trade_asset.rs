@@ -1,5 +1,5 @@
-use std::mem;
 use assets::AssetId;
+use std::mem;
 
 encoding_struct! {
     /// Asset representation to used in `trade` transactions.

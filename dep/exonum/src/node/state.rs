@@ -14,23 +14,24 @@
 
 //! State of the `NodeHandler`.
 
-use std::collections::{BTreeMap, HashMap, HashSet};
 use std::collections::hash_map::Entry;
-use std::sync::{Arc, RwLock};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::net::SocketAddr;
-use std::time::{SystemTime, Duration};
+use std::sync::{Arc, RwLock};
+use std::time::{Duration, SystemTime};
 
-use serde_json::Value;
 use bit_vec::BitVec;
+use serde_json::Value;
 
-use messages::{Message, Propose, Prevote, Precommit, ConsensusMessage, Connect};
-use crypto::{PublicKey, SecretKey, Hash};
-use storage::{Patch, Snapshot};
-use blockchain::{ValidatorKeys, ConsensusConfig, StoredConfiguration, Transaction,
-                 TimeoutAdjusterConfig};
-use helpers::{Height, Round, ValidatorId, Milliseconds};
+use blockchain::{
+    ConsensusConfig, StoredConfiguration, TimeoutAdjusterConfig, Transaction, ValidatorKeys,
+};
+use crypto::{Hash, PublicKey, SecretKey};
+use helpers::{Height, Milliseconds, Round, ValidatorId};
+use messages::{Connect, ConsensusMessage, Message, Precommit, Prevote, Propose};
+use node::timeout_adjuster::{Constant, Dynamic, MovingAverage, TimeoutAdjuster};
 use node::whitelist::Whitelist;
-use node::timeout_adjuster::{TimeoutAdjuster, Constant, Dynamic, MovingAverage};
+use storage::{Patch, Snapshot};
 
 // TODO: move request timeouts into node configuration (ECR-171)
 
@@ -247,7 +248,7 @@ where
 impl RequestData {
     /// Returns timeout value of the data request.
     pub fn timeout(&self) -> Duration {
-        #![cfg_attr(feature="cargo-clippy", allow(match_same_arms))]
+        #![cfg_attr(feature = "cargo-clippy", allow(match_same_arms))]
         let ms = match *self {
             RequestData::Propose(..) => PROPOSE_REQUEST_TIMEOUT,
             RequestData::Transactions(..) => TRANSACTIONS_REQUEST_TIMEOUT,
@@ -490,11 +491,8 @@ impl State {
             .iter()
             .position(|pk| pk.consensus_key == *self.consensus_public_key())
             .map(|id| ValidatorId(id as u16));
-        self.whitelist.set_validators(
-            config.validator_keys.iter().map(|x| {
-                x.consensus_key
-            }),
-        );
+        self.whitelist
+            .set_validators(config.validator_keys.iter().map(|x| x.consensus_key));
         self.renew_validator_id(validator_id);
         trace!("Validator={:#?}", self.validator_state());
 
@@ -523,9 +521,11 @@ impl State {
     pub fn remove_peer_with_addr(&mut self, addr: &SocketAddr) -> bool {
         if let Some(pubkey) = self.connections.remove(addr) {
             self.peers.remove(&pubkey);
-            return self.config.validator_keys.iter().any(|x| {
-                x.consensus_key == pubkey
-            });
+            return self
+                .config
+                .validator_keys
+                .iter()
+                .any(|x| x.consensus_key == pubkey);
         }
         false
     }
@@ -578,8 +578,8 @@ impl State {
                 // keep only maximum round
                 trace!(
                     "Received a message from a lower round than we know already,\
-                message_round = {},\
-                known_round = {}.",
+                     message_round = {},\
+                     known_round = {}.",
                     round,
                     known_round
                 );
@@ -601,7 +601,6 @@ impl State {
         } else {
             None
         }
-
     }
 
     /// Returns the height for a validator identified by the public key.
@@ -611,9 +610,10 @@ impl State {
 
     /// Updates known height for a validator identified by the public key.
     pub fn set_node_height(&mut self, key: PublicKey, height: Height) {
-        *self.nodes_max_height.entry(key).or_insert_with(
-            Height::zero,
-        ) = height;
+        *self
+            .nodes_max_height
+            .entry(key)
+            .or_insert_with(Height::zero) = height;
     }
 
     /// Returns a list of nodes whose height is bigger than one of the current node.
@@ -777,8 +777,7 @@ impl State {
             // but make warn about pool exceeded, even if we should add tx
             warn!(
                 "Too many transactions in pool, txs={}, high_priority={}",
-                tx_pool_len,
-                high_priority_tx
+                tx_pool_len, high_priority_tx
             );
             if !high_priority_tx {
                 return full_proposes;
@@ -846,15 +845,17 @@ impl State {
         match self.proposes.entry(propose_hash) {
             Entry::Occupied(..) => None,
             Entry::Vacant(e) => {
-                let unknown_txs = msg.transactions()
+                let unknown_txs = msg
+                    .transactions()
                     .iter()
                     .filter(|tx| !txs.contains_key(tx))
                     .cloned()
                     .collect::<HashSet<Hash>>();
                 for tx in &unknown_txs {
-                    self.unknown_txs.entry(*tx).or_insert_with(Vec::new).push(
-                        propose_hash,
-                    );
+                    self.unknown_txs
+                        .entry(*tx)
+                        .or_insert_with(Vec::new)
+                        .push(propose_hash);
                 }
                 Some(e.insert(ProposeState {
                     propose: msg.clone(),
@@ -876,14 +877,12 @@ impl State {
     ) -> Option<&BlockState> {
         match self.blocks.entry(block_hash) {
             Entry::Occupied(..) => None,
-            Entry::Vacant(e) => {
-                Some(e.insert(BlockState {
-                    hash: block_hash,
-                    patch,
-                    txs,
-                    proposer_id,
-                }))
-            }
+            Entry::Vacant(e) => Some(e.insert(BlockState {
+                hash: block_hash,
+                patch,
+                txs,
+                proposer_id,
+            })),
         }
     }
 
@@ -896,17 +895,15 @@ impl State {
         let majority_count = self.majority_count();
         if let Some(ref mut validator_state) = self.validator_state {
             if validator_state.id == msg.validator() {
-                if let Some(other) = validator_state.our_prevotes.insert(
-                    msg.round(),
-                    msg.clone(),
-                )
+                if let Some(other) = validator_state
+                    .our_prevotes
+                    .insert(msg.round(), msg.clone())
                 {
                     if &other != msg {
                         panic!(
                             "Trying to send different prevotes for the same round: \
-                            old = {:?}, new = {:?}",
-                            other,
-                            msg
+                             old = {:?}, new = {:?}",
+                            other, msg
                         );
                     }
                 }
@@ -915,9 +912,10 @@ impl State {
 
         let key = (msg.round(), *msg.propose_hash());
         let validators_len = self.validators().len();
-        let votes = self.prevotes.entry(key).or_insert_with(
-            || Votes::new(validators_len),
-        );
+        let votes = self
+            .prevotes
+            .entry(key)
+            .or_insert_with(|| Votes::new(validators_len));
         votes.insert(msg);
         votes.count() >= majority_count
     }
@@ -957,17 +955,15 @@ impl State {
         let majority_count = self.majority_count();
         if let Some(ref mut validator_state) = self.validator_state {
             if validator_state.id == msg.validator() {
-                if let Some(other) = validator_state.our_precommits.insert(
-                    msg.round(),
-                    msg.clone(),
-                )
+                if let Some(other) = validator_state
+                    .our_precommits
+                    .insert(msg.round(), msg.clone())
                 {
                     if other.propose_hash() != msg.propose_hash() {
                         panic!(
                             "Trying to send different precommits for same round, old={:?}, \
-                                new={:?}",
-                            other,
-                            msg
+                             new={:?}",
+                            other, msg
                         );
                     }
                 }
@@ -976,9 +972,10 @@ impl State {
 
         let key = (msg.round(), *msg.block_hash());
         let validators_len = self.validators().len();
-        let votes = self.precommits.entry(key).or_insert_with(
-            || Votes::new(validators_len),
-        );
+        let votes = self
+            .precommits
+            .entry(key)
+            .or_insert_with(|| Votes::new(validators_len));
         votes.insert(msg);
         votes.count() >= majority_count
     }

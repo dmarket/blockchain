@@ -20,8 +20,9 @@ use router::Router;
 use currency::api::error::ApiError;
 use currency::error::Error;
 use currency::transactions::components::FeesCalculator;
-use currency::transactions::{AddAssets, DeleteAssets, Exchange, ExchangeIntermediary, Trade,
-                             TradeIntermediary, Transfer};
+use currency::transactions::{
+    AddAssets, DeleteAssets, Exchange, ExchangeIntermediary, Trade, TradeIntermediary, Transfer,
+};
 
 #[derive(Clone)]
 pub struct FeesApi {
@@ -81,11 +82,7 @@ impl Api for FeesApi {
             let status_code = result
                 .clone()
                 .ok()
-                .map(|r| {
-                    r.err()
-                        .map(|_| status::BadRequest)
-                        .unwrap_or(status::Ok)
-                })
+                .map(|r| r.err().map(|_| status::BadRequest).unwrap_or(status::Ok))
                 .unwrap_or(status::BadRequest);
 
             let mut res =

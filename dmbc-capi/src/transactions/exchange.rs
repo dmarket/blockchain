@@ -1,4 +1,4 @@
-use exonum::crypto::{PublicKey, Signature, SecretKey};
+use exonum::crypto::{PublicKey, SecretKey, Signature};
 
 use assets::AssetBundle;
 use transactions::components::service::SERVICE_ID;
@@ -23,18 +23,23 @@ encoding_struct! {
 
 #[derive(Debug, Clone)]
 pub struct ExchangeOfferWrapper {
-    sender:           PublicKey,
-    sender_assets:    Vec<AssetBundle>,
-    sender_value:     u64,
+    sender: PublicKey,
+    sender_assets: Vec<AssetBundle>,
+    sender_value: u64,
 
-    recipient:        PublicKey,
+    recipient: PublicKey,
     recipient_assets: Vec<AssetBundle>,
 
-    fee_strategy:     u8,
+    fee_strategy: u8,
 }
 
 impl ExchangeOfferWrapper {
-    pub fn new(sender: &PublicKey, sender_value: u64, recipient: &PublicKey, fee_strategy: u8) -> Self {
+    pub fn new(
+        sender: &PublicKey,
+        sender_value: u64,
+        recipient: &PublicKey,
+        fee_strategy: u8,
+    ) -> Self {
         ExchangeOfferWrapper {
             sender: *sender,
             sender_assets: Vec::new(),
@@ -46,19 +51,19 @@ impl ExchangeOfferWrapper {
         }
     }
 
-    pub fn from_ptr<'a>(builder: *mut ExchangeOfferWrapper) -> Result<&'a mut ExchangeOfferWrapper, Error> {
+    pub fn from_ptr<'a>(
+        builder: *mut ExchangeOfferWrapper,
+    ) -> Result<&'a mut ExchangeOfferWrapper, Error> {
         if builder.is_null() {
-            return Err(
-                Error::new(
-                    ErrorKind::Text("Offer isn't initialized".to_string())
-                )
-            );
+            return Err(Error::new(ErrorKind::Text(
+                "Offer isn't initialized".to_string(),
+            )));
         }
-        Ok( unsafe { &mut *builder } )
+        Ok(unsafe { &mut *builder })
     }
 
     pub fn add_sender_asset(&mut self, asset: AssetBundle) {
-         self.sender_assets.push(asset);
+        self.sender_assets.push(asset);
     }
 
     pub fn add_recipient_asset(&mut self, asset: AssetBundle) {
@@ -67,12 +72,12 @@ impl ExchangeOfferWrapper {
 
     pub fn unwrap(&self) -> ExchangeOffer {
         ExchangeOffer::new(
-            &self.sender, 
-            self.sender_assets.clone(), 
-            self.sender_value, 
-            &self.recipient, 
-            self.recipient_assets.clone(), 
-            self.fee_strategy
+            &self.sender,
+            self.sender_assets.clone(),
+            self.sender_value,
+            &self.recipient,
+            self.recipient_assets.clone(),
+            self.fee_strategy,
         )
     }
 }
@@ -92,10 +97,10 @@ message! {
 
 #[derive(Clone, Debug)]
 pub struct ExchangeWrapper {
-    offer:             ExchangeOffer,
-    seed:              u64,
-    signature:         Signature,
-    data_info:         String,
+    offer: ExchangeOffer,
+    seed: u64,
+    signature: Signature,
+    data_info: String,
 }
 
 impl ExchangeWrapper {
@@ -110,13 +115,11 @@ impl ExchangeWrapper {
 
     pub fn from_ptr<'a>(wrapper: *mut ExchangeWrapper) -> Result<&'a mut ExchangeWrapper, Error> {
         if wrapper.is_null() {
-            return Err(
-                Error::new(
-                    ErrorKind::Text("transactionx isn't initialized".to_string())
-                )
-            );
+            return Err(Error::new(ErrorKind::Text(
+                "transactionx isn't initialized".to_string(),
+            )));
         }
-        Ok( unsafe { &mut *wrapper } )
+        Ok(unsafe { &mut *wrapper })
     }
 
     pub fn unwrap(&self) -> Exchange {

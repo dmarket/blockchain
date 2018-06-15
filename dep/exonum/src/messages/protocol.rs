@@ -29,10 +29,10 @@
 use std::net::SocketAddr;
 use std::time::SystemTime;
 
-use crypto::{Hash, PublicKey};
+use super::{BitVec, RawMessage};
 use blockchain;
+use crypto::{Hash, PublicKey};
 use helpers::{Height, Round, ValidatorId};
-use super::{RawMessage, BitVec};
 
 /// Consensus message type.
 pub const CONSENSUS: u16 = 0;

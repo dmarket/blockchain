@@ -1,8 +1,8 @@
-use exonum::crypto::{PublicKey, Signature, SecretKey};
+use exonum::crypto::{PublicKey, SecretKey, Signature};
 
-use transactions::components::Intermediary;
 use assets::AssetBundle;
 use transactions::components::service::SERVICE_ID;
+use transactions::components::Intermediary;
 
 use error::{Error, ErrorKind};
 
@@ -26,20 +26,26 @@ encoding_struct! {
 
 #[derive(Clone, Debug)]
 pub struct ExchangeOfferIntermediaryWrapper {
-    intermediary:     Intermediary,
+    intermediary: Intermediary,
 
-    sender:           PublicKey,
-    sender_assets:    Vec<AssetBundle>,
-    sender_value:     u64,
+    sender: PublicKey,
+    sender_assets: Vec<AssetBundle>,
+    sender_value: u64,
 
-    recipient:        PublicKey,
+    recipient: PublicKey,
     recipient_assets: Vec<AssetBundle>,
 
-    fee_strategy:     u8,
+    fee_strategy: u8,
 }
 
 impl ExchangeOfferIntermediaryWrapper {
-    pub fn new(intermediary: Intermediary, sender: &PublicKey, sender_value: u64, recipient: & PublicKey, fee_strategy: u8) -> Self {
+    pub fn new(
+        intermediary: Intermediary,
+        sender: &PublicKey,
+        sender_value: u64,
+        recipient: &PublicKey,
+        fee_strategy: u8,
+    ) -> Self {
         ExchangeOfferIntermediaryWrapper {
             intermediary: intermediary,
 
@@ -53,19 +59,19 @@ impl ExchangeOfferIntermediaryWrapper {
         }
     }
 
-    pub fn from_ptr<'a>(builder: *mut ExchangeOfferIntermediaryWrapper) -> Result<&'a mut ExchangeOfferIntermediaryWrapper, Error> {
+    pub fn from_ptr<'a>(
+        builder: *mut ExchangeOfferIntermediaryWrapper,
+    ) -> Result<&'a mut ExchangeOfferIntermediaryWrapper, Error> {
         if builder.is_null() {
-            return Err(
-                Error::new(
-                    ErrorKind::Text("Offer isn't initialized".to_string())
-                )
-            );
+            return Err(Error::new(ErrorKind::Text(
+                "Offer isn't initialized".to_string(),
+            )));
         }
-        Ok( unsafe { &mut *builder } )
+        Ok(unsafe { &mut *builder })
     }
 
     pub fn add_sender_asset(&mut self, asset: AssetBundle) {
-         self.sender_assets.push(asset);
+        self.sender_assets.push(asset);
     }
 
     pub fn add_recipient_asset(&mut self, asset: AssetBundle) {
@@ -75,12 +81,12 @@ impl ExchangeOfferIntermediaryWrapper {
     pub fn unwrap(&self) -> ExchangeOfferIntermediary {
         ExchangeOfferIntermediary::new(
             self.intermediary.clone(),
-            &self.sender, 
-            self.sender_assets.clone(), 
-            self.sender_value, 
-            &self.recipient, 
-            self.recipient_assets.clone(), 
-            self.fee_strategy
+            &self.sender,
+            self.sender_assets.clone(),
+            self.sender_value,
+            &self.recipient,
+            self.recipient_assets.clone(),
+            self.fee_strategy,
         )
     }
 }
@@ -101,15 +107,21 @@ message! {
 
 #[derive(Clone, Debug)]
 pub struct ExchangeIntermediaryWrapper {
-    offer:             ExchangeOfferIntermediary,
-    seed:              u64,
-    sender_signature:  Signature,
-    intermediary_signature:  Signature,
-    data_info:         String,
+    offer: ExchangeOfferIntermediary,
+    seed: u64,
+    sender_signature: Signature,
+    intermediary_signature: Signature,
+    data_info: String,
 }
 
 impl ExchangeIntermediaryWrapper {
-    pub fn new(offer: ExchangeOfferIntermediary, seed: u64, sender_signature: &Signature, intermediary_signature: &Signature, data_info: &str) -> Self {
+    pub fn new(
+        offer: ExchangeOfferIntermediary,
+        seed: u64,
+        sender_signature: &Signature,
+        intermediary_signature: &Signature,
+        data_info: &str,
+    ) -> Self {
         ExchangeIntermediaryWrapper {
             offer: offer,
             seed: seed,
@@ -119,15 +131,15 @@ impl ExchangeIntermediaryWrapper {
         }
     }
 
-    pub fn from_ptr<'a>(wrapper: *mut ExchangeIntermediaryWrapper) -> Result<&'a mut ExchangeIntermediaryWrapper, Error> {
+    pub fn from_ptr<'a>(
+        wrapper: *mut ExchangeIntermediaryWrapper,
+    ) -> Result<&'a mut ExchangeIntermediaryWrapper, Error> {
         if wrapper.is_null() {
-            return Err(
-                Error::new(
-                    ErrorKind::Text("transactionx isn't initialized".to_string())
-                )
-            );
+            return Err(Error::new(ErrorKind::Text(
+                "transactionx isn't initialized".to_string(),
+            )));
         }
-        Ok( unsafe { &mut *wrapper } )
+        Ok(unsafe { &mut *wrapper })
     }
 
     pub fn unwrap(&self) -> ExchangeIntermediary {

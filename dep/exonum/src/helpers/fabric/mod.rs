@@ -14,27 +14,27 @@
 
 //! Command line commands utilities.
 
-use std::str::FromStr;
-use std::error::Error;
 use std::collections::BTreeMap;
+use std::error::Error;
+use std::str::FromStr;
 
 use clap;
+use serde::{Deserialize, Serialize};
 use toml::Value;
-use serde::{Serialize, Deserialize};
 
-use blockchain::Service;
 use self::internal::NotFoundInMap;
+use blockchain::Service;
 
 pub use self::builder::NodeBuilder;
-pub use self::details::{Run, Finalize, GenerateNodeConfig, GenerateCommonConfig, GenerateTestnet};
-pub use self::shared::{AbstractConfig, NodePublicConfig, CommonConfigTemplate, NodePrivateConfig};
 pub use self::context_key::ContextKey;
+pub use self::details::{Finalize, GenerateCommonConfig, GenerateNodeConfig, GenerateTestnet, Run};
+pub use self::shared::{AbstractConfig, CommonConfigTemplate, NodePrivateConfig, NodePublicConfig};
 
-mod shared;
 mod builder;
+mod clap_backend;
 mod details;
 mod internal;
-mod clap_backend;
+mod shared;
 #[macro_use]
 mod context_key;
 
@@ -119,9 +119,9 @@ pub mod keys {
 
     use toml;
 
-    use node::NodeConfig;
     use super::shared::{AbstractConfig, CommonConfigTemplate, NodePublicConfig};
     use super::ContextKey;
+    use node::NodeConfig;
 
     /// Configuration for this node.
     /// Set by `finalize` and `run` commands.
@@ -158,7 +158,6 @@ pub mod keys {
     /// Set by `finalize` command.
     pub const AUDITOR_MODE: ContextKey<bool> = context_key!("auditor_mode");
 }
-
 
 /// `Context` is a type, used to keep some values from `Command` into
 /// `CommandExtension` and vice verse.
@@ -211,8 +210,6 @@ impl Context {
                 {
                     panic!("Duplicated argument: {}", arg.name);
                 }
-
-
             } else if arg.required {
                 panic!("Required argument is not found: {}", arg.name)
             }

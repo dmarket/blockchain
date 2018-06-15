@@ -15,22 +15,22 @@
 //! This module defines the Exonum services interfaces. Like smart contracts in some other
 //! blockchain platforms, Exonum services encapsulate business logic of the blockchain application.
 
-use std::fmt;
-use std::sync::{Arc, RwLock};
 use std::collections::{HashMap, HashSet};
+use std::fmt;
 use std::net::SocketAddr;
+use std::sync::{Arc, RwLock};
 
-use serde_json::Value;
 use iron::Handler;
+use serde_json::Value;
 
-use crypto::{Hash, PublicKey, SecretKey};
-use storage::{Fork, Snapshot};
-use messages::{Message, RawTransaction};
-use encoding::Error as MessageError;
-use encoding::serialize::json::ExonumJson;
-use node::{ApiSender, Node, State, TransactionSend};
 use blockchain::{Blockchain, ConsensusConfig, Schema, StoredConfiguration, ValidatorKeys};
+use crypto::{Hash, PublicKey, SecretKey};
+use encoding::serialize::json::ExonumJson;
+use encoding::Error as MessageError;
 use helpers::{Height, Milliseconds, ValidatorId};
+use messages::{Message, RawTransaction};
+use node::{ApiSender, Node, State, TransactionSend};
+use storage::{Fork, Snapshot};
 
 /// Transaction processing functionality for `Message`s allowing to apply authenticated, atomic,
 /// constraint-preserving groups of changes to the blockchain storage.
@@ -522,8 +522,7 @@ impl ::std::fmt::Debug for ApiContext {
         write!(
             f,
             "ApiContext(blockchain: {:?}, public_key: {:?})",
-            self.blockchain,
-            self.public_key
+            self.blockchain, self.public_key
         )
     }
 }
