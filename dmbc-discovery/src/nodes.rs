@@ -2,11 +2,30 @@ use std::collections::HashMap;
 use std::sync::RwLock;
 
 use exonum::crypto::PublicKey;
+use exonum::blockchain::config::ValidatorKeys;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct NodeKeys {
     pub consensus: PublicKey,
     pub service: PublicKey,
+}
+
+impl From<ValidatorKeys> for NodeKeys {
+    fn from(value: ValidatorKeys) {
+        NodeKeys {
+            consensus: value.consensus_key,
+            service: value.service_key,
+        }
+    }
+}
+
+impl NodeKeys {
+    pub fn into_validator_keys(self) -> ValidatorKeys {
+        ValidatorKeys {
+            consensus_key: self.consensus,
+            service_key: self.service,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
