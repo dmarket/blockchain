@@ -21,7 +21,7 @@ use router::Router;
 use currency::api::error::ApiError;
 use currency::status;
 use currency::transactions::{AddAssets, DeleteAssets, Exchange, ExchangeIntermediary, Trade,
-                             TradeIntermediary, Transfer};
+                             TradeIntermediary, Transfer, TransferWithFeesPayer};
 
 use currency::error::Error;
 
@@ -37,6 +37,7 @@ pub struct TransactionApi {
 #[derive(Clone, Serialize, Deserialize)]
 pub enum TransactionRequest {
     Transfer(Transfer),
+    TransferWithFeesPayer(TransferWithFeesPayer),
     AddAssets(AddAssets),
     DeleteAssets(DeleteAssets),
     Trade(Trade),
@@ -49,6 +50,7 @@ impl TransactionRequest {
     fn len(&self) -> usize {
         match self {
             &TransactionRequest::Transfer(ref trans) => trans.raw().len(),
+            &TransactionRequest::TransferWithFeesPayer(ref trans) => trans.raw().len(),
             &TransactionRequest::AddAssets(ref trans) => trans.raw().len(),
             &TransactionRequest::DeleteAssets(ref trans) => trans.raw().len(),
             &TransactionRequest::Trade(ref trans) => trans.raw().len(),
@@ -63,6 +65,7 @@ impl Into<Box<Transaction>> for TransactionRequest {
     fn into(self) -> Box<Transaction> {
         match self {
             TransactionRequest::Transfer(trans) => Box::new(trans),
+            TransactionRequest::TransferWithFeesPayer(trans) => Box::new(trans),
             TransactionRequest::AddAssets(trans) => Box::new(trans),
             TransactionRequest::DeleteAssets(trans) => Box::new(trans),
             TransactionRequest::Trade(trans) => Box::new(trans),
