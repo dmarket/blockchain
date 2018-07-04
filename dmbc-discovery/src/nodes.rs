@@ -1,17 +1,17 @@
 use std::collections::HashMap;
 use std::sync::RwLock;
 
-use exonum::crypto::PublicKey;
 use exonum::blockchain::config::ValidatorKeys;
+use exonum::crypto::PublicKey;
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct NodeKeys {
     pub consensus: PublicKey,
     pub service: PublicKey,
 }
 
 impl From<ValidatorKeys> for NodeKeys {
-    fn from(value: ValidatorKeys) {
+    fn from(value: ValidatorKeys) -> Self {
         NodeKeys {
             consensus: value.consensus_key,
             service: value.service_key,
@@ -72,6 +72,7 @@ pub fn update(keys: NodeKeys, info: NodeInfo) -> bool {
         .is_some()
 }
 
+/*
 pub fn state(keys: NodeKeys) -> Option<NodeState> {
     STATES
         .read()
@@ -79,6 +80,7 @@ pub fn state(keys: NodeKeys) -> Option<NodeState> {
         .get(&keys)
         .cloned()
 }
+*/
 
 pub fn list() -> Vec<(NodeKeys, NodeInfo)> {
     INFOS
@@ -88,3 +90,4 @@ pub fn list() -> Vec<(NodeKeys, NodeInfo)> {
         .map(|(k, v)| (*k, v.clone()))
         .collect()
 }
+
