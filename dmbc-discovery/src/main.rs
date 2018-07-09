@@ -29,7 +29,6 @@ fn main() {
         .map_err(|e| eprintln!("serve failed: {}", e));
 
     let keeper = keeper::new()
-        .map(|_| ())
         .map_err(|e| eprintln!("keeper failed: {}", e));
 
     hyper::rt::run(futures::lazy(|| {
