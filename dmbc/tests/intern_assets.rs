@@ -4,21 +4,22 @@ extern crate exonum_testkit;
 extern crate hyper;
 extern crate iron;
 extern crate iron_test;
-extern crate serde_json;
 extern crate mount;
+extern crate serde_json;
 
 pub mod dmbc_testkit;
 
 use std::collections::HashMap;
 
-use hyper::status::StatusCode;
+use dmbc_testkit::{DmbcTestKit, DmbcTestKitApi};
 use exonum::crypto;
 use exonum_testkit::TestKit;
-use dmbc_testkit::{DmbcTestKit, DmbcTestKitApi};
+use hyper::status::StatusCode;
 
-use dmbc::currency::api::assets_intern::{AssetIdBatchResponse, AssetIdRequest,
-                                         AssetIdBatchResponseBody, AssetIdBatchRequest,
-                                         AssetIdResponse, AssetIdResponseBody};
+use dmbc::currency::api::assets_intern::{
+    AssetIdBatchRequest, AssetIdBatchResponse, AssetIdBatchResponseBody, AssetIdRequest,
+    AssetIdResponse, AssetIdResponseBody,
+};
 use dmbc::currency::api::error::ApiError;
 use dmbc::currency::assets::AssetId;
 
@@ -30,9 +31,11 @@ fn intern_assets_id_from_meta() {
 
     let (pub_key, _) = crypto::gen_keypair();
 
-    let (status, response): (StatusCode, AssetIdResponse) = api.get_with_status(
-        &format!("/v1/intern/assets/{}/{}", pub_key.to_string(), meta_data),
-    );
+    let (status, response): (StatusCode, AssetIdResponse) = api.get_with_status(&format!(
+        "/v1/intern/assets/{}/{}",
+        pub_key.to_string(),
+        meta_data
+    ));
 
     let id = AssetId::from_data(meta_data, &pub_key);
     let mut assets = HashMap::new();
@@ -47,9 +50,8 @@ fn intern_assets_id_from_meta_invalid_public_key() {
     let testkit = TestKit::default();
     let api = testkit.api();
 
-    let (status, response): (StatusCode, AssetIdResponse) = api.get_with_status(
-        "/v1/intern/assets/invalidpublickey/meta_dummy",
-    );
+    let (status, response): (StatusCode, AssetIdResponse) =
+        api.get_with_status("/v1/intern/assets/invalidpublickey/meta_dummy");
 
     assert_eq!(status, StatusCode::BadRequest);
     assert_eq!(response, Err(ApiError::WalletHexInvalid));
@@ -174,9 +176,11 @@ fn intern_assets_endcoded_query() {
 
     let (pub_key, _) = crypto::gen_keypair();
 
-    let (status, response): (StatusCode, AssetIdResponse) = api.get_with_status(
-        &format!("/v1/intern/assets/{}/{}", pub_key.to_string(), query),
-    );
+    let (status, response): (StatusCode, AssetIdResponse) = api.get_with_status(&format!(
+        "/v1/intern/assets/{}/{}",
+        pub_key.to_string(),
+        query
+    ));
 
     let id = AssetId::from_data(meta_data, &pub_key);
     let mut assets = HashMap::new();
@@ -184,4 +188,4 @@ fn intern_assets_endcoded_query() {
 
     assert_eq!(status, StatusCode::Ok);
     assert_eq!(response, Ok(AssetIdResponseBody { assets }));
-}   
+}

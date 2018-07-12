@@ -14,8 +14,8 @@ use hyper::header::ContentType;
 use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
 use iron::status;
-use router::Router;
 use percent_encoding::percent_decode;
+use router::Router;
 
 use currency::api::error::ApiError;
 use currency::assets::AssetId;
@@ -51,7 +51,8 @@ impl Api for AssetInternApi {
     fn wire(&self, router: &mut Router) {
         let get_asset_id = move |req: &mut Request| -> IronResult<Response> {
             let public_key_result = {
-                let wallet_key = req.extensions
+                let wallet_key = req
+                    .extensions
                     .get::<Router>()
                     .unwrap()
                     .find("pub_key")
@@ -94,7 +95,8 @@ impl Api for AssetInternApi {
 
         let get_asset_ids_for_key = move |req: &mut Request| -> IronResult<Response> {
             let public_key_result = {
-                let wallet_key = req.extensions
+                let wallet_key = req
+                    .extensions
                     .get::<Router>()
                     .unwrap()
                     .find("pub_key")
@@ -132,8 +134,9 @@ impl Api for AssetInternApi {
         };
 
         let get_asset_id_batch = move |req: &mut Request| -> IronResult<Response> {
-            let result: AssetIdBatchResponse = match req.get::<bodyparser::Struct<AssetIdBatchRequest>>(
-            ) {
+            let result: AssetIdBatchResponse = match req
+                .get::<bodyparser::Struct<AssetIdBatchRequest>>()
+            {
                 Ok(Some(request)) => {
                     fn create_batch(
                         assets: &HashMap<String, Vec<String>>,

@@ -4,16 +4,16 @@ extern crate exonum_testkit;
 extern crate hyper;
 extern crate iron;
 extern crate iron_test;
-extern crate serde_json;
 extern crate mount;
+extern crate serde_json;
 
 pub mod dmbc_testkit;
 
 use std::collections::HashMap;
 
-use hyper::status::StatusCode;
+use dmbc_testkit::{DmbcTestApiBuilder, DmbcTestKitApi};
 use exonum::crypto;
-use dmbc_testkit::{DmbcTestKitApi, DmbcTestApiBuilder};
+use hyper::status::StatusCode;
 
 use dmbc::currency::api::fees::FeesResponseBody;
 use dmbc::currency::assets::MetaAsset;
@@ -29,7 +29,7 @@ fn fees_for_add_assets() {
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .create();
-    
+
     let api = testkit.api();
 
     let (public_key, secret_key) = crypto::gen_keypair();

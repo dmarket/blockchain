@@ -23,8 +23,8 @@ use std::marker::PhantomData;
 
 use byteorder::{BigEndian, ByteOrder};
 
+use super::{BaseIndex, BaseIndexIter, Fork, Snapshot, StorageValue};
 use crypto::{hash, Hash};
-use super::{BaseIndex, BaseIndexIter, Snapshot, Fork, StorageValue};
 
 #[derive(Debug, Default, Clone, Copy)]
 struct SparseListSize {
@@ -88,7 +88,6 @@ pub struct SparseListIndexIter<'a, V> {
     base_iter: BaseIndexIter<'a, u64, V>,
 }
 
-
 /// An iterator over the indices of a `SparseListIndex`.
 ///
 /// This struct is created by the [`indices`] method on [`SparseListIndex`].
@@ -100,7 +99,6 @@ pub struct SparseListIndexIter<'a, V> {
 pub struct SparseListIndexKeys<'a> {
     base_iter: BaseIndexIter<'a, u64, ()>,
 }
-
 
 /// An iterator over the values of a `SparseListIndex`.
 ///
@@ -228,7 +226,6 @@ where
         self.len() == 0
     }
 
-
     /// Returns the total amount of elements (including "empty" elements) in the list. The value of
     /// capacity is determined by the maximum index of the element ever inserted into the index.
     ///
@@ -297,7 +294,9 @@ where
     /// }
     /// ```
     pub fn iter(&self) -> SparseListIndexIter<V> {
-        SparseListIndexIter { base_iter: self.base.iter_from(&(), &0u64) }
+        SparseListIndexIter {
+            base_iter: self.base.iter_from(&(), &0u64),
+        }
     }
 
     /// Returns an iterator over the indices of the 'SparseListIndex'.
@@ -318,7 +317,9 @@ where
     /// }
     /// ```
     pub fn indices(&self) -> SparseListIndexKeys {
-        SparseListIndexKeys { base_iter: self.base.iter_from(&(), &0u64) }
+        SparseListIndexKeys {
+            base_iter: self.base.iter_from(&(), &0u64),
+        }
     }
 
     /// Returns an iterator over the values of the 'SparseListIndex'. The iterator element type is
@@ -340,7 +341,9 @@ where
     /// }
     /// ```
     pub fn values(&self) -> SparseListIndexValues<V> {
-        SparseListIndexValues { base_iter: self.base.iter_from(&(), &0u64) }
+        SparseListIndexValues {
+            base_iter: self.base.iter_from(&(), &0u64),
+        }
     }
 
     /// Returns an iterator over the list starting from the specified position. The iterator
@@ -363,10 +366,11 @@ where
     /// }
     /// ```
     pub fn iter_from(&self, from: u64) -> SparseListIndexIter<V> {
-        SparseListIndexIter { base_iter: self.base.iter_from(&(), &from) }
+        SparseListIndexIter {
+            base_iter: self.base.iter_from(&(), &from),
+        }
     }
 }
-
 
 impl<'a, V> SparseListIndex<&'a mut Fork, V>
 where
@@ -547,10 +551,7 @@ where
     /// assert_eq!(Some(1), index.pop());
     /// ```
     pub fn pop(&mut self) -> Option<V> {
-
-        let first_item = {
-            self.iter().next()
-        };
+        let first_item = { self.iter().next() };
 
         if let Some((first_index, first_elem)) = first_item {
             let mut size = self.size();
@@ -562,7 +563,6 @@ where
         None
     }
 }
-
 
 impl<'a, T, V> ::std::iter::IntoIterator for &'a SparseListIndex<T, V>
 where
@@ -607,11 +607,10 @@ where
     }
 }
 
-
 #[cfg(test)]
 mod tests {
-    use rand::{thread_rng, Rng};
     use super::SparseListIndex;
+    use rand::{thread_rng, Rng};
     use storage::db::Database;
 
     const IDX_NAME: &'static str = "idx_name";
@@ -679,7 +678,6 @@ mod tests {
         assert_eq!(0, list_index.len());
         assert_eq!(None, list_index.pop());
 
-
         // check that capacity gets overwritten by bigger index correctly
         assert_eq!(None, list_index.set(42, 1024));
         assert_eq!(43, list_index.capacity());
@@ -726,8 +724,8 @@ mod tests {
 
     mod memorydb_tests {
         use std::path::Path;
-        use tempdir::TempDir;
         use storage::{Database, MemoryDB};
+        use tempdir::TempDir;
 
         fn create_database(_: &Path) -> Box<Database> {
             Box::new(MemoryDB::new())
@@ -752,8 +750,8 @@ mod tests {
 
     mod rocksdb_tests {
         use std::path::Path;
-        use tempdir::TempDir;
         use storage::{Database, RocksDB, RocksDBOptions};
+        use tempdir::TempDir;
 
         fn create_database(path: &Path) -> Box<Database> {
             let mut opts = RocksDBOptions::default();

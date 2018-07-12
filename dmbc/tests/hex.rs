@@ -4,21 +4,21 @@ extern crate exonum_testkit;
 extern crate hyper;
 extern crate iron;
 extern crate iron_test;
-extern crate serde_json;
 extern crate mount;
+extern crate serde_json;
 
 pub mod dmbc_testkit;
 
-use hyper::status::StatusCode;
-use iron::headers::Headers;
+use dmbc_testkit::{DmbcTestKit, DmbcTestKitApi};
 use exonum::crypto;
 use exonum::messages::Message;
 use exonum_testkit::TestKit;
-use dmbc_testkit::{DmbcTestKit, DmbcTestKitApi};
+use hyper::status::StatusCode;
+use iron::headers::Headers;
 
-use dmbc::currency::assets::MetaAsset;
 use dmbc::currency::api::error::ApiError;
 use dmbc::currency::api::hex::{HexApi, HexApiResponse, HexResponse};
+use dmbc::currency::assets::MetaAsset;
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::transactions::components::FeeStrategy;
 
@@ -37,10 +37,8 @@ fn hex_tx() {
         .seed(12)
         .build();
 
-    let (status, response): (StatusCode, HexApiResponse) = api.post_with_status(
-        "/v1/hex/transactions",
-        &trade
-    );
+    let (status, response): (StatusCode, HexApiResponse) =
+        api.post_with_status("/v1/hex/transactions", &trade);
     let hex = HexApi::hex_string(trade.raw().body().to_vec());
 
     assert_eq!(status, StatusCode::Ok);
@@ -62,10 +60,8 @@ fn hex_offer_tx() {
         .seed(12)
         .build();
 
-    let (status, response): (StatusCode, HexApiResponse) = api.post_with_status(
-        "/v1/hex/transactions/offer",
-        &trade
-    );
+    let (status, response): (StatusCode, HexApiResponse) =
+        api.post_with_status("/v1/hex/transactions/offer", &trade);
     let hex = HexApi::hex_string(trade.offer_raw().to_vec());
 
     assert_eq!(status, StatusCode::Ok);
@@ -88,10 +84,8 @@ fn hex_offer_tx_without_offer() {
         .build();
 
     let api = TestKit::default().api();
-    let (status, response): (StatusCode, HexApiResponse) = api.post_with_status(
-        "/v1/hex/transactions/offer",
-        &tx_add_assets
-    );
+    let (status, response): (StatusCode, HexApiResponse) =
+        api.post_with_status("/v1/hex/transactions/offer", &tx_add_assets);
 
     assert_eq!(status, StatusCode::Ok);
     assert_eq!(response, Ok(None));
@@ -101,10 +95,8 @@ fn hex_offer_tx_without_offer() {
 fn hex_transactions_empty_request_body() {
     let api = TestKit::default().api();
 
-    let (status, response): (StatusCode, HexApiResponse) = api.post_raw_with_status(
-        "/v1/hex/transactions",
-        ""
-    );
+    let (status, response): (StatusCode, HexApiResponse) =
+        api.post_raw_with_status("/v1/hex/transactions", "");
 
     assert_eq!(status, StatusCode::BadRequest);
     assert_eq!(response, Err(ApiError::IncorrectRequest));
@@ -114,10 +106,8 @@ fn hex_transactions_empty_request_body() {
 fn hex_transactions_offer_empty_request_body() {
     let api = TestKit::default().api();
 
-    let (status, response): (StatusCode, HexApiResponse) = api.post_raw_with_status(
-        "/v1/hex/transactions/offer",
-        ""
-    );
+    let (status, response): (StatusCode, HexApiResponse) =
+        api.post_raw_with_status("/v1/hex/transactions/offer", "");
 
     assert_eq!(status, StatusCode::BadRequest);
     assert_eq!(response, Err(ApiError::IncorrectRequest));
@@ -127,11 +117,8 @@ fn hex_transactions_offer_empty_request_body() {
 fn hex_transactions_empty_request_body_empty_headers() {
     let api = TestKit::default().api();
 
-    let (status, response): (StatusCode, HexApiResponse) = api.post_raw_with_status2(
-        "/v1/hex/transactions",
-        Headers::new(),
-        ""
-    );
+    let (status, response): (StatusCode, HexApiResponse) =
+        api.post_raw_with_status2("/v1/hex/transactions", Headers::new(), "");
 
     assert_eq!(status, StatusCode::BadRequest);
     assert_eq!(response, Err(ApiError::EmptyRequestBody));
@@ -141,11 +128,8 @@ fn hex_transactions_empty_request_body_empty_headers() {
 fn hex_transactions_offer_empty_request_body_empty_headers() {
     let api = TestKit::default().api();
 
-    let (status, response): (StatusCode, HexApiResponse) = api.post_raw_with_status2(
-        "/v1/hex/transactions/offer",
-        Headers::new(),
-        ""
-    );
+    let (status, response): (StatusCode, HexApiResponse) =
+        api.post_raw_with_status2("/v1/hex/transactions/offer", Headers::new(), "");
 
     assert_eq!(status, StatusCode::BadRequest);
     assert_eq!(response, Err(ApiError::EmptyRequestBody));

@@ -19,9 +19,9 @@ use std::collections::{BTreeMap, HashSet};
 use serde::de::Error;
 use serde_json::{self, Error as JsonError};
 
-use storage::StorageValue;
-use crypto::{hash, PublicKey, Hash};
+use crypto::{hash, Hash, PublicKey};
 use helpers::{Height, Milliseconds};
+use storage::StorageValue;
 
 /// Public keys of a validator.
 #[derive(Copy, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -118,9 +118,8 @@ impl StoredConfiguration {
                 if min >= max {
                     return Err(JsonError::custom(format!(
                         "Dynamic adjuster: minimal timeout should be less then maximal: \
-                        min = {}, max = {}",
-                        min,
-                        max
+                         min = {}, max = {}",
+                        min, max
                     )));
                 }
             }
@@ -133,9 +132,8 @@ impl StoredConfiguration {
                 if min >= max {
                     return Err(JsonError::custom(format!(
                         "Moving average adjuster: minimal timeout must be less then maximal: \
-                        min = {}, max = {}",
-                        min,
-                        max
+                         min = {}, max = {}",
+                        min, max
                     )));
                 }
                 if adjustment_speed <= 0. || adjustment_speed > 1. {
@@ -205,13 +203,13 @@ pub enum TimeoutAdjusterConfig {
 
 #[cfg(test)]
 mod tests {
+    use serde::{Deserialize, Serialize};
     use toml;
-    use serde::{Serialize, Deserialize};
 
     use std::fmt::Debug;
 
-    use crypto::{Seed, gen_keypair_from_seed};
     use super::*;
+    use crypto::{gen_keypair_from_seed, Seed};
 
     // TOML doesn't support all rust types, but `StoredConfiguration` must be able to save as TOML.
     #[test]
@@ -357,11 +355,9 @@ mod tests {
 
     fn create_test_configuration() -> StoredConfiguration {
         let validator_keys = (1..4)
-            .map(|i| {
-                ValidatorKeys {
-                    consensus_key: gen_keypair_from_seed(&Seed::new([i; 32])).0,
-                    service_key: gen_keypair_from_seed(&Seed::new([i * 10; 32])).0,
-                }
+            .map(|i| ValidatorKeys {
+                consensus_key: gen_keypair_from_seed(&Seed::new([i; 32])).0,
+                service_key: gen_keypair_from_seed(&Seed::new([i * 10; 32])).0,
             })
             .collect();
 

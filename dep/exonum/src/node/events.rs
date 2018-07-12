@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use events::{Event, EventHandler, NetworkEvent, InternalEvent, InternalRequest};
-use super::{NodeHandler, ExternalMessage, NodeTimeout};
+use super::{ExternalMessage, NodeHandler, NodeTimeout};
 use events::error::LogError;
+use events::{Event, EventHandler, InternalEvent, InternalRequest, NetworkEvent};
 
 impl EventHandler for NodeHandler {
     fn handle_event(&mut self, event: Event) {
@@ -29,7 +29,7 @@ impl EventHandler for NodeHandler {
 impl NodeHandler {
     // clippy sure that `InternalEvent` is not consumed in the body
     // this is because of internal `Copy` types in `JumpToRound`.
-    #![cfg_attr(feature="cargo-clippy", allow(needless_pass_by_value))]
+    #![cfg_attr(feature = "cargo-clippy", allow(needless_pass_by_value))]
     fn handle_internal_event(&mut self, event: InternalEvent) {
         match event {
             InternalEvent::Timeout(timeout) => self.handle_timeout(timeout),

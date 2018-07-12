@@ -1,17 +1,18 @@
 extern crate clap;
 
-use clap::{App, Arg};
 use super::VERSION;
+use clap::{App, Arg};
 
 pub struct Flags {}
 
 pub fn parse() -> Option<Flags> {
     let matches = App::new("DMarket blockchain")
-        .arg(Arg::with_name("version")
-            .help("show version")
-            .short("v")
-            .long("version")
-            .multiple(false)
+        .arg(
+            Arg::with_name("version")
+                .help("show version")
+                .short("v")
+                .long("version")
+                .multiple(false),
         )
         .get_matches();
 

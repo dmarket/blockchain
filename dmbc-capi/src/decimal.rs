@@ -1,13 +1,13 @@
 use std::error::Error;
-use std::string::ToString;
-use std::str::FromStr;
-use std::ops::Mul;
 use std::fmt;
+use std::ops::Mul;
+use std::str::FromStr;
+use std::string::ToString;
 
-use extprim::u128::u128;
-use exonum::encoding::{Field, Offset, CheckedOffset};
 use exonum::encoding::serialize::json::ExonumJson;
 use exonum::encoding::serialize::WriteBufferWrapper;
+use exonum::encoding::{CheckedOffset, Field, Offset};
+use extprim::u128::u128;
 use serde_json;
 
 const BITS_PER_DIGIT: usize = 4;
@@ -84,10 +84,12 @@ impl Mul<u64> for UFract64 {
         for i in 0..UFRACT64_DIGITS {
             let digit = self.digit(i) as u64;
             if digit != 0 {
-                result += u128::new(other) * u128::new(digit) * u128::new(10).pow((UFRACT64_DIGITS-i) as u32);
+                result += u128::new(other)
+                    * u128::new(digit)
+                    * u128::new(10).pow((UFRACT64_DIGITS - i) as u32);
             }
         }
-        result /= u128::new(10).pow((UFRACT64_DIGITS+1) as u32);
+        result /= u128::new(10).pow((UFRACT64_DIGITS + 1) as u32);
 
         result.low64()
     }
@@ -97,7 +99,11 @@ impl ToString for UFract64 {
     fn to_string(&self) -> String {
         let mut result = String::with_capacity(2 + UFRACT64_DIGITS);
         result += "0.";
-        result.extend(self.to_digits().into_iter().map(|digit| (digit + b'0') as char));
+        result.extend(
+            self.to_digits()
+                .into_iter()
+                .map(|digit| (digit + b'0') as char),
+        );
         result
     }
 }
@@ -159,15 +165,14 @@ impl<'a> Field<'a> for UFract64 {
         buffer: &'a [u8],
         from: CheckedOffset,
         to: CheckedOffset,
-        latest_segment: CheckedOffset)
-    -> Result<CheckedOffset, ::exonum::encoding::Error> {
+        latest_segment: CheckedOffset,
+    ) -> Result<CheckedOffset, ::exonum::encoding::Error> {
         u64::check(buffer, from, to, latest_segment)
     }
 }
 
 impl ExonumJson for UFract64 {
-    fn serialize_field(&self)
-        -> Result<serde_json::value::Value, Box<Error + Send + Sync>> {
+    fn serialize_field(&self) -> Result<serde_json::value::Value, Box<Error + Send + Sync>> {
         Ok(serde_json::Value::String(self.to_string()))
     }
 

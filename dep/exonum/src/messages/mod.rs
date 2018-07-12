@@ -22,14 +22,16 @@ use crypto::PublicKey;
 use encoding::Error;
 use helpers::{Height, Round, ValidatorId};
 
-pub use self::raw::{RawMessage, MessageWriter, MessageBuffer, Message, HEADER_LENGTH,
-                    PROTOCOL_MAJOR_VERSION, TEST_NETWORK_ID};
 pub use self::protocol::*;
+pub use self::raw::{
+    Message, MessageBuffer, MessageWriter, RawMessage, HEADER_LENGTH, PROTOCOL_MAJOR_VERSION,
+    TEST_NETWORK_ID,
+};
 
 #[macro_use]
 mod spec;
-mod raw;
 mod protocol;
+mod raw;
 
 #[cfg(test)]
 mod tests;

@@ -4,23 +4,23 @@ extern crate exonum_testkit;
 extern crate hyper;
 extern crate iron;
 extern crate iron_test;
-extern crate serde_json;
 extern crate mount;
+extern crate serde_json;
 
 pub mod dmbc_testkit;
 
 use std::collections::HashMap;
 
-use hyper::status::StatusCode;
-use exonum::crypto;
 use dmbc_testkit::{DmbcTestApiBuilder, DmbcTestKitApi};
+use exonum::crypto;
+use hyper::status::StatusCode;
 
 use dmbc::currency::api::fees::FeesResponseBody;
-use dmbc::currency::configuration::{Configuration, TransactionFees};
-use dmbc::currency::transactions::builders::transaction;
-use dmbc::currency::error::Error;
-use dmbc::currency::transactions::components::FeeStrategy;
 use dmbc::currency::assets::TradeAsset;
+use dmbc::currency::configuration::{Configuration, TransactionFees};
+use dmbc::currency::error::Error;
+use dmbc::currency::transactions::builders::transaction;
+use dmbc::currency::transactions::components::FeeStrategy;
 
 #[test]
 fn fees_for_trade_recipient() {
@@ -35,7 +35,12 @@ fn fees_for_trade_recipient() {
     let (seller_public_key, seller_secret_key) = crypto::gen_keypair();
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pub_key);
+    let (asset, info) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pub_key,
+    );
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -63,7 +68,7 @@ fn fees_for_trade_recipient() {
 
 #[test]
 fn fees_for_trade_sender() {
-        let transaction_fee = 1000;
+    let transaction_fee = 1000;
     let fixed = 10;
     let units = 2;
     let price_per_unit = 1000;
@@ -74,7 +79,12 @@ fn fees_for_trade_sender() {
     let (seller_public_key, seller_secret_key) = crypto::gen_keypair();
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pub_key);
+    let (asset, info) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pub_key,
+    );
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -102,7 +112,7 @@ fn fees_for_trade_sender() {
 
 #[test]
 fn fees_for_trade_recipient_and_sender() {
-        let transaction_fee = 1000;
+    let transaction_fee = 1000;
     let fixed = 10;
     let units = 2;
     let price_per_unit = 1000;
@@ -113,7 +123,12 @@ fn fees_for_trade_recipient_and_sender() {
     let (seller_public_key, seller_secret_key) = crypto::gen_keypair();
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pub_key);
+    let (asset, info) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pub_key,
+    );
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -152,7 +167,12 @@ fn fees_for_trade_recipient_and_sender_creator() {
     let (seller_public_key, seller_secret_key) = crypto::gen_keypair();
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &seller_public_key);
+    let (asset, info) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &seller_public_key,
+    );
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -193,7 +213,12 @@ fn fees_for_trade_invalid_transaction() {
     let (seller_public_key, seller_secret_key) = crypto::gen_keypair();
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pub_key);
+    let (asset, info) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pub_key,
+    );
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -218,7 +243,7 @@ fn fees_for_trade_invalid_transaction() {
 
 #[test]
 fn fees_for_trade_asset_not_found() {
-        let transaction_fee = 1000;
+    let transaction_fee = 1000;
     let fixed = 10;
     let units = 2;
     let price_per_unit = 1000;
@@ -229,7 +254,12 @@ fn fees_for_trade_asset_not_found() {
     let (seller_public_key, seller_secret_key) = crypto::gen_keypair();
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
 
-    let (asset, _) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pub_key);
+    let (asset, _) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_pub_key,
+    );
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))

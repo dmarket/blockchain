@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::ffi::OsString;
 use std::collections::HashMap;
+use std::ffi::OsString;
 
 use clap;
 
-use super::{Context, ArgumentType};
-use super::internal::{Feedback, CollectedCommand};
+use super::internal::{CollectedCommand, Feedback};
 use super::CommandName;
+use super::{ArgumentType, Context};
 
 pub struct ClapBackend;
 
@@ -42,9 +42,7 @@ impl ClapBackend {
             .setting(clap::AppSettings::ArgRequiredElseHelp)
             .version(crate_version!())
             .author(crate_authors!("\n"))
-            .about(
-                "It contain basic set of command, to deploy network on exonum.",
-            )
+            .about("It contain basic set of command, to deploy network on exonum.")
             .subcommands(subcommands.into_iter())
             .get_matches_from_safe(line)
             .unwrap();

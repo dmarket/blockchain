@@ -1,7 +1,7 @@
-use std::ptr; 
+use std::ptr;
 
-use libc::c_char;
 use capi::common::parse_public_key;
+use libc::c_char;
 use transactions::components::Intermediary;
 
 use error::Error;

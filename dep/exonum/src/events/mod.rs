@@ -12,24 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[cfg(any(test, feature = "long_benchmarks"))]
-pub mod tests;
 pub mod codec;
 pub mod error;
-pub mod network;
 pub mod internal;
+pub mod network;
+#[cfg(any(test, feature = "long_benchmarks"))]
+pub mod tests;
 
-use std::time::SystemTime;
 use std::cmp::Ordering;
+use std::time::SystemTime;
 
-use futures::{Future, Async, Poll, Stream};
 use futures::sink::Wait;
 use futures::sync::mpsc::{self, Sender};
+use futures::{Async, Future, Poll, Stream};
 
-use node::{ExternalMessage, NodeTimeout};
-pub use self::network::{NetworkEvent, NetworkRequest, NetworkPart, NetworkConfiguration};
 pub use self::internal::InternalPart;
+pub use self::network::{NetworkConfiguration, NetworkEvent, NetworkPart, NetworkRequest};
 use helpers::{Height, Round};
+use node::{ExternalMessage, NodeTimeout};
 
 pub type SyncSender<T> = Wait<Sender<T>>;
 
@@ -62,7 +62,6 @@ pub trait EventHandler {
     fn handle_event(&mut self, event: Event);
 }
 
-
 #[derive(Debug)]
 pub struct HandlerPart<H: EventHandler> {
     pub handler: H,
@@ -75,11 +74,12 @@ impl<H: EventHandler + 'static> HandlerPart<H> {
     pub fn run(self) -> Box<Future<Item = (), Error = ()>> {
         let mut handler = self.handler;
 
-        let fut = EventsAggregator::new(self.internal_rx, self.network_rx, self.api_rx)
-            .for_each(move |event| {
+        let fut = EventsAggregator::new(self.internal_rx, self.network_rx, self.api_rx).for_each(
+            move |event| {
                 handler.handle_event(event);
                 Ok(())
-            });
+            },
+        );
 
         to_box(fut)
     }
@@ -160,14 +160,8 @@ where
 impl<S1, S2, S3> Stream for EventsAggregator<S1, S2, S3>
 where
     S1: Stream<Item = InternalEvent>,
-    S2: Stream<
-        Item = NetworkEvent,
-        Error = S1::Error,
-    >,
-    S3: Stream<
-        Item = ExternalMessage,
-        Error = S1::Error,
-    >,
+    S2: Stream<Item = NetworkEvent, Error = S1::Error>,
+    S3: Stream<Item = ExternalMessage, Error = S1::Error>,
 {
     type Item = Event;
     type Error = S1::Error;
@@ -211,7 +205,6 @@ where
         }
     }
 }
-
 
 fn to_box<F: Future + 'static>(f: F) -> Box<Future<Item = (), Error = F::Error>> {
     Box::new(f.map(drop))

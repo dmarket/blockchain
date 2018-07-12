@@ -109,12 +109,14 @@
 //! [`BTreeSet`]: https://doc.rust-lang.org/std/collections/struct.BTreeSet.html
 //! [`HashSet`]: https://doc.rust-lang.org/std/collections/struct.HashSet.html
 
+pub use self::db::{
+    Change, Changes, ChangesIterator, Database, Fork, Iter, Iterator, Patch, PatchIterator,
+    Snapshot,
+};
 pub use self::error::Error;
-pub use self::db::{Database, Snapshot, Fork, Patch, PatchIterator, Change, Changes,
-                   ChangesIterator, Iterator, Iter};
 
-pub use self::rocksdb::{RocksDB, RocksDBOptions};
 pub use self::memorydb::MemoryDB;
+pub use self::rocksdb::{RocksDB, RocksDBOptions};
 
 pub use self::keys::StorageKey;
 pub use self::values::StorageValue;
@@ -122,21 +124,21 @@ pub use self::values::StorageValue;
 pub use self::entry::Entry;
 
 pub use self::base_index::{BaseIndex, BaseIndexIter};
-pub use self::map_index::MapIndex;
-pub use self::list_index::ListIndex;
-pub use self::sparse_list_index::SparseListIndex;
 pub use self::key_set_index::KeySetIndex;
+pub use self::list_index::ListIndex;
+pub use self::map_index::MapIndex;
+pub use self::proof_list_index::{ListProof, ProofListIndex};
+pub use self::proof_map_index::{MapProof, ProofMapIndex};
+pub use self::sparse_list_index::SparseListIndex;
 pub use self::value_set_index::ValueSetIndex;
-pub use self::proof_list_index::{ProofListIndex, ListProof};
-pub use self::proof_map_index::{ProofMapIndex, MapProof};
 
 /// A specialized `Result` type for I/O operations with storage.
 pub type Result<T> = ::std::result::Result<T, Error>;
 
-mod error;
 mod db;
-mod rocksdb;
+mod error;
 mod memorydb;
+mod rocksdb;
 
 mod keys;
 mod values;
@@ -145,13 +147,13 @@ mod entry;
 
 pub mod base_index;
 
-pub mod map_index;
-pub mod list_index;
-pub mod sparse_list_index;
 pub mod key_set_index;
-pub mod value_set_index;
+pub mod list_index;
+pub mod map_index;
 pub mod proof_list_index;
 pub mod proof_map_index;
+pub mod sparse_list_index;
+pub mod value_set_index;
 
 #[cfg(test)]
 mod tests;

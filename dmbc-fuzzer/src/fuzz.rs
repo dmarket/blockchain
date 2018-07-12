@@ -19,14 +19,15 @@ use std::process;
 
 use exonum::blockchain::Transaction;
 use exonum::crypto::SecretKey;
-use exonum::messages::{MessageBuffer, RawMessage, Message};
+use exonum::messages::{Message, MessageBuffer, RawMessage};
 use exonum_testkit::TestKitBuilder;
 
 use dmbc::currency::transactions::builders::fee;
 use dmbc::currency::transactions::builders::transaction;
-use dmbc::currency::transactions::{AddAssets, DeleteAssets, Exchange, Trade, Transfer,
-                                   ADD_ASSETS_ID, DELETE_ASSETS_ID, EXCHANGE_ID,
-                                   TRADE_ID, TRANSFER_ID};
+use dmbc::currency::transactions::{
+    AddAssets, DeleteAssets, Exchange, Trade, Transfer, ADD_ASSETS_ID, DELETE_ASSETS_ID,
+    EXCHANGE_ID, TRADE_ID, TRANSFER_ID,
+};
 use dmbc::currency::Service;
 
 use fuzz_data::FuzzData;

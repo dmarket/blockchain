@@ -240,7 +240,8 @@ impl Api for WalletApi {
             ASSETS_REQUESTS.inc();
 
             let public_key_result = {
-                let wallet_key = req.extensions
+                let wallet_key = req
+                    .extensions
                     .get::<Router>()
                     .unwrap()
                     .find("pub_key")
@@ -296,7 +297,8 @@ impl Api for WalletApi {
             ASSET_REQUESTS.inc();
 
             let public_key_result = {
-                let wallet_key = req.extensions
+                let wallet_key = req
+                    .extensions
                     .get::<Router>()
                     .unwrap()
                     .find("pub_key")
@@ -304,7 +306,8 @@ impl Api for WalletApi {
                 PublicKey::from_hex(wallet_key)
             };
             let asset_id_result = {
-                let id_hex = req.extensions
+                let id_hex = req
+                    .extensions
                     .get::<Router>()
                     .unwrap()
                     .find("asset_id")
@@ -312,24 +315,21 @@ impl Api for WalletApi {
                 AssetId::from_hex(id_hex)
             };
             let result: WalletAssetResponse = match public_key_result {
-                Ok(public_key) => {
-                    match asset_id_result {
-                        Ok(id) => {
-                            let assets = self_.assets(&public_key);
-                            let info =
-                                if ServiceApi::read_parameter(req, PARAMETER_META_DATA_KEY, false) {
-                                    self_.asset_info(&id)
-                                } else {
-                                    None
-                                };
-                            match assets.iter()
-                                .find(|ref a| a.id() == id) {
-                                Some(asset) => Ok(ExtendedAsset::from_asset(asset, info)),
-                                None => Err(ApiError::AssetIdNotFound)
-                            }
+                Ok(public_key) => match asset_id_result {
+                    Ok(id) => {
+                        let assets = self_.assets(&public_key);
+                        let info =
+                            if ServiceApi::read_parameter(req, PARAMETER_META_DATA_KEY, false) {
+                                self_.asset_info(&id)
+                            } else {
+                                None
+                            };
+                        match assets.iter().find(|ref a| a.id() == id) {
+                            Some(asset) => Ok(ExtendedAsset::from_asset(asset, info)),
+                            None => Err(ApiError::AssetIdNotFound),
                         }
-                        Err(_) => Err(ApiError::AssetIdInvalid),
                     }
+                    Err(_) => Err(ApiError::AssetIdInvalid),
                 },
                 Err(_) => Err(ApiError::WalletHexInvalid),
             };
@@ -357,9 +357,9 @@ impl Api for WalletApi {
             "assets_info",
         );
         router.get(
-            "/v1/wallets/:pub_key/assets/:asset_id", 
+            "/v1/wallets/:pub_key/assets/:asset_id",
             wallet_asset_info,
-            "asset_info"
+            "asset_info",
         );
     }
 }

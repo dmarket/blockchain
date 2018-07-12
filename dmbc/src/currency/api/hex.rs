@@ -15,9 +15,10 @@ use iron::status as istatus;
 use router::Router;
 
 use currency::api::error::ApiError;
-use currency::transactions::{AddAssets, DeleteAssets, Exchange, ExchangeIntermediary, Trade,
-                             TradeIntermediary, Transfer, EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID,
-                             TRADE_ID, TRADE_INTERMEDIARY_ID};
+use currency::transactions::{
+    AddAssets, DeleteAssets, Exchange, ExchangeIntermediary, Trade, TradeIntermediary, Transfer,
+    EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID, TRADE_ID, TRADE_INTERMEDIARY_ID,
+};
 
 #[derive(Clone)]
 pub struct HexApi {}

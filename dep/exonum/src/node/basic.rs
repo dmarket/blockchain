@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::net::SocketAddr;
 use std::error::Error;
+use std::net::SocketAddr;
 
 use rand::{self, Rng};
 
-use messages::{Any, RawMessage, Connect, Status, Message, PeersRequest};
-use helpers::Height;
 use super::{NodeHandler, RequestData};
+use helpers::Height;
+use messages::{Any, Connect, Message, PeersRequest, RawMessage, Status};
 
 impl NodeHandler {
     /// Redirects message to the corresponding `handle_...` function.
@@ -126,8 +126,7 @@ impl NodeHandler {
         self.state.add_peer(public_key, message.clone());
         info!(
             "Received Connect message from {}, {}",
-            address,
-            need_connect,
+            address, need_connect,
         );
         self.blockchain.save_peer(&public_key, message);
         if need_connect {
@@ -209,7 +208,8 @@ impl NodeHandler {
                 rng.gen_range(0, to)
             };
 
-            let peer = self.state
+            let peer = self
+                .state
                 .peers()
                 .iter()
                 .map(|x| x.1.clone())

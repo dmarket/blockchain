@@ -14,12 +14,12 @@
 
 use rand::{thread_rng, Rng};
 
-use crypto::{Hash, hash};
-use storage::{Database, StorageValue};
-use encoding::serialize::json::reexport::{to_string, from_str};
-use encoding::serialize::reexport::Serialize;
-use super::{ProofListIndex, ListProof, pair_hash};
 use self::ListProof::*;
+use super::{pair_hash, ListProof, ProofListIndex};
+use crypto::{hash, Hash};
+use encoding::serialize::json::reexport::{from_str, to_string};
+use encoding::serialize::reexport::Serialize;
+use storage::{Database, StorageValue};
 
 const IDX_NAME: &'static str = "idx_name";
 
@@ -198,7 +198,6 @@ fn list_index_proof(db: Box<Database>) {
             .unwrap(),
         [(2, &6)]
     );
-
 
     assert_eq!(
         index.get_range_proof(0, 2),
@@ -486,7 +485,6 @@ fn proof_structure(db: Box<Database>) {
         } else {
             assert!(false);
         }
-
     } else {
         assert!(false);
     }
@@ -542,8 +540,8 @@ struct ProofInfo<'a, V: Serialize + 'a> {
 
 mod memorydb_tests {
     use std::path::Path;
-    use tempdir::TempDir;
     use storage::{Database, MemoryDB};
+    use tempdir::TempDir;
 
     fn create_database(_: &Path) -> Box<Database> {
         Box::new(MemoryDB::new())
@@ -654,8 +652,8 @@ mod memorydb_tests {
 
 mod rocksdb_tests {
     use std::path::Path;
-    use tempdir::TempDir;
     use storage::{Database, RocksDB, RocksDBOptions};
+    use tempdir::TempDir;
 
     fn create_database(path: &Path) -> Box<Database> {
         let mut opts = RocksDBOptions::default();

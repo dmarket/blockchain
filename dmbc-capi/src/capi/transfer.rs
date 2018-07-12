@@ -1,22 +1,22 @@
-use std::ptr;
 use std::mem;
+use std::ptr;
 
-use libc::{c_char, size_t};
 use exonum::messages::Message;
+use libc::{c_char, size_t};
 
-use capi::common::*;
 use assets::AssetBundle;
+use capi::common::*;
 use transactions::transfer::TransferWrapper;
 
 use error::{Error, ErrorKind};
 
 ffi_fn! {
     fn dmbc_tx_transfer_create(
-        from: *const c_char, 
+        from: *const c_char,
         to: *const c_char,
         amout: u64,
         seed: u64,
-        data_info: *const c_char, 
+        data_info: *const c_char,
         error: *mut Error,
     ) -> *mut TransferWrapper {
         let from = match parse_public_key(from) {
@@ -96,7 +96,7 @@ ffi_fn! {
                 }
                 return false;
             }
-        } 
+        }
 
         let asset = AssetBundle::from_ptr(asset);
         wrapper.add_asset(asset.clone());

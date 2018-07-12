@@ -1,9 +1,9 @@
 use std::ffi::CStr;
 
-use libc::{c_char, size_t};
+use assets::AssetId;
 use exonum::crypto::{PublicKey, Signature};
 use exonum::encoding::serialize::FromHex;
-use assets::AssetId;
+use libc::{c_char, size_t};
 
 use error::{Error, ErrorKind};
 
@@ -23,9 +23,7 @@ pub fn parse_public_key(public_key: *const c_char) -> Result<PublicKey, Error> {
     let pk_str = parse_str(public_key)?;
     match PublicKey::from_hex(pk_str) {
         Ok(pk) => Ok(pk),
-        Err(err) => Err(
-            Error::new(ErrorKind::Hex(err))
-        )
+        Err(err) => Err(Error::new(ErrorKind::Hex(err))),
     }
 }
 
@@ -33,9 +31,7 @@ pub fn parse_signature(signature: *const c_char) -> Result<Signature, Error> {
     let sig_str = parse_str(signature)?;
     match Signature::from_hex(sig_str) {
         Ok(sig) => Ok(sig),
-        Err(err) => Err(
-            Error::new(ErrorKind::Hex(err))
-        )
+        Err(err) => Err(Error::new(ErrorKind::Hex(err))),
     }
 }
 
@@ -43,9 +39,7 @@ pub fn parse_asset_id(asset_id: *const c_char) -> Result<AssetId, Error> {
     let asset_id_str = parse_str(asset_id)?;
     match AssetId::from_hex(asset_id_str) {
         Ok(asset_id) => Ok(asset_id),
-        Err(err) => {
-            Err(Error::new(ErrorKind::Asset(err)))
-        }
+        Err(err) => Err(Error::new(ErrorKind::Asset(err))),
     }
 }
 

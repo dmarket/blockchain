@@ -6,7 +6,7 @@ publish = false
 
 [dependencies]
 dmbc = { path = "../dmbc" }
-hyper = "0.11"
+hyper = "0.12"
 exonum = "0.5"
 exonum-configuration = "0.5"
 futures = "0.1"
@@ -14,7 +14,8 @@ url = "1.6"
 serde = "1.0"
 serde_json = "1.0"
 serde_derive = "1.0"
-tokio-core = "0.1"
-tokio-timer = "0.1"
+tokio = "0.1"
 toml = "0.4"
+lazy_static = "1.0"
+log = "0.4"
 

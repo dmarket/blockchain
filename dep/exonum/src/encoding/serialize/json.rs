@@ -12,28 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::error::Error;
+use std::net::SocketAddr;
 /// trait `ExonumSerializeJson` implemented for all field that allows serializing in
 /// json format.
 ///
-
 // TODO refer to difference between json serialization and exonum_json (ECR-156).
 // TODO implement Field for float (ECR-153).
 // TODO remove WriteBufferWraper hack (after refactor storage),
 // should be moved into storage (ECR-156).
-
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use std::net::SocketAddr;
-use std::error::Error;
 
-use serde_json::value::Value;
 use bit_vec::BitVec;
 use hex::FromHex;
+use serde_json::value::Value;
 
+use super::WriteBufferWrapper;
 use crypto::{Hash, PublicKey, Signature};
+use encoding::{Field, Offset};
 use helpers::{Height, Round, ValidatorId};
 use messages::RawMessage;
-use encoding::{Field, Offset};
-use super::WriteBufferWrapper;
 // TODO: should we implement serialize for: `SecretKey`, `Seed` (ECR-156)?
 
 macro_rules! impl_default_deserialize_owned {
@@ -156,7 +154,7 @@ impl_deserialize_int!{u8; u16; u32; i8; i16; i32}
 impl_deserialize_bigint!{u64; i64}
 impl_deserialize_hex_segment!{Hash; PublicKey; Signature}
 impl_default_deserialize_owned!{u8; u16; u32; i8; i16; i32; u64; i64;
-                                Hash; PublicKey; Signature; bool}
+Hash; PublicKey; Signature; bool}
 
 impl ExonumJson for bool {
     fn deserialize_field<B: WriteBufferWrapper>(
@@ -297,10 +295,9 @@ impl ExonumJson for Vec<RawMessage> {
     }
 
     fn serialize_field(&self) -> Result<Value, Box<Error + Send + Sync>> {
-        let vec = self.iter()
-            .map(|slice| {
-                Value::String(::encoding::serialize::encode_hex(slice))
-            })
+        let vec = self
+            .iter()
+            .map(|slice| Value::String(::encoding::serialize::encode_hex(slice)))
             .collect();
         Ok(Value::Array(vec))
     }
@@ -449,6 +446,6 @@ impl ExonumJson for ValidatorId {
 /// Reexport of `serde` specific traits, this reexports
 /// provide compatibility layer with important `serde_json` version.
 pub mod reexport {
-    pub use serde_json::{from_str, from_value, to_string, to_value, Value};
     pub use serde_json::map::Map;
+    pub use serde_json::{from_str, from_value, to_string, to_value, Value};
 }

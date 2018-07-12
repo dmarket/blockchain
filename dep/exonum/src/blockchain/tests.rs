@@ -21,9 +21,9 @@ use serde_json;
 
 use blockchain::{Blockchain, Schema, Transaction};
 use crypto::{gen_keypair, Hash};
-use storage::{Database, Error, Fork, ListIndex};
-use messages::Message;
 use helpers::{Height, ValidatorId};
+use messages::Message;
+use storage::{Database, Error, Fork, ListIndex};
 
 const IDX_NAME: &'static str = "idx_name";
 
@@ -69,7 +69,6 @@ fn test_system_time() {
     }
     let test_data = r##"{"some_test":{"nanos":0,"secs":"0"}}"##;
 
-
     let test = Test::new(UNIX_EPOCH);
     let data = ::serde_json::to_string(&test).unwrap();
     assert_eq!(data, test_data);
@@ -86,8 +85,9 @@ encoding_struct! {
 
 #[test]
 fn test_correct_encoding_struct() {
-    let dat: Vec<u8> =
-        vec![8u8, 0, 0, 0, 18, 0, 0, 0, 16, 0, 0, 0, 1, 0, 0, 0, 17, 0, 0, 0, 1, 0, 0, 0, 1, 2];
+    let dat: Vec<u8> = vec![
+        8u8, 0, 0, 0, 18, 0, 0, 0, 16, 0, 0, 0, 1, 0, 0, 0, 17, 0, 0, 0, 1, 0, 0, 0, 1, 2,
+    ];
     let test = vec![16u8, 0, 0, 0, 1, 0, 0, 0, 17, 0, 0, 0, 1, 0, 0, 0, 1, 2];
     let mut buffer = vec![0; 8];
     test.write(&mut buffer, 0, 8);
@@ -107,29 +107,12 @@ fn test_overlap_segments() {
     <StructWithTwoSegments as Field>::check(&buffer, 0.into(), 8.into(), 8.into()).unwrap();
 }
 
-
 #[test]
 #[should_panic(expected = "SpaceBetweenSegments")]
 fn test_segments_has_spaces_between() {
     let test = vec![
-        16u8,
-        0,
-        0,
-        0,
-        1,
-        0,
-        0,
-        0,
-        18,
-        0,
-        0,
-        0,
-        1,
-        0,
-        0,
-        0, // <-- link after space
-        1,
-        0, // <-- this is space one
+        16u8, 0, 0, 0, 1, 0, 0, 0, 18, 0, 0, 0, 1, 0, 0, 0, // <-- link after space
+        1, 0, // <-- this is space one
         2,
     ];
     let mut buffer = vec![0; 8];
@@ -274,13 +257,13 @@ fn handling_tx_panic_storage_error(blockchain: &Blockchain) {
 }
 
 mod memorydb_tests {
-    use futures::sync::mpsc;
-    use std::path::Path;
-    use tempdir::TempDir;
-    use storage::{Database, MemoryDB};
     use blockchain::Blockchain;
     use crypto::gen_keypair;
+    use futures::sync::mpsc;
     use node::ApiSender;
+    use std::path::Path;
+    use storage::{Database, MemoryDB};
+    use tempdir::TempDir;
 
     fn create_database(_: &Path) -> Box<Database> {
         Box::new(MemoryDB::new())
@@ -320,13 +303,13 @@ mod memorydb_tests {
 }
 
 mod rocksdb_tests {
-    use futures::sync::mpsc;
-    use std::path::Path;
-    use tempdir::TempDir;
-    use storage::{Database, RocksDB, RocksDBOptions};
     use blockchain::Blockchain;
     use crypto::gen_keypair;
+    use futures::sync::mpsc;
     use node::ApiSender;
+    use std::path::Path;
+    use storage::{Database, RocksDB, RocksDBOptions};
+    use tempdir::TempDir;
 
     fn create_database(path: &Path) -> Box<Database> {
         let mut opts = RocksDBOptions::default();

@@ -4,37 +4,34 @@ extern crate exonum_testkit;
 extern crate hyper;
 extern crate iron;
 extern crate iron_test;
-extern crate serde_json;
 extern crate mount;
+extern crate serde_json;
 
 pub mod dmbc_testkit;
 
-use hyper::status::StatusCode;
+use dmbc_testkit::{DmbcTestApiBuilder, DmbcTestKitApi};
+use exonum::crypto;
 use exonum::helpers::Height;
 use exonum::messages::Message;
-use exonum::crypto;
-use dmbc_testkit::{DmbcTestKitApi, DmbcTestApiBuilder};
+use hyper::status::StatusCode;
 
-use dmbc::currency::api::error::ApiError;
 use dmbc::currency::api::blocks::{BlockResponse, BlocksResponse};
+use dmbc::currency::api::error::ApiError;
+use dmbc::currency::assets::MetaAsset;
 use dmbc::currency::configuration::{Configuration, TransactionFees};
 use dmbc::currency::transactions::builders::transaction;
-use dmbc::currency::assets::MetaAsset;
 use dmbc::currency::wallet::Wallet;
 
 #[test]
 fn blocks() {
-    let mut testkit = DmbcTestApiBuilder::new()
-        .create();
+    let mut testkit = DmbcTestApiBuilder::new().create();
     let api = testkit.api();
 
     testkit.create_block();
     testkit.create_block();
     testkit.create_block();
 
-    let (status, response): (StatusCode, BlocksResponse) = api.get_with_status(
-        "/v1/blocks"
-    );
+    let (status, response): (StatusCode, BlocksResponse) = api.get_with_status("/v1/blocks");
 
     assert_eq!(status, StatusCode::Ok);
     assert!(response.is_ok());
@@ -49,8 +46,7 @@ fn blocks() {
 
 #[test]
 fn blocks_count() {
-    let mut testkit = DmbcTestApiBuilder::new()
-        .create();
+    let mut testkit = DmbcTestApiBuilder::new().create();
     let api = testkit.api();
     let count = 2;
 
@@ -59,9 +55,8 @@ fn blocks_count() {
     testkit.create_block();
     testkit.create_block();
 
-    let (status, response): (StatusCode, BlocksResponse) = api.get_with_status(
-        &format!("/v1/blocks?count={}", count)
-    );
+    let (status, response): (StatusCode, BlocksResponse) =
+        api.get_with_status(&format!("/v1/blocks?count={}", count));
 
     assert_eq!(status, StatusCode::Ok);
     assert!(response.is_ok());
@@ -77,8 +72,7 @@ fn blocks_count() {
 
 #[test]
 fn blocks_latest() {
-    let mut testkit = DmbcTestApiBuilder::new()
-        .create();
+    let mut testkit = DmbcTestApiBuilder::new().create();
     let api = testkit.api();
     let latest = 3;
 
@@ -87,9 +81,8 @@ fn blocks_latest() {
     testkit.create_block();
     testkit.create_block();
 
-    let (status, response): (StatusCode, BlocksResponse) = api.get_with_status(
-        &format!("/v1/blocks?latest={}", latest)
-    );
+    let (status, response): (StatusCode, BlocksResponse) =
+        api.get_with_status(&format!("/v1/blocks?latest={}", latest));
 
     assert_eq!(status, StatusCode::Ok);
     assert!(response.is_ok());
@@ -105,8 +98,7 @@ fn blocks_latest() {
 
 #[test]
 fn blocks_skip_empty_with_empty_blockchain() {
-    let mut testkit = DmbcTestApiBuilder::new()
-        .create();
+    let mut testkit = DmbcTestApiBuilder::new().create();
     let api = testkit.api();
 
     testkit.create_block();
@@ -114,9 +106,8 @@ fn blocks_skip_empty_with_empty_blockchain() {
     testkit.create_block();
     testkit.create_block();
 
-    let (status, response): (StatusCode, BlocksResponse) = api.get_with_status(
-        "/v1/blocks?skip_empty_blocks=true"
-    );
+    let (status, response): (StatusCode, BlocksResponse) =
+        api.get_with_status("/v1/blocks?skip_empty_blocks=true");
 
     assert_eq!(status, StatusCode::Ok);
     assert!(response.is_ok());
@@ -145,7 +136,12 @@ fn blocks_skip_empty_with_tx_in_blockchain() {
     let api = testkit.api();
 
     // post the transaction
-    let meta_asset = MetaAsset::new(&receiver_key, meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()));
+    let meta_asset = MetaAsset::new(
+        &receiver_key,
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+    );
     let tx_add_assets1 = transaction::Builder::new()
         .keypair(creator_public_key, creator_secret_key.clone())
         .tx_add_assets()
@@ -158,7 +154,7 @@ fn blocks_skip_empty_with_tx_in_blockchain() {
         .tx_add_assets()
         .add_asset_value(meta_asset)
         .seed(86)
-        .build();  
+        .build();
 
     let tx_hash1 = tx_add_assets1.hash();
     let tx_hash2 = tx_add_assets2.hash();
@@ -170,9 +166,8 @@ fn blocks_skip_empty_with_tx_in_blockchain() {
     testkit.create_block();
     testkit.create_block();
 
-    let (status, response): (StatusCode, BlocksResponse) = api.get_with_status(
-        "/v1/blocks?skip_empty_blocks=true"
-    );
+    let (status, response): (StatusCode, BlocksResponse) =
+        api.get_with_status("/v1/blocks?skip_empty_blocks=true");
 
     assert_eq!(status, StatusCode::Ok);
     assert!(response.is_ok());
@@ -190,8 +185,7 @@ fn blocks_skip_empty_with_tx_in_blockchain() {
 
 #[test]
 fn blocks_latest_out_of_bounds() {
-    let mut testkit = DmbcTestApiBuilder::new()
-        .create();
+    let mut testkit = DmbcTestApiBuilder::new().create();
     let api = testkit.api();
     let latest = 10;
     let actual = 5;
@@ -201,9 +195,8 @@ fn blocks_latest_out_of_bounds() {
     testkit.create_block();
     testkit.create_block();
 
-    let (status, response): (StatusCode, BlocksResponse) = api.get_with_status(
-        &format!("/v1/blocks?latest={}", latest)
-    );
+    let (status, response): (StatusCode, BlocksResponse) =
+        api.get_with_status(&format!("/v1/blocks?latest={}", latest));
 
     assert_eq!(status, StatusCode::Ok);
     assert!(response.is_ok());
@@ -219,8 +212,7 @@ fn blocks_latest_out_of_bounds() {
 
 #[test]
 fn blocks_latest_negative() {
-    let mut testkit = DmbcTestApiBuilder::new()
-        .create();
+    let mut testkit = DmbcTestApiBuilder::new().create();
     let api = testkit.api();
     let latest = -1;
 
@@ -229,9 +221,8 @@ fn blocks_latest_negative() {
     testkit.create_block();
     testkit.create_block();
 
-    let (status, response): (StatusCode, BlocksResponse) = api.get_with_status(
-        &format!("/v1/blocks?latest={}", latest)
-    );
+    let (status, response): (StatusCode, BlocksResponse) =
+        api.get_with_status(&format!("/v1/blocks?latest={}", latest));
 
     assert_eq!(status, StatusCode::BadRequest);
     assert_eq!(response, Err(ApiError::IncorrectRequest));
@@ -239,8 +230,7 @@ fn blocks_latest_negative() {
 
 #[test]
 fn blocks_height() {
-    let mut testkit = DmbcTestApiBuilder::new()
-        .create();
+    let mut testkit = DmbcTestApiBuilder::new().create();
     let api = testkit.api();
     let height = 4;
 
@@ -249,9 +239,8 @@ fn blocks_height() {
     testkit.create_block();
     testkit.create_block();
 
-    let (status, response): (StatusCode, BlockResponse) = api.get_with_status(
-        &format!("/v1/blocks/{}", height)
-    );
+    let (status, response): (StatusCode, BlockResponse) =
+        api.get_with_status(&format!("/v1/blocks/{}", height));
 
     assert_eq!(status, StatusCode::Ok);
 
@@ -261,8 +250,7 @@ fn blocks_height() {
 
 #[test]
 fn blocks_negative_height() {
-    let mut testkit = DmbcTestApiBuilder::new()
-        .create();
+    let mut testkit = DmbcTestApiBuilder::new().create();
     let api = testkit.api();
     let height = -4;
 
@@ -271,9 +259,8 @@ fn blocks_negative_height() {
     testkit.create_block();
     testkit.create_block();
 
-    let (status, _): (StatusCode, BlockResponse) = api.get_with_status(
-        &format!("/v1/blocks/{}", height)
-    );
+    let (status, _): (StatusCode, BlockResponse) =
+        api.get_with_status(&format!("/v1/blocks/{}", height));
 
     assert_eq!(status, StatusCode::BadRequest);
 }
@@ -298,7 +285,12 @@ fn blocks_height_with_tx_in_blockchain() {
     let api = testkit.api();
 
     // post the transaction
-    let meta_asset = MetaAsset::new(&receiver_key, meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()));
+    let meta_asset = MetaAsset::new(
+        &receiver_key,
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+    );
     let tx_add_assets = transaction::Builder::new()
         .keypair(creator_public_key, creator_secret_key.clone())
         .tx_add_assets()
@@ -315,9 +307,8 @@ fn blocks_height_with_tx_in_blockchain() {
     testkit.create_block();
     testkit.create_block();
 
-    let (status, response): (StatusCode, BlockResponse) = api.get_with_status(
-        &format!("/v1/blocks/{}", height)
-    );
+    let (status, response): (StatusCode, BlockResponse) =
+        api.get_with_status(&format!("/v1/blocks/{}", height));
 
     assert_eq!(status, StatusCode::Ok);
 
@@ -329,8 +320,7 @@ fn blocks_height_with_tx_in_blockchain() {
 
 #[test]
 fn blocks_height_out_of_range() {
-    let mut testkit = DmbcTestApiBuilder::new()
-        .create();
+    let mut testkit = DmbcTestApiBuilder::new().create();
     let api = testkit.api();
     let height = 10;
 
@@ -339,9 +329,8 @@ fn blocks_height_out_of_range() {
     testkit.create_block();
     testkit.create_block();
 
-    let (status,_): (StatusCode, BlockResponse) = api.get_with_status(
-        &format!("/v1/blocks/{}", height)
-    );
+    let (status, _): (StatusCode, BlockResponse) =
+        api.get_with_status(&format!("/v1/blocks/{}", height));
 
     assert_eq!(status, StatusCode::NotFound);
     // assert_eq!(response, Ok(None));

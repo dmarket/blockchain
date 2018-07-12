@@ -4,21 +4,21 @@ extern crate exonum_testkit;
 extern crate hyper;
 extern crate iron;
 extern crate iron_test;
-extern crate serde_json;
 extern crate mount;
+extern crate serde_json;
 
 pub mod dmbc_testkit;
 
-use hyper::status::StatusCode;
-use exonum::messages::Message;
-use exonum::crypto;
 use dmbc_testkit::{DmbcTestApiBuilder, DmbcTestKitApi};
+use exonum::crypto;
+use exonum::messages::Message;
+use hyper::status::StatusCode;
 
-use dmbc::currency::configuration::{Configuration, TransactionFees};
-use dmbc::currency::transactions::builders::transaction;
-use dmbc::currency::assets::{AssetBundle, AssetInfo};
-use dmbc::currency::error::Error;
 use dmbc::currency::api::transaction::TransactionResponse;
+use dmbc::currency::assets::{AssetBundle, AssetInfo};
+use dmbc::currency::configuration::{Configuration, TransactionFees};
+use dmbc::currency::error::Error;
+use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::wallet::Wallet;
 
 #[test]
@@ -32,8 +32,13 @@ fn delete_assets_one_from_bundle() {
     let config_fees = TransactionFees::with_default_key(0, 0, transaction_fee, 0, 0, 0);
 
     let (public_key, secret_key) = crypto::gen_keypair();
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
-    
+    let (asset, info) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &public_key,
+    );
+
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
@@ -65,9 +70,18 @@ fn delete_assets_one_from_bundle() {
     let assets: Vec<AssetBundle> = wallet_assets.iter().map(|a| a.into()).collect();
     let expected_balance = balance - transaction_fee;
     assert_eq!(wallet.balance, expected_balance);
-    assert_eq!(assets, vec![AssetBundle::new(asset.clone().id(), units-units_to_remove)]);
+    assert_eq!(
+        assets,
+        vec![AssetBundle::new(
+            asset.clone().id(),
+            units - units_to_remove,
+        )]
+    );
 
-    let assets_infos: Vec<AssetInfo> = wallet_assets.iter().map(|a| a.clone().meta_data.unwrap()).collect();
+    let assets_infos: Vec<AssetInfo> = wallet_assets
+        .iter()
+        .map(|a| a.clone().meta_data.unwrap())
+        .collect();
     assert_eq!(assets_infos[0], info.decrease(units_to_remove).unwrap());
 }
 
@@ -81,8 +95,13 @@ fn delete_assets_all_from_bundle() {
     let config_fees = TransactionFees::with_default_key(0, 0, transaction_fee, 0, 0, 0);
 
     let (public_key, secret_key) = crypto::gen_keypair();
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
-    
+    let (asset, info) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &public_key,
+    );
+
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
@@ -166,7 +185,12 @@ fn delete_assets_that_doent_exist2() {
     let config_fees = TransactionFees::with_default_key(0, 0, transaction_fee, 0, 0, 0);
 
     let (public_key, secret_key) = crypto::gen_keypair();
-    let (another_asset, another_info) = dmbc_testkit::create_asset(meta_data2, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
+    let (another_asset, another_info) = dmbc_testkit::create_asset(
+        meta_data2,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &public_key,
+    );
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -196,12 +220,18 @@ fn delete_assets_that_doent_exist2() {
 
     let wallet = api.get_wallet(&public_key);
     let wallet_assets = api.get_wallet_assets(&public_key);
-    let assets = wallet_assets.iter().map(|a| a.into()).collect::<Vec<AssetBundle>>();
+    let assets = wallet_assets
+        .iter()
+        .map(|a| a.into())
+        .collect::<Vec<AssetBundle>>();
     let expected_balance = balance - transaction_fee;
     assert_eq!(wallet.balance, expected_balance);
     assert_eq!(assets, vec![another_asset.clone()]);
 
-    let assets_infos = wallet_assets.iter().map(|a| a.clone().meta_data.unwrap()).collect::<Vec<AssetInfo>>();
+    let assets_infos = wallet_assets
+        .iter()
+        .map(|a| a.clone().meta_data.unwrap())
+        .collect::<Vec<AssetInfo>>();
     assert_eq!(assets_infos[0], another_info);
 }
 
@@ -216,7 +246,12 @@ fn delete_assets_amount_more_than_wallet_have() {
     let config_fees = TransactionFees::with_default_key(0, 0, transaction_fee, 0, 0, 0);
 
     let (public_key, secret_key) = crypto::gen_keypair();
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
+    let (asset, info) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &public_key,
+    );
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -246,12 +281,18 @@ fn delete_assets_amount_more_than_wallet_have() {
 
     let wallet = api.get_wallet(&public_key);
     let wallet_assets = api.get_wallet_assets(&public_key);
-    let assets = wallet_assets.iter().map(|a| a.into()).collect::<Vec<AssetBundle>>();
+    let assets = wallet_assets
+        .iter()
+        .map(|a| a.into())
+        .collect::<Vec<AssetBundle>>();
     let expected_balance = balance - transaction_fee;
     assert_eq!(wallet.balance, expected_balance);
     assert_eq!(assets, vec![asset.clone()]);
 
-    let assets_infos = wallet_assets.iter().map(|a| a.clone().meta_data.unwrap()).collect::<Vec<AssetInfo>>();
+    let assets_infos = wallet_assets
+        .iter()
+        .map(|a| a.clone().meta_data.unwrap())
+        .collect::<Vec<AssetInfo>>();
     assert_eq!(assets_infos[0], info);
 }
 
@@ -265,7 +306,12 @@ fn delete_assets_insufficient_funds() {
     let config_fees = TransactionFees::with_default_key(0, 0, transaction_fee, 0, 0, 0);
 
     let (public_key, secret_key) = crypto::gen_keypair();
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
+    let (asset, info) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &public_key,
+    );
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -295,11 +341,17 @@ fn delete_assets_insufficient_funds() {
 
     let wallet = api.get_wallet(&public_key);
     let wallet_assets = api.get_wallet_assets(&public_key);
-    let assets = wallet_assets.iter().map(|a| a.into()).collect::<Vec<AssetBundle>>();
+    let assets = wallet_assets
+        .iter()
+        .map(|a| a.into())
+        .collect::<Vec<AssetBundle>>();
     assert_eq!(wallet.balance, balance);
     assert_eq!(assets, vec![asset.clone()]);
 
-    let assets_infos = wallet_assets.iter().map(|a| a.clone().meta_data.unwrap()).collect::<Vec<AssetInfo>>();
+    let assets_infos = wallet_assets
+        .iter()
+        .map(|a| a.clone().meta_data.unwrap())
+        .collect::<Vec<AssetInfo>>();
     assert_eq!(assets_infos[0], info);
 }
 
@@ -314,7 +366,12 @@ fn delete_assets_with_different_creator() {
 
     let (creator_key, _) = crypto::gen_keypair();
     let (public_key, secret_key) = crypto::gen_keypair();
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_key);
+    let (asset, info) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_key,
+    );
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -344,12 +401,18 @@ fn delete_assets_with_different_creator() {
 
     let wallet = api.get_wallet(&public_key);
     let wallet_assets = api.get_wallet_assets(&public_key);
-    let assets = wallet_assets.iter().map(|a| a.into()).collect::<Vec<AssetBundle>>();
+    let assets = wallet_assets
+        .iter()
+        .map(|a| a.into())
+        .collect::<Vec<AssetBundle>>();
     let expected_balance = balance - transaction_fee;
     assert_eq!(wallet.balance, expected_balance);
     assert_eq!(assets, vec![asset.clone()]);
 
-    let assets_infos = wallet_assets.iter().map(|a| a.clone().meta_data.unwrap()).collect::<Vec<AssetInfo>>();
+    let assets_infos = wallet_assets
+        .iter()
+        .map(|a| a.clone().meta_data.unwrap())
+        .collect::<Vec<AssetInfo>>();
     assert_eq!(assets_infos[0], info);
 }
 
@@ -364,8 +427,18 @@ fn delete_assets_two_assets_where_one_asset_doesnt_have_enough_items() {
     let config_fees = TransactionFees::with_default_key(0, 0, transaction_fee, 0, 0, 0);
 
     let (public_key, secret_key) = crypto::gen_keypair();
-    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
-    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
+    let (asset1, info1) = dmbc_testkit::create_asset(
+        meta_data1,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &public_key,
+    );
+    let (asset2, info2) = dmbc_testkit::create_asset(
+        meta_data2,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &public_key,
+    );
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -397,12 +470,18 @@ fn delete_assets_two_assets_where_one_asset_doesnt_have_enough_items() {
 
     let wallet = api.get_wallet(&public_key);
     let wallet_assets = api.get_wallet_assets(&public_key);
-    let assets = wallet_assets.iter().map(|a| a.into()).collect::<Vec<AssetBundle>>();
+    let assets = wallet_assets
+        .iter()
+        .map(|a| a.into())
+        .collect::<Vec<AssetBundle>>();
     let expected_balance = balance - transaction_fee;
     assert_eq!(wallet.balance, expected_balance);
     assert_eq!(assets, vec![asset1.clone(), asset2.clone()]);
 
-    let assets_infos = wallet_assets.iter().map(|a| a.clone().meta_data.unwrap()).collect::<Vec<AssetInfo>>();
+    let assets_infos = wallet_assets
+        .iter()
+        .map(|a| a.clone().meta_data.unwrap())
+        .collect::<Vec<AssetInfo>>();
     assert_eq!(assets_infos, vec![info1, info2]);
 }
 
@@ -418,8 +497,18 @@ fn delete_assets_two_assets_where_one_have_another_creator() {
 
     let (creator_key, _) = crypto::gen_keypair();
     let (public_key, secret_key) = crypto::gen_keypair();
-    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_key);
-    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
+    let (asset1, info1) = dmbc_testkit::create_asset(
+        meta_data1,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_key,
+    );
+    let (asset2, info2) = dmbc_testkit::create_asset(
+        meta_data2,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &public_key,
+    );
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -451,11 +540,17 @@ fn delete_assets_two_assets_where_one_have_another_creator() {
 
     let wallet = api.get_wallet(&public_key);
     let wallet_assets = api.get_wallet_assets(&public_key);
-    let assets = wallet_assets.iter().map(|a| a.into()).collect::<Vec<AssetBundle>>();
+    let assets = wallet_assets
+        .iter()
+        .map(|a| a.into())
+        .collect::<Vec<AssetBundle>>();
     let expected_balance = balance - transaction_fee;
     assert_eq!(wallet.balance, expected_balance);
     assert_eq!(assets, vec![asset1.clone(), asset2.clone()]);
 
-    let assets_infos = wallet_assets.iter().map(|a| a.clone().meta_data.unwrap()).collect::<Vec<AssetInfo>>();
+    let assets_infos = wallet_assets
+        .iter()
+        .map(|a| a.clone().meta_data.unwrap())
+        .collect::<Vec<AssetInfo>>();
     assert_eq!(assets_infos, vec![info1, info2]);
 }

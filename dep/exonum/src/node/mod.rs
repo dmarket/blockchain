@@ -16,45 +16,47 @@
 //!
 //! For details about consensus message handling see messages module documentation.
 
-use std::io;
-use std::sync::Arc;
-use std::thread;
-use std::net::SocketAddr;
-use std::time::{Duration, SystemTime};
 use std::collections::BTreeMap;
 use std::collections::HashSet;
 use std::fmt;
+use std::io;
+use std::net::SocketAddr;
+use std::sync::Arc;
+use std::thread;
+use std::time::{Duration, SystemTime};
 
-use toml::Value;
-use router::Router;
-use mount::Mount;
+use futures::sync::mpsc;
+use futures::{Future, Sink};
 use iron::{Chain, Iron};
 use iron_cors::CorsMiddleware;
-use serde::{ser, de};
-use futures::{Future, Sink};
-use futures::sync::mpsc;
+use mount::Mount;
+use router::Router;
+use serde::{de, ser};
 use tokio_core::reactor::Core;
+use toml::Value;
 
-use crypto::{self, Hash, PublicKey, SecretKey};
-use blockchain::{Blockchain, GenesisConfig, Schema, SharedNodeState, Transaction, Service};
 use api::{private, public, Api};
-use messages::{Connect, Message, RawMessage};
-use events::{NetworkRequest, TimeoutRequest, NetworkEvent, InternalRequest, InternalEvent,
-             SyncSender, HandlerPart, NetworkConfiguration, NetworkPart, InternalPart};
-use events::error::{into_other, other_error, LogError, log_error};
+use blockchain::{Blockchain, GenesisConfig, Schema, Service, SharedNodeState, Transaction};
+use crypto::{self, Hash, PublicKey, SecretKey};
+use events::error::{into_other, log_error, other_error, LogError};
+use events::{
+    HandlerPart, InternalEvent, InternalPart, InternalRequest, NetworkConfiguration, NetworkEvent,
+    NetworkPart, NetworkRequest, SyncSender, TimeoutRequest,
+};
 use helpers::{Height, Milliseconds, Round, ValidatorId};
+use messages::{Connect, Message, RawMessage};
 use storage::Database;
 
 pub use self::state::{RequestData, State, TxPool, ValidatorState};
 pub use self::whitelist::Whitelist;
 
-mod events;
 mod basic;
 mod consensus;
+mod events;
 mod requests;
-mod whitelist;
 pub mod state; // TODO: temporary solution to get access to WAIT consts (ECR-167)
 pub mod timeout_adjuster;
+mod whitelist;
 
 /// External messages.
 #[derive(Debug)]
@@ -177,9 +179,9 @@ impl From<AllowOrigin> for CorsMiddleware {
     fn from(allow_origin: AllowOrigin) -> CorsMiddleware {
         match allow_origin {
             AllowOrigin::Any => CorsMiddleware::with_allow_any(),
-            AllowOrigin::Whitelist(hosts) => CorsMiddleware::with_whitelist(
-                hosts.into_iter().collect(),
-            ),
+            AllowOrigin::Whitelist(hosts) => {
+                CorsMiddleware::with_whitelist(hosts.into_iter().collect())
+            }
         }
     }
 }
@@ -264,7 +266,6 @@ fn allow_origin_serde() {
     );
 }
 
-
 /// Events pool capacities.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct EventsPoolCapacity {
@@ -288,7 +289,6 @@ impl Default for EventsPoolCapacity {
         }
     }
 }
-
 
 /// Memory pool configuration parameters.
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -390,9 +390,7 @@ impl NodeHandler {
         let validator_id = stored
             .validator_keys
             .iter()
-            .position(|pk| {
-                pk.consensus_key == config.listener.consensus_public_key
-            })
+            .position(|pk| pk.consensus_key == config.listener.consensus_public_key)
             .map(|id| ValidatorId(id as u16));
         info!("Validator id = '{:?}'", validator_id);
         let connect = Connect::new(
@@ -568,8 +566,8 @@ impl NodeHandler {
     /// Adds `NodeTimeout::Propose` timeout to the channel.
     pub fn add_propose_timeout(&mut self) {
         let adjusted_timeout = self.state.propose_timeout();
-        let time = self.round_start_time(self.state.round()) +
-            Duration::from_millis(adjusted_timeout);
+        let time =
+            self.round_start_time(self.state.round()) + Duration::from_millis(adjusted_timeout);
 
         trace!(
             "ADD PROPOSE TIMEOUT: time={:?}, height={}, round={}",
@@ -604,8 +602,8 @@ impl NodeHandler {
 
     /// Adds `NodeTimeout::UpdateApiState` timeout to the channel.
     pub fn add_update_api_state_timeout(&mut self) {
-        let time = self.system_state.current_time() +
-            Duration::from_millis(self.api_state().state_update_timeout());
+        let time = self.system_state.current_time()
+            + Duration::from_millis(self.api_state().state_update_timeout());
         self.add_timeout(NodeTimeout::UpdateApiState, time);
     }
 
@@ -627,8 +625,7 @@ impl fmt::Debug for NodeHandler {
         write!(
             f,
             "NodeHandler {{ channel: Channel {{ .. }}, blockchain: {:?}, peer_discovery: {:?} }}",
-            self.blockchain,
-            self.peer_discovery
+            self.blockchain, self.peer_discovery
         )
     }
 }
@@ -649,9 +646,12 @@ impl ApiSender {
     /// Add peer to peer list
     pub fn peer_add(&self, addr: SocketAddr) -> io::Result<()> {
         let msg = ExternalMessage::PeerAdd(addr);
-        self.0.clone().send(msg).wait().map(drop).map_err(
-            into_other,
-        )
+        self.0
+            .clone()
+            .send(msg)
+            .wait()
+            .map(drop)
+            .map_err(into_other)
     }
 }
 
@@ -662,9 +662,12 @@ impl TransactionSend for ApiSender {
             return Err(io::Error::new(io::ErrorKind::Other, msg));
         }
         let msg = ExternalMessage::Transaction(tx);
-        self.0.clone().send(msg).wait().map(drop).map_err(
-            into_other,
-        )
+        self.0
+            .clone()
+            .send(msg)
+            .wait()
+            .map(drop)
+            .map_err(into_other)
     }
 }
 
@@ -694,9 +697,15 @@ pub struct NodeChannel {
     /// Channel for network requests.
     pub network_requests: (mpsc::Sender<NetworkRequest>, mpsc::Receiver<NetworkRequest>),
     /// Channel for timeout requests.
-    pub internal_requests: (mpsc::Sender<InternalRequest>, mpsc::Receiver<InternalRequest>),
+    pub internal_requests: (
+        mpsc::Sender<InternalRequest>,
+        mpsc::Receiver<InternalRequest>,
+    ),
     /// Channel for api requests.
-    pub api_requests: (mpsc::Sender<ExternalMessage>, mpsc::Receiver<ExternalMessage>),
+    pub api_requests: (
+        mpsc::Sender<ExternalMessage>,
+        mpsc::Receiver<ExternalMessage>,
+    ),
     /// Channel for network events.
     pub network_events: (mpsc::Sender<NetworkEvent>, mpsc::Receiver<NetworkEvent>),
     /// Channel for internal events.
@@ -743,12 +752,12 @@ impl Node {
         crypto::init();
 
         if cfg!(feature = "flame_profile") {
-            ::exonum_profiler::init_handler(
-                ::std::env::var(PROFILE_ENV_VARIABLE_NAME).expect(&format!(
+            ::exonum_profiler::init_handler(::std::env::var(PROFILE_ENV_VARIABLE_NAME).expect(
+                &format!(
                     "You compiled exonum with profiling support, but {}",
                     PROFILE_ENV_VARIABLE_NAME
-                )),
-            )
+                ),
+            ))
         };
 
         let channel = NodeChannel::new(&node_cfg.mempool.events_pool_capacity);
@@ -762,7 +771,6 @@ impl Node {
         blockchain
             .create_genesis_block(node_cfg.genesis.clone())
             .unwrap();
-
 
         let config = Configuration {
             listener: ListenerConfig {
@@ -816,9 +824,8 @@ impl Node {
         let network_thread = thread::spawn(move || {
             let mut core = Core::new()?;
             let handle = core.handle();
-            core.handle().spawn(
-                timeouts_part.run(handle).map_err(log_error),
-            );
+            core.handle()
+                .spawn(timeouts_part.run(handle).map_err(log_error));
             let network_handler = network_part.run(&core.handle());
             core.run(network_handler).map(drop).map_err(|e| {
                 other_error(&format!("An error in the `Network` thread occurred: {}", e))
@@ -826,9 +833,8 @@ impl Node {
         });
 
         let mut core = Core::new()?;
-        core.run(handler_part.run()).map_err(|_| {
-            other_error("An error in the `Handler` thread occurred")
-        })?;
+        core.run(handler_part.run())
+            .map_err(|_| other_error("An error in the `Handler` thread occurred"))?;
         network_thread.join().unwrap()
     }
 

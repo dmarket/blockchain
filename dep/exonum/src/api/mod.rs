@@ -14,29 +14,29 @@
 
 //! `RESTful` API and corresponding utilities.
 
-use std::ops::Deref;
-use std::marker::PhantomData;
-use std::io;
 use std::collections::BTreeMap;
 use std::fmt;
+use std::io;
+use std::marker::PhantomData;
+use std::ops::Deref;
 
-use iron::IronError;
+use cookie::Cookie as CookiePair;
+use hyper::header::{ContentType, SetCookie};
+use iron::headers::Cookie;
 use iron::prelude::*;
 use iron::status;
-use iron::headers::Cookie;
-use hyper::header::{ContentType, SetCookie};
-use cookie::Cookie as CookiePair;
+use iron::IronError;
 use router::Router;
-use serde_json;
+use serde::de::{self, Deserialize, Deserializer, Visitor};
 use serde::{Serialize, Serializer};
-use serde::de::{self, Visitor, Deserialize, Deserializer};
+use serde_json;
 
-use crypto::{PublicKey, SecretKey, Hash};
-use encoding::serialize::{FromHex, FromHexError, ToHex, encode_hex};
-use storage::{Result as StorageResult, Error as StorageError};
+use crypto::{Hash, PublicKey, SecretKey};
+use encoding::serialize::{encode_hex, FromHex, FromHexError, ToHex};
+use storage::{Error as StorageError, Result as StorageResult};
 
-pub mod public;
 pub mod private;
+pub mod public;
 #[cfg(test)]
 mod tests;
 
@@ -78,8 +78,9 @@ impl fmt::Display for ApiError {
 impl ::std::error::Error for ApiError {
     fn description(&self) -> &str {
         match *self {
-            ApiError::Service(ref error) |
-            ApiError::IncorrectRequest(ref error) => error.description(),
+            ApiError::Service(ref error) | ApiError::IncorrectRequest(ref error) => {
+                error.description()
+            }
             ApiError::Storage(ref error) => error.description(),
             ApiError::FromHex(ref error) => error.description(),
             ApiError::Io(ref error) => error.description(),
@@ -126,8 +127,7 @@ impl From<ApiError> for IronError {
         body.insert("debug", format!("{:?}", e));
         body.insert("description", e.description().to_string());
         let code = match e {
-            ApiError::FileExists(hash) |
-            ApiError::FileNotFound(hash) => {
+            ApiError::FileExists(hash) | ApiError::FileNotFound(hash) => {
                 body.insert("hash", encode_hex(&hash));
                 status::Conflict
             }
@@ -195,10 +195,7 @@ where
 
 impl<'de, T> Deserialize<'de> for HexField<T>
 where
-    T: AsRef<[u8]>
-        + FromHex<Error = FromHexError>
-        + ToHex
-        + Clone,
+    T: AsRef<[u8]> + FromHex<Error = FromHexError> + ToHex + Clone,
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -227,9 +224,10 @@ pub trait Api {
                 }
             }
         }
-        Err(StorageError::new(
-            format!("Unable to find value with given key {}", key),
-        ))
+        Err(StorageError::new(format!(
+            "Unable to find value with given key {}",
+            key
+        )))
     }
 
     /// Loads public and secret key from the cookies.

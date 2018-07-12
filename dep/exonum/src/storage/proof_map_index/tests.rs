@@ -14,14 +14,14 @@
 
 use std::collections::HashSet;
 
-use rand::{self, thread_rng, Rng};
+use super::key::{KEY_SIZE, LEAF_KEY_PREFIX};
+use super::proof::MapProof;
+use super::{ProofMapIndex, ProofPath};
 use crypto::{hash, Hash, HashStream};
-use storage::db::Database;
 use encoding::serialize::json::reexport::to_string;
 use encoding::serialize::reexport::{Serialize, Serializer};
-use super::{ProofMapIndex, ProofPath};
-use super::proof::MapProof;
-use super::key::{KEY_SIZE, LEAF_KEY_PREFIX};
+use rand::{self, thread_rng, Rng};
+use storage::db::Database;
 
 const IDX_NAME: &'static str = "idx_name";
 
@@ -414,7 +414,8 @@ fn fuzz_delete_build_proofs(db: Box<Database>) {
         index.put(&item.0, item.1.clone());
     }
 
-    let mut keys_to_remove = data.iter()
+    let mut keys_to_remove = data
+        .iter()
         .take(50)
         .map(|item| item.0.clone())
         .collect::<Vec<_>>();
@@ -454,7 +455,8 @@ fn fuzz_delete(db1: Box<Database>, db2: Box<Database>) {
 
     let saved_hash = index1.root_hash();
 
-    let mut keys_to_remove = data.iter()
+    let mut keys_to_remove = data
+        .iter()
         .take(50)
         .map(|item| item.0.clone())
         .collect::<Vec<_>>();
@@ -625,8 +627,8 @@ struct ProofInfo<'a, A: AsRef<[u8]>, V: Serialize + 'a> {
 
 mod memorydb_tests {
     use std::path::Path;
-    use tempdir::TempDir;
     use storage::{Database, MemoryDB};
+    use tempdir::TempDir;
 
     fn create_database(_: &Path) -> Box<Database> {
         Box::new(MemoryDB::new())
@@ -787,8 +789,8 @@ mod memorydb_tests {
 
 mod rocksdb_tests {
     use std::path::Path;
-    use tempdir::TempDir;
     use storage::{Database, RocksDB, RocksDBOptions};
+    use tempdir::TempDir;
 
     fn create_database(path: &Path) -> Box<Database> {
         let mut opts = RocksDBOptions::default();

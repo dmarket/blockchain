@@ -1,7 +1,7 @@
 #![allow(missing_docs)]
 
-use decimal::UFract64;
 use currency::assets::{Fee, Fees};
+use decimal::UFract64;
 
 pub struct Builder {
     trade: Option<Fee>,

@@ -4,21 +4,21 @@ extern crate exonum_testkit;
 extern crate hyper;
 extern crate iron;
 extern crate iron_test;
-extern crate serde_json;
 extern crate mount;
+extern crate serde_json;
 
 pub mod dmbc_testkit;
 
-use hyper::status::StatusCode;
-use exonum::messages::Message;
-use exonum::crypto;
 use dmbc_testkit::{DmbcTestApiBuilder, DmbcTestKitApi};
+use exonum::crypto;
+use exonum::messages::Message;
+use hyper::status::StatusCode;
 
-use dmbc::currency::configuration::{Configuration, TransactionFees};
-use dmbc::currency::transactions::builders::transaction;
-use dmbc::currency::assets::AssetBundle;
-use dmbc::currency::error::Error;
 use dmbc::currency::api::transaction::TransactionResponse;
+use dmbc::currency::assets::AssetBundle;
+use dmbc::currency::configuration::{Configuration, TransactionFees};
+use dmbc::currency::error::Error;
+use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::wallet::Wallet;
 
 #[test]
@@ -33,7 +33,12 @@ fn transfer() {
     let (public_key, secret_key) = crypto::gen_keypair();
     let (recipient_key, _) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
+    let (asset, info) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &public_key,
+    );
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -63,13 +68,21 @@ fn transfer() {
     assert_eq!(tx_status, Ok(Ok(())));
 
     let recipient_wallet = api.get_wallet(&recipient_key);
-    let recipient_assets = api.get_wallet_assets(&recipient_key).iter().map(|a| a.into()).collect::<Vec<AssetBundle>>();
+    let recipient_assets = api
+        .get_wallet_assets(&recipient_key)
+        .iter()
+        .map(|a| a.into())
+        .collect::<Vec<AssetBundle>>();
     assert_eq!(recipient_wallet.balance, 0);
     assert_eq!(recipient_assets, vec![asset]);
 
     let sender_wallet = api.get_wallet(&public_key);
     let expected_balance = balance - transaction_fee;
-    let sender_assets = api.get_wallet_assets(&public_key).iter().map(|a| a.into()).collect::<Vec<AssetBundle>>();
+    let sender_assets = api
+        .get_wallet_assets(&public_key)
+        .iter()
+        .map(|a| a.into())
+        .collect::<Vec<AssetBundle>>();
     assert_eq!(sender_wallet.balance, expected_balance);
     assert!(sender_assets.is_empty());
 }
@@ -86,7 +99,12 @@ fn transfer_asset_not_found() {
     let (public_key, secret_key) = crypto::gen_keypair();
     let (recipient_key, _) = crypto::gen_keypair();
 
-    let (asset, _) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
+    let (asset, _) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &public_key,
+    );
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -120,7 +138,11 @@ fn transfer_asset_not_found() {
 
     let sender_wallet = api.get_wallet(&public_key);
     let expected_balance = balance - transaction_fee;
-    let sender_assets = api.get_wallet_assets(&public_key).iter().map(|a| a.into()).collect::<Vec<AssetBundle>>();
+    let sender_assets = api
+        .get_wallet_assets(&public_key)
+        .iter()
+        .map(|a| a.into())
+        .collect::<Vec<AssetBundle>>();
     assert_eq!(sender_wallet.balance, expected_balance);
     assert!(sender_assets.is_empty());
 }
@@ -137,7 +159,12 @@ fn transfer_insufficient_funds() {
     let (public_key, secret_key) = crypto::gen_keypair();
     let (recipient_key, _) = crypto::gen_keypair();
 
-    let (asset, _) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
+    let (asset, _) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &public_key,
+    );
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -187,7 +214,12 @@ fn transfer_insufficient_assets() {
     let (public_key, secret_key) = crypto::gen_keypair();
     let (recipient_key, _) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
+    let (asset, info) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &public_key,
+    );
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -199,7 +231,7 @@ fn transfer_insufficient_assets() {
     let tx_transfer = transaction::Builder::new()
         .keypair(public_key, secret_key)
         .tx_transfer()
-        .add_asset_value(AssetBundle::new(asset.id(), asset.amount()*2))
+        .add_asset_value(AssetBundle::new(asset.id(), asset.amount() * 2))
         .recipient(recipient_key)
         .seed(42)
         .build();

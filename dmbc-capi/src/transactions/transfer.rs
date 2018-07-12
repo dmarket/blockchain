@@ -25,11 +25,11 @@ message! {
 
 #[derive(Debug, Clone)]
 pub struct TransferWrapper {
-    from:      PublicKey,
-    to:        PublicKey,
-    amount:    u64,
-    assets:    Vec<AssetBundle>,
-    seed:      u64,
+    from: PublicKey,
+    to: PublicKey,
+    amount: u64,
+    assets: Vec<AssetBundle>,
+    seed: u64,
     data_info: String,
 }
 
@@ -41,19 +41,17 @@ impl TransferWrapper {
             amount: amount,
             assets: Vec::new(),
             seed: seed,
-            data_info: data_info.to_string()
+            data_info: data_info.to_string(),
         }
     }
 
     pub fn from_ptr<'a>(wrapper: *mut TransferWrapper) -> Result<&'a mut TransferWrapper, Error> {
         if wrapper.is_null() {
-            return Err(
-                Error::new(
-                    ErrorKind::Text("wrapper isn't initialized".to_string())
-                )
-            );
+            return Err(Error::new(ErrorKind::Text(
+                "wrapper isn't initialized".to_string(),
+            )));
         }
-        Ok( unsafe { &mut *wrapper } )
+        Ok(unsafe { &mut *wrapper })
     }
 
     pub fn add_asset(&mut self, asset: AssetBundle) {
@@ -63,9 +61,9 @@ impl TransferWrapper {
     pub fn unwrap(&self) -> Transfer {
         Transfer::new(
             &self.from,
-            &self.to, 
+            &self.to,
             self.amount,
-            self.assets.clone(), 
+            self.assets.clone(),
             self.seed,
             &self.data_info,
             &SecretKey::zero(),

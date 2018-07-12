@@ -4,23 +4,23 @@ extern crate exonum_testkit;
 extern crate hyper;
 extern crate iron;
 extern crate iron_test;
-extern crate serde_json;
 extern crate mount;
+extern crate serde_json;
 
 pub mod dmbc_testkit;
 
-use hyper::status::StatusCode;
-use exonum::messages::Message;
-use exonum::crypto;
 use dmbc_testkit::{DmbcTestApiBuilder, DmbcTestKitApi};
+use exonum::crypto;
+use exonum::messages::Message;
+use hyper::status::StatusCode;
 
-use dmbc::currency::configuration::{Configuration, TransactionFees};
-use dmbc::currency::transactions::builders::transaction;
-use dmbc::currency::assets::{TradeAsset, AssetBundle};
-use dmbc::currency::error::Error;
 use dmbc::currency::api::transaction::TransactionResponse;
-use dmbc::currency::wallet::Wallet;
+use dmbc::currency::assets::{AssetBundle, TradeAsset};
+use dmbc::currency::configuration::{Configuration, TransactionFees};
+use dmbc::currency::error::Error;
+use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::transactions::components::FeeStrategy;
+use dmbc::currency::wallet::Wallet;
 
 #[test]
 fn trade_intermediary_fee_from_recipient() {
@@ -37,7 +37,12 @@ fn trade_intermediary_fee_from_recipient() {
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &seller_public_key);
+    let (asset, info) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &seller_public_key,
+    );
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -81,7 +86,8 @@ fn trade_intermediary_fee_from_recipient() {
     let assets_price = units * price;
     let trade_fee = units * fixed;
     let expected_sellers_balance = balance + assets_price + trade_fee;
-    let expected_buyer_balace = balance - assets_price - transaction_fee - trade_fee - intermediary_commission;
+    let expected_buyer_balace =
+        balance - assets_price - transaction_fee - trade_fee - intermediary_commission;
     let expected_genesis_balance = genesis_balance + transaction_fee;
 
     assert_eq!(seller_wallet.balance, expected_sellers_balance);
@@ -89,9 +95,13 @@ fn trade_intermediary_fee_from_recipient() {
     assert_eq!(genesis_wallet.balance, expected_genesis_balance);
     assert_eq!(intermediary_wallet.balance, intermediary_commission);
 
-    let buyer_assets = api.get_wallet_assets(&buyer_public_key).iter().map(|a| a.into()).collect::<Vec<AssetBundle>>();
+    let buyer_assets = api
+        .get_wallet_assets(&buyer_public_key)
+        .iter()
+        .map(|a| a.into())
+        .collect::<Vec<AssetBundle>>();
     assert!(seller_wallet.assets_count == 0);
-    assert_eq!(buyer_assets,vec![asset]);
+    assert_eq!(buyer_assets, vec![asset]);
 }
 
 #[test]
@@ -109,7 +119,12 @@ fn trade_intermediary_fee_from_sender() {
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &seller_public_key);
+    let (asset, info) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &seller_public_key,
+    );
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -151,7 +166,8 @@ fn trade_intermediary_fee_from_sender() {
     let intermediary_wallet = api.get_wallet(&intermediary_public_key);
 
     let assets_price = units * price;
-    let expected_sellers_balance = balance + assets_price - transaction_fee - intermediary_commission;
+    let expected_sellers_balance =
+        balance + assets_price - transaction_fee - intermediary_commission;
     let expected_buyer_balace = balance - assets_price;
     let expected_genesis_balance = genesis_balance + transaction_fee;
 
@@ -159,10 +175,14 @@ fn trade_intermediary_fee_from_sender() {
     assert_eq!(buyer_wallet.balance, expected_buyer_balace);
     assert_eq!(genesis_wallet.balance, expected_genesis_balance);
     assert_eq!(intermediary_wallet.balance, intermediary_commission);
-    
-    let buyer_assets = api.get_wallet_assets(&buyer_public_key).iter().map(|a| a.into()).collect::<Vec<AssetBundle>>();
+
+    let buyer_assets = api
+        .get_wallet_assets(&buyer_public_key)
+        .iter()
+        .map(|a| a.into())
+        .collect::<Vec<AssetBundle>>();
     assert!(seller_wallet.assets_count == 0);
-    assert_eq!(buyer_assets,vec![asset]);
+    assert_eq!(buyer_assets, vec![asset]);
 }
 
 #[test]
@@ -180,7 +200,12 @@ fn trade_intermediary_fee_from_recipient_and_sender() {
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &seller_public_key);
+    let (asset, info) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &seller_public_key,
+    );
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -221,8 +246,14 @@ fn trade_intermediary_fee_from_recipient_and_sender() {
     let genesis_wallet = api.get_wallet(&dmbc_testkit::default_genesis_key());
     let intermediary_wallet = api.get_wallet(&intermediary_public_key);
 
-    let expected_sellers_balance = balance + units * price - transaction_fee/2 - intermediary_commission/2 + fixed * units / 2;
-    let expected_buyer_balace = balance - units * price - transaction_fee/2 - intermediary_commission/2 - fixed * units / 2;
+    let expected_sellers_balance = balance + units * price
+        - transaction_fee / 2
+        - intermediary_commission / 2 + fixed * units / 2;
+    let expected_buyer_balace = balance
+        - units * price
+        - transaction_fee / 2
+        - intermediary_commission / 2
+        - fixed * units / 2;
     let expected_genesis_balance = genesis_balance + transaction_fee;
 
     assert_eq!(seller_wallet.balance, expected_sellers_balance);
@@ -230,9 +261,13 @@ fn trade_intermediary_fee_from_recipient_and_sender() {
     assert_eq!(genesis_wallet.balance, expected_genesis_balance);
     assert_eq!(intermediary_wallet.balance, intermediary_commission);
 
-    let buyer_assets = api.get_wallet_assets(&buyer_public_key).iter().map(|a| a.into()).collect::<Vec<AssetBundle>>();
+    let buyer_assets = api
+        .get_wallet_assets(&buyer_public_key)
+        .iter()
+        .map(|a| a.into())
+        .collect::<Vec<AssetBundle>>();
     assert!(seller_wallet.assets_count == 0);
-    assert_eq!(buyer_assets,vec![asset]);
+    assert_eq!(buyer_assets, vec![asset]);
 }
 
 #[test]
@@ -250,7 +285,12 @@ fn trade_intermediary_fee_from_intermediary() {
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &seller_public_key);
+    let (asset, info) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &seller_public_key,
+    );
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -286,7 +326,7 @@ fn trade_intermediary_fee_from_intermediary() {
 
     let (_, tx_status) = api.get_tx_status(&tx_trade);
     assert_eq!(tx_status, Ok(Ok(())));
-    
+
     let seller_wallet = api.get_wallet(&seller_public_key);
     let buyer_wallet = api.get_wallet(&buyer_public_key);
     let genesis_wallet = api.get_wallet(&dmbc_testkit::default_genesis_key());
@@ -304,9 +344,13 @@ fn trade_intermediary_fee_from_intermediary() {
     assert_eq!(genesis_wallet.balance, expected_genesis_balance);
     assert_eq!(intermediary_wallet.balance, expected_intermediary_balance);
 
-    let buyer_assets = api.get_wallet_assets(&buyer_public_key).iter().map(|a| a.into()).collect::<Vec<AssetBundle>>();
+    let buyer_assets = api
+        .get_wallet_assets(&buyer_public_key)
+        .iter()
+        .map(|a| a.into())
+        .collect::<Vec<AssetBundle>>();
     assert!(seller_wallet.assets_count == 0);
-    assert_eq!(buyer_assets,vec![asset]);
+    assert_eq!(buyer_assets, vec![asset]);
 }
 
 #[test]
@@ -324,7 +368,12 @@ fn trade_intermediary_asset_not_found() {
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
-    let (asset, _) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &seller_public_key);
+    let (asset, _) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &seller_public_key,
+    );
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -391,7 +440,12 @@ fn trade_intermediary_insufficient_assets() {
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &seller_public_key);
+    let (asset, info) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &seller_public_key,
+    );
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
@@ -460,7 +514,12 @@ fn trade_intermediary_insufficient_funds() {
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &seller_public_key);
+    let (asset, info) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &seller_public_key,
+    );
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))

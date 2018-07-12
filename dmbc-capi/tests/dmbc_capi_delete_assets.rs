@@ -3,12 +3,12 @@ extern crate exonum;
 
 pub mod utils;
 
+use exonum::blockchain::Transaction;
 use exonum::crypto::{PublicKey, SecretKey};
 use exonum::encoding::serialize::FromHex;
-use exonum::blockchain::Transaction;
 
+use dmbc::currency::assets::{AssetBundle, AssetId};
 use dmbc::currency::transactions::builders::transaction;
-use dmbc::currency::assets::{AssetId, AssetBundle};
 
 #[test]
 fn capi_delete_assets() {

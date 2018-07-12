@@ -13,39 +13,37 @@
 // limitations under the License.
 
 use crypto::Hash;
-use messages::Precommit;
 use helpers::{Height, ValidatorId};
+use messages::Precommit;
 
 /// Current core information schema version.
 pub const SCHEMA_MAJOR_VERSION: u16 = 0;
 
-encoding_struct!(
-    /// Exonum block header data structure.
-    ///
-    /// Block is essentially a list of transactions, which is
-    /// a result of the consensus algorithm (thus authenticated by the supermajority of validators)
-    /// and is applied atomically to the blockchain state.
-    ///
-    /// Header only contains the amount of transactions and the transactions root hash as well as
-    /// other information, but not the transactions themselves.
-    struct Block {
-        /// Information schema version.
-        schema_version: u16,
-        /// Block proposer id.
-        proposer_id: ValidatorId,
-        /// Height of the committed block
-        height: Height,
-        /// Number of transactions in block.
-        tx_count: u32,
-        /// Hash link to the previous block in blockchain.
-        prev_hash: &Hash,
-        /// Root hash of [merkle tree](struct.Schema.html#method.block_txs) of current block
-        /// transactions.
-        tx_hash: &Hash,
-        /// Hash of the current `exonum` state after applying transactions in the block.
-        state_hash: &Hash,
-    }
-);
+encoding_struct!(/// Exonum block header data structure.
+///
+/// Block is essentially a list of transactions, which is
+/// a result of the consensus algorithm (thus authenticated by the supermajority of validators)
+/// and is applied atomically to the blockchain state.
+///
+/// Header only contains the amount of transactions and the transactions root hash as well as
+/// other information, but not the transactions themselves.
+struct Block {
+    /// Information schema version.
+    schema_version: u16,
+    /// Block proposer id.
+    proposer_id: ValidatorId,
+    /// Height of the committed block
+    height: Height,
+    /// Number of transactions in block.
+    tx_count: u32,
+    /// Hash link to the previous block in blockchain.
+    prev_hash: &Hash,
+    /// Root hash of [merkle tree](struct.Schema.html#method.block_txs) of current block
+    /// transactions.
+    tx_hash: &Hash,
+    /// Hash of the current `exonum` state after applying transactions in the block.
+    state_hash: &Hash,
+});
 
 /// Block with pre-commits.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -58,8 +56,8 @@ pub struct BlockProof {
 
 #[cfg(test)]
 mod tests {
-    use crypto::hash;
     use super::*;
+    use crypto::hash;
 
     #[test]
     fn test_block() {

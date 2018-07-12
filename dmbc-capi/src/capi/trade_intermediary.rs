@@ -1,14 +1,14 @@
-use std::ptr;
 use std::mem;
+use std::ptr;
 
-use libc::{c_char, size_t};
-use exonum::storage::StorageValue;
 use exonum::messages::Message;
+use exonum::storage::StorageValue;
+use libc::{c_char, size_t};
 
 use assets::TradeAsset;
-use transactions::components::Intermediary;
-use transactions::trade_intermediary::{TradeOfferIntermediaryWrapper, TradeIntermediaryWrapper};
 use capi::common::*;
+use transactions::components::Intermediary;
+use transactions::trade_intermediary::{TradeIntermediaryWrapper, TradeOfferIntermediaryWrapper};
 
 use error::{Error, ErrorKind};
 
@@ -90,7 +90,7 @@ ffi_fn! {
                 }
                 return false;
             }
-        } 
+        }
 
         let asset = TradeAsset::from_ptr(asset);
         wrapper.add_asset(asset.clone());
@@ -100,7 +100,7 @@ ffi_fn! {
 
 ffi_fn! {
     fn dmbc_trade_offer_intermediary_into_bytes(
-        wrapper: *mut TradeOfferIntermediaryWrapper, 
+        wrapper: *mut TradeOfferIntermediaryWrapper,
         length: *mut size_t,
         error: *mut Error
     ) -> *const u8 {
@@ -131,7 +131,7 @@ ffi_fn! {
 
 ffi_fn! {
     fn dmbc_tx_trade_intermediary_create(
-        wrapper: *mut TradeOfferIntermediaryWrapper, 
+        wrapper: *mut TradeOfferIntermediaryWrapper,
         seller_signature: *const c_char,
         intermediary_signature: *const c_char,
         seed: u64,

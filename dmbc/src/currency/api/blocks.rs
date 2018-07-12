@@ -1,9 +1,10 @@
 extern crate serde_json;
 
-use exonum::api::Api;
-use exonum::blockchain::{Blockchain, Block};
-use exonum::explorer::{BlockchainExplorer, BlockInfo};
 use currency::api::error::ApiError;
+use currency::api::params::{Params, Value};
+use exonum::api::Api;
+use exonum::blockchain::{Block, Blockchain};
+use exonum::explorer::{BlockInfo, BlockchainExplorer};
 use exonum::helpers::Height;
 use hyper::header::ContentType;
 use iron::headers::AccessControlAllowOrigin;
@@ -11,7 +12,6 @@ use iron::prelude::*;
 use iron::status;
 use prometheus::IntCounter;
 use router::Router;
-use currency::api::params::{Params, Value};
 
 const MAX_BLOCKS_PER_REQUEST: u64 = 1000;
 
@@ -24,7 +24,6 @@ pub type BlocksResponse = Result<Vec<Block>, ApiError>;
 pub type BlockResponse = Result<Option<BlockInfo>, ApiError>;
 
 impl BlocksApi {
-
     fn get_blocks(
         &self,
         count: u64,
@@ -42,10 +41,9 @@ impl BlocksApi {
         let explorer = BlockchainExplorer::new(&self.blockchain);
         match explorer.block_info(height) {
             Some(b) => Ok(Some(b)),
-            None => Err(ApiError::BlockNotFound)
+            None => Err(ApiError::BlockNotFound),
         }
     }
-
 }
 
 lazy_static! {
@@ -75,39 +73,38 @@ impl Api for BlocksApi {
             LIST_REQUESTS.inc();
 
             let map = req.get_ref::<Params>().unwrap();
-            let mut err:Option<ApiError> = None;
+            let mut err: Option<ApiError> = None;
             let count: u64 = match map.find(&["count"]) {
-                Some(&Value::String(ref count_str)) => {
-                    count_str
-                        .parse()
-                        .unwrap_or_else(|_| { err = Some(ApiError::IncorrectRequest); 0 })
-                }
-                _ => MAX_BLOCKS_PER_REQUEST
+                Some(&Value::String(ref count_str)) => count_str.parse().unwrap_or_else(|_| {
+                    err = Some(ApiError::IncorrectRequest);
+                    0
+                }),
+                _ => MAX_BLOCKS_PER_REQUEST,
             };
             let latest: Option<u64> = match map.find(&["latest"]) {
                 Some(&Value::String(ref from_str)) => {
-                    from_str
-                        .parse()
-                        .map(|f|{ Some(f) })
-                        .unwrap_or_else(|_| { err = Some(ApiError::IncorrectRequest); None })
+                    from_str.parse().map(|f| Some(f)).unwrap_or_else(|_| {
+                        err = Some(ApiError::IncorrectRequest);
+                        None
+                    })
                 }
-                _ => None
+                _ => None,
             };
             let skip_empty_blocks: bool = match map.find(&["skip_empty_blocks"]) {
-                Some(&Value::String(ref skip_str)) => {
-                    skip_str
-                        .parse()
-                        .unwrap_or_else(|_| { err = Some(ApiError::IncorrectRequest); false })
-                }
+                Some(&Value::String(ref skip_str)) => skip_str.parse().unwrap_or_else(|_| {
+                    err = Some(ApiError::IncorrectRequest);
+                    false
+                }),
                 _ => false,
             };
 
             let result = match err {
                 None => _self.get_blocks(count, latest, skip_empty_blocks),
-                Some(e) => Err(e)
+                Some(e) => Err(e),
             };
-            let status_code = result.clone()
-                .map(|_| { status::Ok })
+            let status_code = result
+                .clone()
+                .map(|_| status::Ok)
                 .unwrap_or(status::BadRequest);
 
             let mut res =
@@ -125,13 +122,12 @@ impl Api for BlocksApi {
 
             let params = req.extensions.get::<Router>().unwrap();
 
-            let result:Result<Option<BlockInfo>, ApiError> = match params.find("height") {
-                Some(height_str) => {
-                    height_str.parse()
-                        .map_err(|_|ApiError::IncorrectRequest)
-                        .and_then(|h| _self.get_block(Height(h)))
-                }
-                None => Err(ApiError::IncorrectRequest)
+            let result: Result<Option<BlockInfo>, ApiError> = match params.find("height") {
+                Some(height_str) => height_str
+                    .parse()
+                    .map_err(|_| ApiError::IncorrectRequest)
+                    .and_then(|h| _self.get_block(Height(h))),
+                None => Err(ApiError::IncorrectRequest),
             };
 
             let status_code = match result {
@@ -139,8 +135,7 @@ impl Api for BlocksApi {
                 Err(e) => e.to_status(),
             };
             let body = serde_json::to_string_pretty(&result).unwrap();
-            let mut res =
-                Response::with((status_code, body));
+            let mut res = Response::with((status_code, body));
             res.headers.set(ContentType::json());
             res.headers.set(AccessControlAllowOrigin::Any);
 
