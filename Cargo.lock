@@ -362,7 +362,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "dmbc"
-version = "2.1.2"
+version = "2.2.0"
 dependencies = [
  "bodyparser 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -392,10 +392,10 @@ dependencies = [
 
 [[package]]
 name = "dmbc-bot"
-version = "2.0.0"
+version = "2.2.0"
 dependencies = [
  "curl 0.4.12 (registry+https://github.com/rust-lang/crates.io-index)",
- "dmbc 2.1.2",
+ "dmbc 2.2.0",
  "env_logger 0.5.10 (registry+https://github.com/rust-lang/crates.io-index)",
  "exonum 0.5.2",
  "log 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -407,9 +407,9 @@ dependencies = [
 
 [[package]]
 name = "dmbc-capi"
-version = "0.1.0"
+version = "2.2.0"
 dependencies = [
- "dmbc 2.1.2",
+ "dmbc 2.2.0",
  "exonum 0.5.2",
  "extprim 1.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.41 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -420,9 +420,9 @@ dependencies = [
 
 [[package]]
 name = "dmbc-discovery"
-version = "2.1.2"
+version = "2.2.0"
 dependencies = [
- "dmbc 2.1.2",
+ "dmbc 2.2.0",
  "exonum 0.5.2",
  "exonum-configuration 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures 0.1.21 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -439,9 +439,9 @@ dependencies = [
 
 [[package]]
 name = "dmbc-flooder"
-version = "2.0.0"
+version = "2.2.0"
 dependencies = [
- "dmbc 2.1.2",
+ "dmbc 2.2.0",
  "exonum 0.5.2",
  "fnv 1.0.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "mio 0.6.14 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -454,10 +454,10 @@ dependencies = [
 
 [[package]]
 name = "dmbc-fuzzer"
-version = "2.0.0"
+version = "2.2.0"
 dependencies = [
  "afl 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "dmbc 2.1.2",
+ "dmbc 2.2.0",
  "exonum 0.5.2",
  "exonum-testkit 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.64 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -467,11 +467,11 @@ dependencies = [
 
 [[package]]
 name = "dmbc-node"
-version = "2.1.2"
+version = "2.2.0"
 dependencies = [
  "clap 2.31.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "curl 0.4.12 (registry+https://github.com/rust-lang/crates.io-index)",
- "dmbc 2.1.2",
+ "dmbc 2.2.0",
  "exonum 0.5.2",
  "exonum-configuration 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "exonum_rocksdb 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
