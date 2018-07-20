@@ -7,6 +7,7 @@ use serde_json as json;
 
 use nodes;
 use nodes::{NodeInfo, NodeKeys};
+use log;
 
 #[derive(Debug, Serialize, Deserialize, Eq, PartialEq, Clone)]
 pub struct ValidatorInfo(NodeKeys, NodeInfo);
@@ -14,7 +15,11 @@ pub struct ValidatorInfo(NodeKeys, NodeInfo);
 pub type ResponseFuture = Box<Future<Item = Response<Body>, Error = hyper::Error> + Send + 'static>;
 
 pub fn new(req: Request<Body>) -> ResponseFuture {
-    eprintln!("Got request: {:?}", req);
+    info!(log::SERVER,
+          "Processing request";
+          "method" => %req.method(),
+          "uri" => %req.uri());
+
     match (req.method(), req.uri().path()) {
         (&Method::GET, "/nodes") => get_nodes(),
         (&Method::POST, "/nodes") => post_node(req.into_body()),
@@ -28,18 +33,8 @@ pub fn new(req: Request<Body>) -> ResponseFuture {
 }
 
 fn get_nodes() -> ResponseFuture {
-    match json::to_string_pretty(&nodes::list()) {
-        Ok(nodes) => Box::new(future::ok(Response::new(nodes.into()))),
-        Err(e) => {
-            eprintln!("Error when parsing GET: {}", e);
-            Box::new(future::ok(
-                Response::builder()
-                    .status(StatusCode::IM_A_TEAPOT)
-                    .body(Body::empty())
-                    .unwrap(),
-            ))
-        }
-    }
+    let nodes = json::to_string_pretty(&nodes::list()).expect("Unable to deserialize nodes list.");
+    Box::new(future::ok(Response::new(nodes.into())))
 }
 
 fn update_peer(vi: ValidatorInfo) -> ResponseFuture {

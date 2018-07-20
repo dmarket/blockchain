@@ -19,6 +19,7 @@ use tokio::timer::Delay;
 
 use nodes;
 use nodes::NodeKeys;
+use log;
 
 const PROTOCOL_PREFIX: &str = "http://";
 const LATEST_BLOCK_PATH: &str = "/api/services/cryptocurrency/v1/blocks?count=1";
@@ -80,6 +81,11 @@ pub fn new() -> impl Future<Item = (), Error = Error> {
                     .join(get_height(&node_public))
             })
             .and_then(|((candidates, validators), height)| {
+                debug!(log::KEEPER, "Preparing to propose config";
+                       "candidates" => ?&candidates,
+                       "validators" => ?&validators,
+                       "height" => height);
+
                 let actual_from = height + ACTUAL_FROM_DELAY;
                 let proposer = candidates[&validators[0]].clone();
                 let node_public = proposer.public.clone();
@@ -106,7 +112,7 @@ pub fn new() -> impl Future<Item = (), Error = Error> {
             })
             .then(|result| {
                 if let Err(e) = result {
-                    eprintln!("error: {}", e);
+                    error!(log::KEEPER, "Keeper cycle unsuccessful"; "error" => %e);
                 }
                 Delay::new(Instant::now() + Duration::from_secs(30)).map_err(Error::from_std)
             })
@@ -115,14 +121,14 @@ pub fn new() -> impl Future<Item = (), Error = Error> {
 }
 
 fn get_height(addr: &str) -> impl Future<Item = u64, Error = Error> {
-    eprintln!("GET {}", addr.to_string() + LATEST_BLOCK_PATH);
+    let uri = [PROTOCOL_PREFIX, addr, LATEST_BLOCK_PATH]
+        .concat()
+        .parse()
+        .unwrap();
+    info!(log::KEEPER, "Get height"; "address" => %uri);
+
     Client::new()
-        .get(
-            [PROTOCOL_PREFIX, addr, LATEST_BLOCK_PATH]
-                .concat()
-                .parse()
-                .unwrap(),
-        )
+        .get(uri)
         .map_err(Error::from_std)
         .and_then(parse_response)
         .map(|blocks: Result<Vec<Block>, ()>|
@@ -134,15 +140,15 @@ fn get_height(addr: &str) -> impl Future<Item = u64, Error = Error> {
 }
 
 fn get_validators(addr: &str) -> impl Future<Item = Vec<NodeKeys>, Error = Error> {
-    let inspect_addr = addr.to_string();
+    let uri = [PROTOCOL_PREFIX, addr, ACTUAL_CONFIG_PATH]
+        .concat()
+        .parse()
+        .unwrap();
+
+    info!(log::KEEPER, "Get validators"; "address" => %uri);
+
     Client::new()
-        .get(
-            [PROTOCOL_PREFIX, addr, ACTUAL_CONFIG_PATH]
-                .concat()
-                .parse()
-                .unwrap(),
-        )
-        .inspect(move |_| eprintln!("get_validators: {}", inspect_addr))
+        .get(uri)
         .map_err(Error::from_std)
         .and_then(parse_response)
         .map(|response: ApiResponseConfigHashInfo| {
@@ -161,10 +167,8 @@ fn propose_config(
     keys: Vec<NodeKeys>,
     actual_from: u64,
 ) -> impl Future<Item = Hash, Error = Error> {
-    eprintln!(
-        "propose_config: from - {}, keys - {:?}, actual_from - {}",
-        &private, &keys, actual_from
-    );
+    info!(log::KEEPER, "Propose config"; "from" => &private, "keys" => ?keys, "actual_from" => actual_from);
+
     Client::new()
         .get(
             [PROTOCOL_PREFIX, &public, ACTUAL_CONFIG_PATH]
@@ -202,7 +206,7 @@ fn propose_config(
 }
 
 fn vote_config(addr: String, hash: Hash) -> impl Future<Item = (), Error = Error> {
-    eprintln!("vote_config: from - {}, hash - {:?}", &addr, &hash);
+    info!(log::KEEPER, "Vote for config"; "from" => %addr, "hash" => ?hash);
     let uri: Uri = [
         PROTOCOL_PREFIX,
         &addr,
@@ -231,7 +235,7 @@ where
         .concat2()
         .map_err(Error::from_std)
         .and_then(|chunk| {
-            eprintln!("response: {}", ::std::str::from_utf8(&chunk).unwrap());
+            info!(log::KEEPER, "Got response"; "response" => ::std::str::from_utf8(&chunk).unwrap());
             json::from_slice(&chunk)
                 .map_err(Error::from_std)
                 .into_future()

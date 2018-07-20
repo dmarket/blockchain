@@ -9,13 +9,17 @@ extern crate serde_json;
 extern crate toml;
 #[macro_use]
 extern crate lazy_static;
-extern crate log;
 extern crate tokio;
+#[macro_use]
+extern crate slog;
+extern crate slog_async;
+extern crate slog_term;
 
 mod config;
 mod keeper;
 mod nodes;
 mod server;
+mod log;
 
 use futures::Future;
 use hyper::server::Server;
@@ -24,12 +28,14 @@ use hyper::service;
 fn main() {
     let addr = config::get().listen_address().parse().unwrap();
 
+    info!(log::ROOT, "Starting server"; "listen_address" => %addr);
+
     let server = Server::bind(&addr)
-        .serve(|| service::service_fn(server::new))
-        .map_err(|e| eprintln!("serve failed: {}", e));
+        .serve(|| service::service_fn(|req| server::new(req)))
+        .map_err(|e| error!(log::ROOT, "Serve failed"; "error" => %e));
 
     let keeper = keeper::new()
-        .map_err(|e| eprintln!("keeper failed: {}", e));
+        .map_err(|e| error!(log::ROOT, "Keeper failed"; "error" => %e));
 
     hyper::rt::run(futures::lazy(|| {
         hyper::rt::spawn(keeper);
