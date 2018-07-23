@@ -69,6 +69,9 @@ pub fn new() -> impl Future<Item = (), Error = Error> {
                 let node_public = candidates.values().next().unwrap().public.clone();
                 get_validators(&node_public)
                     .and_then(|mut validators| {
+                        if candidates.len() < validators.len() {
+                            return Err(Error::ValidatorsAbsent)
+                        }
                         let mut sorted_candidates: Vec<_> = candidates.keys().cloned().collect();
                         sorted_candidates.sort();
                         validators.sort();
@@ -235,7 +238,7 @@ where
         .concat2()
         .map_err(Error::from_std)
         .and_then(|chunk| {
-            info!(log::KEEPER, "Got response"; "response" => ::std::str::from_utf8(&chunk).unwrap());
+            debug!(log::KEEPER, "Got response"; "response" => ::std::str::from_utf8(&chunk).unwrap());
             json::from_slice(&chunk)
                 .map_err(Error::from_std)
                 .into_future()
@@ -246,6 +249,7 @@ where
 pub enum Error {
     NoNodes,
     ValidatorsActual,
+    ValidatorsAbsent,
     Std(Box<StdError + Send + 'static>),
 }
 
@@ -265,6 +269,7 @@ impl fmt::Display for Error {
         match self {
             Error::NoNodes => write!(fmt, "no nodes"),
             Error::ValidatorsActual => write!(fmt, "validators actual"),
+            Error::ValidatorsAbsent => write!(fmt, "some validators are absent"),
             Error::Std(err) => write!(fmt, "keeper error: {}", err),
         }
     }
