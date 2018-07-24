@@ -16,6 +16,7 @@ use currency::transactions::exchange_intermediary::{
 use currency::transactions::trade::{Trade, TradeOffer};
 use currency::transactions::trade_intermediary::{TradeIntermediary, TradeOfferIntermediary};
 use currency::transactions::transfer::Transfer;
+use currency::transactions::transfer_fees_payes::{TransferOffer, TransferWithFeesPayer};
 
 pub struct Builder {
     public_key: Option<PublicKey>,
@@ -121,6 +122,11 @@ impl Builder {
     pub fn tx_transfer(self) -> TransferBuilder {
         self.validate();
         TransferBuilder::new(self.into())
+    }
+
+    pub fn tx_transfer_with_fees_payer(self) -> TransferWithFeesPayerBuilder {
+        self.validate();
+        TransferWithFeesPayerBuilder::new(self.into())
     }
 
     fn validate(&self) {
@@ -832,6 +838,103 @@ impl TransferBuilder {
 
     fn verify(&self) {
         assert!(self.recipient.is_some());
+    }
+}
+
+pub struct TransferWithFeesPayerBuilder {
+    meta: TransactionMetadata,
+    recipient: Option<PublicKey>,
+    fees_payer_pk: Option<PublicKey>,
+    fees_payer_sk: Option<SecretKey>,
+    amount: u64,
+    assets: Vec<AssetBundle>,
+    seed: u64,
+    data_info: Option<String>,
+}
+
+impl TransferWithFeesPayerBuilder {
+    fn new(meta: TransactionMetadata) -> Self {
+        TransferWithFeesPayerBuilder {
+            meta,
+            recipient: None,
+            fees_payer_pk: None,
+            fees_payer_sk: None,
+            amount: 0,
+            assets: Vec::new(),
+            seed: 0,
+            data_info: None,
+        }
+    }
+
+    pub fn recipient(self, pub_key: PublicKey) -> Self {
+        TransferWithFeesPayerBuilder {
+            recipient: Some(pub_key),
+            ..self
+        }
+    }
+
+    pub fn fees_payer(self, pub_key: PublicKey, secret: SecretKey) -> Self {
+        TransferWithFeesPayerBuilder {
+            fees_payer_pk: Some(pub_key),
+            fees_payer_sk: Some(secret),
+            ..self
+        }
+    }
+
+    pub fn amount(self, amount: u64) -> Self {
+        TransferWithFeesPayerBuilder { amount, ..self }
+    }
+
+    pub fn add_asset(self, name: &str, count: u64) -> Self {
+        let asset = AssetBundle::from_data(name, count, &self.meta.public_key);
+        self.add_asset_value(asset)
+    }
+
+    pub fn add_asset_value(mut self, asset: AssetBundle) -> Self {
+        self.assets.push(asset);
+        self
+    }
+
+    pub fn add_asset_value_ref(&mut self, asset: AssetBundle) {
+        self.assets.push(asset);
+    }
+
+    pub fn seed(self, seed: u64) -> Self {
+        TransferWithFeesPayerBuilder { seed, ..self }
+    }
+
+    pub fn data_info(self, data_info: &str) -> Self {
+        TransferWithFeesPayerBuilder {
+            data_info: Some(data_info.to_string()),
+            ..self
+        }
+    }
+
+    pub fn build(self) -> TransferWithFeesPayer {
+        self.verify();
+
+        let offer = TransferOffer::new(
+            &self.meta.public_key,
+            self.recipient.as_ref().unwrap(),
+            self.fees_payer_pk.as_ref().unwrap(),
+            self.amount,
+            self.assets,
+            self.seed,
+            &self.data_info.unwrap_or_default(),
+        );
+
+        let fees_payer_signature = crypto::sign(&offer.clone().into_bytes(), &self.fees_payer_sk.unwrap());
+        TransferWithFeesPayer::new(
+            offer,
+            &fees_payer_signature,
+            &self.meta.secret_key,
+        )
+    }
+
+    fn verify(&self) {
+        assert!(self.recipient.is_some());
+        assert!(self.fees_payer_pk.is_some());
+        assert!(self.fees_payer_sk.is_some());
     }
 }
 
