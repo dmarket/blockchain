@@ -280,7 +280,13 @@ impl Transaction for TradeIntermediary {
             offer.intermediary().wallet(),
         );
 
-        if wallets_ok && fee_strategy_ok && buyer_ok && seller_ok && intermediary_ok {
+        let assets_ok = self.offer()
+            .assets()
+            .into_iter()
+            .all(|asset| asset.amount().checked_mul(asset.price())
+                              .is_some());
+
+        if wallets_ok && fee_strategy_ok && buyer_ok && seller_ok && intermediary_ok && assets_ok {
             VERIFY_SUCCESS_COUNT.inc();
             true
         } else {
