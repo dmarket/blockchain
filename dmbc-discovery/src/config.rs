@@ -30,7 +30,10 @@ pub fn get() -> &'static Config {
 
     fn read_file_config() -> Config {
         let path = env::var("DISCOVERY_CONFIG_PATH").unwrap_or("./etc/discovery.toml".to_string());
-        let mut file = File::open(path).unwrap();
+        let mut file = match File::open(path) {
+            Ok(f) => f,
+            _ => return Config::default(),
+        };
         let mut buf = Vec::new();
 
         let _ = file.read_to_end(&mut buf);
