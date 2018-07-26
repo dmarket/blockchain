@@ -16,6 +16,7 @@ use currency::transactions::trade::{Trade, TradeOffer};
 use currency::transactions::trade_intermediary::{TradeIntermediary, TradeOfferIntermediary};
 use currency::transactions::transfer::Transfer;
 use currency::transactions::transfer_fees_payes::{TransferOffer, TransferWithFeesPayer};
+use currency::transactions::open_order::OpenOrder;
 
 pub struct Builder {
     public_key: Option<PublicKey>,
@@ -126,6 +127,11 @@ impl Builder {
     pub fn tx_transfer_with_fees_payer(self) -> TransferWithFeesPayerBuilder {
         self.validate();
         TransferWithFeesPayerBuilder::new(self.into())
+    }
+
+    pub fn tx_open_order(self) -> OpenOrderBuilder {
+        self.validate();
+        OpenOrderBuilder::new(self.into())
     }
 
     fn validate(&self) {
@@ -934,6 +940,64 @@ impl TransferWithFeesPayerBuilder {
         assert!(self.recipient.is_some());
         assert!(self.fees_payer_pk.is_some());
         assert!(self.fees_payer_sk.is_some());
+    }
+}
+
+pub struct OpenOrderBuilder {
+    meta: TransactionMetadata,
+    asset: Option<TradeAsset>,
+    bid: bool,
+    fee_strategy: u8,
+    seed: u64,
+    data_info: Option<String>,
+}
+
+impl OpenOrderBuilder {
+    fn new(meta: TransactionMetadata) -> Self {
+        OpenOrderBuilder {
+            meta,
+            asset: None,
+            bid: true,
+            fee_strategy: 1,
+            seed: 0,
+            data_info: None,
+        }
+    }
+
+    pub fn asset(self, asset: TradeAsset) -> Self {
+        OpenOrderBuilder { asset:Some(asset), ..self }
+    }
+
+    pub fn bid(self, bid: bool) -> Self {
+        OpenOrderBuilder { bid, ..self }
+    }
+
+    pub fn seed(self, seed: u64) -> Self {
+        OpenOrderBuilder { seed, ..self }
+    }
+
+    pub fn data_info(self, data_info: &str) -> Self {
+        OpenOrderBuilder {
+            data_info: Some(data_info.to_string()),
+            ..self
+        }
+    }
+
+    pub fn build(self) -> OpenOrder {
+        self.verify();
+
+        OpenOrder::new(
+            &self.meta.public_key,
+            self.asset.unwrap(),
+            self.bid,
+            self.seed,
+            &self.data_info.unwrap_or_default(),
+            &self.meta.secret_key,
+        )
+    }
+
+    fn verify(&self) {
+        assert!(self.asset.is_some());
     }
 }
 

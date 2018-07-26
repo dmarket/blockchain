@@ -64,6 +64,18 @@ impl Wallet {
 
         Ok(())
     }
+
+    /// Remove coins from the wallet.
+    pub fn remove_coins(&mut self, amount:u64) -> Result<(), Error>
+    {
+        if self.balance() < amount {
+            return Err(Error::InsufficientFunds)
+        }
+
+        *self = Wallet::new(self.balance()-amount, self.assets());
+
+        Ok(())
+    }
 }
 
 /// Move funds between wallets.
