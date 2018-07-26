@@ -19,10 +19,10 @@ use std::cmp;
 
 use serde_json::Value;
 
-use storage::ListProof;
+use blockchain::{Block, Blockchain, Schema, TxLocation};
 use crypto::Hash;
-use blockchain::{Schema, Blockchain, Block, TxLocation};
 use messages::Precommit;
+use storage::ListProof;
 // TODO: if explorer is usable anywhere else, remove `ApiError` dependencies (ECR-163).
 use api::ApiError;
 use helpers::Height;
@@ -58,7 +58,9 @@ pub struct TxInfo {
 impl<'a> BlockchainExplorer<'a> {
     /// Creates a new `BlockchainExplorer` instance.
     pub fn new(blockchain: &'a Blockchain) -> Self {
-        BlockchainExplorer { blockchain: blockchain }
+        BlockchainExplorer {
+            blockchain: blockchain,
+        }
     }
 
     /// Returns information about the transaction identified by the hash.
@@ -70,19 +72,17 @@ impl<'a> BlockchainExplorer<'a> {
         let res = match tx {
             None => None,
             Some(raw_tx) => {
-                let box_transaction = self.blockchain.tx_from_raw(raw_tx.clone()).ok_or_else(|| {
-                    ApiError::Service(format!("Service not found for tx: {:?}", raw_tx).into())
-                })?;
-                let content = box_transaction.serialize_field().map_err(
-                    ApiError::Serialize,
+                let box_transaction = self.blockchain.tx_from_raw(raw_tx.clone()).ok_or_else(
+                    || ApiError::Service(format!("Service not found for tx: {:?}", raw_tx).into()),
                 )?;
+                let content = box_transaction
+                    .serialize_field()
+                    .map_err(ApiError::Serialize)?;
 
-                let location = schema.tx_location_by_tx_hash().get(tx_hash).expect(
-                    &format!(
-                        "Not found tx_hash location: {:?}",
-                        tx_hash
-                    ),
-                );
+                let location = schema
+                    .tx_location_by_tx_hash()
+                    .get(tx_hash)
+                    .expect(&format!("Not found tx_hash location: {:?}", tx_hash));
 
                 let block_height = location.block_height();
                 let tx_index = location.position_in_block();
@@ -141,14 +141,12 @@ impl<'a> BlockchainExplorer<'a> {
             if skip_empty_blocks && block_txs.is_empty() {
                 continue;
             }
-            let block_hash = hashes.get(height).expect(&format!(
-                "Block not found, height:{:?}",
-                height
-            ));
-            let block = blocks.get(&block_hash).expect(&format!(
-                "Block not found, hash:{:?}",
-                block_hash
-            ));
+            let block_hash = hashes
+                .get(height)
+                .expect(&format!("Block not found, height:{:?}", height));
+            let block = blocks
+                .get(&block_hash)
+                .expect(&format!("Block not found, hash:{:?}", block_hash));
             v.push(block)
         }
         v

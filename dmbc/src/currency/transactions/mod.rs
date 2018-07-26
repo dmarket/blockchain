@@ -16,8 +16,9 @@ mod open_order;
 pub use currency::transactions::add_assets::{AddAssets, ADD_ASSETS_ID};
 pub use currency::transactions::delete_assets::{DeleteAssets, DELETE_ASSETS_ID};
 pub use currency::transactions::exchange::{Exchange, EXCHANGE_ID};
-pub use currency::transactions::exchange_intermediary::{ExchangeIntermediary,
-                                                        EXCHANGE_INTERMEDIARY_ID};
+pub use currency::transactions::exchange_intermediary::{
+    ExchangeIntermediary, EXCHANGE_INTERMEDIARY_ID,
+};
 pub use currency::transactions::trade::{Trade, TRADE_ID};
 pub use currency::transactions::trade_intermediary::{TradeIntermediary, TRADE_INTERMEDIARY_ID};
 pub use currency::transactions::transfer::{Transfer, TRANSFER_ID};

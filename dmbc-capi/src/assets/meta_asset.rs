@@ -1,4 +1,4 @@
-use exonum::crypto::PublicKey; 
+use exonum::crypto::PublicKey;
 
 use assets::Fees;
 

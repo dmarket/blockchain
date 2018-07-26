@@ -4,16 +4,16 @@ use exonum::blockchain::Transaction;
 use exonum::crypto::PublicKey;
 use exonum::messages::Message;
 use exonum::storage::Fork;
-use prometheus::{IntCounter, Histogram};
+use prometheus::{Histogram, IntCounter};
 
 use currency::assets;
 use currency::assets::AssetBundle;
 use currency::error::Error;
+use currency::service::CONFIGURATION;
 use currency::status;
 use currency::transactions::components::FeesCalculator;
 use currency::wallet;
 use currency::SERVICE_ID;
-use currency::service::CONFIGURATION;
 
 /// Transaction ID.
 pub const DELETE_ASSETS_ID: u16 = 400;
@@ -50,15 +50,15 @@ impl DeleteAssets {
         let genesis_fees = CONFIGURATION.read().unwrap().fees();
 
         let genesis_pub = genesis_fees.recipient();
-        let creator_pub = self.pub_key();
+        let owner_pub = self.pub_key();
 
         let mut genesis = wallet::Schema(&*view).fetch(&genesis_pub);
-        let mut creator = wallet::Schema(&*view).fetch(&creator_pub);
+        let mut owner = wallet::Schema(&*view).fetch(&owner_pub);
 
-        wallet::move_coins(&mut creator, &mut genesis, genesis_fees.delete_assets())?;
+        wallet::move_coins(&mut owner, &mut genesis, genesis_fees.delete_assets())?;
 
         wallet::Schema(&mut *view).store(&genesis_pub, genesis);
-        wallet::Schema(&mut *view).store(&creator_pub, creator.clone());
+        wallet::Schema(&mut *view).store(&owner_pub, owner.clone());
 
         let mut infos = HashMap::new();
 
@@ -67,17 +67,14 @@ impl DeleteAssets {
                 Some(info) => info,
                 None => return Err(Error::AssetNotFound),
             };
-            if info.creator() != creator_pub {
-                return Err(Error::InvalidTransaction);
-            }
             let mut entry = infos.remove(&asset.id()).unwrap_or(info);
             let entry = entry.decrease(asset.amount())?;
             infos.insert(asset.id(), entry);
         }
 
-        creator.remove_assets(self.assets())?;
+        owner.remove_assets(self.assets())?;
 
-        wallet::Schema(&mut *view).store(creator_pub, creator);
+        wallet::Schema(&mut *view).store(owner_pub, owner);
 
         for (id, info) in infos {
             assets::Schema(&mut *view).store(&id, info);

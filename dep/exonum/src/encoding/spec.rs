@@ -362,7 +362,11 @@ macro_rules! __ex_for_each_field {
 macro_rules! __ex_struct_check_field {
     (
         ($latest_segment:ident, $vec:ident),
-        $(#[$field_attr:meta])*, $field_name:ident, $field_type:ty, $from:expr, $to:expr
+        $(#[$field_attr:meta])*,
+        $field_name:ident,
+        $field_type:ty,
+        $from:expr,
+        $to:expr
     ) => {
         let $latest_segment = <$field_type as $crate::encoding::Field>::check(
             &$vec,
@@ -370,7 +374,7 @@ macro_rules! __ex_struct_check_field {
             $to.into(),
             $latest_segment,
         )?;
-    }
+    };
 }
 
 #[doc(hidden)]
@@ -378,10 +382,14 @@ macro_rules! __ex_struct_check_field {
 macro_rules! __ex_struct_write_field {
     (
         ($buf:ident),
-        $(#[$field_attr:meta])*, $field_name:ident, $field_type:ty, $from:expr, $to:expr
+        $(#[$field_attr:meta])*,
+        $field_name:ident,
+        $field_type:ty,
+        $from:expr,
+        $to:expr
     ) => {
         $crate::encoding::Field::write(&$field_name, &mut $buf, $from, $to);
-    }
+    };
 }
 
 #[doc(hidden)]
@@ -406,10 +414,15 @@ macro_rules! __ex_struct_mk_field {
 macro_rules! __ex_deserialize_field {
     (
         ($obj:ident, $writer:ident),
-        $(#[$field_attr:meta])*, $field_name:ident, $field_type:ty, $from:expr, $to:expr
+        $(#[$field_attr:meta])*,
+        $field_name:ident,
+        $field_type:ty,
+        $from:expr,
+        $to:expr
     ) => {
-        let val = $obj.get(stringify!($field_name))
-                      .ok_or("Can't get object from json.")?;
+        let val = $obj
+            .get(stringify!($field_name))
+            .ok_or("Can't get object from json.")?;
         <$field_type as ExonumJson>::deserialize_field(val, &mut $writer, $from, $to)?;
-    }
+    };
 }

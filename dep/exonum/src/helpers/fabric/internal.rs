@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::fmt;
-use std::error::Error;
 use std::collections::HashMap;
+use std::error::Error;
+use std::fmt;
 
 use super::{Argument, CommandExtension, CommandName, Context};
 
@@ -104,9 +104,9 @@ impl CollectedCommand {
             // TODO: check duplicates, in services context keys (ECR-164)
             let mut new_context = context.clone();
             for ext in &self.exts {
-                new_context = ext.execute(new_context).expect(
-                    "Could not execute extension.",
-                );
+                new_context = ext
+                    .execute(new_context)
+                    .expect("Could not execute extension.");
             }
             new_context
         })

@@ -4,23 +4,23 @@ extern crate exonum_testkit;
 extern crate hyper;
 extern crate iron;
 extern crate iron_test;
-extern crate serde_json;
 extern crate mount;
+extern crate serde_json;
 
 pub mod dmbc_testkit;
 
 use std::collections::HashMap;
 
-use hyper::status::StatusCode;
-use exonum::crypto;
 use dmbc_testkit::{DmbcTestApiBuilder, DmbcTestKitApi};
+use exonum::crypto;
+use hyper::status::StatusCode;
 
 use dmbc::currency::api::fees::FeesResponseBody;
 use dmbc::currency::configuration::{Configuration, TransactionFees};
 use dmbc::currency::transactions::builders::transaction;
 
 #[test]
-fn fees_for_delete_assets() {   
+fn fees_for_delete_assets() {
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, transaction_fee, 0, 0, 0);
     let testkit = DmbcTestApiBuilder::new()

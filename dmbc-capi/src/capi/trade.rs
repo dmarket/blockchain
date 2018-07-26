@@ -1,13 +1,13 @@
-use std::ptr;
 use std::mem;
+use std::ptr;
 
-use libc::{c_char, size_t};
-use exonum::storage::StorageValue;
 use exonum::messages::Message;
+use exonum::storage::StorageValue;
+use libc::{c_char, size_t};
 
 use assets::TradeAsset;
-use transactions::trade::{TradeOfferWrapper, TradeWrapper};
 use capi::common::*;
+use transactions::trade::{TradeOfferWrapper, TradeWrapper};
 
 use error::{Error, ErrorKind};
 
@@ -80,7 +80,7 @@ ffi_fn! {
                 }
                 return false;
             }
-        } 
+        }
 
         let asset = TradeAsset::from_ptr(asset);
         wrapper.add_asset(asset.clone());
@@ -90,7 +90,7 @@ ffi_fn! {
 
 ffi_fn! {
     fn dmbc_trade_offer_into_bytes(
-        wrapper: *mut TradeOfferWrapper, 
+        wrapper: *mut TradeOfferWrapper,
         length: *mut size_t,
         error: *mut Error
     ) -> *const u8 {
@@ -121,7 +121,7 @@ ffi_fn! {
 
 ffi_fn! {
     fn dmbc_tx_trade_create(
-        wrapper: *mut TradeOfferWrapper, 
+        wrapper: *mut TradeOfferWrapper,
         signature: *const c_char,
         seed: u64,
         error: *mut Error,

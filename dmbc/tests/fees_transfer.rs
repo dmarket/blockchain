@@ -4,21 +4,21 @@ extern crate exonum_testkit;
 extern crate hyper;
 extern crate iron;
 extern crate iron_test;
-extern crate serde_json;
 extern crate mount;
+extern crate serde_json;
 
 pub mod dmbc_testkit;
 
 use std::collections::HashMap;
 
-use hyper::status::StatusCode;
-use exonum::crypto;
 use dmbc_testkit::{DmbcTestApiBuilder, DmbcTestKitApi};
+use exonum::crypto;
+use hyper::status::StatusCode;
 
 use dmbc::currency::api::fees::FeesResponseBody;
 use dmbc::currency::configuration::{Configuration, TransactionFees};
-use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::error::Error;
+use dmbc::currency::transactions::builders::transaction;
 
 #[test]
 fn fees_for_transfer() {
@@ -32,13 +32,18 @@ fn fees_for_transfer() {
     let (recipient_key, _) = crypto::gen_keypair();
     let (sender_pub_key, sender_sec_key) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, amount, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_key);
+    let (asset, info) = dmbc_testkit::create_asset(
+        meta_data,
+        amount,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_key,
+    );
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_asset_to_wallet(&sender_pub_key, (asset.clone(), info))
         .create();
-    let api = testkit.api();    
+    let api = testkit.api();
 
     let tx_transfer = transaction::Builder::new()
         .keypair(sender_pub_key, sender_sec_key)
@@ -69,13 +74,18 @@ fn fees_for_transfer_sender_is_creator() {
     let (recipient_key, _) = crypto::gen_keypair();
     let (sender_pub_key, sender_sec_key) = crypto::gen_keypair();
 
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, amount, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &sender_pub_key);
+    let (asset, info) = dmbc_testkit::create_asset(
+        meta_data,
+        amount,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &sender_pub_key,
+    );
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .add_asset_to_wallet(&sender_pub_key, (asset.clone(), info))
         .create();
-    let api = testkit.api();    
+    let api = testkit.api();
 
     let tx_transfer = transaction::Builder::new()
         .keypair(sender_pub_key, sender_sec_key)
@@ -96,7 +106,7 @@ fn fees_for_transfer_sender_is_creator() {
 
 #[test]
 fn fees_for_transfer_asset_not_found() {
-        let transaction_fee = 1000;
+    let transaction_fee = 1000;
     let amount = 2;
     let fixed = 10;
     let meta_data = "asset";
@@ -106,12 +116,17 @@ fn fees_for_transfer_asset_not_found() {
     let (recipient_key, _) = crypto::gen_keypair();
     let (sender_pub_key, sender_sec_key) = crypto::gen_keypair();
 
-    let (asset, _) = dmbc_testkit::create_asset(meta_data, amount, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_key);
+    let (asset, _) = dmbc_testkit::create_asset(
+        meta_data,
+        amount,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &creator_key,
+    );
 
     let testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees))
         .create();
-    let api = testkit.api(); 
+    let api = testkit.api();
 
     let tx_transfer = transaction::Builder::new()
         .keypair(sender_pub_key, sender_sec_key)

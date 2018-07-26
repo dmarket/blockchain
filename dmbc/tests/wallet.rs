@@ -4,23 +4,24 @@ extern crate exonum_testkit;
 extern crate hyper;
 extern crate iron;
 extern crate iron_test;
-extern crate serde_json;
 extern crate mount;
+extern crate serde_json;
 
 pub mod dmbc_testkit;
 
 use std::collections::HashMap;
 
-use hyper::status::StatusCode;
+use dmbc_testkit::{DmbcTestApiBuilder, DmbcTestKit, DmbcTestKitApi};
 use exonum::crypto;
-use dmbc_testkit::{DmbcTestKit, DmbcTestApiBuilder, DmbcTestKitApi};
+use hyper::status::StatusCode;
 
-use dmbc::currency::api::wallet::{self, ExtendedAsset, WalletAssetsResponse, WalletAssetsResponseBody,
-                                  WalletInfo, WalletResponse, WalletsResponse, WalletsResponseBody, 
-                                  WalletAssetResponse};
-use dmbc::currency::wallet::Wallet;
-use dmbc::currency::assets::AssetId;
 use dmbc::currency::api::error::ApiError;
+use dmbc::currency::api::wallet::{
+    self, ExtendedAsset, WalletAssetResponse, WalletAssetsResponse, WalletAssetsResponseBody,
+    WalletInfo, WalletResponse, WalletsResponse, WalletsResponseBody,
+};
+use dmbc::currency::assets::AssetId;
+use dmbc::currency::wallet::Wallet;
 
 #[test]
 fn wallet() {
@@ -30,7 +31,12 @@ fn wallet() {
     let meta_data = "asset";
 
     let (pub_key, _) = crypto::gen_keypair();
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &pub_key);
+    let (asset, info) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &pub_key,
+    );
 
     let testkit = DmbcTestApiBuilder::new()
         .add_wallet_value(&pub_key, Wallet::new(balance, vec![]))
@@ -38,9 +44,8 @@ fn wallet() {
         .create();
     let api = testkit.api();
 
-    let (status, response): (StatusCode, WalletResponse) = api.get_with_status(
-        &format!("/v1/wallets/{}", pub_key.to_string())
-    );
+    let (status, response): (StatusCode, WalletResponse) =
+        api.get_with_status(&format!("/v1/wallets/{}", pub_key.to_string()));
 
     let wallet = Wallet::new(balance, vec![asset]);
 
@@ -58,8 +63,18 @@ fn wallets() {
     let (pub_key1, _) = crypto::gen_keypair();
     let (pub_key2, _) = crypto::gen_keypair();
 
-    let asset1 = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &pub_key1);
-    let asset2 = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &pub_key2);
+    let asset1 = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &pub_key1,
+    );
+    let asset2 = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &pub_key2,
+    );
 
     let mut testkit = DmbcTestApiBuilder::new()
         .add_wallet_value(&pub_key1, Wallet::new(balance, vec![]))
@@ -98,9 +113,7 @@ fn wallets() {
     let total = wallets.len() as u64;
     let count = wallets.len() as u64;
 
-    let (status, response): (StatusCode, WalletsResponse) = api.get_with_status(
-        "/v1/wallets"
-    );
+    let (status, response): (StatusCode, WalletsResponse) = api.get_with_status("/v1/wallets");
 
     assert_eq!(status, StatusCode::Ok);
     assert_eq!(
@@ -122,8 +135,18 @@ fn wallets_pagination() {
     let (pub_key1, _) = crypto::gen_keypair();
     let (pub_key2, _) = crypto::gen_keypair();
 
-    let asset1 = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &pub_key1);
-    let asset2 = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &pub_key2);
+    let asset1 = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &pub_key1,
+    );
+    let asset2 = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &pub_key2,
+    );
 
     let testkit = DmbcTestApiBuilder::new()
         .add_asset_to_wallet(&pub_key1, asset1)
@@ -135,9 +158,8 @@ fn wallets_pagination() {
     let total = 3;
     let count = 1;
 
-    let (status, response): (StatusCode, WalletsResponse) = api.get_with_status(
-        "/v1/wallets?offset=0&limit=1",
-    );
+    let (status, response): (StatusCode, WalletsResponse) =
+        api.get_with_status("/v1/wallets?offset=0&limit=1");
 
     assert_eq!(status, StatusCode::Ok);
     assert!(response.is_ok());
@@ -156,9 +178,24 @@ fn wallet_assets() {
     let meta_data2 = "asset2";
 
     let (pub_key, _) = crypto::gen_keypair();
-    let (asset0, info0) = dmbc_testkit::create_asset(meta_data0, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &pub_key);
-    let (asset1, info1) = dmbc_testkit::create_asset(meta_data1, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &pub_key);
-    let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &pub_key);
+    let (asset0, info0) = dmbc_testkit::create_asset(
+        meta_data0,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &pub_key,
+    );
+    let (asset1, info1) = dmbc_testkit::create_asset(
+        meta_data1,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &pub_key,
+    );
+    let (asset2, info2) = dmbc_testkit::create_asset(
+        meta_data2,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &pub_key,
+    );
 
     let testkit = DmbcTestApiBuilder::new()
         .add_asset_to_wallet(&pub_key, (asset0.clone(), info0.clone()))
@@ -167,9 +204,11 @@ fn wallet_assets() {
         .create();
     let api = testkit.api();
 
-    let (status, response): (StatusCode, WalletAssetsResponse) = api.get_with_status(
-        &format!("/v1/wallets/{}/assets?{}=true", pub_key.to_string(), wallet::PARAMETER_META_DATA_KEY)
-    );
+    let (status, response): (StatusCode, WalletAssetsResponse) = api.get_with_status(&format!(
+        "/v1/wallets/{}/assets?{}=true",
+        pub_key.to_string(),
+        wallet::PARAMETER_META_DATA_KEY
+    ));
 
     let assets = vec![
         ExtendedAsset::from_asset(&asset0, Some(info0)),
@@ -197,7 +236,12 @@ fn wallet_assets_meta_data() {
     let meta_data = "asset";
 
     let (pub_key, _) = crypto::gen_keypair();
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &pub_key);
+    let (asset, info) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &pub_key,
+    );
 
     let testkit = DmbcTestApiBuilder::new()
         .add_asset_to_wallet(&pub_key, (asset.clone(), info.clone()))
@@ -205,13 +249,11 @@ fn wallet_assets_meta_data() {
 
     let api = testkit.api();
 
-    let (status, response): (StatusCode, WalletAssetsResponse) = api.get_with_status(
-        &format!(
-            "/v1/wallets/{}/assets?{}=true",
-            pub_key.to_string(),
-            wallet::PARAMETER_META_DATA_KEY
-        ),
-    );
+    let (status, response): (StatusCode, WalletAssetsResponse) = api.get_with_status(&format!(
+        "/v1/wallets/{}/assets?{}=true",
+        pub_key.to_string(),
+        wallet::PARAMETER_META_DATA_KEY
+    ));
 
     let assets = vec![ExtendedAsset::from_asset(&asset, Some(info))];
     let total = assets.len() as u64;
@@ -234,9 +276,8 @@ fn wallet_empty_with_valid_key() {
     let api = testkit.api();
 
     let (pub_key, _) = crypto::gen_keypair();
-    let (status, response): (StatusCode, WalletResponse) = api.get_with_status(
-        &format!("/v1/wallets/{}", pub_key.to_string()),
-    );
+    let (status, response): (StatusCode, WalletResponse) =
+        api.get_with_status(&format!("/v1/wallets/{}", pub_key.to_string()));
 
     assert_eq!(status, StatusCode::Ok);
     assert_eq!(response, Ok(WalletInfo::from(Wallet::new_empty())));
@@ -247,9 +288,8 @@ fn wallet_invalid_public_key() {
     let testkit = DmbcTestApiBuilder::new().create();
     let api = testkit.api();
 
-    let (status, response): (StatusCode, WalletResponse) = api.get_with_status(
-        "/v1/wallets/invalidpubkey"
-    );
+    let (status, response): (StatusCode, WalletResponse) =
+        api.get_with_status("/v1/wallets/invalidpubkey");
 
     assert_eq!(status, StatusCode::BadRequest);
     assert_eq!(response, Err(ApiError::WalletHexInvalid));
@@ -260,9 +300,8 @@ fn wallet_assets_invalid_public_key() {
     let testkit = DmbcTestApiBuilder::new().create();
     let api = testkit.api();
 
-    let (status, response): (StatusCode, WalletAssetsResponse) = api.get_with_status(
-        "/v1/wallets/invalidpubkey/assets"
-    );
+    let (status, response): (StatusCode, WalletAssetsResponse) =
+        api.get_with_status("/v1/wallets/invalidpubkey/assets");
 
     assert_eq!(status, StatusCode::BadRequest);
     assert_eq!(response, Err(ApiError::WalletHexInvalid));
@@ -276,9 +315,11 @@ fn wallet_asset_from_empty_wallet() {
 
     let (pub_key, _) = crypto::gen_keypair();
     let id = AssetId::from_data(meta_data, &pub_key);
-    let (status, response): (StatusCode, WalletAssetResponse) = api.get_with_status(
-        &format!("/v1/wallets/{}/assets/{}", pub_key.to_string(), id.to_string()),
-    );
+    let (status, response): (StatusCode, WalletAssetResponse) = api.get_with_status(&format!(
+        "/v1/wallets/{}/assets/{}",
+        pub_key.to_string(),
+        id.to_string()
+    ));
 
     assert_eq!(status, StatusCode::NotFound);
     assert_eq!(response, Err(ApiError::AssetIdNotFound));
@@ -290,12 +331,13 @@ fn wallet_asset_invalid_asset_id() {
     let api = testkit.api();
 
     let (pub_key, _) = crypto::gen_keypair();
-    let (status, response): (StatusCode, WalletAssetResponse) = api.get_with_status(
-        &format!("/v1/wallets/{}/assets/invalid_asset_id", pub_key.to_string()),
-    );
+    let (status, response): (StatusCode, WalletAssetResponse) = api.get_with_status(&format!(
+        "/v1/wallets/{}/assets/invalid_asset_id",
+        pub_key.to_string()
+    ));
 
     assert_eq!(status, StatusCode::BadRequest);
-    assert_eq!(response, Err(ApiError::AssetIdInvalid));    
+    assert_eq!(response, Err(ApiError::AssetIdInvalid));
 }
 
 #[test]
@@ -306,12 +348,13 @@ fn wallet_asset_invalid_public_key() {
 
     let (pub_key, _) = crypto::gen_keypair();
     let id = AssetId::from_data(meta_data, &pub_key);
-    let (status, response): (StatusCode, WalletAssetResponse) = api.get_with_status(
-        &format!("/v1/wallets/invalid_public_key/assets/{}", id.to_string()),
-    );
+    let (status, response): (StatusCode, WalletAssetResponse) = api.get_with_status(&format!(
+        "/v1/wallets/invalid_public_key/assets/{}",
+        id.to_string()
+    ));
 
     assert_eq!(status, StatusCode::BadRequest);
-    assert_eq!(response, Err(ApiError::WalletHexInvalid));    
+    assert_eq!(response, Err(ApiError::WalletHexInvalid));
 }
 
 #[test]
@@ -320,22 +363,29 @@ fn wallet_asset() {
     let units = 6;
     let fixed = 11;
     let (pub_key, _) = crypto::gen_keypair();
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &pub_key);
+    let (asset, info) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &pub_key,
+    );
 
     let testkit = DmbcTestApiBuilder::new()
         .add_wallet_value(&pub_key, Wallet::new(0, vec![]))
         .add_asset_to_wallet(&pub_key, (asset.clone(), info))
         .create();
-    let api = testkit.api();    
+    let api = testkit.api();
 
-    let (status, response): (StatusCode, WalletAssetResponse) = api.get_with_status(
-        &format!("/v1/wallets/{}/assets/{}", pub_key.to_string(), asset.id().to_string()),
-    );
+    let (status, response): (StatusCode, WalletAssetResponse) = api.get_with_status(&format!(
+        "/v1/wallets/{}/assets/{}",
+        pub_key.to_string(),
+        asset.id().to_string()
+    ));
 
     let extended_asset = ExtendedAsset::from_asset(&asset, None);
 
     assert_eq!(status, StatusCode::Ok);
-    assert_eq!(response, Ok(extended_asset));    
+    assert_eq!(response, Ok(extended_asset));
 }
 
 #[test]
@@ -344,25 +394,28 @@ fn wallet_asset_whit_info() {
     let units = 6;
     let fixed = 11;
     let (pub_key, _) = crypto::gen_keypair();
-    let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &pub_key);
+    let (asset, info) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &pub_key,
+    );
 
     let testkit = DmbcTestApiBuilder::new()
         .add_wallet_value(&pub_key, Wallet::new(0, vec![]))
         .add_asset_to_wallet(&pub_key, (asset.clone(), info.clone()))
         .create();
-    let api = testkit.api();    
+    let api = testkit.api();
 
-    let (status, response): (StatusCode, WalletAssetResponse) = api.get_with_status(
-        &format!(
-            "/v1/wallets/{}/assets/{}?{}=true", 
-            pub_key.to_string(), 
-            asset.id().to_string(), 
-            wallet::PARAMETER_META_DATA_KEY
-        ),
-    );
+    let (status, response): (StatusCode, WalletAssetResponse) = api.get_with_status(&format!(
+        "/v1/wallets/{}/assets/{}?{}=true",
+        pub_key.to_string(),
+        asset.id().to_string(),
+        wallet::PARAMETER_META_DATA_KEY
+    ));
 
     let extended_asset = ExtendedAsset::from_asset(&asset, Some(info));
 
     assert_eq!(status, StatusCode::Ok);
-    assert_eq!(response, Ok(extended_asset));    
+    assert_eq!(response, Ok(extended_asset));
 }

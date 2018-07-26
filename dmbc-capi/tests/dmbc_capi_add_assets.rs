@@ -3,12 +3,12 @@ extern crate exonum;
 
 pub mod utils;
 
+use exonum::blockchain::Transaction;
 use exonum::crypto::{PublicKey, SecretKey};
 use exonum::encoding::serialize::FromHex;
-use exonum::blockchain::Transaction;
 
-use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::transactions::builders::fee;
+use dmbc::currency::transactions::builders::transaction;
 
 #[test]
 fn capi_add_assets() {
@@ -28,17 +28,26 @@ fn capi_add_assets() {
         let transfer = fees_json["transfer"].as_object().unwrap();
 
         let fees = fee::Builder::new()
-            .trade(trade["fixed"].as_u64().unwrap(), trade["fraction"].as_str().unwrap().parse().unwrap())
-            .exchange(exchange["fixed"].as_u64().unwrap(), exchange["fraction"].as_str().unwrap().parse().unwrap())
-            .transfer(transfer["fixed"].as_u64().unwrap(), transfer["fraction"].as_str().unwrap().parse().unwrap())
+            .trade(
+                trade["fixed"].as_u64().unwrap(),
+                trade["fraction"].as_str().unwrap().parse().unwrap(),
+            )
+            .exchange(
+                exchange["fixed"].as_u64().unwrap(),
+                exchange["fraction"].as_str().unwrap().parse().unwrap(),
+            )
+            .transfer(
+                transfer["fixed"].as_u64().unwrap(),
+                transfer["fraction"].as_str().unwrap().parse().unwrap(),
+            )
             .build();
 
         let receiver = PublicKey::from_hex(asset["receiver"].as_str().unwrap());
         builder.add_asset_receiver_ref(
             receiver.unwrap(),
-            asset["data"].as_str().unwrap(), 
-            asset["amount"].as_u64().unwrap(), 
-            fees
+            asset["data"].as_str().unwrap(),
+            asset["amount"].as_u64().unwrap(),
+            fees,
         );
     }
 

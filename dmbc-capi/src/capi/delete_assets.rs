@@ -1,18 +1,18 @@
-use std::ptr;
 use std::mem;
+use std::ptr;
 
-use libc::{c_char, size_t};
 use exonum::messages::Message;
+use libc::{c_char, size_t};
 
-use capi::common::*;
 use assets::AssetBundle;
+use capi::common::*;
 use transactions::delete_assets::DeleteAssetsWrapper;
 
 use error::{Error, ErrorKind};
 
 ffi_fn! {
     fn dmbc_tx_delete_assets_create(
-        public_key: *const c_char, 
+        public_key: *const c_char,
         seed: u64,
         error: *mut Error,
     ) -> *mut DeleteAssetsWrapper {
@@ -65,7 +65,7 @@ ffi_fn! {
                 }
                 return false;
             }
-        } 
+        }
 
         let asset = AssetBundle::from_ptr(asset);
         wrapper.add_asset(asset.clone());

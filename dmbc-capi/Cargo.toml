@@ -1,6 +1,6 @@
 [package]
 name = "dmbc-capi"
-version = "0.1.0"
+version = "2.2.0"
 authors = ["Taras Shchybovyk <tshchybo@gmail.com>"]
 
 [lib]

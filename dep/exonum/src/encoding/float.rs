@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::mem;
 use std::error::Error;
+use std::mem;
 
 use byteorder::{ByteOrder, LittleEndian};
-use serde_json::value::{Value, Number};
+use serde_json::value::{Number, Value};
 
-use super::Result as EncodingResult;
 use super::Error as EncodingError;
-use encoding::{CheckedOffset, Field, Offset};
-use encoding::serialize::WriteBufferWrapper;
+use super::Result as EncodingResult;
 use encoding::serialize::json::ExonumJson;
+use encoding::serialize::WriteBufferWrapper;
+use encoding::{CheckedOffset, Field, Offset};
 
 /// Wrapper for the `f32` type that restricts non-finite
 /// (NaN, Infinity, negative zero and subnormal) values.
@@ -236,9 +236,7 @@ impl ExonumJson for F32 {
 
     fn serialize_field(&self) -> Result<Value, Box<Error + Send + Sync>> {
         Ok(Value::Number(
-            Number::from_f64(f64::from(self.get())).ok_or(
-                "Can't cast float as json",
-            )?,
+            Number::from_f64(f64::from(self.get())).ok_or("Can't cast float as json")?,
         ))
     }
 }
@@ -256,21 +254,21 @@ impl ExonumJson for F64 {
     }
 
     fn serialize_field(&self) -> Result<Value, Box<Error + Send + Sync>> {
-        Ok(Value::Number(Number::from_f64(self.get()).ok_or(
-            "Can't cast float as json",
-        )?))
+        Ok(Value::Number(
+            Number::from_f64(self.get()).ok_or("Can't cast float as json")?,
+        ))
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::{F32, F64};
-    use std::num::FpCategory;
-    use std::{f32, f64};
-    use std::panic;
+    use byteorder::{ByteOrder, LittleEndian};
     use encoding::fields::Field;
-    use byteorder::{LittleEndian, ByteOrder};
     use encoding::Offset;
+    use std::num::FpCategory;
+    use std::panic;
+    use std::{f32, f64};
 
     fn validate_constructor<T, V, C: Fn(V) -> T>(
         constructor: C,

@@ -20,10 +20,7 @@ impl Api for DbStatsApi {
                     res
                 }
                 None => {
-                    let mut res = Response::with(
-                        (status::ServiceUnavailable,
-                         "")
-                    );
+                    let mut res = Response::with((status::ServiceUnavailable, ""));
                     res.headers.set(ContentType::plaintext());
                     res.headers.set(AccessControlAllowOrigin::Any);
                     res

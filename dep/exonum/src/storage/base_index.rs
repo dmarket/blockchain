@@ -17,7 +17,7 @@
 use std::borrow::Cow;
 use std::marker::PhantomData;
 
-use super::{StorageKey, StorageValue, Snapshot, Fork, Iter};
+use super::{Fork, Iter, Snapshot, StorageKey, StorageValue};
 
 /// Basic struct for all indices that implements common features.
 ///
@@ -128,10 +128,9 @@ where
     where
         K: StorageKey,
     {
-        self.view.as_ref().contains(
-            &self.name,
-            &self.prefixed_key(key),
-        )
+        self.view
+            .as_ref()
+            .contains(&self.name, &self.prefixed_key(key))
     }
 
     /// Returns an iterator over the entries of the index in ascending order. The iterator element

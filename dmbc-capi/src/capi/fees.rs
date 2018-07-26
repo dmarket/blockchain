@@ -1,41 +1,33 @@
-use std::ptr; 
+use std::ptr;
 use std::str::FromStr;
 
 use libc::c_char;
 
-use decimal::UFract64;
 use assets::{Fee, Fees};
 use capi::common::parse_str;
+use decimal::UFract64;
 
 use error::{Error, ErrorKind};
 
-fn dmbc_fee_create(
-    fixed: u64, 
-    fraction: *const c_char, 
-    error: *mut Error,
-) -> Option<Fee> {
+fn dmbc_fee_create(fixed: u64, fraction: *const c_char, error: *mut Error) -> Option<Fee> {
     let fraction_str = match parse_str(fraction) {
         Ok(fraction_str) => fraction_str,
-        Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return None;
-                }
+        Err(err) => unsafe {
+            if !error.is_null() {
+                *error = err;
             }
+            return None;
+        },
     };
 
     let fraction = match UFract64::from_str(fraction_str) {
         Ok(fraction) => fraction,
-        Err(err) => {
-            unsafe {
-                if !error.is_null() {
-                    *error = Error::new(ErrorKind::Text(err.to_string()));
-                }
-                return None
+        Err(err) => unsafe {
+            if !error.is_null() {
+                *error = Error::new(ErrorKind::Text(err.to_string()));
             }
-        }
+            return None;
+        },
     };
 
     Some(Fee::new(fixed, fraction))
@@ -43,11 +35,11 @@ fn dmbc_fee_create(
 
 ffi_fn! {
     fn dmbc_fees_create(
-        trade_fixed: u64, 
+        trade_fixed: u64,
         trade_fraction: *const c_char,
-        exchnage_fixed: u64, 
+        exchnage_fixed: u64,
         exchange_fraction: *const c_char,
-        transfer_fixed: u64, 
+        transfer_fixed: u64,
         transfer_fraction: *const c_char,
         error: *mut Error
     ) -> *mut Fees {
@@ -62,8 +54,8 @@ ffi_fn! {
         Box::into_raw(
             Box::new(
                 Fees::new(
-                    trade.unwrap(), 
-                    exchange.unwrap(), 
+                    trade.unwrap(),
+                    exchange.unwrap(),
                     transfer.unwrap()
                 )
             )

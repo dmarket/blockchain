@@ -1,28 +1,29 @@
 extern crate serde_json;
 
 use hyper::status::StatusCode;
-use iron_test::{request, response};
-use iron::Handler;
 use iron::headers::{ContentType, Headers};
+use iron::Handler;
+use iron_test::{request, response};
 
 use exonum::crypto::{self, PublicKey};
-use exonum::messages::Message;
-use exonum_testkit::{TestKit as ExonumTestKit, TestKitBuilder, TestKitApi as ExonumTestKitApi};
+use exonum::encoding::serialize::reexport::{Deserialize, Serialize};
 use exonum::encoding::serialize::FromHex;
-use exonum::encoding::serialize::reexport::{Serialize, Deserialize};
+use exonum::messages::Message;
+use exonum_testkit::{TestKit as ExonumTestKit, TestKitApi as ExonumTestKitApi, TestKitBuilder};
 
-use dmbc::decimal::UFract64;
-use dmbc::currency::configuration::Configuration;
-use dmbc::currency::{SERVICE_NAME, Service};
-use dmbc::currency::wallet::{self, Wallet};
-use dmbc::currency::assets::{self, AssetBundle, AssetInfo, Fees, MetaAsset, AssetId};
-use dmbc::currency::transactions::builders::fee;
-use dmbc::currency::api::transaction::{TxPostResponse, StatusResponse};
 use dmbc::currency::api::fees::FeesResponse;
+use dmbc::currency::api::transaction::{StatusResponse, TxPostResponse};
 use dmbc::currency::api::wallet as wallet_api;
-use dmbc::currency::api::wallet::{WalletResponse, WalletAssetsResponse,
-                                    WalletInfo, ExtendedAsset};
+use dmbc::currency::api::wallet::{
+    ExtendedAsset, WalletAssetsResponse, WalletInfo, WalletResponse,
+};
+use dmbc::currency::assets::{self, AssetBundle, AssetId, AssetInfo, Fees, MetaAsset};
+use dmbc::currency::configuration::Configuration;
 use dmbc::currency::configuration::GENESIS_WALLET_PUB_KEY;
+use dmbc::currency::transactions::builders::fee;
+use dmbc::currency::wallet::{self, Wallet};
+use dmbc::currency::{Service, SERVICE_NAME};
+use dmbc::decimal::UFract64;
 
 pub trait DmbcTestKit {
     fn default() -> Self;
@@ -87,7 +88,10 @@ impl DmbcTestKit for ExonumTestKit {
         let mut existing_wallet = wallet::Schema(&fork).fetch(&pub_key);
         existing_wallet.add_assets(wallet.assets());
         let updated_balance = existing_wallet.balance() + wallet.balance();
-        wallet::Schema(&mut fork).store(&pub_key, Wallet::new(updated_balance, existing_wallet.assets()));
+        wallet::Schema(&mut fork).store(
+            &pub_key,
+            Wallet::new(updated_balance, existing_wallet.assets()),
+        );
 
         assert!(blockchain.merge(fork.into_patch()).is_ok());
     }
@@ -108,31 +112,45 @@ impl DmbcTestKit for ExonumTestKit {
     }
 }
 
-
 pub trait DmbcTestKitApi {
-    fn get_internal_with_status<H, D>(handler: &H, endpoint: &str) -> (StatusCode, D) 
-    where H: Handler, for <'de> D: Deserialize<'de>;
+    fn get_internal_with_status<H, D>(handler: &H, endpoint: &str) -> (StatusCode, D)
+    where
+        H: Handler,
+        for<'de> D: Deserialize<'de>;
 
     fn get_with_status<D>(&self, endpoint: &str) -> (StatusCode, D)
-    where for<'de> D: Deserialize<'de>;
+    where
+        for<'de> D: Deserialize<'de>;
 
     fn post_with_status<T, D>(&self, endpoint: &str, transaction: &T) -> (StatusCode, D)
-    where T: Serialize, for<'de> D: Deserialize<'de>;
+    where
+        T: Serialize,
+        for<'de> D: Deserialize<'de>;
 
     fn post_raw_with_status<D>(&self, endpoint: &str, body: &str) -> (StatusCode, D)
-    where for <'de> D: Deserialize<'de>;
+    where
+        for<'de> D: Deserialize<'de>;
 
-    fn post_raw_with_status2<D>(&self, endpoint: &str, headers: Headers, body: &str) -> (StatusCode, D)
-    where for <'de> D: Deserialize<'de>;
+    fn post_raw_with_status2<D>(
+        &self,
+        endpoint: &str,
+        headers: Headers,
+        body: &str,
+    ) -> (StatusCode, D)
+    where
+        for<'de> D: Deserialize<'de>;
 
     fn post_tx<T>(&self, tx: &T) -> (StatusCode, TxPostResponse)
-    where T: Message + Serialize; 
+    where
+        T: Message + Serialize;
 
     fn get_tx_status<T>(&self, transaction: &T) -> (StatusCode, StatusResponse)
-    where T: Message + Serialize;
+    where
+        T: Message + Serialize;
 
     fn post_fee<T>(&self, tx: &T) -> (StatusCode, FeesResponse)
-    where T: Message + Serialize; 
+    where
+        T: Message + Serialize;
 
     fn get_wallet(&self, public_key: &PublicKey) -> WalletInfo;
 
@@ -140,11 +158,15 @@ pub trait DmbcTestKitApi {
 }
 
 impl DmbcTestKitApi for ExonumTestKitApi {
-
-    fn get_internal_with_status<H, D>(handler: &H, endpoint: &str) -> (StatusCode, D) 
-    where H: Handler, for <'de> D: Deserialize<'de>
+    fn get_internal_with_status<H, D>(handler: &H, endpoint: &str) -> (StatusCode, D)
+    where
+        H: Handler,
+        for<'de> D: Deserialize<'de>,
     {
-        let url = format!("http://localhost:3000/api/services/{}/{}", SERVICE_NAME, endpoint);
+        let url = format!(
+            "http://localhost:3000/api/services/{}/{}",
+            SERVICE_NAME, endpoint
+        );
         let response = request::get(&url, Headers::new(), handler).unwrap();
         let status = response.status.unwrap();
         let body = response::extract_body_to_string(response);
@@ -152,18 +174,20 @@ impl DmbcTestKitApi for ExonumTestKitApi {
     }
 
     fn get_with_status<D>(&self, endpoint: &str) -> (StatusCode, D)
-    where for <'de> D: Deserialize<'de>
+    where
+        for<'de> D: Deserialize<'de>,
     {
-        ExonumTestKitApi::get_internal_with_status(
-            self.public_handler(),
-            endpoint, 
-        )
+        ExonumTestKitApi::get_internal_with_status(self.public_handler(), endpoint)
     }
 
     fn post_raw_with_status<D>(&self, endpoint: &str, body: &str) -> (StatusCode, D)
-    where for <'de> D: Deserialize<'de> 
+    where
+        for<'de> D: Deserialize<'de>,
     {
-        let url = format!("http://localhost:3000/api/services/{}/{}", SERVICE_NAME, endpoint);
+        let url = format!(
+            "http://localhost:3000/api/services/{}/{}",
+            SERVICE_NAME, endpoint
+        );
         let response = request::post(
             &url,
             {
@@ -179,16 +203,21 @@ impl DmbcTestKitApi for ExonumTestKitApi {
         (status, serde_json::from_str(&body).unwrap())
     }
 
-    fn post_raw_with_status2<D>(&self, endpoint: &str, headers: Headers, body: &str) -> (StatusCode, D)
-    where for <'de> D: Deserialize<'de>
+    fn post_raw_with_status2<D>(
+        &self,
+        endpoint: &str,
+        headers: Headers,
+        body: &str,
+    ) -> (StatusCode, D)
+    where
+        for<'de> D: Deserialize<'de>,
     {
-        let url = format!("http://localhost:3000/api/services/{}/{}", SERVICE_NAME, endpoint);
-        let response = request::post(
-            &url,
-            headers,
-            &body,
-            self.public_handler(),
-        ).expect("Cannot send data");
+        let url = format!(
+            "http://localhost:3000/api/services/{}/{}",
+            SERVICE_NAME, endpoint
+        );
+        let response =
+            request::post(&url, headers, &body, self.public_handler()).expect("Cannot send data");
         let status = response.status.unwrap();
         let body = response::extract_body_to_string(response);
         (status, serde_json::from_str(&body).unwrap())
@@ -206,42 +235,43 @@ impl DmbcTestKitApi for ExonumTestKitApi {
     }
 
     fn post_tx<T>(&self, tx: &T) -> (StatusCode, TxPostResponse)
-    where T: Message + Serialize 
+    where
+        T: Message + Serialize,
     {
         self.post_with_status("v1/transactions", &tx)
     }
 
     fn get_tx_status<T>(&self, transaction: &T) -> (StatusCode, StatusResponse)
-    where T: Message + Serialize 
-    {   
+    where
+        T: Message + Serialize,
+    {
         let endpoint = &format!("/v1/transactions/{}", transaction.hash().to_string());
         self.get_with_status(endpoint)
     }
 
     fn post_fee<T>(&self, tx: &T) -> (StatusCode, FeesResponse)
-    where T: Message + Serialize
+    where
+        T: Message + Serialize,
     {
         self.post_with_status("/v1/fees/transactions", &tx)
     }
 
     fn get_wallet(&self, public_key: &PublicKey) -> WalletInfo {
-        let (status, response): (StatusCode, WalletResponse) = self.get_with_status(
-            &format!("/v1/wallets/{}", public_key.to_string())
-        );
-        
+        let (status, response): (StatusCode, WalletResponse) =
+            self.get_with_status(&format!("/v1/wallets/{}", public_key.to_string()));
+
         assert_eq!(status, StatusCode::Ok);
         assert!(response.is_ok());
         response.unwrap()
     }
 
     fn get_wallet_assets(&self, public_key: &PublicKey) -> Vec<ExtendedAsset> {
-        let (status, response): (StatusCode, WalletAssetsResponse) = self.get_with_status(
-            &format!(
+        let (status, response): (StatusCode, WalletAssetsResponse) =
+            self.get_with_status(&format!(
                 "/v1/wallets/{}/assets?{}=true",
                 public_key.to_string(),
                 wallet_api::PARAMETER_META_DATA_KEY,
-            )
-        );
+            ));
 
         assert_eq!(status, StatusCode::Ok);
         assert!(response.is_ok());
@@ -258,12 +288,11 @@ pub fn asset_fees(t: u64, r: UFract64) -> Fees {
 }
 
 pub fn create_asset(
-    meta_data: &str, 
-    units: u64, 
-    fees: Fees, 
-    creator: &PublicKey
-) -> (AssetBundle, AssetInfo) 
-{
+    meta_data: &str,
+    units: u64,
+    fees: Fees,
+    creator: &PublicKey,
+) -> (AssetBundle, AssetInfo) {
     let (receiver, _) = crypto::gen_keypair();
     let meta_asset = MetaAsset::new(&receiver, meta_data, units, fees);
     let id = AssetId::from_data(meta_data, creator);
@@ -274,13 +303,12 @@ pub fn create_asset(
 }
 
 pub fn create_asset2(
-    meta_data: &str, 
-    units: u64, 
-    fees: Fees, 
+    meta_data: &str,
+    units: u64,
+    fees: Fees,
     creator: &PublicKey,
-    origin: &crypto::Hash
-) -> (AssetBundle, AssetInfo) 
-{
+    origin: &crypto::Hash,
+) -> (AssetBundle, AssetInfo) {
     let (receiver, _) = crypto::gen_keypair();
     let meta_asset = MetaAsset::new(&receiver, meta_data, units, fees);
     let id = AssetId::from_data(meta_data, creator);
@@ -289,7 +317,6 @@ pub fn create_asset2(
 
     (asset, info)
 }
-
 
 pub fn default_genesis_key() -> PublicKey {
     PublicKey::from_hex(GENESIS_WALLET_PUB_KEY).unwrap()
@@ -319,7 +346,11 @@ impl DmbcTestApiBuilder {
         }
     }
 
-    pub fn add_asset_to_wallet(mut self, public_key: &PublicKey, asset: (AssetBundle, AssetInfo)) -> Self {
+    pub fn add_asset_to_wallet(
+        mut self,
+        public_key: &PublicKey,
+        asset: (AssetBundle, AssetInfo),
+    ) -> Self {
         self.assets.push((*public_key, asset));
         self
     }
@@ -347,7 +378,7 @@ impl DmbcTestApiBuilder {
         for (id, info) in self.infos {
             testkit.store_asset_info(&id, info);
         }
-        
+
         for (key, asset) in self.assets {
             testkit.add_assets(&key, vec![asset])
         }

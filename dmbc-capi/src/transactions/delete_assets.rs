@@ -1,7 +1,7 @@
 use exonum::crypto::{PublicKey, SecretKey};
 
-use transactions::components::service::SERVICE_ID;
 use assets::AssetBundle;
+use transactions::components::service::SERVICE_ID;
 
 use error::{Error, ErrorKind};
 
@@ -22,7 +22,7 @@ message! {
 
 #[derive(Clone, Debug)]
 pub struct DeleteAssetsWrapper {
-    public_key: PublicKey, 
+    public_key: PublicKey,
     assets: Vec<AssetBundle>,
     seed: u64,
 }
@@ -36,15 +36,15 @@ impl DeleteAssetsWrapper {
         }
     }
 
-    pub fn from_ptr<'a>(wrapper: *mut DeleteAssetsWrapper) -> Result<&'a mut DeleteAssetsWrapper, Error> {
+    pub fn from_ptr<'a>(
+        wrapper: *mut DeleteAssetsWrapper,
+    ) -> Result<&'a mut DeleteAssetsWrapper, Error> {
         if wrapper.is_null() {
-            return Err(
-                Error::new(
-                    ErrorKind::Text("wrapper isn't initialized".to_string())
-                )
-            );
+            return Err(Error::new(ErrorKind::Text(
+                "wrapper isn't initialized".to_string(),
+            )));
         }
-        Ok( unsafe { &mut *wrapper } )
+        Ok(unsafe { &mut *wrapper })
     }
 
     pub fn add_asset(&mut self, asset: AssetBundle) {
@@ -53,8 +53,8 @@ impl DeleteAssetsWrapper {
 
     pub fn unwrap(&self) -> DeleteAssets {
         DeleteAssets::new(
-            &self.public_key, 
-            self.assets.clone(), 
+            &self.public_key,
+            self.assets.clone(),
             self.seed,
             &SecretKey::zero(),
         )

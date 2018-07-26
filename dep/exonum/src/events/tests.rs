@@ -16,19 +16,19 @@ use std::net::SocketAddr;
 use std::thread;
 use std::time::{self, Duration};
 
-use futures::{Future, Sink, Stream};
 use futures::stream::Wait;
 use futures::sync::mpsc;
+use futures::{Future, Sink, Stream};
 use tokio_core::reactor::Core;
 use tokio_timer::{TimeoutStream, Timer};
 
-use crypto::{gen_keypair, PublicKey, Signature};
-use messages::{Connect, Message, MessageWriter, RawMessage};
-use events::{NetworkEvent, NetworkRequest};
-use events::network::{NetworkConfiguration, NetworkPart};
-use events::error::log_error;
-use node::{EventsPoolCapacity, NodeChannel};
 use blockchain::ConsensusConfig;
+use crypto::{gen_keypair, PublicKey, Signature};
+use events::error::log_error;
+use events::network::{NetworkConfiguration, NetworkPart};
+use events::{NetworkEvent, NetworkRequest};
+use messages::{Connect, Message, MessageWriter, RawMessage};
+use node::{EventsPoolCapacity, NodeChannel};
 
 #[derive(Debug)]
 pub struct TestHandler {
@@ -267,8 +267,8 @@ fn test_network_max_message_len() {
     let second = "127.0.0.1:17303".parse().unwrap();
 
     let max_message_length = ConsensusConfig::DEFAULT_MESSAGE_MAX_LEN as usize;
-    let max_payload_length = max_message_length - ::messages::HEADER_LENGTH -
-        ::crypto::SIGNATURE_LENGTH;
+    let max_payload_length =
+        max_message_length - ::messages::HEADER_LENGTH - ::crypto::SIGNATURE_LENGTH;
     let acceptable_message = raw_message(15, max_payload_length);
     let too_big_message = raw_message(16, max_payload_length + 1000);
 

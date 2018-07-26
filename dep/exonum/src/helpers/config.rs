@@ -14,13 +14,13 @@
 
 //! Loading and saving TOML-encoded configurations.
 
-use std::path::{Path, PathBuf};
-use std::io::{Read, Write};
-use std::fs::{self, File};
 use std::error::Error;
 use std::fmt;
+use std::fs::{self, File};
+use std::io::{Read, Write};
+use std::path::{Path, PathBuf};
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use toml;
 
 #[derive(Debug)]
@@ -65,9 +65,8 @@ impl ConfigFile {
         let mut file = File::open(path.as_ref())?;
         let mut toml = String::new();
         file.read_to_string(&mut toml)?;
-        toml::de::from_str(&toml).map_err(|e| {
-            Box::new(DeserializeError::new(path.as_ref().to_owned(), e)) as Box<Error>
-        })
+        toml::de::from_str(&toml)
+            .map_err(|e| Box::new(DeserializeError::new(path.as_ref().to_owned(), e)) as Box<Error>)
     }
 
     /// Saves TOML-encoded file.

@@ -1,11 +1,11 @@
-use std::ptr;
 use std::mem;
+use std::ptr;
 
-use libc::{c_char, size_t};
 use exonum::messages::Message;
+use libc::{c_char, size_t};
 
-use capi::common::*;
 use assets::{Fees, MetaAsset};
+use capi::common::*;
 use transactions::add_assets::AddAssetWrapper;
 
 use error::{Error, ErrorKind};
@@ -68,7 +68,7 @@ ffi_fn! {
                 }
                 return false;
             }
-        } 
+        }
         let fees = Fees::from_ptr(fees);
 
         let receiver_key = match parse_public_key(receiver_key) {

@@ -12,18 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::net::SocketAddr;
 use std::collections::HashMap;
+use std::net::SocketAddr;
 
-use router::Router;
 use iron::prelude::*;
 use params::{Params, Value as ParamsValue};
+use router::Router;
 
-use crypto::PublicKey;
-use node::ApiSender;
-use blockchain::{Service, Blockchain, SharedNodeState};
 use api::{Api, ApiError};
-use messages::{TEST_NETWORK_ID, PROTOCOL_MAJOR_VERSION};
+use blockchain::{Blockchain, Service, SharedNodeState};
+use crypto::PublicKey;
+use messages::{PROTOCOL_MAJOR_VERSION, TEST_NETWORK_ID};
+use node::ApiSender;
 
 #[derive(Serialize, Clone, Debug)]
 struct ServiceInfo {
@@ -50,11 +50,9 @@ impl NodeInfo {
             protocol_version: PROTOCOL_MAJOR_VERSION,
             services: services
                 .into_iter()
-                .map(|s| {
-                    ServiceInfo {
-                        name: s.service_name().to_owned(),
-                        id: s.service_id(),
-                    }
+                .map(|s| ServiceInfo {
+                    name: s.service_name().to_owned(),
+                    id: s.service_id(),
                 })
                 .collect(),
         }
@@ -65,7 +63,6 @@ impl NodeInfo {
 struct ReconnectInfo {
     delay: u64,
 }
-
 
 #[derive(Serialize)]
 #[serde(tag = "type")]
@@ -157,7 +154,6 @@ impl SystemApi {
 
 impl Api for SystemApi {
     fn wire(&self, router: &mut Router) {
-
         let self_ = self.clone();
         let peer_add = move |req: &mut Request| -> IronResult<Response> {
             let map = req.get_ref::<Params>().unwrap();
@@ -166,11 +162,9 @@ impl Api for SystemApi {
                     self_.peer_add(ip_str)?;
                     self_.ok_response(&::serde_json::to_value("Ok").unwrap())
                 }
-                _ => {
-                    Err(ApiError::IncorrectRequest(
-                        "Required parameter of peer 'ip' is missing".into(),
-                    ))?
-                }
+                _ => Err(ApiError::IncorrectRequest(
+                    "Required parameter of peer 'ip' is missing".into(),
+                ))?,
             }
         };
 

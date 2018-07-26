@@ -16,7 +16,7 @@
 
 use std::marker::PhantomData;
 
-use super::{BaseIndex, BaseIndexIter, Snapshot, Fork, StorageKey, StorageValue};
+use super::{BaseIndex, BaseIndexIter, Fork, Snapshot, StorageKey, StorageValue};
 
 /// A map of keys and values.
 ///
@@ -192,7 +192,9 @@ where
     /// }
     /// ```
     pub fn iter(&self) -> MapIndexIter<K, V> {
-        MapIndexIter { base_iter: self.base.iter(&()) }
+        MapIndexIter {
+            base_iter: self.base.iter(&()),
+        }
     }
 
     /// Returns an iterator over the keys of the map in ascending order. The iterator element
@@ -213,7 +215,9 @@ where
     /// }
     /// ```
     pub fn keys(&self) -> MapIndexKeys<K> {
-        MapIndexKeys { base_iter: self.base.iter(&()) }
+        MapIndexKeys {
+            base_iter: self.base.iter(&()),
+        }
     }
 
     /// Returns an iterator over the values of the map in ascending order of keys. The iterator
@@ -234,7 +238,9 @@ where
     /// }
     /// ```
     pub fn values(&self) -> MapIndexValues<V> {
-        MapIndexValues { base_iter: self.base.iter(&()) }
+        MapIndexValues {
+            base_iter: self.base.iter(&()),
+        }
     }
 
     /// Returns an iterator over the entries of the map in ascending order starting from the
@@ -255,7 +261,9 @@ where
     /// }
     /// ```
     pub fn iter_from(&self, from: &K) -> MapIndexIter<K, V> {
-        MapIndexIter { base_iter: self.base.iter_from(&(), from) }
+        MapIndexIter {
+            base_iter: self.base.iter_from(&(), from),
+        }
     }
 
     /// Returns an iterator over the keys of the map in ascending order starting from the
@@ -276,7 +284,9 @@ where
     /// }
     /// ```
     pub fn keys_from(&self, from: &K) -> MapIndexKeys<K> {
-        MapIndexKeys { base_iter: self.base.iter_from(&(), from) }
+        MapIndexKeys {
+            base_iter: self.base.iter_from(&(), from),
+        }
     }
 
     /// Returns an iterator over the values of the map in ascending order of keys starting from the
@@ -296,7 +306,9 @@ where
     /// }
     /// ```
     pub fn values_from(&self, from: &K) -> MapIndexValues<V> {
-        MapIndexValues { base_iter: self.base.iter_from(&(), from) }
+        MapIndexValues {
+            base_iter: self.base.iter_from(&(), from),
+        }
     }
 }
 
@@ -421,9 +433,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use storage::Database;
     use super::MapIndex;
     use rand::{thread_rng, Rng};
+    use storage::Database;
 
     const IDX_NAME: &'static str = "idx_name";
 

@@ -17,12 +17,13 @@ use std::time::SystemTime;
 
 use bit_vec::BitVec;
 
-use crypto::{hash, gen_keypair};
-use blockchain::{self, BlockProof, Block};
-use messages::{RawMessage, Message, Connect, Propose, Prevote, Precommit, Status, BlockResponse,
-               BlockRequest};
-use helpers::{Height, Round, ValidatorId};
 use super::{Field, Offset};
+use blockchain::{self, Block, BlockProof};
+use crypto::{gen_keypair, hash};
+use helpers::{Height, Round, ValidatorId};
+use messages::{
+    BlockRequest, BlockResponse, Connect, Message, Precommit, Prevote, Propose, RawMessage, Status,
+};
 
 static VALIDATOR: ValidatorId = ValidatorId(65_123);
 static HEIGHT: Height = Height(123_123_123);
@@ -51,8 +52,10 @@ use self::ignore_new::*;
 #[test]
 #[should_panic(expected = "Found error in check: UnexpectedlyShortPayload")]
 fn test_zero_size_segment() {
-    let buf = vec![8,0,0,0, // not overlap
-                   0,0,0,0,0]; // but with zero size
+    let buf = vec![
+        8, 0, 0, 0, // not overlap
+        0, 0, 0, 0, 0,
+    ]; // but with zero size
 
     <Parent as Field>::check(&buf, 0.into(), 8.into(), 8.into()).expect("Found error in check");
 }
@@ -60,8 +63,10 @@ fn test_zero_size_segment() {
 #[test]
 #[should_panic(expected = "Found error in check: UnexpectedlyShortPayload")]
 fn test_incorrect_pointer() {
-    let buf = vec![8,0,0,0, // not overlap
-                   0,0,0,0,0]; // but with zero size
+    let buf = vec![
+        8, 0, 0, 0, // not overlap
+        0, 0, 0, 0, 0,
+    ]; // but with zero size
 
     <Parent as Field>::check(&buf, 0.into(), 8.into(), 8.into()).expect("Found error in check");
 }
@@ -371,7 +376,7 @@ fn test_block() {
             &hash(&[1, 2, 3]),
             &hash(&[3, 2, 1]),
             ts,
-            &secret_key
+            &secret_key,
         ),
         Precommit::new(
             ValidatorId(13),
@@ -380,7 +385,7 @@ fn test_block() {
             &hash(&[4, 2, 3]),
             &hash(&[3, 3, 1]),
             ts,
-            &secret_key
+            &secret_key,
         ),
         Precommit::new(
             ValidatorId(323),
@@ -389,7 +394,7 @@ fn test_block() {
             &hash(&[1, 1, 3]),
             &hash(&[5, 2, 1]),
             ts,
-            &secret_key
+            &secret_key,
         ),
     ];
     let transactions = vec![

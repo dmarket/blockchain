@@ -133,7 +133,8 @@ impl Api for TransactionApi {
                 Ok(None) => Err(ApiError::EmptyRequestBody),
                 Err(_) => Err(ApiError::IncorrectRequest),
             };
-            let ss = s.clone()
+            let ss = s
+                .clone()
                 .ok()
                 .map(|r| {
                     r.err()

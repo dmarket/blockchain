@@ -14,25 +14,25 @@
 
 //! An implementation of `RocksDB` database.
 
-use std::mem;
-use std::sync::Arc;
-use std::path::Path;
-use std::fmt;
 use std::error;
+use std::fmt;
 use std::iter::Peekable;
+use std::mem;
+use std::path::Path;
+use std::sync::Arc;
 
 use exonum_profiler::ProfilerSpan;
-use rocksdb::DB as _RocksDB;
-use rocksdb::{WriteBatch, DBIterator};
-use rocksdb::Snapshot as _Snapshot;
-use rocksdb::Error as _Error;
 use rocksdb::utils::get_cf_names;
+use rocksdb::Error as _Error;
+use rocksdb::Snapshot as _Snapshot;
+use rocksdb::DB as _RocksDB;
+use rocksdb::{DBIterator, WriteBatch};
 
-use super::{Database, Iterator, Iter, Snapshot, Error, Patch, Result};
 use super::db::Change;
+use super::{Database, Error, Iter, Iterator, Patch, Result, Snapshot};
 
-pub use rocksdb::{Options as RocksDBOptions, WriteOptions as RocksDBWriteOptions};
 pub use rocksdb::BlockBasedOptions as RocksBlockOptions;
+pub use rocksdb::{Options as RocksDBOptions, WriteOptions as RocksDBWriteOptions};
 
 impl From<_Error> for Error {
     fn from(err: _Error) -> Self {
@@ -78,11 +78,10 @@ impl RocksDB {
         for (cf_name, changes) in patch {
             let cf = match self.db.cf_handle(&cf_name) {
                 Some(cf) => cf,
-                None => {
-                    self.db
-                        .create_cf(&cf_name, &RocksDBOptions::default())
-                        .unwrap()
-                }
+                None => self
+                    .db
+                    .create_cf(&cf_name, &RocksDBOptions::default())
+                    .unwrap(),
             };
             for (key, change) in changes {
                 match change {
@@ -130,14 +129,13 @@ impl Snapshot for RocksDBSnapshot {
     }
 
     fn iter<'a>(&'a self, name: &str, from: &[u8]) -> Iter<'a> {
-        use rocksdb::{IteratorMode, Direction};
+        use rocksdb::{Direction, IteratorMode};
         let _p = ProfilerSpan::new("RocksDBSnapshot::iter");
         let iter = match self._db.cf_handle(name) {
-            Some(cf) => {
-                self.snapshot
-                    .iterator_cf(cf, IteratorMode::From(from, Direction::Forward))
-                    .unwrap()
-            }
+            Some(cf) => self
+                .snapshot
+                .iterator_cf(cf, IteratorMode::From(from, Direction::Forward))
+                .unwrap(),
             None => self.snapshot.iterator(IteratorMode::Start),
         };
         Box::new(RocksDBIterator {

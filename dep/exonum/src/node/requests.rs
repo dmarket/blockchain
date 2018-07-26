@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use messages::{RequestMessage, Message, ProposeRequest, TransactionsRequest, PrevotesRequest,
-               BlockRequest, BlockResponse};
-use blockchain::Schema;
 use super::NodeHandler;
+use blockchain::Schema;
+use messages::{
+    BlockRequest, BlockResponse, Message, PrevotesRequest, ProposeRequest, RequestMessage,
+    TransactionsRequest,
+};
 
 // TODO: height should be updated after any message, not only after status (if signature is correct)
 // TODO: Request propose makes sense only if we know that node is on our height.
@@ -59,9 +61,9 @@ impl NodeHandler {
         }
 
         let propose = if msg.height() == self.state.height() {
-            self.state.propose(msg.propose_hash()).map(|p| {
-                p.message().raw().clone()
-            })
+            self.state
+                .propose(msg.propose_hash())
+                .map(|p| p.message().raw().clone())
         } else {
             return;
         };
@@ -77,7 +79,8 @@ impl NodeHandler {
         let snapshot = self.blockchain.snapshot();
         let schema = Schema::new(&snapshot);
         for hash in msg.txs() {
-            let tx = self.state
+            let tx = self
+                .state
                 .transactions()
                 .read()
                 .expect("Expected read lock")
@@ -100,7 +103,8 @@ impl NodeHandler {
         }
 
         let has_prevotes = msg.validators();
-        let prevotes = self.state
+        let prevotes = self
+            .state
             .prevotes(msg.round(), *msg.propose_hash())
             .iter()
             .filter(|p| !has_prevotes[p.validator().into()])
@@ -132,7 +136,6 @@ impl NodeHandler {
         let block = schema.blocks().get(&block_hash).unwrap();
         let precommits = schema.precommits(&block_hash);
         let transactions = schema.block_txs(height);
-
 
         let block_msg = BlockResponse::new(
             self.state.consensus_public_key(),

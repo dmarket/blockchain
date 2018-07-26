@@ -10,8 +10,9 @@ use currency::transactions::add_assets::AddAssets;
 use currency::transactions::components::{FeeStrategy, Intermediary};
 use currency::transactions::delete_assets::DeleteAssets;
 use currency::transactions::exchange::{Exchange, ExchangeOffer};
-use currency::transactions::exchange_intermediary::{ExchangeIntermediary,
-                                                    ExchangeOfferIntermediary};
+use currency::transactions::exchange_intermediary::{
+    ExchangeIntermediary, ExchangeOfferIntermediary,
+};
 use currency::transactions::trade::{Trade, TradeOffer};
 use currency::transactions::trade_intermediary::{TradeIntermediary, TradeOfferIntermediary};
 use currency::transactions::transfer::Transfer;
@@ -484,7 +485,7 @@ impl ExchangeIntermediaryBuilder {
         self
     }
 
-    pub fn recipient_add_asset_value_ref(&mut self, asset:AssetBundle) {
+    pub fn recipient_add_asset_value_ref(&mut self, asset: AssetBundle) {
         self.recipient_assets.push(asset);
     }
 
@@ -1012,8 +1013,9 @@ mod test {
     use currency::transactions::components::{FeeStrategy, Intermediary};
     use currency::transactions::delete_assets::DeleteAssets;
     use currency::transactions::exchange::{Exchange, ExchangeOffer};
-    use currency::transactions::exchange_intermediary::{ExchangeIntermediary,
-                                                        ExchangeOfferIntermediary};
+    use currency::transactions::exchange_intermediary::{
+        ExchangeIntermediary, ExchangeOfferIntermediary,
+    };
     use currency::transactions::trade::{Trade, TradeOffer};
     use currency::transactions::trade_intermediary::{TradeIntermediary, TradeOfferIntermediary};
     use currency::transactions::transfer::Transfer;

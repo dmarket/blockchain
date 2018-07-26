@@ -14,7 +14,7 @@
 
 //! A definition of `StorageKey` trait and implementations for common types.
 
-use byteorder::{ByteOrder, BigEndian};
+use byteorder::{BigEndian, ByteOrder};
 use crypto::{Hash, PublicKey, HASH_SIZE, PUBLIC_KEY_LENGTH};
 
 /// A type that can be (de)serialized as a key in the blockchain storage.

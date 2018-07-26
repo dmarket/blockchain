@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use byteorder::{ByteOrder, LittleEndian};
 use bit_vec::BitVec;
+use byteorder::{ByteOrder, LittleEndian};
 
-use messages::{RawMessage, HEADER_LENGTH, MessageBuffer};
+use super::{CheckedOffset, Error, Field, Offset, Result};
 use crypto::Hash;
-use super::{Result, Error, Field, Offset, CheckedOffset};
+use messages::{MessageBuffer, RawMessage, HEADER_LENGTH};
 
 /// Trait for fields, that has unknown `compile-time` size.
 /// Usually important for arrays,
@@ -64,7 +64,6 @@ where
             self.count() as u32,
         );
         self.extend_buffer(buffer);
-
     }
 
     fn check(
@@ -79,12 +78,10 @@ where
         );
         let pointer_count_start: Offset = (pointer_from + 4)?.unchecked_offset();
         let segment_start: CheckedOffset = LittleEndian::read_u32(
-            &buffer[pointer_from.unchecked_offset() as usize..
-                        pointer_count_start as usize],
+            &buffer[pointer_from.unchecked_offset() as usize..pointer_count_start as usize],
         ).into();
         let count: CheckedOffset = LittleEndian::read_u32(
-            &buffer[pointer_count_start as usize..
-                        pointer_to.unchecked_offset() as usize],
+            &buffer[pointer_count_start as usize..pointer_to.unchecked_offset() as usize],
         ).into();
 
         if segment_start < latest_segment {
@@ -167,7 +164,6 @@ impl<'a> SegmentField<'a> for RawMessage {
     }
 
     fn extend_buffer(&self, buffer: &mut Vec<u8>) {
-
         buffer.extend_from_slice(self.as_ref())
     }
 
@@ -313,15 +309,13 @@ impl<'a> SegmentField<'a> for &'a [u8] {
     }
 }
 
-
 /// Implement field helper for all array of POD types
 /// it writes POD type as bytearray in place.
 ///
 /// **Beware of platform specific data representation.**
 #[macro_export]
 macro_rules! implement_pod_array_field {
-    ($name:ident) => (
-
+    ($name:ident) => {
         impl<'a> SegmentField<'a> for &'a [$name] {
             fn item_size() -> Offset {
                 ::std::mem::size_of::<$name>() as Offset
@@ -334,26 +328,32 @@ macro_rules! implement_pod_array_field {
             unsafe fn from_buffer(buffer: &'a [u8], from: Offset, count: Offset) -> Self {
                 let to = from + count * Self::item_size();
                 let slice = &buffer[(from as usize)..(to as usize)];
-                ::std::slice::from_raw_parts(slice.as_ptr() as *const Hash,
-                                            slice.len() / Self::item_size() as usize)
+                ::std::slice::from_raw_parts(
+                    slice.as_ptr() as *const Hash,
+                    slice.len() / Self::item_size() as usize,
+                )
             }
 
             fn extend_buffer(&self, buffer: &mut Vec<u8>) {
                 let slice = unsafe {
-                    ::std::slice::from_raw_parts(self.as_ptr() as *const u8,
-                                                self.len() * Self::item_size() as usize)
+                    ::std::slice::from_raw_parts(
+                        self.as_ptr() as *const u8,
+                        self.len() * Self::item_size() as usize,
+                    )
                 };
                 buffer.extend_from_slice(slice)
             }
 
-            fn check_data(_: &'a [u8],
-                        _: CheckedOffset,
-                        _: CheckedOffset,
-                        latest_segment: CheckedOffset) -> Result {
+            fn check_data(
+                _: &'a [u8],
+                _: CheckedOffset,
+                _: CheckedOffset,
+                latest_segment: CheckedOffset,
+            ) -> Result {
                 Ok(latest_segment)
             }
         }
-    )
+    };
 }
 
 implement_pod_array_field!{Hash}

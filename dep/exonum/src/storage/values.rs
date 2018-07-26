@@ -14,13 +14,13 @@
 
 //! A definition of `StorageValue` trait and implementations for common types.
 
-use std::mem;
 use std::borrow::Cow;
+use std::mem;
 
 use byteorder::{ByteOrder, LittleEndian};
 
-use crypto::{Hash, hash, PublicKey};
-use messages::{RawMessage, MessageBuffer, Message};
+use crypto::{hash, Hash, PublicKey};
+use messages::{Message, MessageBuffer, RawMessage};
 
 /// A type that can be (de)serialized as a value in the blockchain storage.
 ///

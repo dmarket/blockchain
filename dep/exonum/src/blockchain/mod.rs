@@ -32,33 +32,35 @@
 //! [`Service`]: ./trait.Service.html
 //! [doc:create-service]: https://exonum.com/doc/get-started/create-service
 
-use std::sync::Arc;
 use std::collections::BTreeMap;
 use std::collections::HashMap;
-use std::mem;
 use std::fmt;
-use std::panic;
+use std::mem;
 use std::net::SocketAddr;
+use std::panic;
+use std::sync::Arc;
 
-use vec_map::VecMap;
 use byteorder::{ByteOrder, LittleEndian};
 use mount::Mount;
+use vec_map::VecMap;
 
 use crypto::{self, Hash, PublicKey, SecretKey};
-use messages::{CONSENSUS as CORE_SERVICE, Precommit, RawMessage, Connect};
-use storage::{Database, Error, Fork, Patch, Snapshot};
 use helpers::{Height, ValidatorId};
+use messages::{Connect, Precommit, RawMessage, CONSENSUS as CORE_SERVICE};
 use node::ApiSender;
+use storage::{Database, Error, Fork, Patch, Snapshot};
 
 pub use self::block::{Block, BlockProof, SCHEMA_MAJOR_VERSION};
-pub use self::schema::{gen_prefix, Schema, TxLocation};
+pub use self::config::{
+    ConsensusConfig, StoredConfiguration, TimeoutAdjusterConfig, ValidatorKeys,
+};
 pub use self::genesis::GenesisConfig;
-pub use self::config::{ConsensusConfig, StoredConfiguration, TimeoutAdjusterConfig, ValidatorKeys};
+pub use self::schema::{gen_prefix, Schema, TxLocation};
 pub use self::service::{ApiContext, Service, ServiceContext, SharedNodeState, Transaction};
 
 mod block;
-mod schema;
 mod genesis;
+mod schema;
 mod service;
 #[cfg(test)]
 mod tests;
@@ -137,9 +139,9 @@ impl Blockchain {
     /// - Service can deserialize given raw message.
     pub fn tx_from_raw(&self, raw: RawMessage) -> Option<Box<Transaction>> {
         let id = raw.service_id() as usize;
-        self.service_map.get(id).and_then(|service| {
-            service.tx_from_raw(raw).ok()
-        })
+        self.service_map
+            .get(id)
+            .and_then(|service| service.tx_from_raw(raw).ok())
     }
 
     /// Commits changes from the patch to the blockchain storage.
@@ -248,13 +250,15 @@ impl Blockchain {
             let last_hash = self.last_hash();
             // Save & execute transactions
             for (index, hash) in tx_hashes.iter().enumerate() {
-                let tx = pool.get(hash).expect(
-                    "BUG: Cannot find transaction in pool.",
-                );
+                let tx = pool
+                    .get(hash)
+                    .expect("BUG: Cannot find transaction in pool.");
 
                 fork.checkpoint();
 
-                let r = panic::catch_unwind(panic::AssertUnwindSafe(|| { tx.execute(&mut fork); }));
+                let r = panic::catch_unwind(panic::AssertUnwindSafe(|| {
+                    tx.execute(&mut fork);
+                }));
 
                 match r {
                     Ok(..) => fork.commit(),
@@ -425,9 +429,8 @@ impl Blockchain {
             schema.peers_cache_mut().put(pubkey, peer);
         }
 
-        self.merge(fork.into_patch()).expect(
-            "Unable to save peer to the peers cache",
-        );
+        self.merge(fork.into_patch())
+            .expect("Unable to save peer to the peers cache");
     }
 
     /// Removes peer from the peers cache
@@ -443,9 +446,8 @@ impl Blockchain {
             }
         }
 
-        self.merge(fork.into_patch()).expect(
-            "Unable to remove peer from the peers cache",
-        );
+        self.merge(fork.into_patch())
+            .expect("Unable to remove peer from the peers cache");
     }
 
     /// Recover cached peers if any.

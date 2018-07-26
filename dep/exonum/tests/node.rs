@@ -17,20 +17,20 @@ extern crate exonum;
 extern crate futures;
 extern crate tokio_timer;
 
+use std::sync::Mutex;
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
-use std::sync::Mutex;
 
-use futures::Future;
-use futures::sync::oneshot;
-use tokio_timer::Timer;
 use exonum::blockchain::{Service, ServiceContext, Transaction};
+use exonum::crypto::Hash;
 use exonum::encoding::Error as EncodingError;
+use exonum::helpers;
 use exonum::messages::RawTransaction;
 use exonum::node::Node;
 use exonum::storage::{MemoryDB, Snapshot};
-use exonum::helpers;
-use exonum::crypto::Hash;
+use futures::sync::oneshot;
+use futures::Future;
+use tokio_timer::Timer;
 
 struct CommitWatcherService(pub Mutex<Option<oneshot::Sender<()>>>);
 

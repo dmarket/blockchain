@@ -12,13 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crypto::{PublicKey, Hash};
-use messages::{Precommit, RawMessage, Connect};
-use storage::{Fork, ListIndex, MapIndex, MapProof, ProofListIndex, ProofMapIndex, Snapshot,
-              StorageKey, StorageValue};
-use helpers::Height;
-use super::{Block, BlockProof, Blockchain};
 use super::config::StoredConfiguration;
+use super::{Block, BlockProof, Blockchain};
+use crypto::{Hash, PublicKey};
+use helpers::Height;
+use messages::{Connect, Precommit, RawMessage};
+use storage::{
+    Fork, ListIndex, MapIndex, MapProof, ProofListIndex, ProofMapIndex, Snapshot, StorageKey,
+    StorageValue,
+};
 
 /// Generates an array of bytes from the `prefix`.
 pub fn gen_prefix<K: StorageKey>(prefix: &K) -> Vec<u8> {
@@ -27,25 +29,21 @@ pub fn gen_prefix<K: StorageKey>(prefix: &K) -> Vec<u8> {
     res
 }
 
-encoding_struct! (
-    /// Configuration index.
-    struct ConfigReference {
-        /// The height, starting from which this configuration becomes actual.
-        actual_from: Height,
-        /// Hash of the configuration contents that serialized as raw bytes vec.
-        cfg_hash: &Hash,
-    }
-);
+encoding_struct!(/// Configuration index.
+struct ConfigReference {
+    /// The height, starting from which this configuration becomes actual.
+    actual_from: Height,
+    /// Hash of the configuration contents that serialized as raw bytes vec.
+    cfg_hash: &Hash,
+});
 
-encoding_struct! (
-    /// Transaction location in block.
-    struct TxLocation {
-        /// Height of block in the blockchain.
-        block_height: Height,
-        /// Index in block.
-        position_in_block: u64,
-    }
-);
+encoding_struct!(/// Transaction location in block.
+struct TxLocation {
+    /// Height of block in the blockchain.
+    block_height: Height,
+    /// Index in block.
+    position_in_block: u64,
+});
 
 /// Information schema for `exonum-core`.
 #[derive(Debug)]
@@ -155,9 +153,10 @@ where
     ///
     /// Panics if the "genesis block" was not created.
     pub fn last_block(&self) -> Block {
-        let hash = self.block_hashes_by_height().last().expect(
-            "An attempt to get the `last_block` during creating the genesis block.",
-        );
+        let hash = self
+            .block_hashes_by_height()
+            .last()
+            .expect("An attempt to get the `last_block` during creating the genesis block.");
         self.blocks().get(&hash).unwrap()
     }
 
@@ -209,10 +208,10 @@ where
         let next_height = self.next_height();
         let idx = self.find_configurations_index_by_height(next_height);
         if idx > 0 {
-            let cfg_ref = self.configs_actual_from().get(idx - 1).expect(&format!(
-                "Configuration at index {} not found",
-                idx
-            ));
+            let cfg_ref = self
+                .configs_actual_from()
+                .get(idx - 1)
+                .expect(&format!("Configuration at index {} not found", idx));
             let cfg_hash = cfg_ref.cfg_hash();
             let cfg = self.configuration_by_hash(cfg_hash).expect(&format!(
                 "Config with hash {:?} is absent in configs table",
@@ -227,10 +226,10 @@ where
     /// Returns the configuration that is the actual for the given height.
     pub fn configuration_by_height(&self, height: Height) -> StoredConfiguration {
         let idx = self.find_configurations_index_by_height(height);
-        let cfg_ref = self.configs_actual_from().get(idx).expect(&format!(
-            "Configuration at index {} not found",
-            idx
-        ));
+        let cfg_ref = self
+            .configs_actual_from()
+            .get(idx)
+            .expect(&format!("Configuration at index {} not found", idx));
         let cfg_hash = cfg_ref.cfg_hash();
         self.configuration_by_hash(cfg_hash).expect(&format!(
             "Config with hash {:?} is absent in configs table",

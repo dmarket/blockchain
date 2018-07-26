@@ -17,7 +17,7 @@
 use std::cell::Cell;
 use std::marker::PhantomData;
 
-use super::{BaseIndex, BaseIndexIter, Snapshot, Fork, StorageValue};
+use super::{BaseIndex, BaseIndexIter, Fork, Snapshot, StorageValue};
 
 /// A list of items that implement `StorageValue` trait.
 ///
@@ -217,7 +217,9 @@ where
     /// }
     /// ```
     pub fn iter(&self) -> ListIndexIter<V> {
-        ListIndexIter { base_iter: self.base.iter_from(&(), &0u64) }
+        ListIndexIter {
+            base_iter: self.base.iter_from(&(), &0u64),
+        }
     }
 
     /// Returns an iterator over the list starting from the specified position. The iterator
@@ -240,7 +242,9 @@ where
     /// }
     /// ```
     pub fn iter_from(&self, from: u64) -> ListIndexIter<V> {
-        ListIndexIter { base_iter: self.base.iter_from(&(), &from) }
+        ListIndexIter {
+            base_iter: self.base.iter_from(&(), &from),
+        }
     }
 }
 
@@ -384,7 +388,7 @@ where
         if index >= self.len() {
             panic!(
                 "index out of bounds: \
-                    the len is {} but the index is {}",
+                 the len is {} but the index is {}",
                 self.len(),
                 index
             );
@@ -448,15 +452,14 @@ where
 
 #[cfg(test)]
 mod tests {
+    use super::{Fork, ListIndex};
     use rand::{thread_rng, Rng};
-    use super::{ListIndex, Fork};
 
     fn gen_tempdir_name() -> String {
         thread_rng().gen_ascii_chars().take(10).collect()
     }
 
     fn list_index_methods(list_index: &mut ListIndex<&mut Fork, i32>) {
-
         assert!(list_index.is_empty());
         assert_eq!(0, list_index.len());
         assert!(list_index.last().is_none());
@@ -510,8 +513,8 @@ mod tests {
 
     mod memorydb_tests {
         use std::path::Path;
+        use storage::{Database, ListIndex, MemoryDB};
         use tempdir::TempDir;
-        use storage::{Database, MemoryDB, ListIndex};
 
         const IDX_NAME: &'static str = "idx_name";
 
@@ -562,8 +565,8 @@ mod tests {
 
     mod rocksdb_tests {
         use std::path::Path;
-        use tempdir::TempDir;
         use storage::{Database, ListIndex, RocksDB, RocksDBOptions};
+        use tempdir::TempDir;
 
         const IDX_NAME: &'static str = "idx_name";
 

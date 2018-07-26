@@ -12,20 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use serde_json;
-use router::Router;
 use iron::prelude::*;
+use router::Router;
+use serde_json;
 
-use node::state::TxPool;
+use api::{Api, ApiError};
 use blockchain::{Blockchain, SharedNodeState};
 use crypto::Hash;
-use explorer::{BlockchainExplorer, TxInfo};
-use api::{Api, ApiError};
 use encoding::serialize::FromHex;
-use iron::status;
-use iron::headers::AccessControlAllowOrigin;
-use hyper::header::ContentType;
+use explorer::{BlockchainExplorer, TxInfo};
 use helpers::Height;
+use hyper::header::ContentType;
+use iron::headers::AccessControlAllowOrigin;
+use iron::status;
+use node::state::TxPool;
 
 #[derive(Serialize)]
 struct MemPoolTxInfo {
@@ -77,7 +77,9 @@ impl SystemApi {
     }
 
     fn get_mempool_info(&self) -> MemPoolInfo {
-        MemPoolInfo { size: self.pool.read().expect("Expected read lock").len() }
+        MemPoolInfo {
+            size: self.pool.read().expect("Expected read lock").len(),
+        }
     }
 
     fn get_transaction(&self, hash_str: &str) -> Result<MemPoolResult, ApiError> {
@@ -89,10 +91,9 @@ impl SystemApi {
             .map_or_else(
                 || {
                     let explorer = BlockchainExplorer::new(&self.blockchain);
-                    Ok(explorer.tx_info(&hash)?.map_or(
-                        MemPoolResult::Unknown,
-                        MemPoolResult::Committed,
-                    ))
+                    Ok(explorer
+                        .tx_info(&hash)?
+                        .map_or(MemPoolResult::Unknown, MemPoolResult::Committed))
                 },
                 |o| {
                     Ok(MemPoolResult::MemPool(MemPoolTxInfo {
@@ -123,11 +124,9 @@ impl Api for SystemApi {
                     };
                     result(&self_, &::serde_json::to_value(info).unwrap())
                 }
-                None => {
-                    Err(ApiError::IncorrectRequest(
-                        "Required parameter of transaction 'hash' is missing".into(),
-                    ))?
-                }
+                None => Err(ApiError::IncorrectRequest(
+                    "Required parameter of transaction 'hash' is missing".into(),
+                ))?,
             }
         };
 
@@ -148,10 +147,7 @@ impl Api for SystemApi {
                 current_height: last_block.height(),
             };
             let json = &::serde_json::to_value(info).unwrap();
-            let mut resp = Response::with((
-                code,
-                serde_json::to_string_pretty(json).unwrap(),
-            ));
+            let mut resp = Response::with((code, serde_json::to_string_pretty(json).unwrap()));
             resp.headers.set(ContentType::json());
             resp.headers.set(AccessControlAllowOrigin::Any);
 
