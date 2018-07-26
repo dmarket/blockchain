@@ -67,7 +67,7 @@ impl OpenOrder {
 
         if self.bid() { // assets was locked
             wallet_from.remove_assets(vec![self.asset().to_bundle()].to_vec())?;
-            let _asset_id_offers = offers::Schema(&mut *view).fetch(&self.asset().id());
+            let _offers = offers::Schema(&mut *view).fetch(&self.asset().id());
 
 //            let (closed_offers, need_added) =  asset_id_offers.close_asks(self.asset().price(), self.asset().amount());
 
