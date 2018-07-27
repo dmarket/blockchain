@@ -19,7 +19,7 @@ use currency::service::CONFIGURATION;
 pub const OPEN_OFFER_ID: u16 = 700;
 
 message! {
-    /// `OpenOrder` transaction.
+    /// `OpenOffer` transaction.
     struct OpenOffer {
         const TYPE = SERVICE_ID;
         const ID = OPEN_OFFER_ID;
@@ -70,7 +70,7 @@ impl OpenOffer {
             let mut open_offers = offers::Schema(&mut *view).fetch(&self.asset().id());
             let closed_asks =  open_offers.close_ask(self.asset().price(), self.asset().amount());
             if closed_asks.len() == 0 {
-                let bid = offers::Offer::new(self.pub_key(), self.asset().amount(), self.hash());
+                let bid = offers::Offer::new(self.pub_key(), self.asset().amount(), &self.hash());
                 open_offers.add_bid(self.asset().price(), bid);
             }
 
@@ -84,27 +84,27 @@ impl OpenOffer {
 
 lazy_static! {
     static ref VERIFY_COUNT: IntCounter = register_int_counter!(
-        "dmbc_transaction_open_order_verify_count",
+        "dmbc_transaction_open_offer_verify_count",
         "Times .verify() was called on a transaction."
     ).unwrap();
     static ref VERIFY_SUCCESS_COUNT: IntCounter = register_int_counter!(
-        "dmbc_transaction_open_order_verify_success_count",
+        "dmbc_transaction_open_offer_verify_success_count",
         "Times verification was successfull on a transaction."
     ).unwrap();
     static ref EXECUTE_COUNT: IntCounter = register_int_counter!(
-        "dmbc_transaction_open_order_execute_count",
+        "dmbc_transaction_open_offer_execute_count",
         "Transactions executed."
     ).unwrap();
     static ref EXECUTE_SUCCESS_COUNT: IntCounter = register_int_counter!(
-        "dmbc_transaction_open_order_execute_success_count",
+        "dmbc_transaction_open_offer_execute_success_count",
         "Times transaction execution reported a success."
     ).unwrap();
     static ref EXECUTE_FINISH_COUNT: IntCounter = register_int_counter!(
-        "dmbc_transaction_open_order_execute_finish_count",
+        "dmbc_transaction_open_offer_execute_finish_count",
         "Times transaction has finished executing without panicking."
     ).unwrap();
     static ref EXECUTE_DURATION: Histogram = register_histogram!(
-        "dmbc_transaction_open_order_execute_duration_seconds",
+        "dmbc_transaction_open_offer_execute_duration_seconds",
         "Duration of transaction execution."
     ).unwrap();
 }
