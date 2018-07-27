@@ -17,7 +17,7 @@ use currency::transactions::trade::{Trade, TradeOffer};
 use currency::transactions::trade_intermediary::{TradeIntermediary, TradeOfferIntermediary};
 use currency::transactions::transfer::Transfer;
 use currency::transactions::transfer_fees_payes::{TransferOffer, TransferWithFeesPayer};
-use currency::transactions::open_order::OpenOrder;
+use currency::transactions::open_offers::OpenOffer;
 
 pub struct Builder {
     public_key: Option<PublicKey>,
@@ -130,9 +130,9 @@ impl Builder {
         TransferWithFeesPayerBuilder::new(self.into())
     }
 
-    pub fn tx_open_order(self) -> OpenOrderBuilder {
+    pub fn tx_open_offer(self) -> OpenOfferBuilder {
         self.validate();
-        OpenOrderBuilder::new(self.into())
+        OpenOfferBuilder::new(self.into())
     }
 
     fn validate(&self) {
@@ -944,50 +944,48 @@ impl TransferWithFeesPayerBuilder {
     }
 }
 
-pub struct OpenOrderBuilder {
+pub struct OpenOfferBuilder {
     meta: TransactionMetadata,
     asset: Option<TradeAsset>,
     bid: bool,
-    fee_strategy: u8,
     seed: u64,
     data_info: Option<String>,
 }
 
-impl OpenOrderBuilder {
+impl OpenOfferBuilder {
     fn new(meta: TransactionMetadata) -> Self {
-        OpenOrderBuilder {
+        OpenOfferBuilder {
             meta,
             asset: None,
             bid: true,
-            fee_strategy: 1,
             seed: 0,
             data_info: None,
         }
     }
 
     pub fn asset(self, asset: TradeAsset) -> Self {
-        OpenOrderBuilder { asset:Some(asset), ..self }
+        OpenOfferBuilder { asset:Some(asset), ..self }
     }
 
     pub fn bid(self, bid: bool) -> Self {
-        OpenOrderBuilder { bid, ..self }
+        OpenOfferBuilder { bid, ..self }
     }
 
     pub fn seed(self, seed: u64) -> Self {
-        OpenOrderBuilder { seed, ..self }
+        OpenOfferBuilder { seed, ..self }
     }
 
     pub fn data_info(self, data_info: &str) -> Self {
-        OpenOrderBuilder {
+        OpenOfferBuilder {
             data_info: Some(data_info.to_string()),
             ..self
         }
     }
 
-    pub fn build(self) -> OpenOrder {
+    pub fn build(self) -> OpenOffer {
         self.verify();
 
-        OpenOrder::new(
+        OpenOffer::new(
             &self.meta.public_key,
             self.asset.unwrap(),
             self.bid,
@@ -1019,6 +1017,7 @@ mod test {
     use currency::transactions::trade::{Trade, TradeOffer};
     use currency::transactions::trade_intermediary::{TradeIntermediary, TradeOfferIntermediary};
     use currency::transactions::transfer::Transfer;
+    use currency::transactions::open_offers::OpenOffer;
 
     use currency::transactions::builders::fee;
     use currency::transactions::builders::transaction;
@@ -1295,4 +1294,31 @@ mod test {
 
         assert_eq!(transaction, equivalent);
     }
+
+    #[test]
+    fn open_offer() {
+        let (public_key, secret_key) = crypto::gen_keypair();
+        let asset = AssetBundle::from_data("foobar", 9, &public_key);
+        let trade_asset = TradeAsset::from_bundle(asset, 10);
+        let build_bid = transaction::Builder::new()
+            .keypair(public_key, secret_key.clone())
+            .tx_open_offer()
+            .bid(true)
+            .asset(trade_asset.clone())
+            .seed(1)
+            .data_info("info")
+            .build();
+
+        let bid = OpenOffer::new(
+            &public_key,
+            trade_asset,
+            true,
+            1,
+            "info",
+            &secret_key,
+        );
+
+        assert_eq!(build_bid, bid);
+    }
+
 }

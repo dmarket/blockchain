@@ -17,7 +17,7 @@ use router::Router;
 use currency::api::error::ApiError;
 use currency::transactions::{
     AddAssets, DeleteAssets, Exchange, ExchangeIntermediary, Trade, TradeIntermediary, Transfer,
-    EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID, TRADE_ID, TRADE_INTERMEDIARY_ID,
+    OpenOffer, EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID, TRADE_ID, TRADE_INTERMEDIARY_ID,
 };
 
 #[derive(Clone)]
@@ -33,6 +33,7 @@ enum TransactionRequest {
     TradeIntermediary(TradeIntermediary),
     Exchange(Exchange),
     ExchangeIntermediary(ExchangeIntermediary),
+    OpenOffer(OpenOffer),
 }
 
 impl Into<Box<Transaction>> for TransactionRequest {
@@ -45,6 +46,7 @@ impl Into<Box<Transaction>> for TransactionRequest {
             TransactionRequest::TradeIntermediary(trans) => Box::new(trans),
             TransactionRequest::Exchange(trans) => Box::new(trans),
             TransactionRequest::ExchangeIntermediary(trans) => Box::new(trans),
+            TransactionRequest::OpenOffer(trans) => Box::new(trans),
         }
     }
 }

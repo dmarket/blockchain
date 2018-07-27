@@ -16,13 +16,13 @@ use currency::SERVICE_ID;
 use currency::service::CONFIGURATION;
 
 /// Transaction ID.
-pub const OPEN_ORDER_ID: u16 = 700;
+pub const OPEN_OFFER_ID: u16 = 700;
 
 message! {
     /// `OpenOrder` transaction.
-    struct OpenOrder {
+    struct OpenOffer {
         const TYPE = SERVICE_ID;
-        const ID = OPEN_ORDER_ID;
+        const ID = OPEN_OFFER_ID;
 
         pub_key:      &PublicKey,
         asset:        TradeAsset,
@@ -32,7 +32,7 @@ message! {
     }
 }
 
-impl FeesCalculator for OpenOrder {
+impl FeesCalculator for OpenOffer {
     fn calculate_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error> {
         let genesis_fees = CONFIGURATION.read().unwrap().fees();
         let fees = ThirdPartyFees::new_trade(&*view, &[self.asset()])?;
@@ -52,7 +52,7 @@ impl FeesCalculator for OpenOrder {
     }
 }
 
-impl OpenOrder {
+impl OpenOffer {
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
         let genesis_fees = CONFIGURATION.read().unwrap().fees();
 
@@ -67,9 +67,12 @@ impl OpenOrder {
 
         if self.bid() { // assets was locked
             wallet_from.remove_assets(vec![self.asset().to_bundle()].to_vec())?;
-            let _offers = offers::Schema(&mut *view).fetch(&self.asset().id());
-
-//            let (closed_offers, need_added) =  asset_id_offers.close_asks(self.asset().price(), self.asset().amount());
+            let mut open_offers = offers::Schema(&mut *view).fetch(&self.asset().id());
+            let closed_asks =  open_offers.close_ask(self.asset().price(), self.asset().amount());
+            if closed_asks.len() == 0 {
+                let bid = offers::Offer::new(self.pub_key(), self.asset().amount(), self.hash());
+                open_offers.add_bid(self.asset().price(), bid);
+            }
 
         } else { // coins was locked
             wallet_from.remove_coins(self.asset().amount() * self.asset().price())?;
@@ -106,7 +109,7 @@ lazy_static! {
     ).unwrap();
 }
 
-impl Transaction for OpenOrder {
+impl Transaction for OpenOffer {
     fn verify(&self) -> bool {
         VERIFY_COUNT.inc();
 
