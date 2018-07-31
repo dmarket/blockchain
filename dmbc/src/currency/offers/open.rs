@@ -174,6 +174,9 @@ impl OpenOffers {
         } else if bids[bids.len() - 1].price() > price {
             new_bids = bids;
             new_bids.push(Offers::new(price, vec![offer]));
+        } else if bids[0].price() < price {
+            new_bids.push(Offers::new(price, vec![offer]));
+            new_bids.append(&mut bids);
         } else {
             for k in (0..bids.len()).rev() {
                 if bids[k].price() == price {
@@ -199,8 +202,11 @@ impl OpenOffers {
         let mut new_open_offers: Vec<Offers> = vec![];
         if open_offers.len() == 0 {
             new_open_offers.push(Offers::new(price, vec![offer]));
+        } else if open_offers[open_offers.len()-1].price() < price {
+            new_open_offers = open_offers;
+            new_open_offers.push(Offers::new(price, vec![offer]));
         } else if open_offers[0].price() > price {
-            new_open_offers = vec![Offers::new(price, vec![offer])];
+            new_open_offers.push(Offers::new(price, vec![offer]));
             new_open_offers.append(&mut open_offers);
         } else {
             for k in (0..open_offers.len()).rev() {
@@ -224,7 +230,7 @@ impl OpenOffers {
     pub fn close_bid(&mut self, price: u64, amount: u64) -> Vec<CloseOffer>
     {
         let mut closed_offers: Vec<CloseOffer> = vec![];
-        if self.bids().len() == 0 && self.bids()[self.bids().len()-1].price() > price {
+        if self.bids().len() == 0 || self.bids()[self.bids().len()-1].price() > price {
             return closed_offers;
         }
         let mut bids = self.bids();
@@ -249,7 +255,7 @@ impl OpenOffers {
     pub fn close_ask(&mut self, price: u64, amount: u64) -> Vec<CloseOffer>
     {
         let mut closed_offers: Vec<CloseOffer> = vec![];
-        if self.asks().len() == 0 && self.asks()[self.asks().len()-1].price() < price {
+        if self.asks().len() == 0 || self.asks()[self.asks().len()-1].price() < price {
             return closed_offers;
         }
         let mut asks = self.asks();
@@ -414,6 +420,8 @@ mod test_open_offers {
         assert_eq!(buyer_amount, summary_assets);
         assert_eq!(need_coins, summary_coins);
     }
+
+    //todo: добавить тест для close_bid и для close_ask когда нет других оферов по данному ассету
 
     #[test]
     fn close_ask() {
