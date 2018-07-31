@@ -19,6 +19,9 @@ use currency::transactions::transfer::Transfer;
 use currency::transactions::transfer_fees_payes::{TransferOffer, TransferWithFeesPayer};
 use currency::transactions::open_offers::OpenOffer;
 
+use rand::prelude::*;
+use std::u64::MAX;
+
 pub struct Builder {
     public_key: Option<PublicKey>,
     secret_key: Option<SecretKey>,
@@ -154,7 +157,7 @@ impl AddAssetBuilder {
         AddAssetBuilder {
             meta,
             assets: Vec::new(),
-            seed: 0,
+            seed: rand_seed(),
         }
     }
 
@@ -222,7 +225,7 @@ impl DelAssetBuilder {
         DelAssetBuilder {
             meta,
             assets: Vec::new(),
-            seed: 0,
+            seed: rand_seed(),
         }
     }
 
@@ -290,7 +293,7 @@ impl ExchangeBuilder {
 
             fee_strategy: FeeStrategy::Recipient,
 
-            seed: 0,
+            seed: rand_seed(),
 
             data_info: None,
         }
@@ -428,7 +431,7 @@ impl ExchangeIntermediaryBuilder {
 
             fee_strategy: FeeStrategy::Recipient,
 
-            seed: 0,
+            seed: rand_seed(),
 
             data_info: None,
         }
@@ -569,7 +572,7 @@ impl TradeBuilder {
             assets: Vec::new(),
             data_for_assets: Vec::new(),
             fee_strategy: FeeStrategy::Recipient,
-            seed: 0,
+            seed: rand_seed(),
             data_info: None,
         }
     }
@@ -668,7 +671,7 @@ impl TradeIntermediaryBuilder {
             assets: Vec::new(),
             data_for_assets: Vec::new(),
             fee_strategy: FeeStrategy::Recipient,
-            seed: 0,
+            seed: rand_seed(),
             data_info: None,
         }
     }
@@ -787,7 +790,7 @@ impl TransferBuilder {
             recipient: None,
             amount: 0,
             assets: Vec::new(),
-            seed: 0,
+            seed: rand_seed(),
             data_info: None,
         }
     }
@@ -867,7 +870,7 @@ impl TransferWithFeesPayerBuilder {
             fees_payer_sk: None,
             amount: 0,
             assets: Vec::new(),
-            seed: 0,
+            seed: rand_seed(),
             data_info: None,
         }
     }
@@ -958,7 +961,7 @@ impl OpenOfferBuilder {
             meta,
             asset: None,
             bid: true,
-            seed: 0,
+            seed: rand_seed(),
             data_info: None,
         }
     }
@@ -998,6 +1001,11 @@ impl OpenOfferBuilder {
     fn verify(&self) {
         assert!(self.asset.is_some());
     }
+}
+
+fn rand_seed() -> u64 {
+    let mut rng = thread_rng();
+    rng.gen_range(1, MAX)
 }
 
 #[cfg(test)]
