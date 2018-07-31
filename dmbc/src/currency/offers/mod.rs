@@ -4,4 +4,4 @@ mod schema;
 mod open;
 
 pub use currency::offers::schema::Schema;
-pub use currency::offers::open::{Offers, OpenOffers, Offer};
+pub use currency::offers::open::{Offers, OpenOffers, Offer, CloseOffer};

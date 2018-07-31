@@ -21,7 +21,7 @@ use router::Router;
 use currency::api::error::ApiError;
 use currency::status;
 use currency::transactions::{AddAssets, DeleteAssets, Exchange, ExchangeIntermediary, Trade,
-                             TradeIntermediary, Transfer, TransferWithFeesPayer, OpenOffer};
+                             TradeIntermediary, Transfer, TransferWithFeesPayer, BidOffer, AskOffer};
 
 use currency::error::Error;
 
@@ -44,7 +44,8 @@ pub enum TransactionRequest {
     TradeIntermediary(TradeIntermediary),
     Exchange(Exchange),
     ExchangeIntermediary(ExchangeIntermediary),
-    OpenOffer(OpenOffer),
+    BidOffer(BidOffer),
+    AskOffer(AskOffer),
 }
 
 impl TransactionRequest {
@@ -58,7 +59,8 @@ impl TransactionRequest {
             &TransactionRequest::TradeIntermediary(ref trans) => trans.raw().len(),
             &TransactionRequest::Exchange(ref trans) => trans.raw().len(),
             &TransactionRequest::ExchangeIntermediary(ref trans) => trans.raw().len(),
-            &TransactionRequest::OpenOffer(ref trans) => trans.raw().len(),
+            &TransactionRequest::BidOffer(ref trans) => trans.raw().len(),
+            &TransactionRequest::AskOffer(ref trans) => trans.raw().len(),
         }
     }
 }
@@ -74,7 +76,8 @@ impl Into<Box<Transaction>> for TransactionRequest {
             TransactionRequest::TradeIntermediary(trans) => Box::new(trans),
             TransactionRequest::Exchange(trans) => Box::new(trans),
             TransactionRequest::ExchangeIntermediary(trans) => Box::new(trans),
-            TransactionRequest::OpenOffer(trans) => Box::new(trans),
+            TransactionRequest::BidOffer(trans) => Box::new(trans),
+            TransactionRequest::AskOffer(trans) => Box::new(trans),
         }
     }
 }

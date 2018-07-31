@@ -16,15 +16,16 @@ use dmbc_testkit::{DmbcTestApiBuilder, DmbcTestKitApi};
 
 use dmbc::currency::configuration::{Configuration, TransactionFees};
 use dmbc::currency::transactions::builders::transaction;
-use dmbc::currency::assets::{MetaAsset, AssetBundle, AssetInfo, TradeAsset};
-use dmbc::currency::api::transaction::TransactionResponse;
+use dmbc::currency::assets::{MetaAsset, AssetBundle, TradeAsset};
+//use dmbc::currency::api::transaction::TransactionResponse;
 use dmbc::currency::wallet::Wallet;
+use dmbc::currency::offers::{OpenOffers, Offer};
 
 #[test]
-fn open_bid() {
-    let fixed = 10;
+fn set_3_bid_1_ask_result_1_bid_1_ask() {
+    let fixed = 0;
     let meta_data = "asset";
-    let units = 3;
+    let units = 100;
     let balance = 100_000;
     let transaction_fee = 10;
     let per_asset_fee = 4;
@@ -44,31 +45,86 @@ fn open_bid() {
 
     // post the transaction
     let meta_asset = MetaAsset::new(&user1_pk, meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()));
-    let asset_bundle = AssetBundle::from_data(meta_data, units, &creator_public_key);
-    let trade_asset = TradeAsset::from_bundle(asset_bundle, 100);
-
     let tx_add_assets = transaction::Builder::new()
         .keypair(creator_public_key, creator_secret_key)
         .tx_add_assets()
         .add_asset_value(meta_asset)
-        .seed(85)
         .build();
 
     let (status, _) = api.post_tx(&tx_add_assets);
     testkit.create_block();
     assert_eq!(status, StatusCode::Created);
+    let seller_assets = api
+        .get_wallet_assets(&user1_pk)
+        .iter()
+        .map(|a| a.into())
+        .collect::<Vec<AssetBundle>>();
+    assert_eq!(units, seller_assets[0].amount());
 
-    let tx_open_offer = transaction::Builder::new()
-        .keypair(user1_pk, user1_sk)
-        .tx_open_offer()
-        .bid(true)
+    let mut sample_offers = OpenOffers::new_open_offers();
+
+    let bid_amount = 2;
+    for bid_price in vec![10, 30, 50] {
+        let asset_bundle = AssetBundle::from_data(meta_data, bid_amount, &creator_public_key);
+        let trade_asset = TradeAsset::from_bundle(asset_bundle, bid_price);
+        let tx_bid_offer = transaction::Builder::new()
+            .keypair(user1_pk, user1_sk.clone())
+            .tx_offer()
+            .asset(trade_asset.clone())
+            .data_info("bid")
+            .bid_build();
+
+        let (status, _) = api.post_tx(&tx_bid_offer);
+        testkit.create_block();
+        assert_eq!(status, StatusCode::Created);
+        let offer = Offer::new(&user1_pk, bid_amount, &tx_bid_offer.hash());
+        sample_offers.add_bid(bid_price, offer);
+    }
+
+    let seller_assets = api
+        .get_wallet_assets(&user1_pk)
+        .iter()
+        .map(|a| a.into())
+        .collect::<Vec<AssetBundle>>();
+    assert_eq!(units - 3*bid_amount, seller_assets[0].amount());
+
+    let ask_amount = 5;
+    let ask_price = 40;
+    let asset_bundle = AssetBundle::from_data(meta_data, ask_amount, &creator_public_key);
+    let trade_asset = TradeAsset::from_bundle(asset_bundle.clone(), ask_price);
+    let tx_ask_offer = transaction::Builder::new()
+        .keypair(user2_pk, user2_sk)
+        .tx_offer()
         .asset(trade_asset)
-        .seed(100)
-        .data_info("bid")
-        .build();
+        .data_info("ask")
+        .ask_build();
 
-    let (status, _) = api.post_tx(&tx_open_offer);
+    let (status, _) = api.post_tx(&tx_ask_offer);
     testkit.create_block();
     assert_eq!(status, StatusCode::Created);
+    let _close_bids = sample_offers.close_bid(ask_price, ask_amount);
+    let offer = Offer::new(&user2_pk, 1, &tx_ask_offer.hash());
+    sample_offers.add_ask(ask_price, offer);
 
+    let buyer_wallet = api.get_wallet(&user2_pk);
+    let seller_wallet = api.get_wallet(&user1_pk);
+    assert_eq!(balance - ask_price * ask_amount, buyer_wallet.balance);
+    assert_eq!(balance + 10 * 2 + 30 * 2, seller_wallet.balance);
+    let buyer_assets = api
+        .get_wallet_assets(&user2_pk)
+        .iter()
+        .map(|a| a.into())
+        .collect::<Vec<AssetBundle>>();
+    assert_eq!(4, buyer_assets[0].amount());
+
+    let seller_assets = api
+        .get_wallet_assets(&user1_pk)
+        .iter()
+        .map(|a| a.into())
+        .collect::<Vec<AssetBundle>>();
+    assert_eq!(units - 3*bid_amount, seller_assets[0].amount());
+    assert_eq!(buyer_assets[0].id(), seller_assets[0].id());
+
+    let offers = api.get_offers(&asset_bundle.id()).unwrap();
+    assert_eq!(sample_offers, offers);
 }

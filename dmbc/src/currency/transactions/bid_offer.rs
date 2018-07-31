@@ -6,7 +6,7 @@ use exonum::messages::Message;
 use exonum::storage::Fork;
 use prometheus::{IntCounter, Histogram};
 
-use currency::assets::TradeAsset;
+use currency::assets::{TradeAsset, AssetBundle};
 use currency::error::Error;
 use currency::status;
 use currency::transactions::components::{FeesCalculator, ThirdPartyFees};
@@ -16,23 +16,22 @@ use currency::SERVICE_ID;
 use currency::service::CONFIGURATION;
 
 /// Transaction ID.
-pub const OPEN_OFFER_ID: u16 = 700;
+pub const BID_OFFER_ID: u16 = 700;
 
 message! {
-    /// `OpenOffer` transaction.
-    struct OpenOffer {
+    /// `BidOffer` transaction.
+    struct BidOffer {
         const TYPE = SERVICE_ID;
-        const ID = OPEN_OFFER_ID;
+        const ID = BID_OFFER_ID;
 
         pub_key:      &PublicKey,
         asset:        TradeAsset,
-        bid:          bool,
         seed:         u64,
         data_info:    &str,
     }
 }
 
-impl FeesCalculator for OpenOffer {
+impl FeesCalculator for BidOffer {
     fn calculate_fees(&self, view: &mut Fork) -> Result<HashMap<PublicKey, u64>, Error> {
         let genesis_fees = CONFIGURATION.read().unwrap().fees();
         let fees = ThirdPartyFees::new_trade(&*view, &[self.asset()])?;
@@ -52,7 +51,7 @@ impl FeesCalculator for OpenOffer {
     }
 }
 
-impl OpenOffer {
+impl BidOffer {
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
         let genesis_fees = CONFIGURATION.read().unwrap().fees();
 
@@ -65,18 +64,16 @@ impl OpenOffer {
         wallet::Schema(&mut *view).store(self.pub_key(), wallet_from.clone());
         wallet::Schema(&mut *view).store(genesis_fees.recipient(), genesis);
 
-        if self.bid() { // assets was locked
-            wallet_from.remove_assets(vec![self.asset().to_bundle()].to_vec())?;
-            let mut open_offers = offers::Schema(&mut *view).fetch(&self.asset().id());
-            let closed_asks =  open_offers.close_ask(self.asset().price(), self.asset().amount());
-            if closed_asks.len() == 0 {
-                let bid = offers::Offer::new(self.pub_key(), self.asset().amount(), &self.hash());
-                open_offers.add_bid(self.asset().price(), bid);
-            }
-
-        } else { // coins was locked
-            wallet_from.remove_coins(self.asset().amount() * self.asset().price())?;
+        wallet_from.remove_assets(vec![self.asset().to_bundle()].to_vec())?;
+        let mut open_offers = offers::Schema(&mut *view).fetch(&self.asset().id());
+        let closed_asks =  open_offers.close_ask(self.asset().price(), self.asset().amount());
+        if closed_asks.len() == 0 {
+            let bid = offers::Offer::new(self.pub_key(), self.asset().amount(), &self.hash());
+            open_offers.add_bid(self.asset().price(), bid);
+        } else {
         }
+        offers::Schema(&mut *view).store(&self.asset().id(), open_offers);
+        wallet::Schema(&mut *view).store(self.pub_key(), wallet_from);
 
         Ok(())
     }
@@ -84,32 +81,32 @@ impl OpenOffer {
 
 lazy_static! {
     static ref VERIFY_COUNT: IntCounter = register_int_counter!(
-        "dmbc_transaction_open_offer_verify_count",
+        "dmbc_transaction_bid_offer_verify_count",
         "Times .verify() was called on a transaction."
     ).unwrap();
     static ref VERIFY_SUCCESS_COUNT: IntCounter = register_int_counter!(
-        "dmbc_transaction_open_offer_verify_success_count",
+        "dmbc_transaction_bid_offer_verify_success_count",
         "Times verification was successfull on a transaction."
     ).unwrap();
     static ref EXECUTE_COUNT: IntCounter = register_int_counter!(
-        "dmbc_transaction_open_offer_execute_count",
+        "dmbc_transaction_bid_offer_execute_count",
         "Transactions executed."
     ).unwrap();
     static ref EXECUTE_SUCCESS_COUNT: IntCounter = register_int_counter!(
-        "dmbc_transaction_open_offer_execute_success_count",
+        "dmbc_transaction_bid_offer_execute_success_count",
         "Times transaction execution reported a success."
     ).unwrap();
     static ref EXECUTE_FINISH_COUNT: IntCounter = register_int_counter!(
-        "dmbc_transaction_open_offer_execute_finish_count",
+        "dmbc_transaction_bid_offer_execute_finish_count",
         "Times transaction has finished executing without panicking."
     ).unwrap();
     static ref EXECUTE_DURATION: Histogram = register_histogram!(
-        "dmbc_transaction_open_offer_execute_duration_seconds",
+        "dmbc_transaction_bid_offer_execute_duration_seconds",
         "Duration of transaction execution."
     ).unwrap();
 }
 
-impl Transaction for OpenOffer {
+impl Transaction for BidOffer {
     fn verify(&self) -> bool {
         VERIFY_COUNT.inc();
 

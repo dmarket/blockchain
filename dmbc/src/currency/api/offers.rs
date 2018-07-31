@@ -23,6 +23,7 @@ const MAX_BLOCKS_PER_REQUEST: u64 = 1000;
 pub struct OfferApi {
     pub blockchain: Blockchain,
 }
+pub type OpenOffersResult = Result<Option<OpenOffers>, ApiError>;
 
 pub type OpenOffersResponse = Result<OpenOffersInfo, ApiError>;
 #[derive(Clone, Serialize, Deserialize)]
@@ -134,7 +135,7 @@ impl Api for OfferApi {
 
             let params = req.extensions.get::<Router>().unwrap();
 
-            let result: Result<Option<OpenOffers>, ApiError> = match params.find("asset_id") {
+            let result: OpenOffersResult = match params.find("asset_id") {
                 Some(asset_id_str) =>
                     match AssetId::from_hex(asset_id_str) {
                         Ok(asset_id) => {
