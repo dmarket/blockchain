@@ -61,11 +61,15 @@ pub fn close_bids(
     wallet: &mut Wallet,
 ) -> HashMap<PublicKey, Wallet>
 {
+    let mut wallets: HashMap<PublicKey, Wallet> = HashMap::new();
     let closed_bids = open_offers.close_bid(asset.price(), asset.amount());
+    if closed_bids.len() == 0 {
+        return wallets;
+    }
+
     let mut amount = 0;
     let mut coins_back = 0u64;
 
-    let mut wallets: HashMap<PublicKey, Wallet> = HashMap::new();
     for bid in closed_bids.iter() {
         amount += bid.amount;
         coins_back += bid.amount * (asset.price() - bid.price);
@@ -105,14 +109,17 @@ pub fn close_asks(
     buyer: &mut Wallet,
 ) -> HashMap<PublicKey, Wallet>
 {
-    let closed_asks = open_offers.close_ask(asset.price(), asset.amount());
-
     let mut wallets: HashMap<PublicKey, Wallet> = HashMap::new();
+    let closed_asks = open_offers.close_ask(asset.price(), asset.amount());
+    if closed_asks.len() == 0 {
+        return wallets;
+    }
+
     let mut coins = 0u64;
     let mut amount = 0u64;
     for ask in closed_asks.iter() {
         coins += ask.amount * asset.price();
-        amount += amount;
+        amount += ask.amount;
         let wallet = wallets.entry(ask.wallet).or_insert(wallet::Schema(view).fetch(&ask.wallet));
         wallet.add_assets(vec![AssetBundle::new(asset.id(), ask.amount)]);
         *wallet = Wallet::new(wallet.balance() + (ask.price - asset.price()) * ask.amount, wallet.assets());
@@ -134,6 +141,4 @@ pub fn close_asks(
     *buyer = Wallet::new(buyer.balance() + coins - sum_fee_coins, buyer.assets());
 
     wallets
-
-
 }
