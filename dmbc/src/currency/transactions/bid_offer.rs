@@ -6,7 +6,7 @@ use exonum::messages::Message;
 use exonum::storage::Fork;
 use prometheus::{IntCounter, Histogram};
 
-use currency::assets::{TradeAsset, AssetBundle};
+use currency::assets::TradeAsset;
 use currency::error::Error;
 use currency::status;
 use currency::transactions::components::{FeesCalculator, ThirdPartyFees};
@@ -64,13 +64,17 @@ impl BidOffer {
         wallet::Schema(&mut *view).store(self.pub_key(), wallet_from.clone());
         wallet::Schema(&mut *view).store(genesis_fees.recipient(), genesis);
 
-        wallet_from.remove_assets(vec![self.asset().to_bundle()].to_vec())?;
+        let mut bid = wallet::create_bid(&mut wallet_from, &self.pub_key(),&self.asset(), &self.hash())?;
         let mut open_offers = offers::Schema(&mut *view).fetch(&self.asset().id());
-        let closed_asks =  open_offers.close_ask(self.asset().price(), self.asset().amount());
-        if closed_asks.len() == 0 {
-            let bid = offers::Offer::new(self.pub_key(), self.asset().amount(), &self.hash());
-            open_offers.add_bid(self.asset().price(), bid);
-        } else {
+
+        let update_wallets = offers::close_asks(&*view, &mut open_offers, &self.asset(), &mut bid, &mut wallet_from);
+
+        if bid.amount() > 0 {
+            open_offers.add_bid(self.asset().price(), bid.clone());
+        }
+
+        for (pk, wallet) in update_wallets {
+            wallet::Schema(&mut *view).store(&pk, wallet);
         }
         offers::Schema(&mut *view).store(&self.asset().id(), open_offers);
         wallet::Schema(&mut *view).store(self.pub_key(), wallet_from);

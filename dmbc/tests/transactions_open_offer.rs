@@ -23,13 +23,12 @@ use dmbc::currency::offers::{OpenOffers, Offer};
 
 #[test]
 fn set_3_bid_1_ask_result_1_bid_1_ask() {
-    let fixed = 0;
+    let fixed = 1;
     let meta_data = "asset";
     let units = 100;
     let balance = 100_000;
-    let transaction_fee = 10;
-    let per_asset_fee = 4;
-    let config_fees = TransactionFees::with_default_key(transaction_fee, per_asset_fee, 0, 0, 0, 0);
+
+    let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, 0);
 
     let (creator_public_key, creator_secret_key) = crypto::gen_keypair();
     let (user1_pk, user1_sk) = crypto::gen_keypair();
@@ -60,6 +59,9 @@ fn set_3_bid_1_ask_result_1_bid_1_ask() {
         .map(|a| a.into())
         .collect::<Vec<AssetBundle>>();
     assert_eq!(units, seller_assets[0].amount());
+
+    let creator_wallet = api.get_wallet(&creator_public_key);
+    assert_eq!(balance, creator_wallet.balance);
 
     let mut sample_offers = OpenOffers::new_open_offers();
 
@@ -106,10 +108,14 @@ fn set_3_bid_1_ask_result_1_bid_1_ask() {
     let offer = Offer::new(&user2_pk, 1, &tx_ask_offer.hash());
     sample_offers.add_ask(ask_price, offer);
 
+    let creator_wallet = api.get_wallet(&creator_public_key);
+    assert_eq!(balance + 4 * fixed, creator_wallet.balance);
     let buyer_wallet = api.get_wallet(&user2_pk);
     let seller_wallet = api.get_wallet(&user1_pk);
-    assert_eq!(balance - ask_price * ask_amount, buyer_wallet.balance);
-    assert_eq!(balance + 10 * 2 + 30 * 2, seller_wallet.balance);
+    let buyer_balance = balance - ask_price* ask_amount + (ask_price - 30) * 2 + (ask_price - 10) * 2;
+    assert_eq!(buyer_balance, buyer_wallet.balance);
+    assert_eq!(balance + 10 * 2 + 30 * 2 - 4 * fixed, seller_wallet.balance);
+
     let buyer_assets = api
         .get_wallet_assets(&user2_pk)
         .iter()

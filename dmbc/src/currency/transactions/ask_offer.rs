@@ -6,7 +6,7 @@ use exonum::messages::Message;
 use exonum::storage::Fork;
 use prometheus::{IntCounter, Histogram};
 
-use currency::assets::{TradeAsset, AssetBundle};
+use currency::assets::TradeAsset;
 use currency::error::Error;
 use currency::status;
 use currency::transactions::components::{FeesCalculator, ThirdPartyFees};
@@ -64,44 +64,17 @@ impl AskOffer {
         wallet::Schema(&mut *view).store(self.pub_key(), wallet_from.clone());
         wallet::Schema(&mut *view).store(genesis_fees.recipient(), genesis);
 
-        wallet_from.remove_coins(self.asset().amount() * self.asset().price())?;
         let mut open_offers = offers::Schema(&mut *view).fetch(&self.asset().id());
-        let closed_bids =  open_offers.close_bid(self.asset().price(), self.asset().amount());
-        if closed_bids.len() == 0 {
-            let ask = offers::Offer::new(self.pub_key(), self.asset().amount(), &self.hash());
-            open_offers.add_ask(self.asset().price(), ask);
-        } else {
-            let mut closed_amount:u64 = 0;
-            #[derive(Debug)]
-            struct UpdateData {
-                amount: u64,
-                coins: u64,
-            }
+        let mut ask = wallet::create_ask(&mut wallet_from, self.pub_key(), &self.asset(), &self.hash())?;
 
-            let mut update_wallets: HashMap<PublicKey, UpdateData> = HashMap::new(); // HashMap[wallet] = amount
-            for offer in closed_bids.iter(){
-                closed_amount += offer.amount;
-                let v = update_wallets.entry(offer.wallet).or_insert(UpdateData{amount:0,coins:0});
-                let amount = v.amount + offer.amount;
-//                    let coins = v.coins + offer.amount * self.asset().price();
-                let coins = v.coins + offer.amount * offer.price;
-                *v = UpdateData{ amount, coins};
-            }
+        let update_wallets = offers::close_bids(&*view, &mut open_offers, &self.asset(), &mut ask, &mut wallet_from);
 
+        if ask.amount() > 0 {
+            open_offers.add_ask(self.asset().price(), ask.clone());
+        }
 
-            for (pk, data) in update_wallets.iter() {
-                let w = wallet::Schema(&*view).fetch(pk);
-                wallet::Schema(&mut *view).store(pk, wallet::Wallet::new(w.balance() + data.coins, w.assets()));
-            }
-            if self.asset().amount() > closed_amount {
-                let ask_amount = self.asset().amount() - closed_amount;
-                let ask = offers::Offer::new(self.pub_key(), ask_amount, &self.hash());
-                open_offers.add_ask(self.asset().price(), ask);
-            }
-            if closed_amount > 0 {
-                let asset = AssetBundle::new(self.asset().id(), closed_amount);
-                wallet_from.add_assets(vec![asset]);
-            }
+        for (pk, wallet) in update_wallets {
+            wallet::Schema(&mut *view).store(&pk, wallet);
         }
 
         offers::Schema(&mut *view).store(&self.asset().id(), open_offers);
