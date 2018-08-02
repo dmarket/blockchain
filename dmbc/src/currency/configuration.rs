@@ -19,7 +19,7 @@ pub const PM_TRADE:                 u64 =       0b_10000;
 pub const PM_TRADE_INTERMEDIARY:    u64 =      0b_100000;
 pub const PM_TRANSFER:              u64 =     0b_1000000;
 pub const PM_TRANSFER_FEES:         u64 =    0b_10000000;
-pub const PM_ALL_ALLOED:            u64 = <u64>::max_value();
+pub const PM_ALL_ALLOWED:            u64 = <u64>::max_value();
 
 encoding_struct! {
     /// Wallet tx permittion configuration
