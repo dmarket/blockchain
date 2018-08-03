@@ -18,7 +18,7 @@ use currency::api::error::ApiError;
 use currency::transactions::{
     AddAssets, DeleteAssets, Exchange, ExchangeIntermediary, Trade, TradeIntermediary, Transfer,
     BidOffer, AskOffer, EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID, TRADE_ID, TRADE_INTERMEDIARY_ID,
-    TransferWithFeesPayer,
+    TransferWithFeesPayer, TRANSFER_FEES_PAYER_ID,
 };
 
 #[derive(Clone)]
