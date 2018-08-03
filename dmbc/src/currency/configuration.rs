@@ -9,18 +9,6 @@ use exonum::storage::Snapshot;
 
 use currency;
 
-/// Transaction permission mask
-/// 0 - Tx not Allowd, 1 - Tx allowed
-pub const PM_ADD_ASSETSD:           u64 =           0b_1;
-pub const PM_DELETE_ASSETS:         u64 =          0b_10;
-pub const PM_EXCHANGE:              u64 =         0b_100;
-pub const PM_EXCHANGE_INTERMEDIARY: u64 =        0b_1000;
-pub const PM_TRADE:                 u64 =       0b_10000;
-pub const PM_TRADE_INTERMEDIARY:    u64 =      0b_100000;
-pub const PM_TRANSFER:              u64 =     0b_1000000;
-pub const PM_TRANSFER_FEES:         u64 =    0b_10000000;
-pub const PM_ALL_ALLOWED:            u64 = <u64>::max_value();
-
 encoding_struct! {
     /// Wallet tx permittion configuration
     #[derive(Eq, PartialOrd, Ord)]
@@ -33,9 +21,10 @@ encoding_struct! {
 encoding_struct! {
     /// List of wallets that have permissions.
     #[derive(Default)]
-    struct TxPermittionList {
-        wallets: Vec<WalletPermissions>,
-        digest: &Hash
+    struct TransactionPermissions {
+        wallet_masks: Vec<WalletPermissions>,
+        wallet_masks_digest: &Hash,
+        global_permission_mask: u64,
     }
 }
 
@@ -93,7 +82,7 @@ encoding_struct! {
     #[derive(Eq, PartialOrd, Ord)]
     struct Configuration {
         fees: TransactionFees,
-        tx_permission_list: TxPermittionList
+        tx_permissions: TransactionPermissions,
     }
 }
 
@@ -103,7 +92,7 @@ pub const GENESIS_WALLET_PUB_KEY: &str =
 
 impl Default for Configuration {
     fn default() -> Configuration {
-        Configuration::new(TransactionFees::default(), TxPermittionList::default())
+        Configuration::new(TransactionFees::default(), TransactionPermissions::default())
     }
 }
 
