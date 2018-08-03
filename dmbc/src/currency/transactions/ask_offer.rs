@@ -65,9 +65,9 @@ impl AskOffer {
         wallet::Schema(&mut *view).store(genesis_fees.recipient(), genesis);
 
         let mut open_offers = offers::Schema(&mut *view).fetch(&self.asset().id());
-        let mut ask = wallet::create_ask(&mut wallet_from, self.pub_key(), &self.asset(), &self.hash())?;
+        let mut ask = offers::create_ask(&mut wallet_from, self.pub_key(), &self.asset(), &self.hash())?;
 
-        let update_wallets = offers::close_bids(&*view, &mut open_offers, &self.asset(), &mut ask, &mut wallet_from);
+        let (update_wallets, history_offers) = offers::close_bids(&*view, &mut open_offers, &self.asset(), &mut ask, &mut wallet_from);
 
         if ask.amount() > 0 {
             open_offers.add_ask(self.asset().price(), ask.clone());
@@ -79,6 +79,9 @@ impl AskOffer {
 
         offers::Schema(&mut *view).store(&self.asset().id(), open_offers);
         wallet::Schema(&mut *view).store(self.pub_key(), wallet_from);
+
+
+        offers::history::Schema(&mut *view).update(&self.hash(), &history_offers);
 
         Ok(())
     }
