@@ -258,13 +258,17 @@ impl Transaction for Trade {
         );
         let buyer_verify_ok = self.verify_signature(&self.offer().buyer());
 
-        let assets_verify_ok = self.offer()
+        let price_verify_ok = self.offer()
             .assets()
-            .into_iter()
-            .all(|asset| asset.amount().checked_mul(asset.price())
-                              .is_some());
+            .iter()
+            .map(|asset| asset.amount().overflowing_mul(asset.price()))
+            .try_fold(0u64, |value, (price, overflown)| match overflown { 
+                true => None,
+                _ => value.checked_add(price),
+            })
+            .is_some();
 
-        if wallets_ok && fee_strategy_ok && buyer_verify_ok && seller_verify_ok && assets_verify_ok {
+        if wallets_ok && fee_strategy_ok && buyer_verify_ok && seller_verify_ok && price_verify_ok {
             VERIFY_SUCCESS_COUNT.inc();
             true
         } else {
