@@ -15,10 +15,9 @@ use iron::status as istatus;
 use router::Router;
 
 use currency::api::error::ApiError;
-use currency::transactions::{
-    AddAssets, DeleteAssets, Exchange, ExchangeIntermediary, Trade, TradeIntermediary, Transfer,
-    EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID, TRADE_ID, TRADE_INTERMEDIARY_ID,
-};
+use currency::transactions::{AddAssets, DeleteAssets, Exchange, ExchangeIntermediary, Trade, TransferWithFeesPayer,
+                             TradeIntermediary, Transfer, EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID,
+                             TRADE_ID, TRADE_INTERMEDIARY_ID};
 
 #[derive(Clone)]
 pub struct HexApi {}
@@ -27,6 +26,7 @@ pub struct HexApi {}
 #[derive(Clone, Serialize, Deserialize)]
 enum TransactionRequest {
     Transfer(Transfer),
+    TransferWithFeesPayer(TransferWithFeesPayer),
     AddAssets(AddAssets),
     DeleteAssets(DeleteAssets),
     Trade(Trade),
@@ -39,6 +39,7 @@ impl Into<Box<Transaction>> for TransactionRequest {
     fn into(self) -> Box<Transaction> {
         match self {
             TransactionRequest::Transfer(trans) => Box::new(trans),
+            TransactionRequest::TransferWithFeesPayer(trans) => Box::new(trans),
             TransactionRequest::AddAssets(trans) => Box::new(trans),
             TransactionRequest::DeleteAssets(trans) => Box::new(trans),
             TransactionRequest::Trade(trans) => Box::new(trans),
@@ -98,6 +99,10 @@ impl Api for HexApi {
                     let raw_ = transaction.raw().clone();
 
                     let vec_hash: Option<Vec<u8>> = match transaction.raw().message_type() {
+                        TRANSFER_FEES_PAYER_ID => match TransferWithFeesPayer::from_raw(raw_) {
+                            Ok(transfer) => Some(transfer.offer_raw()),
+                            Err(_) => None,
+                        },
                         EXCHANGE_ID => match Exchange::from_raw(raw_) {
                             Ok(exchange) => Some(exchange.offer_raw()),
                             Err(_) => None,

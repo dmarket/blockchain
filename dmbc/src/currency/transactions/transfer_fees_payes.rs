@@ -63,6 +63,11 @@ impl FeesCalculator for TransferWithFeesPayer {
 }
 
 impl TransferWithFeesPayer {
+    /// Get raw bytes of the offer.
+    pub fn offer_raw(&self) -> Vec<u8> {
+        self.offer().raw
+    }
+
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
         let genesis_fees = CONFIGURATION.read().unwrap().fees();
 
