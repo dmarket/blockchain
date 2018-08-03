@@ -1,5 +1,5 @@
-use exonum::crypto::PublicKey;
 use currency::offers::Offer;
+use exonum::crypto::PublicKey;
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct CloseOffer {
@@ -19,20 +19,20 @@ encoding_struct! {
 impl Offers {
     pub fn insert(&mut self, offer: Offer)
     {
-        let mut o = self.offers();
-        if o.len() == 0 {
-            *self = Offers::new(self.price(), vec![offer]);
-            return;
-        }
-        let n = o.len() - 1;
+        let mut offers = self.offers();
+        if offers.len() > 0 {
+            let last = offers.iter().last().unwrap();
 
-        if o[n].wallet() == offer.wallet() && o[n].tx_hash() == offer.tx_hash() {
-            o[n].add_amount(offer.amount());
-        } else {
-            o.push(offer);
+            if last.wallet() == offer.wallet() && last.tx_hash() == offer.tx_hash() {
+                eprintln!("last = {:#?}", last);
+                eprintln!("offer = {:#?}", offer);
+                panic!("last offer equal add offer");
+            }
         }
 
-        *self = Offers::new(self.price(), o);
+        offers.push(offer);
+
+        *self = Offers::new(self.price(), offers);
     }
 
     pub fn close(&mut self, amount: u64) -> Vec<CloseOffer>
@@ -75,13 +75,13 @@ impl Offers {
 
 #[cfg(test)]
 mod test {
-    use currency::offers::{Offer, Offers, CloseOffer};
+    use currency::offers::{CloseOffer, Offer, Offers};
     use exonum::crypto;
     use exonum::crypto::gen_keypair;
 
-
     #[test]
-    fn offers_insert_offer()
+    #[should_panic]
+    fn offers_insert_offer_panic()
     {
         let (wallet, _) = gen_keypair();
         let tx_hash = &crypto::hash("tx1".as_bytes());
@@ -91,6 +91,23 @@ mod test {
 
         offers.insert(Offer::new(&wallet, amount, tx_hash));
         assert_eq!(vec![Offer::new(&wallet, 2 * amount, tx_hash)], offers.offers());
+    }
+
+    #[test]
+    fn offers_insert_offer()
+    {
+        let (wallet, _) = gen_keypair();
+        let tx_hash1 = &crypto::hash("tx1".as_bytes());
+        let tx_hash2 = &crypto::hash("tx2".as_bytes());
+
+        let amount = 10;
+        let price = 12;
+        let mut offers = Offers::new(price, vec![]);
+        offers.insert(Offer::new(&wallet, amount, tx_hash1));
+        assert_eq!(vec![Offer::new(&wallet, amount, tx_hash1)], offers.offers());
+
+        offers.insert(Offer::new(&wallet, amount, tx_hash2));
+        assert_eq!(vec![Offer::new(&wallet, amount, tx_hash1), Offer::new(&wallet, amount, tx_hash2)], offers.offers());
     }
 
     #[test]
