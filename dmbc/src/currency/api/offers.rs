@@ -41,18 +41,9 @@ pub struct OpenOfferInfo {
 
 impl OpenOfferInfo {
     pub fn from(open_offers: &OpenOffers) -> Self {
-        let mut bids:usize = 0;
-        let mut asks:usize = 0;
-        for bid in open_offers.bids().iter() {
-            bids += bid.offers().len() ;
-        }
-        for ask in open_offers.asks().iter() {
-            asks += ask.offers().len();
-        }
-
         OpenOfferInfo {
-            bids: bids as u64,
-            asks: asks as u64,
+            bids: open_offers.bids().into_iter().map(|bid| bid.offers().len() as u64).sum(),
+            asks: open_offers.asks().into_iter().map(|ask| ask.offers().len() as u64).sum(),
         }
     }
 }

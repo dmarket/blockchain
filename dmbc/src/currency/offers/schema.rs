@@ -70,7 +70,7 @@ pub fn close_bids(
     let mut amount = 0;
     let mut coins_back = 0u64;
 
-    for bid in closed_bids.iter() {
+    for bid in &closed_bids {
         amount += bid.amount;
         coins_back += bid.amount * (asset.price() - bid.price);
 
@@ -117,7 +117,7 @@ pub fn close_asks(
 
     let mut coins = 0u64;
     let mut amount = 0u64;
-    for ask in closed_asks.iter() {
+    for ask in &closed_asks {
         coins += ask.amount * asset.price();
         amount += ask.amount;
         let wallet = wallets.entry(ask.wallet).or_insert(wallet::Schema(view).fetch(&ask.wallet));

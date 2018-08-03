@@ -118,11 +118,7 @@ impl Transaction for BidOffer {
             return true;
         }
 
-        let overflow = match self.asset().price().checked_mul(self.asset().amount()) {
-            None => false,
-            Some(_) => true,
-        };
-
+        let overflow = self.asset().price().checked_mul(self.asset().amount()).is_some();
         let verify_ok = self.verify_signature(&self.pub_key());
 
         if verify_ok && overflow {
