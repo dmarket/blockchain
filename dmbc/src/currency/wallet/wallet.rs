@@ -136,7 +136,7 @@ pub fn create_ask(wallet: &mut Wallet, pk: &PublicKey, asset: &TradeAsset, tx_ha
     if wallet.balance() < asset.price()*asset.amount() {
         return Err(Error::InsufficientFunds);
     }
-    *wallet = Wallet::new(wallet.balance()- asset.price()*asset.amount(), wallet.assets());
+    *wallet = Wallet::new(wallet.balance() - asset.price()*asset.amount(), wallet.assets());
 
     Ok(Offer::new(pk, asset.amount(), tx_hash))
 }

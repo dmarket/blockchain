@@ -127,31 +127,32 @@ mod test_open_offers {
         let (wallet, _) = gen_keypair();
         let mut open_offers = OpenOffers::new(vec![], vec![]);
 
-        let first_bid = Offer::new(&wallet, 3, &crypto::hash("tx1".as_bytes()));
-        let first_bid_price = 30;
+        let first = Offer::new(&wallet, 3, &crypto::hash("tx1".as_bytes()));
+        let first_price = 30;
+        let second = Offer::new(&wallet, 1, &crypto::hash("tx2".as_bytes()));
+        let second_price = 10;
+        let third = Offer::new(&wallet, 7, &crypto::hash("tx3".as_bytes()));
+        let third_price = 15;
 
-        open_offers.add_bid(first_bid_price, first_bid.clone());
-        assert_eq!(open_offers.bids()[0].price(), first_bid_price);
-        assert_eq!(open_offers.bids()[0].offers(), vec![first_bid.clone()]);
+        open_offers.add_bid(first_price, first.clone());
+        assert_eq!(open_offers.bids()[0].price(), first_price);
+        assert_eq!(open_offers.bids()[0].offers(), vec![first]);
 
-        let second_bid = Offer::new(&wallet, 1, &crypto::hash("tx2".as_bytes()));
-        let second_bid_price = 10;
+        open_offers.add_bid(second_price, second.clone());
+        assert_eq!(open_offers.bids()[1].price(), second_price);
+        assert_eq!(open_offers.bids()[1].offers(), vec![second.clone()]);
+        assert_eq!(open_offers.bids()[0].price(), first_price);
 
-        open_offers.add_bid(second_bid_price, second_bid.clone());
-        assert_eq!(open_offers.bids()[1].price(), second_bid_price);
-        assert_eq!(open_offers.bids()[1].offers(), vec![second_bid.clone()]);
-        assert_eq!(open_offers.bids()[0].price(), first_bid_price);
+        open_offers.add_bid(third_price, third.clone());
+        assert_eq!(open_offers.bids()[2].price(), second_price);
+        assert_eq!(open_offers.bids()[1].price(), third_price);
+        assert_eq!(open_offers.bids()[1].offers(), vec![third]);
+        assert_eq!(open_offers.bids()[0].price(), first_price);
 
-        let third_bid = Offer::new(&wallet, 7, &crypto::hash("tx3".as_bytes()));
-        let third_bid_price = 15;
-        open_offers.add_bid(third_bid_price, third_bid.clone());
-        assert_eq!(open_offers.bids()[2].price(), second_bid_price);
-        assert_eq!(open_offers.bids()[1].price(), third_bid_price);
-        assert_eq!(open_offers.bids()[1].offers(), vec![third_bid.clone()]);
-        assert_eq!(open_offers.bids()[0].price(), first_bid_price);
-
-        open_offers.add_bid(second_bid_price, second_bid.clone());
-        assert_eq!(open_offers.bids()[2].offers(), vec![Offer::new(&wallet, 2*1, &crypto::hash("tx2".as_bytes()))]);
+        let fourth = Offer::new(&wallet, 1, &crypto::hash("tx4".as_bytes()));
+        let fourth_price = second_price;
+        open_offers.add_bid(fourth_price, fourth.clone());
+        assert_eq!(open_offers.bids()[2].offers(), vec![second, fourth]);
     }
 
     #[test]
@@ -159,31 +160,32 @@ mod test_open_offers {
         let (wallet, _) = gen_keypair();
         let mut open_offers = OpenOffers::new(vec![], vec![]);
 
-        let first_ask = Offer::new(&wallet, 3, &crypto::hash("tx1".as_bytes()));
-        let first_ask_price = 30;
+        let first = Offer::new(&wallet, 3, &crypto::hash("tx1".as_bytes()));
+        let first_price = 30;
+        let second = Offer::new(&wallet, 1, &crypto::hash("tx2".as_bytes()));
+        let second_price = 10;
+        let third = Offer::new(&wallet, 7, &crypto::hash("tx3".as_bytes()));
+        let third_price = 15;
 
-        open_offers.add_ask(first_ask_price, first_ask.clone());
-        assert_eq!(open_offers.asks()[0].price(), first_ask_price);
-        assert_eq!(open_offers.asks()[0].offers(), vec![first_ask.clone()]);
+        open_offers.add_ask(first_price, first.clone());
+        assert_eq!(open_offers.asks()[0].price(), first_price);
+        assert_eq!(open_offers.asks()[0].offers(), vec![first]);
 
-        let second_ask = Offer::new(&wallet, 1, &crypto::hash("tx2".as_bytes()));
-        let second_ask_price = 10;
+        open_offers.add_ask(second_price, second.clone());
+        assert_eq!(open_offers.asks()[0].price(), second_price);
+        assert_eq!(open_offers.asks()[0].offers(), vec![second.clone()]);
+        assert_eq!(open_offers.asks()[1].price(), first_price);
 
-        open_offers.add_ask(second_ask_price, second_ask.clone());
-        assert_eq!(open_offers.asks()[0].price(), second_ask_price);
-        assert_eq!(open_offers.asks()[0].offers(), vec![second_ask.clone()]);
-        assert_eq!(open_offers.asks()[1].price(), first_ask_price);
+        open_offers.add_ask(third_price, third.clone());
+        assert_eq!(open_offers.asks()[0].price(), second_price);
+        assert_eq!(open_offers.asks()[1].price(), third_price);
+        assert_eq!(open_offers.asks()[1].offers(), vec![third.clone()]);
+        assert_eq!(open_offers.asks()[2].price(), first_price);
 
-        let third_ask = Offer::new(&wallet, 7, &crypto::hash("tx3".as_bytes()));
-        let third_ask_price = 15;
-        open_offers.add_ask(third_ask_price, third_ask.clone());
-        assert_eq!(open_offers.asks()[0].price(), second_ask_price);
-        assert_eq!(open_offers.asks()[1].price(), third_ask_price);
-        assert_eq!(open_offers.asks()[1].offers(), vec![third_ask.clone()]);
-        assert_eq!(open_offers.asks()[2].price(), first_ask_price);
-
-        open_offers.add_ask(second_ask_price, second_ask.clone());
-        assert_eq!(open_offers.asks()[0].offers(), vec![Offer::new(&wallet, 2*1, &crypto::hash("tx2".as_bytes()))]);
+        let fourth = Offer::new(&wallet, 1, &crypto::hash("tx4".as_bytes()));
+        let fourth_price = second_price;
+        open_offers.add_ask(fourth_price, fourth.clone());
+        assert_eq!(open_offers.asks()[0].offers(), vec![second, fourth]);
     }
 
     #[test]
