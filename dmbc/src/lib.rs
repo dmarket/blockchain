@@ -29,6 +29,7 @@ extern crate prometheus;
 extern crate lazy_static;
 extern crate extprim;
 extern crate percent_encoding;
+extern crate rand;
 
 pub mod config;
 pub mod currency;

@@ -30,6 +30,7 @@ prometheus = "0.4.1"
 lazy_static = "1.0"
 percent-encoding = "1.0.1"
 extprim = "1.5"
+rand = "0.5.4"
 
 [dev-dependencies]
 exonum-testkit = "0.5"

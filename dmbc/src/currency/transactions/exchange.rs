@@ -28,8 +28,8 @@ encoding_struct! {
         recipient_assets: Vec<AssetBundle>,
 
         fee_strategy:     u8,
-        seed:              u64,
-        data_info:         &str,
+        seed:             u64,
+        data_info:        &str,
     }
 }
 

@@ -17,6 +17,10 @@ use currency::transactions::trade::{Trade, TradeOffer};
 use currency::transactions::trade_intermediary::{TradeIntermediary, TradeOfferIntermediary};
 use currency::transactions::transfer::Transfer;
 use currency::transactions::transfer_fees_payes::{TransferOffer, TransferWithFeesPayer};
+use currency::transactions::bid_offer::BidOffer;
+use currency::transactions::ask_offer::AskOffer;
+
+use rand::prelude::*;
 
 pub struct Builder {
     public_key: Option<PublicKey>,
@@ -129,6 +133,11 @@ impl Builder {
         TransferWithFeesPayerBuilder::new(self.into())
     }
 
+    pub fn tx_offer(self) -> OfferBuilder {
+        self.validate();
+        OfferBuilder::new(self.into())
+    }
+
     fn validate(&self) {
         match (&self.public_key, &self.secret_key) {
             (&Some(_), &Some(_)) => (),
@@ -148,7 +157,7 @@ impl AddAssetBuilder {
         AddAssetBuilder {
             meta,
             assets: Vec::new(),
-            seed: 0,
+            seed: rand_seed(),
         }
     }
 
@@ -216,7 +225,7 @@ impl DelAssetBuilder {
         DelAssetBuilder {
             meta,
             assets: Vec::new(),
-            seed: 0,
+            seed: rand_seed(),
         }
     }
 
@@ -284,7 +293,7 @@ impl ExchangeBuilder {
 
             fee_strategy: FeeStrategy::Recipient,
 
-            seed: 0,
+            seed: rand_seed(),
 
             data_info: None,
         }
@@ -422,7 +431,7 @@ impl ExchangeIntermediaryBuilder {
 
             fee_strategy: FeeStrategy::Recipient,
 
-            seed: 0,
+            seed: rand_seed(),
 
             data_info: None,
         }
@@ -563,7 +572,7 @@ impl TradeBuilder {
             assets: Vec::new(),
             data_for_assets: Vec::new(),
             fee_strategy: FeeStrategy::Recipient,
-            seed: 0,
+            seed: rand_seed(),
             data_info: None,
         }
     }
@@ -662,7 +671,7 @@ impl TradeIntermediaryBuilder {
             assets: Vec::new(),
             data_for_assets: Vec::new(),
             fee_strategy: FeeStrategy::Recipient,
-            seed: 0,
+            seed: rand_seed(),
             data_info: None,
         }
     }
@@ -781,7 +790,7 @@ impl TransferBuilder {
             recipient: None,
             amount: 0,
             assets: Vec::new(),
-            seed: 0,
+            seed: rand_seed(),
             data_info: None,
         }
     }
@@ -861,7 +870,7 @@ impl TransferWithFeesPayerBuilder {
             fees_payer_sk: None,
             amount: 0,
             assets: Vec::new(),
-            seed: 0,
+            seed: rand_seed(),
             data_info: None,
         }
     }
@@ -938,6 +947,74 @@ impl TransferWithFeesPayerBuilder {
     }
 }
 
+pub struct OfferBuilder {
+    meta: TransactionMetadata,
+    asset: Option<TradeAsset>,
+    seed: u64,
+    data_info: Option<String>,
+}
+
+impl OfferBuilder {
+    fn new(meta: TransactionMetadata) -> Self {
+        OfferBuilder {
+            meta,
+            asset: None,
+            seed: rand_seed(),
+            data_info: None,
+        }
+    }
+
+    pub fn asset(self, asset: TradeAsset) -> Self {
+        OfferBuilder { asset:Some(asset), ..self }
+    }
+
+    pub fn seed(self, seed: u64) -> Self {
+        OfferBuilder { seed, ..self }
+    }
+
+    pub fn data_info(self, data_info: &str) -> Self {
+        OfferBuilder {
+            data_info: Some(data_info.to_string()),
+            ..self
+        }
+    }
+
+    pub fn bid_build(self) -> BidOffer {
+        self.verify();
+
+        BidOffer::new(
+            &self.meta.public_key,
+            self.asset.unwrap(),
+            self.seed,
+            &self.data_info.unwrap_or_default(),
+            &self.meta.secret_key,
+        )
+    }
+
+    pub fn ask_build(self) -> AskOffer {
+        self.verify();
+
+        AskOffer::new(
+            &self.meta.public_key,
+            self.asset.unwrap(),
+            self.seed,
+            &self.data_info.unwrap_or_default(),
+            &self.meta.secret_key,
+        )
+    }
+
+    fn verify(&self) {
+        assert!(self.asset.is_some());
+    }
+}
+
+fn rand_seed() -> u64 {
+    use std::u64::MAX;
+
+    let mut rng = thread_rng();
+    rng.gen_range(1, MAX)
+}
+
 #[cfg(test)]
 mod test {
     use exonum::crypto;
@@ -955,6 +1032,8 @@ mod test {
     use currency::transactions::trade::{Trade, TradeOffer};
     use currency::transactions::trade_intermediary::{TradeIntermediary, TradeOfferIntermediary};
     use currency::transactions::transfer::Transfer;
+    use currency::transactions::bid_offer::BidOffer;
+    use currency::transactions::ask_offer::AskOffer;
 
     use currency::transactions::builders::fee;
     use currency::transactions::builders::transaction;
@@ -1022,10 +1101,11 @@ mod test {
             .tx_add_assets()
             .add_asset_value(asset_foobar.clone())
             .add_asset_value(asset_bazqux.clone())
+            .seed(123)
             .build();
 
         let assets = vec![asset_foobar, asset_bazqux];
-        let equivalent = AddAssets::new(&public_key, assets, 0, &secret_key);
+        let equivalent = AddAssets::new(&public_key, assets, 123, &secret_key);
 
         assert_eq!(transaction, equivalent);
     }
@@ -1231,4 +1311,53 @@ mod test {
 
         assert_eq!(transaction, equivalent);
     }
+
+    #[test]
+    fn bid_offer() {
+        let (public_key, secret_key) = crypto::gen_keypair();
+        let asset = AssetBundle::from_data("foobar", 9, &public_key);
+        let trade_asset = TradeAsset::from_bundle(asset, 10);
+        let build_bid = transaction::Builder::new()
+            .keypair(public_key, secret_key.clone())
+            .tx_offer()
+            .asset(trade_asset.clone())
+            .seed(1)
+            .data_info("info")
+            .bid_build();
+
+        let bid = BidOffer::new(
+            &public_key,
+            trade_asset,
+            1,
+            "info",
+            &secret_key,
+        );
+
+        assert_eq!(build_bid, bid);
+    }
+
+    #[test]
+    fn ask_offer() {
+        let (public_key, secret_key) = crypto::gen_keypair();
+        let asset = AssetBundle::from_data("foobar", 9, &public_key);
+        let trade_asset = TradeAsset::from_bundle(asset, 10);
+        let build_bid = transaction::Builder::new()
+            .keypair(public_key, secret_key.clone())
+            .tx_offer()
+            .asset(trade_asset.clone())
+            .seed(1)
+            .data_info("info")
+            .ask_build();
+
+        let bid = AskOffer::new(
+            &public_key,
+            trade_asset,
+            1,
+            "info",
+            &secret_key,
+        );
+
+        assert_eq!(build_bid, bid);
+    }
+
 }

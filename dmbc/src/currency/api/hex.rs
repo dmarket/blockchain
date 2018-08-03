@@ -15,9 +15,11 @@ use iron::status as istatus;
 use router::Router;
 
 use currency::api::error::ApiError;
-use currency::transactions::{AddAssets, DeleteAssets, Exchange, ExchangeIntermediary, Trade, TransferWithFeesPayer,
-                             TradeIntermediary, Transfer, EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID,
-                             TRADE_ID, TRADE_INTERMEDIARY_ID, TRANSFER_FEES_PAYER_ID};
+use currency::transactions::{
+    AddAssets, DeleteAssets, Exchange, ExchangeIntermediary, Trade, TradeIntermediary, Transfer,
+    BidOffer, AskOffer, EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID, TRADE_ID, TRADE_INTERMEDIARY_ID,
+    TransferWithFeesPayer, TRANSFER_FEES_PAYER_ID,
+};
 
 #[derive(Clone)]
 pub struct HexApi {}
@@ -33,6 +35,8 @@ enum TransactionRequest {
     TradeIntermediary(TradeIntermediary),
     Exchange(Exchange),
     ExchangeIntermediary(ExchangeIntermediary),
+    BidOffer(BidOffer),
+    AskOffer(AskOffer),
 }
 
 impl Into<Box<Transaction>> for TransactionRequest {
@@ -46,6 +50,8 @@ impl Into<Box<Transaction>> for TransactionRequest {
             TransactionRequest::TradeIntermediary(trans) => Box::new(trans),
             TransactionRequest::Exchange(trans) => Box::new(trans),
             TransactionRequest::ExchangeIntermediary(trans) => Box::new(trans),
+            TransactionRequest::BidOffer(trans) => Box::new(trans),
+            TransactionRequest::AskOffer(trans) => Box::new(trans),
         }
     }
 }
