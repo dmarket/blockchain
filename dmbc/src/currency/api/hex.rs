@@ -17,7 +17,7 @@ use router::Router;
 use currency::api::error::ApiError;
 use currency::transactions::{AddAssets, DeleteAssets, Exchange, ExchangeIntermediary, Trade, TransferWithFeesPayer,
                              TradeIntermediary, Transfer, EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID,
-                             TRADE_ID, TRADE_INTERMEDIARY_ID};
+                             TRADE_ID, TRADE_INTERMEDIARY_ID, TRANSFER_FEES_PAYER_ID};
 
 #[derive(Clone)]
 pub struct HexApi {}
