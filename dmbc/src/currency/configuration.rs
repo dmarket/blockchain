@@ -20,11 +20,18 @@ encoding_struct! {
 
 encoding_struct! {
     /// List of wallets that have permissions.
-    #[derive(Default)]
     struct TransactionPermissions {
         wallet_masks: Vec<WalletPermissions>,
-        wallet_masks_digest: &Hash,
         global_permission_mask: u64,
+    }
+}
+
+impl Default for TransactionPermissions {
+    fn default() -> Self {
+        TransactionPermissions::new(
+            vec![],
+            <u64>::max_value()
+        )
     }
 }
 
@@ -82,7 +89,7 @@ encoding_struct! {
     #[derive(Eq, PartialOrd, Ord)]
     struct Configuration {
         fees: TransactionFees,
-        tx_permissions: TransactionPermissions,
+        permissions: TransactionPermissions
     }
 }
 
@@ -114,5 +121,11 @@ impl Configuration {
                 currency::SERVICE_NAME
             ),
         }
+    }
+
+    pub fn extract_previous_cfg_hash(snapshot: &Snapshot) -> Hash {
+        let schema = Schema::new(snapshot);
+        let stored_configuration = schema.actual_configuration();
+        stored_configuration.previous_cfg_hash
     }
 }

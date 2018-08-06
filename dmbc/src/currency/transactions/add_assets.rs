@@ -51,21 +51,6 @@ impl FeesCalculator for AddAssets {
     }
 }
 
-impl Permissions for AddAssets {
-    fn is_authorized(&self) -> bool {
-        let permissions = CONFIGURATION.read().unwrap().tx_permissions();
-        let tx_mask: u64 = mask_from(ADD_ASSETS_ID);
-
-        for wallet in permissions.wallet_masks() {
-            if wallet.key() == self.pub_key() {
-                return has_permission(tx_mask, wallet.mask());
-            }
-        }
-
-        has_permission(tx_mask, permissions.global_permission_mask())
-    }
-}
-
 impl AddAssets {
 
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
@@ -170,10 +155,6 @@ impl Transaction for AddAssets {
         }
 
         if !self.verify_signature(&self.pub_key()) {
-            return false;
-        }
-
-        if !self.is_authorized() {
             return false;
         }
 

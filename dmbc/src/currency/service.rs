@@ -12,6 +12,7 @@ use iron::Handler;
 use prometheus::IntGauge;
 use router::Router;
 use std::sync::RwLock;
+use std::collections::HashMap;
 
 use super::nats;
 use config;
@@ -56,6 +57,8 @@ lazy_static! {
         "Height of the blockchain of the current node in blocks."
     ).unwrap();
     pub static ref CONFIGURATION: RwLock<Configuration> = RwLock::new(Configuration::default());
+    pub static ref PREVIOUS_CONFIG_HASH: RwLock<Option<Hash>> = RwLock::new(None);
+    pub static ref PERMISSIONS: RwLock<HashMap<PublicKey, u64>> = RwLock::new(HashMap::new());
 }
 
 impl blockchain::Service for Service {
@@ -106,7 +109,18 @@ impl blockchain::Service for Service {
         info!("Block #{}.", last_block.height());
 
         BLOCKCHAIN_HEIGHT.set(last_block.height().0 as i64);
-        *CONFIGURATION.write().unwrap() = Configuration::extract(ctx.snapshot());
+        let hash_from_blockchain = Configuration::extract_previous_cfg_hash(ctx.snapshot());
+        let hash_from_global_memory = *PREVIOUS_CONFIG_HASH.read().unwrap();
+        if hash_from_global_memory.is_none() || hash_from_global_memory.unwrap() != hash_from_blockchain {
+            *CONFIGURATION.write().unwrap() = Configuration::extract(ctx.snapshot());
+            *PREVIOUS_CONFIG_HASH.write().unwrap() = Some(hash_from_blockchain);
+            let permissions = CONFIGURATION.read().unwrap().permissions();
+            let mut updated_permission_list = HashMap::<PublicKey, u64>::new();
+            for wallet in permissions.wallet_masks() {
+                updated_permission_list.insert(*wallet.key(), wallet.mask());
+            }
+            *PERMISSIONS.write().unwrap() = updated_permission_list;
+        }
 
         let txs = schema.block_txs(last_block.height());
         for hash in txs.iter() {
