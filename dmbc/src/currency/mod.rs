@@ -7,6 +7,7 @@ pub mod error;
 pub mod status;
 pub mod transactions;
 pub mod wallet;
+pub mod offers;
 
 mod nats;
 mod service;
