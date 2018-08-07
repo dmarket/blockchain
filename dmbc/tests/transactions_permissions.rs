@@ -20,8 +20,9 @@ use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::transactions::components::FeeStrategy;
 use dmbc::currency::transactions::components::{PM_ADD_ASSETS, PM_DELETE_ASSETS, 
     PM_EXCHANGE, PM_EXCHANGE_INTERMEDIARY, PM_TRADE, PM_TRADE_INTERMEDIARY, 
-    PM_TRANSFER, PM_TRANSFER_WITH_FEES_PAYER, PM_ALL_ALLOWED};
+    PM_TRANSFER, PM_TRANSFER_WITH_FEES_PAYER, PM_ASK, PM_BID, PM_ALL_ALLOWED};
 use dmbc::currency::wallet::Wallet;
+use dmbc::currency::offers::OpenOffers;
 
 #[test]
 fn add_assets_wallet_permissions() {
@@ -1601,4 +1602,253 @@ fn transfer_with_fees_payer_and_his_permissions() {
 
     // check post response
     assert_eq!(status, StatusCode::BadRequest);
+}
+
+#[test]
+fn bid_global_permissions() {
+    let fixed = 1;
+    let meta_data = "asset";
+    let units = 100;
+    let balance = 100_000;
+    let permissions = TransactionPermissions::new(
+        vec![], PM_ALL_ALLOWED ^ PM_BID
+    );
+    let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, 0);
+
+    let (creator_public_key, creator_secret_key) = crypto::gen_keypair();
+    let (user1_pk, user1_sk) = crypto::gen_keypair();
+    let (user2_pk, _user2_sk) = crypto::gen_keypair();
+
+    let mut testkit = DmbcTestApiBuilder::new()
+        .with_configuration(Configuration::new(config_fees, permissions))
+        .add_wallet_value(&creator_public_key, Wallet::new(balance, vec![]))
+        .add_wallet_value(&user1_pk, Wallet::new(balance, vec![]))
+        .add_wallet_value(&user2_pk, Wallet::new(balance, vec![]))
+        .create();
+    let api = testkit.api();
+
+    // post the transaction
+    let meta_asset = MetaAsset::new(&user1_pk, meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()));
+    let tx_add_assets = transaction::Builder::new()
+        .keypair(creator_public_key, creator_secret_key)
+        .tx_add_assets()
+        .add_asset_value(meta_asset)
+        .build();
+
+    let (status, _) = api.post_tx(&tx_add_assets);
+    testkit.create_block();
+    assert_eq!(status, StatusCode::Created);
+    let seller_assets = api
+        .get_wallet_assets(&user1_pk)
+        .iter()
+        .map(|a| a.into())
+        .collect::<Vec<AssetBundle>>();
+    assert_eq!(units, seller_assets[0].amount());
+
+    let creator_wallet = api.get_wallet(&creator_public_key);
+    assert_eq!(balance, creator_wallet.balance);
+
+    let _sample_offers = OpenOffers::new_open_offers();
+
+    let bid_amount = 2;
+    for bid_price in vec![10, 30, 50] {
+        let asset_bundle = AssetBundle::from_data(meta_data, bid_amount, &creator_public_key);
+        let trade_asset = TradeAsset::from_bundle(asset_bundle, bid_price);
+        let tx_bid_offer = transaction::Builder::new()
+            .keypair(user1_pk, user1_sk.clone())
+            .tx_offer()
+            .asset(trade_asset.clone())
+            .data_info("bid")
+            .bid_build();
+
+        let (status, _) = api.post_tx(&tx_bid_offer);
+        testkit.create_block();
+        assert_eq!(status, StatusCode::BadRequest);
+    }
+}
+
+#[test]
+fn bid_wallet_permissions() {
+    let fixed = 1;
+    let meta_data = "asset";
+    let units = 100;
+    let balance = 100_000;
+    let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, 0);
+
+    let (creator_public_key, creator_secret_key) = crypto::gen_keypair();
+    let (user1_pk, user1_sk) = crypto::gen_keypair();
+    let (user2_pk, _user2_sk) = crypto::gen_keypair();
+
+    let permissions = TransactionPermissions::new(
+        vec![WalletPermissions::new(&user1_pk, PM_ALL_ALLOWED ^ PM_BID)], PM_ALL_ALLOWED
+    );
+
+    let mut testkit = DmbcTestApiBuilder::new()
+        .with_configuration(Configuration::new(config_fees, permissions))
+        .add_wallet_value(&creator_public_key, Wallet::new(balance, vec![]))
+        .add_wallet_value(&user1_pk, Wallet::new(balance, vec![]))
+        .add_wallet_value(&user2_pk, Wallet::new(balance, vec![]))
+        .create();
+    let api = testkit.api();
+
+    // post the transaction
+    let meta_asset = MetaAsset::new(&user1_pk, meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()));
+    let tx_add_assets = transaction::Builder::new()
+        .keypair(creator_public_key, creator_secret_key)
+        .tx_add_assets()
+        .add_asset_value(meta_asset)
+        .build();
+
+    let (status, _) = api.post_tx(&tx_add_assets);
+    testkit.create_block();
+    assert_eq!(status, StatusCode::Created);
+    let seller_assets = api
+        .get_wallet_assets(&user1_pk)
+        .iter()
+        .map(|a| a.into())
+        .collect::<Vec<AssetBundle>>();
+    assert_eq!(units, seller_assets[0].amount());
+
+    let creator_wallet = api.get_wallet(&creator_public_key);
+    assert_eq!(balance, creator_wallet.balance);
+
+    let _sample_offers = OpenOffers::new_open_offers();
+
+    let bid_amount = 2;
+    for bid_price in vec![10, 30, 50] {
+        let asset_bundle = AssetBundle::from_data(meta_data, bid_amount, &creator_public_key);
+        let trade_asset = TradeAsset::from_bundle(asset_bundle, bid_price);
+        let tx_bid_offer = transaction::Builder::new()
+            .keypair(user1_pk, user1_sk.clone())
+            .tx_offer()
+            .asset(trade_asset.clone())
+            .data_info("bid")
+            .bid_build();
+
+        let (status, _) = api.post_tx(&tx_bid_offer);
+        testkit.create_block();
+        assert_eq!(status, StatusCode::BadRequest);
+    }
+}
+
+#[test]
+fn ask_global_permissions() {
+    let fixed = 1;
+    let meta_data = "asset";
+    let units = 100;
+    let balance = 100_000;
+    let permissions = TransactionPermissions::new(
+        vec![], PM_ALL_ALLOWED ^ PM_ASK
+    );
+    let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, 0);
+
+    let (creator_public_key, creator_secret_key) = crypto::gen_keypair();
+    let (user1_pk, _user1_sk) = crypto::gen_keypair();
+    let (user2_pk, user2_sk) = crypto::gen_keypair();
+
+    let mut testkit = DmbcTestApiBuilder::new()
+        .with_configuration(Configuration::new(config_fees, permissions))
+        .add_wallet_value(&creator_public_key, Wallet::new(balance, vec![]))
+        .add_wallet_value(&user1_pk, Wallet::new(balance, vec![]))
+        .add_wallet_value(&user2_pk, Wallet::new(balance, vec![]))
+        .create();
+    let api = testkit.api();
+
+    // post the transaction
+    let meta_asset = MetaAsset::new(&user1_pk, meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()));
+    let tx_add_assets = transaction::Builder::new()
+        .keypair(creator_public_key, creator_secret_key)
+        .tx_add_assets()
+        .add_asset_value(meta_asset)
+        .build();
+
+    let (status, _) = api.post_tx(&tx_add_assets);
+    testkit.create_block();
+    assert_eq!(status, StatusCode::Created);
+    let seller_assets = api
+        .get_wallet_assets(&user1_pk)
+        .iter()
+        .map(|a| a.into())
+        .collect::<Vec<AssetBundle>>();
+    assert_eq!(units, seller_assets[0].amount());
+
+    let creator_wallet = api.get_wallet(&creator_public_key);
+    assert_eq!(balance, creator_wallet.balance);
+
+    let ask_amount = 2;
+    let asset_bundle = AssetBundle::from_data(meta_data, ask_amount, &creator_public_key);
+    for ask_price in vec![10, 30, 50] {
+        let trade_asset = TradeAsset::from_bundle(asset_bundle.clone(), ask_price);
+        let tx_ask_offer = transaction::Builder::new()
+            .keypair(user2_pk, user2_sk.clone())
+            .tx_offer()
+            .asset(trade_asset)
+            .data_info("ask")
+            .ask_build();
+
+        let (status, _) = api.post_tx(&tx_ask_offer);
+        testkit.create_block();
+        assert_eq!(status, StatusCode::BadRequest);
+    }
+}
+
+#[test]
+fn ask_user_permissions() {
+    let fixed = 1;
+    let meta_data = "asset";
+    let units = 100;
+    let balance = 100_000;
+    let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, 0);
+
+    let (creator_public_key, creator_secret_key) = crypto::gen_keypair();
+    let (user1_pk, user1_sk) = crypto::gen_keypair();
+
+    let permissions = TransactionPermissions::new(
+        vec![WalletPermissions::new(&user1_pk, PM_ALL_ALLOWED ^ PM_ASK)], 
+        PM_ALL_ALLOWED
+    );
+
+    let mut testkit = DmbcTestApiBuilder::new()
+        .with_configuration(Configuration::new(config_fees, permissions))
+        .add_wallet_value(&creator_public_key, Wallet::new(balance, vec![]))
+        .add_wallet_value(&user1_pk, Wallet::new(balance, vec![]))
+        .create();
+    let api = testkit.api();
+
+    // post the transaction
+    let meta_asset = MetaAsset::new(&user1_pk, meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()));
+    let tx_add_assets = transaction::Builder::new()
+        .keypair(creator_public_key, creator_secret_key)
+        .tx_add_assets()
+        .add_asset_value(meta_asset)
+        .build();
+
+    let (status, _) = api.post_tx(&tx_add_assets);
+    testkit.create_block();
+    assert_eq!(status, StatusCode::Created);
+    let seller_assets = api
+        .get_wallet_assets(&user1_pk)
+        .iter()
+        .map(|a| a.into())
+        .collect::<Vec<AssetBundle>>();
+    assert_eq!(units, seller_assets[0].amount());
+
+    let creator_wallet = api.get_wallet(&creator_public_key);
+    assert_eq!(balance, creator_wallet.balance);
+
+    let ask_amount = 2;
+    let asset_bundle = AssetBundle::from_data(meta_data, ask_amount, &creator_public_key);
+    for ask_price in vec![10, 30, 50] {
+        let trade_asset = TradeAsset::from_bundle(asset_bundle.clone(), ask_price);
+        let tx_ask_offer = transaction::Builder::new()
+            .keypair(user1_pk, user1_sk.clone())
+            .tx_offer()
+            .asset(trade_asset)
+            .data_info("ask")
+            .ask_build();
+
+        let (status, _) = api.post_tx(&tx_ask_offer);
+        testkit.create_block();
+        assert_eq!(status, StatusCode::BadRequest);
+    }
 }
