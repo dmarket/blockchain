@@ -9,11 +9,12 @@ use prometheus::{Histogram, IntCounter};
 
 use currency::assets::AssetBundle;
 use currency::error::Error;
-use currency::service::CONFIGURATION;
+use currency::service::{CONFIGURATION, PERMISSIONS};
 use currency::status;
 use currency::transactions::components::{
     FeeStrategy, FeesCalculator, Intermediary, ThirdPartyFees,
 };
+use currency::transactions::components::{mask_for, has_permission, Permissions};
 use currency::wallet;
 use currency::{Service, SERVICE_ID};
 
@@ -46,6 +47,43 @@ message! {
         offer:                  ExchangeOfferIntermediary,
         sender_signature:       &Signature,
         intermediary_signature: &Signature,
+    }
+}
+
+impl Permissions for ExchangeIntermediary {
+    fn is_authorized(&self) -> bool {
+        let permissions = PERMISSIONS.read().unwrap();
+        let global_mask = CONFIGURATION.read().unwrap().permissions().global_permission_mask();
+        let tx_mask = mask_for(EXCHANGE_INTERMEDIARY_ID);
+
+        match permissions.get(self.offer().sender()) {
+            Some(mask) => { 
+                if !has_permission(*mask, tx_mask) {
+                    return false;
+                }
+            },
+            None => ()
+        }
+
+        match permissions.get(self.offer().recipient()) {
+            Some(mask) => {
+                if !has_permission(*mask, tx_mask) {
+                    return false;
+                }
+            },
+            None => ()
+        }
+
+        match permissions.get(self.offer().intermediary().wallet()) {
+            Some(mask) => {
+                if !has_permission(*mask, tx_mask) {
+                    return false;
+                }
+            },
+            None => ()
+        }
+
+        has_permission(global_mask, tx_mask)
     }
 }
 
@@ -249,6 +287,10 @@ impl Transaction for ExchangeIntermediary {
 
         if cfg!(fuzzing) {
             return wallets_ok && fee_strategy_ok;
+        }
+
+        if !self.is_authorized() {
+            return false;
         }
 
         let recipient_ok = self.verify_signature(offer.recipient());

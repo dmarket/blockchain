@@ -9,9 +9,10 @@ use prometheus::{Histogram, IntCounter};
 
 use currency::assets::AssetBundle;
 use currency::error::Error;
-use currency::service::CONFIGURATION;
+use currency::service::{CONFIGURATION, PERMISSIONS};
 use currency::status;
 use currency::transactions::components::{FeeStrategy, FeesCalculator, ThirdPartyFees};
+use currency::transactions::components::{mask_for, has_permission, Permissions};
 use currency::wallet;
 use currency::SERVICE_ID;
 
@@ -41,6 +42,34 @@ message! {
 
         offer:             ExchangeOffer,
         sender_signature:  &Signature,
+    }
+}
+
+impl Permissions for Exchange {
+    fn is_authorized(&self) -> bool {
+        let permissions = PERMISSIONS.read().unwrap();
+        let global_mask = CONFIGURATION.read().unwrap().permissions().global_permission_mask();
+        let tx_mask = mask_for(EXCHANGE_ID);
+
+        match permissions.get(self.offer().sender()) {
+            Some(mask) => { 
+                if !has_permission(*mask, tx_mask) {
+                    return false;
+                }
+            },
+            None => ()
+        }
+
+        match permissions.get(self.offer().recipient()) {
+            Some(mask) => {
+                if !has_permission(*mask, tx_mask) {
+                    return false;
+                }
+            },
+            None => ()
+        }
+
+        has_permission(global_mask, tx_mask)
     }
 }
 
@@ -229,6 +258,10 @@ impl Transaction for Exchange {
 
         if cfg!(fuzzing) {
             return wallets_ok && fee_strategy_ok;
+        }
+
+        if !self.is_authorized() {
+            return false;
         }
 
         let recipient_ok = self.verify_signature(offer.recipient());
