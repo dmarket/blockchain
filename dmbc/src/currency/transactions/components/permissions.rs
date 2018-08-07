@@ -24,6 +24,8 @@ pub fn mask_for(message_id: u16) -> u64 {
         transactions::TRADE_INTERMEDIARY_ID => PM_TRADE_INTERMEDIARY,
         transactions::EXCHANGE_ID => PM_EXCHANGE,
         transactions::EXCHANGE_INTERMEDIARY_ID => PM_EXCHANGE_INTERMEDIARY,
+        transactions::ASK_OFFER_ID => PM_ASK,
+        transactions::BID_OFFER_ID => PM_BID,
         _ => panic!("Unimplemented permission mask!"),
     }
 }
