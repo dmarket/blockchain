@@ -14,7 +14,7 @@ pub const PM_BID:                      u64 =   0b_100000000;
 pub const PM_ASK:                      u64 =  0b_1000000000;
 pub const PM_ALL_ALLOWED:              u64 = <u64>::max_value();
 
-pub fn mask_from(message_id: u16) -> u64 {
+pub fn mask_for(message_id: u16) -> u64 {
     match message_id {
         transactions::TRANSFER_ID => PM_TRANSFER,
         transactions::TRANSFER_FEES_PAYER_ID => PM_TRANSFER_WITH_FEES_PAYER,

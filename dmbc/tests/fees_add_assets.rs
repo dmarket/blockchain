@@ -17,7 +17,7 @@ use hyper::status::StatusCode;
 
 use dmbc::currency::api::fees::FeesResponseBody;
 use dmbc::currency::assets::MetaAsset;
-use dmbc::currency::configuration::{Configuration, TransactionFees};
+use dmbc::currency::configuration::{Configuration, TransactionFees, TransactionPermissions};
 use dmbc::currency::transactions::builders::transaction;
 
 #[test]
@@ -26,8 +26,9 @@ fn fees_for_add_assets() {
     let per_asset_fee = 4;
     let amount = 5;
     let config_fees = TransactionFees::with_default_key(transaction_fee, per_asset_fee, 0, 0, 0, 0);
+    let permissions = TransactionPermissions::default();
     let testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .create();
 
     let api = testkit.api();

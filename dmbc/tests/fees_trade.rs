@@ -17,7 +17,7 @@ use hyper::status::StatusCode;
 
 use dmbc::currency::api::fees::FeesResponseBody;
 use dmbc::currency::assets::TradeAsset;
-use dmbc::currency::configuration::{Configuration, TransactionFees};
+use dmbc::currency::configuration::{Configuration, TransactionFees, TransactionPermissions};
 use dmbc::currency::error::Error;
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::transactions::components::FeeStrategy;
@@ -30,6 +30,7 @@ fn fees_for_trade_recipient() {
     let price_per_unit = 1000;
     let meta_data = "asset";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0);
+    let permissions = TransactionPermissions::default();
 
     let (creator_pub_key, _) = crypto::gen_keypair();
     let (seller_public_key, seller_secret_key) = crypto::gen_keypair();
@@ -43,7 +44,7 @@ fn fees_for_trade_recipient() {
     );
 
     let testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
@@ -74,6 +75,7 @@ fn fees_for_trade_sender() {
     let price_per_unit = 1000;
     let meta_data = "asset";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0);
+    let permissions = TransactionPermissions::default();
 
     let (creator_pub_key, _) = crypto::gen_keypair();
     let (seller_public_key, seller_secret_key) = crypto::gen_keypair();
@@ -87,7 +89,7 @@ fn fees_for_trade_sender() {
     );
 
     let testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
@@ -118,6 +120,7 @@ fn fees_for_trade_recipient_and_sender() {
     let price_per_unit = 1000;
     let meta_data = "asset";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0);
+    let permissions = TransactionPermissions::default();
 
     let (creator_pub_key, _) = crypto::gen_keypair();
     let (seller_public_key, seller_secret_key) = crypto::gen_keypair();
@@ -131,7 +134,7 @@ fn fees_for_trade_recipient_and_sender() {
     );
 
     let testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
@@ -163,6 +166,7 @@ fn fees_for_trade_recipient_and_sender_creator() {
     let price_per_unit = 1000;
     let meta_data = "asset";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0);
+    let permissions = TransactionPermissions::default();
 
     let (seller_public_key, seller_secret_key) = crypto::gen_keypair();
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
@@ -175,7 +179,7 @@ fn fees_for_trade_recipient_and_sender_creator() {
     );
 
     let testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
@@ -208,6 +212,7 @@ fn fees_for_trade_invalid_transaction() {
     let price_per_unit = 1000;
     let meta_data = "asset";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0);
+    let permissions = TransactionPermissions::default();
 
     let (creator_pub_key, _) = crypto::gen_keypair();
     let (seller_public_key, seller_secret_key) = crypto::gen_keypair();
@@ -221,7 +226,7 @@ fn fees_for_trade_invalid_transaction() {
     );
 
     let testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
@@ -249,6 +254,7 @@ fn fees_for_trade_asset_not_found() {
     let price_per_unit = 1000;
     let meta_data = "asset";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0);
+    let permissions = TransactionPermissions::default();
 
     let (creator_pub_key, _) = crypto::gen_keypair();
     let (seller_public_key, seller_secret_key) = crypto::gen_keypair();
@@ -262,7 +268,7 @@ fn fees_for_trade_asset_not_found() {
     );
 
     let testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .create();
     let api = testkit.api();
 

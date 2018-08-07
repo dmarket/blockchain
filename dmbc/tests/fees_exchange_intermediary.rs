@@ -16,7 +16,7 @@ use exonum::crypto;
 use hyper::status::StatusCode;
 
 use dmbc::currency::api::fees::FeesResponseBody;
-use dmbc::currency::configuration::{Configuration, TransactionFees};
+use dmbc::currency::configuration::{Configuration, TransactionFees, TransactionPermissions};
 use dmbc::currency::error::Error;
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::transactions::components::FeeStrategy;
@@ -31,6 +31,7 @@ fn fees_for_exchange_intermediary_recipient() {
     let meta_data2 = "asset2";
     let meta_data3 = "asset3";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0);
+    let permissions = TransactionPermissions::default();
 
     let (creator_pub_key, _) = crypto::gen_keypair();
     let (sender_public_key, sender_secret_key) = crypto::gen_keypair();
@@ -63,7 +64,7 @@ fn fees_for_exchange_intermediary_recipient() {
     );
 
     let testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_asset_to_wallet(&sender_public_key, (asset0.clone(), info0))
         .add_asset_to_wallet(&sender_public_key, (asset1.clone(), info1))
         .add_asset_to_wallet(&sender_public_key, (asset2.clone(), info2))
@@ -103,6 +104,7 @@ fn fees_for_exchange_intermediary_sender() {
     let meta_data2 = "asset2";
     let meta_data3 = "asset3";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0);
+    let permissions = TransactionPermissions::default();
 
     let (creator_pub_key, _) = crypto::gen_keypair();
     let (sender_public_key, sender_secret_key) = crypto::gen_keypair();
@@ -135,7 +137,7 @@ fn fees_for_exchange_intermediary_sender() {
     );
 
     let testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_asset_to_wallet(&sender_public_key, (asset0.clone(), info0))
         .add_asset_to_wallet(&sender_public_key, (asset1.clone(), info1))
         .add_asset_to_wallet(&sender_public_key, (asset2.clone(), info2))
@@ -175,6 +177,7 @@ fn fees_for_exchange_intermediary_recipient_and_sender() {
     let meta_data2 = "asset2";
     let meta_data3 = "asset3";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0);
+    let permissions = TransactionPermissions::default();
 
     let (creator_pub_key, _) = crypto::gen_keypair();
     let (sender_public_key, sender_secret_key) = crypto::gen_keypair();
@@ -207,7 +210,7 @@ fn fees_for_exchange_intermediary_recipient_and_sender() {
     );
 
     let testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_asset_to_wallet(&sender_public_key, (asset0.clone(), info0))
         .add_asset_to_wallet(&sender_public_key, (asset1.clone(), info1))
         .add_asset_to_wallet(&sender_public_key, (asset2.clone(), info2))
@@ -248,6 +251,7 @@ fn fees_for_exchange_intermediary_intermediary() {
     let meta_data2 = "asset2";
     let meta_data3 = "asset3";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0);
+    let permissions = TransactionPermissions::default();
 
     let (creator_pub_key, _) = crypto::gen_keypair();
     let (sender_public_key, sender_secret_key) = crypto::gen_keypair();
@@ -280,7 +284,7 @@ fn fees_for_exchange_intermediary_intermediary() {
     );
 
     let testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_asset_to_wallet(&sender_public_key, (asset0.clone(), info0))
         .add_asset_to_wallet(&sender_public_key, (asset1.clone(), info1))
         .add_asset_to_wallet(&sender_public_key, (asset2.clone(), info2))
@@ -320,6 +324,7 @@ fn fees_for_exchange_intermediary_recipient_and_sender_creator() {
     let meta_data2 = "asset2";
     let meta_data3 = "asset3";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0);
+    let permissions = TransactionPermissions::default();
 
     let (sender_public_key, sender_secret_key) = crypto::gen_keypair();
     let (recipient_public_key, recipient_secret_key) = crypto::gen_keypair();
@@ -351,7 +356,7 @@ fn fees_for_exchange_intermediary_recipient_and_sender_creator() {
     );
 
     let testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_asset_to_wallet(&sender_public_key, (asset0.clone(), info0))
         .add_asset_to_wallet(&sender_public_key, (asset1.clone(), info1))
         .add_asset_to_wallet(&sender_public_key, (asset2.clone(), info2))
@@ -393,6 +398,7 @@ fn fees_for_exchange_intermediary_asset_not_found() {
     let meta_data2 = "asset2";
     let meta_data3 = "asset3";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0);
+    let permissions = TransactionPermissions::default();
 
     let (creator_pub_key, _) = crypto::gen_keypair();
     let (sender_public_key, sender_secret_key) = crypto::gen_keypair();
@@ -425,7 +431,7 @@ fn fees_for_exchange_intermediary_asset_not_found() {
     );
 
     let testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .create();
     let api = testkit.api();
 

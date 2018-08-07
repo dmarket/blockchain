@@ -16,7 +16,7 @@ use hyper::status::StatusCode;
 
 use dmbc::currency::api::transaction::TransactionResponse;
 use dmbc::currency::assets::AssetBundle;
-use dmbc::currency::configuration::{Configuration, TransactionFees};
+use dmbc::currency::configuration::{Configuration, TransactionFees, TransactionPermissions};
 use dmbc::currency::error::Error;
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::transactions::components::FeeStrategy;
@@ -26,6 +26,7 @@ use dmbc::currency::wallet::Wallet;
 fn exchange_intermediary_assets() {
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0);
+    let permissions = TransactionPermissions::default();
     let fixed = 10;
     let creators_balance = 0;
     let intermediary_balance = 0;
@@ -86,7 +87,7 @@ fn exchange_intermediary_assets() {
     );
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
         .add_asset_to_wallet(&sender_pk, (asset1.clone(), info1))
@@ -187,6 +188,7 @@ fn exchange_intermediary_assets() {
 fn exchange_intermediary_assets_creator_is_sender() {
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0);
+    let permissions = TransactionPermissions::default();
     let fixed = 10;
     let intermediary_balance = 0;
     let others_balance = 100_000;
@@ -217,7 +219,7 @@ fn exchange_intermediary_assets_creator_is_sender() {
     );
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
         .add_asset_to_wallet(&sender_pk, (asset1.clone(), info1))
@@ -299,6 +301,7 @@ fn exchange_intermediary_assets_creator_is_sender() {
 fn exchange_intermediary_assets_creator_is_intermediary() {
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0);
+    let permissions = TransactionPermissions::default();
     let fixed = 10;
     let intermediary_balance = 0;
     let others_balance = 100_000;
@@ -329,7 +332,7 @@ fn exchange_intermediary_assets_creator_is_intermediary() {
     );
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
         .add_asset_to_wallet(&sender_pk, (asset1.clone(), info1))
@@ -409,6 +412,7 @@ fn exchange_intermediary_assets_creator_is_intermediary() {
 fn exchange_intermediary_assets_payer_fee_intermediary() {
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0);
+    let permissions = TransactionPermissions::default();
     let fixed = 10;
     let intermediary_balance = 100_000;
     let others_balance = 100_000;
@@ -439,7 +443,7 @@ fn exchange_intermediary_assets_payer_fee_intermediary() {
     );
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&intermediary_pk, Wallet::new(intermediary_balance, vec![]))
@@ -518,6 +522,7 @@ fn exchange_intermediary_assets_payer_fee_intermediary() {
 fn exchange_intermediary_assets_asset_not_found() {
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0);
+    let permissions = TransactionPermissions::default();
     let fixed = 10;
     let intermediary_balance = 100_000;
     let others_balance = 100_000;
@@ -548,7 +553,7 @@ fn exchange_intermediary_assets_asset_not_found() {
     );
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&intermediary_pk, Wallet::new(intermediary_balance, vec![]))
@@ -598,6 +603,7 @@ fn exchange_intermediary_assets_asset_not_found() {
 fn exchange_intermediary_assets_insufficient_assets() {
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0);
+    let permissions = TransactionPermissions::default();
     let fixed = 10;
     let intermediary_balance = 100_000;
     let others_balance = 100_000;
@@ -628,7 +634,7 @@ fn exchange_intermediary_assets_insufficient_assets() {
     );
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&intermediary_pk, Wallet::new(intermediary_balance, vec![]))
@@ -680,6 +686,7 @@ fn exchange_intermediary_assets_insufficient_assets() {
 fn exchange_intermediary_assets_insufficient_funds() {
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0);
+    let permissions = TransactionPermissions::default();
     let fixed = 10;
     let intermediary_balance = 0;
     let others_balance = 100_000;
@@ -710,7 +717,7 @@ fn exchange_intermediary_assets_insufficient_funds() {
     );
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&intermediary_pk, Wallet::new(intermediary_balance, vec![]))

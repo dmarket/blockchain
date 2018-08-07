@@ -14,7 +14,7 @@ use exonum::messages::Message;
 use exonum::crypto;
 use dmbc_testkit::{DmbcTestApiBuilder, DmbcTestKitApi};
 
-use dmbc::currency::configuration::{Configuration, TransactionFees};
+use dmbc::currency::configuration::{Configuration, TransactionFees, TransactionPermissions};
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::assets::AssetBundle;
 use dmbc::currency::error::Error;
@@ -26,6 +26,7 @@ fn transfer_with_fees_payer() {
     let fixed = 10;
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee);
+    let permissions = TransactionPermissions::default();
     let meta_data = "asset";
     let units = 5;
     let balance = 100_000;
@@ -38,7 +39,7 @@ fn transfer_with_fees_payer() {
     let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&fees_payer_pk, Wallet::new(balance, vec![]))
         .add_asset_to_wallet(&public_key, (asset.clone(), info))
@@ -91,6 +92,7 @@ fn transfer_with_fees_payer_asset_not_found() {
     let fixed = 10;
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee);
+    let permissions = TransactionPermissions::default();
     let meta_data = "asset";
     let units = 5;
     let balance = 100_000;
@@ -102,7 +104,7 @@ fn transfer_with_fees_payer_asset_not_found() {
     let (asset, _) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&fees_payer_pk, Wallet::new(balance, vec![]))
         .create();
@@ -151,6 +153,7 @@ fn transfer_with_fees_payer_insufficient_funds() {
     let fixed = 10;
     let transaction_fee = 1000_000_000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee);
+    let permissions = TransactionPermissions::default();
     let meta_data = "asset";
     let units = 5;
     let balance = 100_000;
@@ -162,7 +165,7 @@ fn transfer_with_fees_payer_insufficient_funds() {
     let (asset, _) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&fees_payer_pk, Wallet::new(balance, vec![]))
         .create();
@@ -204,6 +207,7 @@ fn transfer_with_fees_payer_insufficient_assets() {
     let fixed = 10;
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee);
+    let permissions = TransactionPermissions::default();
     let meta_data = "asset";
     let units = 5;
     let balance = 100_000;
@@ -214,7 +218,7 @@ fn transfer_with_fees_payer_insufficient_assets() {
     let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
         .add_asset_to_wallet(&public_key, (asset.clone(), info))
         .create();

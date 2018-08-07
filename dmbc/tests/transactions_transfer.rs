@@ -16,7 +16,7 @@ use hyper::status::StatusCode;
 
 use dmbc::currency::api::transaction::TransactionResponse;
 use dmbc::currency::assets::AssetBundle;
-use dmbc::currency::configuration::{Configuration, TransactionFees};
+use dmbc::currency::configuration::{Configuration, TransactionFees, TransactionPermissions};
 use dmbc::currency::error::Error;
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::wallet::Wallet;
@@ -26,6 +26,7 @@ fn transfer() {
     let fixed = 10;
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee);
+    let permissions = TransactionPermissions::default();
     let meta_data = "asset";
     let units = 5;
     let balance = 100_000;
@@ -41,7 +42,7 @@ fn transfer() {
     );
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
         .add_asset_to_wallet(&public_key, (asset.clone(), info))
         .create();
@@ -92,6 +93,7 @@ fn transfer_asset_not_found() {
     let fixed = 10;
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee);
+    let permissions = TransactionPermissions::default();
     let meta_data = "asset";
     let units = 5;
     let balance = 100_000;
@@ -107,7 +109,7 @@ fn transfer_asset_not_found() {
     );
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
         .create();
     let api = testkit.api();
@@ -152,6 +154,7 @@ fn transfer_insufficient_funds() {
     let fixed = 10;
     let transaction_fee = 1000_000_000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee);
+    let permissions = TransactionPermissions::default();
     let meta_data = "asset";
     let units = 5;
     let balance = 100_000;
@@ -167,7 +170,7 @@ fn transfer_insufficient_funds() {
     );
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
         .create();
     let api = testkit.api();
@@ -207,6 +210,8 @@ fn transfer_insufficient_assets() {
     let fixed = 10;
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee);
+    let permissions = TransactionPermissions::default();
+    
     let meta_data = "asset";
     let units = 5;
     let balance = 100_000;
@@ -222,7 +227,7 @@ fn transfer_insufficient_assets() {
     );
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
         .add_asset_to_wallet(&public_key, (asset.clone(), info))
         .create();
