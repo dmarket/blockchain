@@ -170,8 +170,6 @@ fn propose_config(
     keys: Vec<NodeKeys>,
     actual_from: u64,
 ) -> impl Future<Item = Hash, Error = Error> {
-    info!(log::KEEPER, "Propose config"; "from" => &private, "keys" => ?keys, "actual_from" => actual_from);
-
     Client::new()
         .get(
             [PROTOCOL_PREFIX, &public, ACTUAL_CONFIG_PATH]
@@ -182,6 +180,8 @@ fn propose_config(
         .map_err(Error::from_std)
         .and_then(parse_response)
         .and_then(move |response: ApiResponseConfigHashInfo| {
+            info!(log::KEEPER, "Propose config"; "via" => &private, "keys" => ?keys, "actual_from" => actual_from);
+
             let config = StoredConfiguration {
                 validator_keys: keys
                     .into_iter()
@@ -191,10 +191,12 @@ fn propose_config(
                 previous_cfg_hash: response.hash,
                 ..response.config
             };
+
             let uri: Uri = [PROTOCOL_PREFIX, &private, PROPOSE_CONFIG_PATH]
                 .concat()
                 .parse()
                 .unwrap();
+
             Client::new()
                 .request(
                     Request::post(uri)

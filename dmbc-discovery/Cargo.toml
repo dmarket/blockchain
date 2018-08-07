@@ -6,7 +6,7 @@ publish = false
 
 [dependencies]
 dmbc = { path = "../dmbc" }
-hyper = "0.12"
+hyper = { version = "0.12", features = [] }
 exonum = "0.5"
 exonum-configuration = "0.5"
 futures = "0.1"
@@ -20,4 +20,5 @@ lazy_static = "1.0"
 slog = "^2.2"
 slog-async = "^2.3"
 slog-term = "^2.4"
+tokio-core = "^0.1"
 
