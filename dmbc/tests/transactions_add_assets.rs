@@ -17,9 +17,10 @@ use hyper::status::StatusCode;
 use dmbc::currency::api::error::ApiError;
 use dmbc::currency::api::transaction::TransactionResponse;
 use dmbc::currency::assets::{AssetBundle, AssetInfo, MetaAsset};
-use dmbc::currency::configuration::{Configuration, TransactionFees, TransactionPermissions};
+use dmbc::currency::configuration::{Configuration, TransactionFees, TransactionPermissions, WalletPermissions};
 use dmbc::currency::error::Error;
 use dmbc::currency::transactions::builders::transaction;
+use dmbc::currency::transactions::components::{PM_ADD_ASSETS, PM_ALL_ALLOWED};
 use dmbc::currency::wallet::Wallet;
 
 #[test]
@@ -588,4 +589,48 @@ fn add_assets_transaction_too_large() {
 
     let (_, tx_status) = api.get_tx_status(&tx_add_assets);
     assert_eq!(tx_status, Err(ApiError::TransactionNotFound));
+}
+
+#[test]
+fn add_assets_wallet_permissions() {
+    let fixed = 10;
+    let meta_data = "asset";
+    let units = 3;
+    let balance = 100_000;
+    let transaction_fee = 10;
+    let per_asset_fee = 4;
+    let config_fees = TransactionFees::with_default_key(transaction_fee, per_asset_fee, 0, 0, 0, 0);
+    let (creator_public_key, creator_secret_key) = crypto::gen_keypair();
+    let (receiver_key, _) = crypto::gen_keypair();
+    let permissions = TransactionPermissions::new(
+        vec![WalletPermissions::new(&creator_public_key, PM_ALL_ALLOWED ^ PM_ADD_ASSETS)], 
+        PM_ALL_ALLOWED);
+
+    let mut testkit = DmbcTestApiBuilder::new()
+        .with_configuration(Configuration::new(config_fees, permissions))
+        .add_wallet_value(&creator_public_key, Wallet::new(balance, vec![]))
+        .create();
+    let api = testkit.api();
+
+    // post the transaction
+    let meta_asset = MetaAsset::new(
+        &receiver_key,
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+    );
+    let tx_add_assets = transaction::Builder::new()
+        .keypair(creator_public_key, creator_secret_key)
+        .tx_add_assets()
+        .add_asset_value(meta_asset)
+        .seed(85)
+        .build();
+
+    let tx_hash = tx_add_assets.hash();
+
+    let (status, response) = api.post_tx(&tx_add_assets);
+    testkit.create_block();
+
+    // check post response
+    assert_eq!(status, StatusCode::BadRequest);
 }
