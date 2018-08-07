@@ -132,7 +132,7 @@ impl Transaction for DeleteAssets {
             return true;
         }
 
-        if self.is_authorized() {
+        if !self.is_authorized() {
             return false;
         }
 
