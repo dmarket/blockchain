@@ -14,7 +14,7 @@ use exonum::messages::Message;
 use exonum::crypto;
 use dmbc_testkit::{DmbcTestApiBuilder, DmbcTestKitApi};
 
-use dmbc::currency::configuration::{Configuration, TransactionFees};
+use dmbc::currency::configuration::{Configuration, TransactionFees, TransactionPermissions};
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::assets::{MetaAsset, AssetBundle, TradeAsset};
 //use dmbc::currency::api::transaction::TransactionResponse;
@@ -27,7 +27,7 @@ fn set_3_bid_1_ask_result_1_bid_1_ask() {
     let meta_data = "asset";
     let units = 100;
     let balance = 100_000;
-
+    let permissions = TransactionPermissions::default();
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, 0);
 
     let (creator_public_key, creator_secret_key) = crypto::gen_keypair();
@@ -35,7 +35,7 @@ fn set_3_bid_1_ask_result_1_bid_1_ask() {
     let (user2_pk, user2_sk) = crypto::gen_keypair();
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_wallet_value(&creator_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&user1_pk, Wallet::new(balance, vec![]))
         .add_wallet_value(&user2_pk, Wallet::new(balance, vec![]))
@@ -141,7 +141,7 @@ fn set_3_ask_1_bid_result_2_ask_1_bid() {
     let meta_data = "asset";
     let units = 100;
     let balance = 100_000;
-
+    let permissions = TransactionPermissions::default();
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, 0);
 
     let (creator_public_key, creator_secret_key) = crypto::gen_keypair();
@@ -149,7 +149,7 @@ fn set_3_ask_1_bid_result_2_ask_1_bid() {
     let (user2_pk, user2_sk) = crypto::gen_keypair();
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_wallet_value(&creator_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&user1_pk, Wallet::new(balance, vec![]))
         .add_wallet_value(&user2_pk, Wallet::new(balance, vec![]))
