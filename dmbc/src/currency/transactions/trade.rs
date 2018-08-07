@@ -9,9 +9,10 @@ use prometheus::{Histogram, IntCounter};
 
 use currency::assets::TradeAsset;
 use currency::error::Error;
-use currency::service::CONFIGURATION;
+use currency::service::{CONFIGURATION, PERMISSIONS};
 use currency::status;
 use currency::transactions::components::{FeeStrategy, FeesCalculator, ThirdPartyFees};
+use currency::transactions::components::{mask_for, has_permission, Permissions};
 use currency::wallet;
 use currency::SERVICE_ID;
 
@@ -38,6 +39,34 @@ message! {
 
         offer:              TradeOffer,
         seller_signature:   &Signature,
+    }
+}
+
+impl Permissions for Trade {
+    fn is_authorized(&self) -> bool {
+        let permissions = PERMISSIONS.read().unwrap();
+        let global_mask = CONFIGURATION.read().unwrap().permissions().global_permission_mask();
+        let tx_mask = mask_for(TRADE_ID);
+
+        match permissions.get(self.offer().buyer()) {
+            Some(mask) => { 
+                if !has_permission(*mask, tx_mask) {
+                    return false;
+                }
+            },
+            None => ()
+        }
+
+        match permissions.get(self.offer().seller()) {
+            Some(mask) => {
+                if !has_permission(*mask, tx_mask) {
+                    return false;
+                }
+            },
+            None => ()
+        }
+
+        has_permission(global_mask, tx_mask)
     }
 }
 
@@ -249,6 +278,10 @@ impl Transaction for Trade {
 
         if cfg!(fuzzing) {
             return wallets_ok && fee_strategy_ok;
+        }
+
+        if !self.is_authorized() {
+            return false;
         }
 
         let seller_verify_ok = crypto::verify(
