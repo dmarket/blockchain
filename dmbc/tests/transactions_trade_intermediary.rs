@@ -16,10 +16,11 @@ use hyper::status::StatusCode;
 
 use dmbc::currency::api::transaction::TransactionResponse;
 use dmbc::currency::assets::{AssetBundle, TradeAsset};
-use dmbc::currency::configuration::{Configuration, TransactionFees, TransactionPermissions};
+use dmbc::currency::configuration::{Configuration, TransactionFees, TransactionPermissions, WalletPermissions};
 use dmbc::currency::error::Error;
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::transactions::components::FeeStrategy;
+use dmbc::currency::transactions::components::{PM_TRADE_INTERMEDIARY, PM_ALL_ALLOWED};
 use dmbc::currency::wallet::Wallet;
 
 #[test]
@@ -578,4 +579,226 @@ fn trade_intermediary_insufficient_funds() {
     assert_eq!(buyer_wallet.balance, expected_buyer_balace);
     assert_eq!(genesis_wallet.balance, expected_genesis_balance);
     assert_eq!(intermediary_wallet.balance, expected_intermediary_balance);
+}
+
+#[test]
+fn trade_intermediary_global_permissions() {
+    let transaction_fee = 1000;
+    let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0);
+    let permissions = TransactionPermissions::new(
+        vec![], PM_ALL_ALLOWED ^ PM_TRADE_INTERMEDIARY
+    );
+    let meta_data = "asset";
+    let fixed = 10;
+    let balance = 100_000;
+    let units = 3;
+    let intermediary_commission = 50;
+    let price = 500;
+
+    let (seller_public_key, seller_secret_key) = crypto::gen_keypair();
+    let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
+    let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
+
+    let (asset, info) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &seller_public_key,
+    );
+
+    let mut testkit = DmbcTestApiBuilder::new()
+        .with_configuration(Configuration::new(config_fees, permissions))
+        .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
+        .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))
+        .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
+        .create();
+    let api = testkit.api();
+
+    let tx_trade = transaction::Builder::new()
+        .keypair(buyer_public_key, buyer_secret_key)
+        .tx_trade_assets_with_intermediary()
+        .intermediary_key_pair(intermediary_public_key, intermediary_secret_key)
+        .commission(intermediary_commission)
+        .add_asset_value(TradeAsset::from_bundle(asset.clone(), price))
+        .seller(seller_public_key, seller_secret_key)
+        .fee_strategy(FeeStrategy::Recipient)
+        .seed(1)
+        .data_info("trade_test")
+        .build();
+
+    let _tx_hash = tx_trade.hash();
+
+    let (status, _response) = api.post_tx(&tx_trade);
+    testkit.create_block();
+
+    // check post response
+    assert_eq!(status, StatusCode::BadRequest);
+}
+
+#[test]
+fn trade_intermediary_seller_permissions() {
+    let transaction_fee = 1000;
+    let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0);
+    let meta_data = "asset";
+    let fixed = 10;
+    let balance = 100_000;
+    let units = 3;
+    let intermediary_commission = 50;
+    let price = 500;
+
+    let (seller_public_key, seller_secret_key) = crypto::gen_keypair();
+    let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
+    let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
+
+    let permissions = TransactionPermissions::new(
+        vec![WalletPermissions::new(&seller_public_key, PM_ALL_ALLOWED ^ PM_TRADE_INTERMEDIARY)], 
+        PM_ALL_ALLOWED
+    );
+
+    let (asset, info) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &seller_public_key,
+    );
+
+    let mut testkit = DmbcTestApiBuilder::new()
+        .with_configuration(Configuration::new(config_fees, permissions))
+        .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
+        .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))
+        .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
+        .create();
+    let api = testkit.api();
+
+    let tx_trade = transaction::Builder::new()
+        .keypair(buyer_public_key, buyer_secret_key)
+        .tx_trade_assets_with_intermediary()
+        .intermediary_key_pair(intermediary_public_key, intermediary_secret_key)
+        .commission(intermediary_commission)
+        .add_asset_value(TradeAsset::from_bundle(asset.clone(), price))
+        .seller(seller_public_key, seller_secret_key)
+        .fee_strategy(FeeStrategy::Recipient)
+        .seed(1)
+        .data_info("trade_test")
+        .build();
+
+    let _tx_hash = tx_trade.hash();
+
+    let (status, _response) = api.post_tx(&tx_trade);
+    testkit.create_block();
+
+    // check post response
+    assert_eq!(status, StatusCode::BadRequest);
+}
+
+#[test]
+fn trade_intermediary_buyer_permissions() {
+    let transaction_fee = 1000;
+    let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0);
+    let meta_data = "asset";
+    let fixed = 10;
+    let balance = 100_000;
+    let units = 3;
+    let intermediary_commission = 50;
+    let price = 500;
+
+    let (seller_public_key, seller_secret_key) = crypto::gen_keypair();
+    let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
+    let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
+
+    let permissions = TransactionPermissions::new(
+        vec![WalletPermissions::new(&buyer_public_key, PM_ALL_ALLOWED ^ PM_TRADE_INTERMEDIARY)], 
+        PM_ALL_ALLOWED
+    );
+
+    let (asset, info) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &seller_public_key,
+    );
+
+    let mut testkit = DmbcTestApiBuilder::new()
+        .with_configuration(Configuration::new(config_fees, permissions))
+        .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
+        .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))
+        .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
+        .create();
+    let api = testkit.api();
+
+    let tx_trade = transaction::Builder::new()
+        .keypair(buyer_public_key, buyer_secret_key)
+        .tx_trade_assets_with_intermediary()
+        .intermediary_key_pair(intermediary_public_key, intermediary_secret_key)
+        .commission(intermediary_commission)
+        .add_asset_value(TradeAsset::from_bundle(asset.clone(), price))
+        .seller(seller_public_key, seller_secret_key)
+        .fee_strategy(FeeStrategy::Recipient)
+        .seed(1)
+        .data_info("trade_test")
+        .build();
+
+    let _tx_hash = tx_trade.hash();
+
+    let (status, _response) = api.post_tx(&tx_trade);
+    testkit.create_block();
+
+    // check post response
+    assert_eq!(status, StatusCode::BadRequest);
+}
+
+#[test]
+fn trade_intermediary_intermediary_permissions() {
+    let transaction_fee = 1000;
+    let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0);
+    let meta_data = "asset";
+    let fixed = 10;
+    let balance = 100_000;
+    let units = 3;
+    let intermediary_commission = 50;
+    let price = 500;
+
+    let (seller_public_key, seller_secret_key) = crypto::gen_keypair();
+    let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
+    let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
+
+    let permissions = TransactionPermissions::new(
+        vec![WalletPermissions::new(&intermediary_public_key, PM_ALL_ALLOWED ^ PM_TRADE_INTERMEDIARY)], 
+        PM_ALL_ALLOWED
+    );
+
+    let (asset, info) = dmbc_testkit::create_asset(
+        meta_data,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &seller_public_key,
+    );
+
+    let mut testkit = DmbcTestApiBuilder::new()
+        .with_configuration(Configuration::new(config_fees, permissions))
+        .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
+        .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))
+        .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
+        .create();
+    let api = testkit.api();
+
+    let tx_trade = transaction::Builder::new()
+        .keypair(buyer_public_key, buyer_secret_key)
+        .tx_trade_assets_with_intermediary()
+        .intermediary_key_pair(intermediary_public_key, intermediary_secret_key)
+        .commission(intermediary_commission)
+        .add_asset_value(TradeAsset::from_bundle(asset.clone(), price))
+        .seller(seller_public_key, seller_secret_key)
+        .fee_strategy(FeeStrategy::Recipient)
+        .seed(1)
+        .data_info("trade_test")
+        .build();
+
+    let _tx_hash = tx_trade.hash();
+
+    let (status, _response) = api.post_tx(&tx_trade);
+    testkit.create_block();
+
+    // check post response
+    assert_eq!(status, StatusCode::BadRequest);
 }
