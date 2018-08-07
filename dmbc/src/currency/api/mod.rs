@@ -11,6 +11,7 @@ pub mod hex;
 pub mod metrics;
 pub mod transaction;
 pub mod wallet;
+pub mod offers;
 
 extern crate params;
 
@@ -36,6 +37,7 @@ use self::metrics::MetricsApi;
 use self::params::{FromValue, Params};
 use self::transaction::TransactionApi;
 use self::wallet::WalletApi;
+use self::offers::OfferApi;
 
 const PARAMETER_OFFSET_KEY: &str = "offset";
 const PARAMETER_LIMIT_KEY: &str = "limit";
@@ -151,6 +153,11 @@ impl Api for ServiceApi {
         api.wire(router);
 
         let api = BlocksApi {
+            blockchain: self.clone().blockchain,
+        };
+        api.wire(router);
+
+        let api = OfferApi {
             blockchain: self.clone().blockchain,
         };
         api.wire(router);

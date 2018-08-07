@@ -13,6 +13,7 @@ use exonum_testkit::{TestKit as ExonumTestKit, TestKitApi as ExonumTestKitApi, T
 
 use dmbc::currency::api::fees::FeesResponse;
 use dmbc::currency::api::transaction::{StatusResponse, TxPostResponse};
+use dmbc::currency::api::offers::OpenOffersResult;
 use dmbc::currency::api::wallet as wallet_api;
 use dmbc::currency::api::wallet::{
     ExtendedAsset, WalletAssetsResponse, WalletInfo, WalletResponse,
@@ -21,6 +22,7 @@ use dmbc::currency::assets::{self, AssetBundle, AssetId, AssetInfo, Fees, MetaAs
 use dmbc::currency::configuration::Configuration;
 use dmbc::currency::configuration::GENESIS_WALLET_PUB_KEY;
 use dmbc::currency::transactions::builders::fee;
+use dmbc::currency::offers::OpenOffers;
 use dmbc::currency::wallet::{self, Wallet};
 use dmbc::currency::{Service, SERVICE_NAME};
 use dmbc::decimal::UFract64;
@@ -155,6 +157,8 @@ pub trait DmbcTestKitApi {
     fn get_wallet(&self, public_key: &PublicKey) -> WalletInfo;
 
     fn get_wallet_assets(&self, public_key: &PublicKey) -> Vec<ExtendedAsset>;
+
+    fn get_offers(&self, asset_id: &AssetId) -> Option<OpenOffers>;
 }
 
 impl DmbcTestKitApi for ExonumTestKitApi {
@@ -276,6 +280,15 @@ impl DmbcTestKitApi for ExonumTestKitApi {
         assert_eq!(status, StatusCode::Ok);
         assert!(response.is_ok());
         response.unwrap().assets
+    }
+
+    fn get_offers(&self, asset_id: &AssetId) -> Option<OpenOffers> {
+        let (status, response): (StatusCode, OpenOffersResult) =
+            self.get_with_status(&format!("/v1/offers/{}", asset_id.to_string()));
+
+        assert_eq!(status, StatusCode::Ok);
+        assert!(response.is_ok());
+        response.unwrap()
     }
 }
 
