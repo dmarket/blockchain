@@ -57,8 +57,8 @@ lazy_static! {
         "Height of the blockchain of the current node in blocks."
     ).unwrap();
     pub static ref CONFIGURATION: RwLock<Configuration> = RwLock::new(Configuration::default());
-    pub static ref PREVIOUS_CONFIG_HASH: RwLock<Option<Hash>> = RwLock::new(None);
     pub static ref PERMISSIONS: RwLock<HashMap<PublicKey, u64>> = RwLock::new(HashMap::new());
+    static ref CONFIG_HASH: RwLock<Option<Hash>> = RwLock::new(None);
 }
 
 impl blockchain::Service for Service {
@@ -109,17 +109,18 @@ impl blockchain::Service for Service {
         info!("Block #{}.", last_block.height());
 
         BLOCKCHAIN_HEIGHT.set(last_block.height().0 as i64);
-        let hash_from_blockchain = Configuration::extract_previous_cfg_hash(ctx.snapshot());
-        let hash_from_global_memory = *PREVIOUS_CONFIG_HASH.read().unwrap();
-        if hash_from_global_memory.is_none() || hash_from_global_memory.unwrap() != hash_from_blockchain {
-            *CONFIGURATION.write().unwrap() = Configuration::extract(ctx.snapshot());
-            *PREVIOUS_CONFIG_HASH.write().unwrap() = Some(hash_from_blockchain);
-            let permissions = CONFIGURATION.read().unwrap().permissions();
+        let hash = schema.actual_configuration().previous_cfg_hash;
+        let stored_hash = *CONFIG_HASH.read().unwrap();
+        if stored_hash.is_none() || stored_hash.unwrap() != hash {
+            let service_configuration = Configuration::extract(ctx.snapshot());
             let mut updated_permission_list = HashMap::<PublicKey, u64>::new();
-            for wallet in permissions.wallets() {
+            for wallet in service_configuration.permissions().wallets() {
                 updated_permission_list.insert(*wallet.key(), wallet.mask());
             }
+            *CONFIGURATION.write().unwrap() = service_configuration;
             *PERMISSIONS.write().unwrap() = updated_permission_list;
+
+            *CONFIG_HASH.write().unwrap() = Some(hash);
         }
 
         let txs = schema.block_txs(last_block.height());

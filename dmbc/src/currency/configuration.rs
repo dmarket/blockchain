@@ -3,7 +3,7 @@
 use serde_json;
 
 use exonum::blockchain::Schema;
-use exonum::crypto::{PublicKey, Hash};
+use exonum::crypto::PublicKey;
 use exonum::encoding::serialize::FromHex;
 use exonum::storage::Snapshot;
 
@@ -121,11 +121,5 @@ impl Configuration {
                 currency::SERVICE_NAME
             ),
         }
-    }
-
-    pub fn extract_previous_cfg_hash(snapshot: &Snapshot) -> Hash {
-        let schema = Schema::new(snapshot);
-        let stored_configuration = schema.actual_configuration();
-        stored_configuration.previous_cfg_hash
     }
 }
