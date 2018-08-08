@@ -18,9 +18,9 @@ use dmbc::currency::assets::{AssetBundle, MetaAsset, TradeAsset};
 use dmbc::currency::configuration::{Configuration, TransactionFees, TransactionPermissions, WalletPermissions};
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::transactions::components::FeeStrategy;
-use dmbc::currency::transactions::components::{PM_ADD_ASSETS, PM_DELETE_ASSETS, 
-    PM_EXCHANGE, PM_EXCHANGE_INTERMEDIARY, PM_TRADE, PM_TRADE_INTERMEDIARY, 
-    PM_TRANSFER, PM_TRANSFER_WITH_FEES_PAYER, PM_ASK, PM_BID, PM_ALL_ALLOWED};
+use dmbc::currency::transactions::components::{ADD_ASSETS_MASK, DELETE_ASSETS_MASK, 
+    EXCHANGE_MASK, EXCHANGE_INTERMEDIARY_MASK, TRADE_MASK, TRADE_INTERMEDIARY_MASK, 
+    TRANSFER_MASK, TRANSFER_WITH_FEES_PAYER_MASK, ASK_MASK, BID_MASK, ALL_ALLOWED_MASK};
 use dmbc::currency::wallet::Wallet;
 use dmbc::currency::offers::OpenOffers;
 
@@ -36,8 +36,8 @@ fn add_assets_wallet_permissions() {
     let (creator_public_key, creator_secret_key) = crypto::gen_keypair();
     let (receiver_key, _) = crypto::gen_keypair();
     let permissions = TransactionPermissions::new(
-        vec![WalletPermissions::new(&creator_public_key, PM_ALL_ALLOWED ^ PM_ADD_ASSETS)], 
-        PM_ALL_ALLOWED);
+        vec![WalletPermissions::new(&creator_public_key, ALL_ALLOWED_MASK ^ ADD_ASSETS_MASK)], 
+        ALL_ALLOWED_MASK);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees, permissions))
@@ -79,7 +79,7 @@ fn add_assets_global_permissions() {
     let config_fees = TransactionFees::with_default_key(transaction_fee, per_asset_fee, 0, 0, 0, 0);
     let (creator_public_key, creator_secret_key) = crypto::gen_keypair();
     let (receiver_key, _) = crypto::gen_keypair();
-    let permissions = TransactionPermissions::new(vec![], PM_ALL_ALLOWED ^ PM_ADD_ASSETS);
+    let permissions = TransactionPermissions::new(vec![], ALL_ALLOWED_MASK ^ ADD_ASSETS_MASK);
 
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees, permissions))
@@ -121,8 +121,8 @@ fn delete_assets_wallet_permissions() {
     let config_fees = TransactionFees::with_default_key(0, 0, transaction_fee, 0, 0, 0);
     let (public_key, secret_key) = crypto::gen_keypair();
     let permissions = TransactionPermissions::new(
-        vec![WalletPermissions::new(&public_key, PM_ALL_ALLOWED ^ PM_DELETE_ASSETS)],
-        PM_ALL_ALLOWED
+        vec![WalletPermissions::new(&public_key, ALL_ALLOWED_MASK ^ DELETE_ASSETS_MASK)],
+        ALL_ALLOWED_MASK
     );
     
     let (asset, info) = dmbc_testkit::create_asset(
@@ -165,7 +165,7 @@ fn delete_assets_global_permissions() {
     let fixed = 10;
     let config_fees = TransactionFees::with_default_key(0, 0, transaction_fee, 0, 0, 0);
     let (public_key, secret_key) = crypto::gen_keypair();
-    let permissions = TransactionPermissions::new(vec![], PM_ALL_ALLOWED ^ PM_DELETE_ASSETS);
+    let permissions = TransactionPermissions::new(vec![], ALL_ALLOWED_MASK ^ DELETE_ASSETS_MASK);
     
     let (asset, info) = dmbc_testkit::create_asset(
         meta_data,
@@ -202,7 +202,7 @@ fn exchange_assets_global_permissions() {
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0);
     let permissions = TransactionPermissions::new(
-        vec![], PM_ALL_ALLOWED ^ PM_EXCHANGE
+        vec![], ALL_ALLOWED_MASK ^ EXCHANGE_MASK
     );
     let fixed = 10;
     let others_balance = 100_000;
@@ -318,7 +318,7 @@ fn exchange_assets_sender_permissions() {
     let (creator_pk, _) = crypto::gen_keypair();
 
     let permissions = TransactionPermissions::new(
-        vec![WalletPermissions::new(&sender_pk, PM_ALL_ALLOWED ^ PM_EXCHANGE)], PM_ALL_ALLOWED
+        vec![WalletPermissions::new(&sender_pk, ALL_ALLOWED_MASK ^ EXCHANGE_MASK)], ALL_ALLOWED_MASK
     );
 
     let (asset1, info1) = dmbc_testkit::create_asset(
@@ -417,7 +417,7 @@ fn exchange_assets_recipient_permissions() {
     let (creator_pk, _) = crypto::gen_keypair();
 
     let permissions = TransactionPermissions::new(
-        vec![WalletPermissions::new(&recipient_pk, PM_ALL_ALLOWED ^ PM_EXCHANGE)], PM_ALL_ALLOWED
+        vec![WalletPermissions::new(&recipient_pk, ALL_ALLOWED_MASK ^ EXCHANGE_MASK)], ALL_ALLOWED_MASK
     );
 
     let (asset1, info1) = dmbc_testkit::create_asset(
@@ -498,7 +498,7 @@ fn exchange_intermediary_global_permissions() {
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, transaction_fee, 0, 0);
     let permissions = TransactionPermissions::new(
-        vec![], PM_ALL_ALLOWED ^ PM_EXCHANGE_INTERMEDIARY
+        vec![], ALL_ALLOWED_MASK ^ EXCHANGE_INTERMEDIARY_MASK
     );
     let fixed = 10;
     let others_balance = 100_000;
@@ -619,7 +619,7 @@ fn exchange_intermediary_sender_permissions() {
     let (intermediary_pk, intermediary_sk) = crypto::gen_keypair();
 
     let permissions = TransactionPermissions::new(
-        vec![WalletPermissions::new(&sender_pk, PM_ALL_ALLOWED ^ PM_EXCHANGE_INTERMEDIARY)], PM_ALL_ALLOWED
+        vec![WalletPermissions::new(&sender_pk, ALL_ALLOWED_MASK ^ EXCHANGE_INTERMEDIARY_MASK)], ALL_ALLOWED_MASK
     );
 
     let (asset1, info1) = dmbc_testkit::create_asset(
@@ -721,7 +721,7 @@ fn exchange_intermediary_recipient_permissions() {
     let (intermediary_pk, intermediary_sk) = crypto::gen_keypair();
 
     let permissions = TransactionPermissions::new(
-        vec![WalletPermissions::new(&recipient_pk, PM_ALL_ALLOWED ^ PM_EXCHANGE_INTERMEDIARY)], PM_ALL_ALLOWED
+        vec![WalletPermissions::new(&recipient_pk, ALL_ALLOWED_MASK ^ EXCHANGE_INTERMEDIARY_MASK)], ALL_ALLOWED_MASK
     );
 
     let (asset1, info1) = dmbc_testkit::create_asset(
@@ -823,7 +823,7 @@ fn exchange_intermediary_intermediary_permissions() {
     let (intermediary_pk, intermediary_sk) = crypto::gen_keypair();
 
     let permissions = TransactionPermissions::new(
-        vec![WalletPermissions::new(&intermediary_pk, PM_ALL_ALLOWED ^ PM_EXCHANGE_INTERMEDIARY)], PM_ALL_ALLOWED
+        vec![WalletPermissions::new(&intermediary_pk, ALL_ALLOWED_MASK ^ EXCHANGE_INTERMEDIARY_MASK)], ALL_ALLOWED_MASK
     );
 
     let (asset1, info1) = dmbc_testkit::create_asset(
@@ -906,7 +906,7 @@ fn trade_global_permissions() {
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0);
     let permissions = TransactionPermissions::new(
         vec![],
-        PM_ALL_ALLOWED ^ PM_TRADE
+        ALL_ALLOWED_MASK ^ TRADE_MASK
     );
     let meta_data = "asset";
     let fixed = 10;
@@ -964,8 +964,8 @@ fn trade_seller_permissions() {
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
 
     let permissions = TransactionPermissions::new(
-        vec![WalletPermissions::new(&seller_public_key, PM_ALL_ALLOWED ^ PM_TRADE)],
-        PM_ALL_ALLOWED
+        vec![WalletPermissions::new(&seller_public_key, ALL_ALLOWED_MASK ^ TRADE_MASK)],
+        ALL_ALLOWED_MASK
     );
 
     let (asset, info) = dmbc_testkit::create_asset(
@@ -1015,8 +1015,8 @@ fn trade_buyer_permissions() {
     let (buyer_public_key, buyer_secret_key) = crypto::gen_keypair();
 
     let permissions = TransactionPermissions::new(
-        vec![WalletPermissions::new(&buyer_public_key, PM_ALL_ALLOWED ^ PM_TRADE)],
-        PM_ALL_ALLOWED
+        vec![WalletPermissions::new(&buyer_public_key, ALL_ALLOWED_MASK ^ TRADE_MASK)],
+        ALL_ALLOWED_MASK
     );
 
     let (asset, info) = dmbc_testkit::create_asset(
@@ -1057,7 +1057,7 @@ fn trade_intermediary_global_permissions() {
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, transaction_fee, 0);
     let permissions = TransactionPermissions::new(
-        vec![], PM_ALL_ALLOWED ^ PM_TRADE_INTERMEDIARY
+        vec![], ALL_ALLOWED_MASK ^ TRADE_INTERMEDIARY_MASK
     );
     let meta_data = "asset";
     let fixed = 10;
@@ -1122,8 +1122,8 @@ fn trade_intermediary_seller_permissions() {
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
     let permissions = TransactionPermissions::new(
-        vec![WalletPermissions::new(&seller_public_key, PM_ALL_ALLOWED ^ PM_TRADE_INTERMEDIARY)], 
-        PM_ALL_ALLOWED
+        vec![WalletPermissions::new(&seller_public_key, ALL_ALLOWED_MASK ^ TRADE_INTERMEDIARY_MASK)], 
+        ALL_ALLOWED_MASK
     );
 
     let (asset, info) = dmbc_testkit::create_asset(
@@ -1178,8 +1178,8 @@ fn trade_intermediary_buyer_permissions() {
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
     let permissions = TransactionPermissions::new(
-        vec![WalletPermissions::new(&buyer_public_key, PM_ALL_ALLOWED ^ PM_TRADE_INTERMEDIARY)], 
-        PM_ALL_ALLOWED
+        vec![WalletPermissions::new(&buyer_public_key, ALL_ALLOWED_MASK ^ TRADE_INTERMEDIARY_MASK)], 
+        ALL_ALLOWED_MASK
     );
 
     let (asset, info) = dmbc_testkit::create_asset(
@@ -1234,8 +1234,8 @@ fn trade_intermediary_intermediary_permissions() {
     let (intermediary_public_key, intermediary_secret_key) = crypto::gen_keypair();
 
     let permissions = TransactionPermissions::new(
-        vec![WalletPermissions::new(&intermediary_public_key, PM_ALL_ALLOWED ^ PM_TRADE_INTERMEDIARY)], 
-        PM_ALL_ALLOWED
+        vec![WalletPermissions::new(&intermediary_public_key, ALL_ALLOWED_MASK ^ TRADE_INTERMEDIARY_MASK)], 
+        ALL_ALLOWED_MASK
     );
 
     let (asset, info) = dmbc_testkit::create_asset(
@@ -1280,7 +1280,7 @@ fn transfer_global_permissions() {
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee);
     let permissions = TransactionPermissions::new(
-        vec![], PM_ALL_ALLOWED ^ PM_TRANSFER
+        vec![], ALL_ALLOWED_MASK ^ TRANSFER_MASK
     );
     let meta_data = "asset";
     let units = 5;
@@ -1333,7 +1333,7 @@ fn transfer_sender_permissions() {
     let (recipient_key, _) = crypto::gen_keypair();
 
     let permissions = TransactionPermissions::new(
-        vec![WalletPermissions::new(&public_key, PM_ALL_ALLOWED ^ PM_TRANSFER)], PM_ALL_ALLOWED
+        vec![WalletPermissions::new(&public_key, ALL_ALLOWED_MASK ^ TRANSFER_MASK)], ALL_ALLOWED_MASK
     );
 
     let (asset, info) = dmbc_testkit::create_asset(
@@ -1380,7 +1380,7 @@ fn transfer_recipient_permissions() {
     let (recipient_key, _) = crypto::gen_keypair();
 
     let permissions = TransactionPermissions::new(
-        vec![WalletPermissions::new(&recipient_key, PM_ALL_ALLOWED ^ PM_TRANSFER)], PM_ALL_ALLOWED
+        vec![WalletPermissions::new(&recipient_key, ALL_ALLOWED_MASK ^ TRANSFER_MASK)], ALL_ALLOWED_MASK
     );
 
     let (asset, info) = dmbc_testkit::create_asset(
@@ -1420,7 +1420,7 @@ fn transfer_with_fees_payer_global_permissions() {
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee);
     let permissions = TransactionPermissions::new(
-        vec![], PM_ALL_ALLOWED ^ PM_TRANSFER_WITH_FEES_PAYER
+        vec![], ALL_ALLOWED_MASK ^ TRANSFER_WITH_FEES_PAYER_MASK
     );
     let meta_data = "asset";
     let units = 5;
@@ -1475,8 +1475,8 @@ fn transfer_with_fees_payer_sender_permissions() {
     let (recipient_key, _) = crypto::gen_keypair();
 
     let permissions = TransactionPermissions::new(
-        vec![WalletPermissions::new(&public_key, PM_ALL_ALLOWED ^ PM_TRANSFER_WITH_FEES_PAYER)], 
-        PM_ALL_ALLOWED
+        vec![WalletPermissions::new(&public_key, ALL_ALLOWED_MASK ^ TRANSFER_WITH_FEES_PAYER_MASK)], 
+        ALL_ALLOWED_MASK
     );
 
     let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
@@ -1523,8 +1523,8 @@ fn transfer_with_fees_payer_recipient_permissions() {
     let (recipient_key, _) = crypto::gen_keypair();
 
     let permissions = TransactionPermissions::new(
-        vec![WalletPermissions::new(&recipient_key, PM_ALL_ALLOWED ^ PM_TRANSFER_WITH_FEES_PAYER)], 
-        PM_ALL_ALLOWED
+        vec![WalletPermissions::new(&recipient_key, ALL_ALLOWED_MASK ^ TRANSFER_WITH_FEES_PAYER_MASK)], 
+        ALL_ALLOWED_MASK
     );
 
     let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
@@ -1571,8 +1571,8 @@ fn transfer_with_fees_payer_and_his_permissions() {
     let (recipient_key, _) = crypto::gen_keypair();
 
     let permissions = TransactionPermissions::new(
-        vec![WalletPermissions::new(&fees_payer_pk, PM_ALL_ALLOWED ^ PM_TRANSFER_WITH_FEES_PAYER)], 
-        PM_ALL_ALLOWED
+        vec![WalletPermissions::new(&fees_payer_pk, ALL_ALLOWED_MASK ^ TRANSFER_WITH_FEES_PAYER_MASK)], 
+        ALL_ALLOWED_MASK
     );
 
     let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
@@ -1611,7 +1611,7 @@ fn bid_global_permissions() {
     let units = 100;
     let balance = 100_000;
     let permissions = TransactionPermissions::new(
-        vec![], PM_ALL_ALLOWED ^ PM_BID
+        vec![], ALL_ALLOWED_MASK ^ BID_MASK
     );
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, 0);
 
@@ -1680,7 +1680,7 @@ fn bid_wallet_permissions() {
     let (user2_pk, _user2_sk) = crypto::gen_keypair();
 
     let permissions = TransactionPermissions::new(
-        vec![WalletPermissions::new(&user1_pk, PM_ALL_ALLOWED ^ PM_BID)], PM_ALL_ALLOWED
+        vec![WalletPermissions::new(&user1_pk, ALL_ALLOWED_MASK ^ BID_MASK)], ALL_ALLOWED_MASK
     );
 
     let mut testkit = DmbcTestApiBuilder::new()
@@ -1738,7 +1738,7 @@ fn ask_global_permissions() {
     let units = 100;
     let balance = 100_000;
     let permissions = TransactionPermissions::new(
-        vec![], PM_ALL_ALLOWED ^ PM_ASK
+        vec![], ALL_ALLOWED_MASK ^ ASK_MASK
     );
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, 0);
 
@@ -1804,8 +1804,8 @@ fn ask_user_permissions() {
     let (user1_pk, user1_sk) = crypto::gen_keypair();
 
     let permissions = TransactionPermissions::new(
-        vec![WalletPermissions::new(&user1_pk, PM_ALL_ALLOWED ^ PM_ASK)], 
-        PM_ALL_ALLOWED
+        vec![WalletPermissions::new(&user1_pk, ALL_ALLOWED_MASK ^ ASK_MASK)], 
+        ALL_ALLOWED_MASK
     );
 
     let mut testkit = DmbcTestApiBuilder::new()

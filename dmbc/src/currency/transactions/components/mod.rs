@@ -8,6 +8,6 @@ pub use currency::transactions::components::fees::{FeeStrategy, FeesCalculator, 
 pub use currency::transactions::components::intermediary::Intermediary;
 pub use currency::transactions::components::permissions::{mask_for, has_permission, Permissions};
 pub use currency::transactions::components::permissions::{
-    PM_TRANSFER, PM_TRANSFER_WITH_FEES_PAYER, PM_ADD_ASSETS, PM_DELETE_ASSETS, PM_TRADE,
-    PM_TRADE_INTERMEDIARY, PM_EXCHANGE, PM_EXCHANGE_INTERMEDIARY, PM_BID, PM_ASK, PM_ALL_ALLOWED
+    TRANSFER_MASK, TRANSFER_WITH_FEES_PAYER_MASK, ADD_ASSETS_MASK, DELETE_ASSETS_MASK, TRADE_MASK,
+    TRADE_INTERMEDIARY_MASK, EXCHANGE_MASK, EXCHANGE_INTERMEDIARY_MASK, BID_MASK, ASK_MASK, ALL_ALLOWED_MASK
 };

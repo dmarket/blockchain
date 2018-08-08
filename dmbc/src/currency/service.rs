@@ -116,7 +116,7 @@ impl blockchain::Service for Service {
             *PREVIOUS_CONFIG_HASH.write().unwrap() = Some(hash_from_blockchain);
             let permissions = CONFIGURATION.read().unwrap().permissions();
             let mut updated_permission_list = HashMap::<PublicKey, u64>::new();
-            for wallet in permissions.wallet_masks() {
+            for wallet in permissions.wallets() {
                 updated_permission_list.insert(*wallet.key(), wallet.mask());
             }
             *PERMISSIONS.write().unwrap() = updated_permission_list;

@@ -21,7 +21,7 @@ encoding_struct! {
 encoding_struct! {
     /// List of wallets that have permissions.
     struct TransactionPermissions {
-        wallet_masks: Vec<WalletPermissions>,
+        wallets: Vec<WalletPermissions>,
         global_permission_mask: u64,
     }
 }
