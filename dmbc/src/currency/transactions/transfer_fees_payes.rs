@@ -10,10 +10,10 @@ use currency::assets::AssetBundle;
 use currency::error::Error;
 use currency::status;
 use currency::transactions::components::{FeesCalculator, ThirdPartyFees};
-use currency::transactions::components::{mask_for, has_permission, Permissions};
+use currency::transactions::components::permissions;
 use currency::wallet;
 use currency::SERVICE_ID;
-use currency::service::{CONFIGURATION, PERMISSIONS};
+use currency::service::CONFIGURATION;
 
 /// Transaction ID.
 pub const TRANSFER_FEES_PAYER_ID: u16 = 201;
@@ -40,43 +40,6 @@ message! {
 
         offer:                TransferOffer,
         fees_payer_signature: &Signature,
-    }
-}
-
-impl Permissions for TransferWithFeesPayer {
-    fn is_authorized(&self) -> bool {
-        let permissions = PERMISSIONS.read().unwrap();
-        let global_mask = CONFIGURATION.read().unwrap().permissions().global_permission_mask();
-        let tx_mask = mask_for(TRANSFER_FEES_PAYER_ID);
-
-        match permissions.get(self.offer().from()) {
-            Some(mask) => { 
-                if !has_permission(*mask, tx_mask) {
-                    return false;
-                }
-            },
-            None => ()
-        }
-
-        match permissions.get(self.offer().to()) {
-            Some(mask) => {
-                if !has_permission(*mask, tx_mask) {
-                    return false;
-                }
-            },
-            None => ()
-        }
-
-        match permissions.get(self.offer().fees_payer()) {
-            Some(mask) => {
-                if !has_permission(*mask, tx_mask) {
-                    return false;
-                }
-            },
-            None => ()
-        }
-
-        has_permission(global_mask, tx_mask)
     }
 }
 
@@ -189,7 +152,11 @@ impl Transaction for TransferWithFeesPayer {
             return wallets_ok;
         }
 
-        if !self.is_authorized() {
+        if !permissions::is_authorized(TRANSFER_FEES_PAYER_ID, vec![
+            &self.offer().from(),
+            &self.offer().to(),
+            &self.offer().fees_payer()
+        ]) {
             return false;
         }
 

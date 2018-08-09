@@ -9,10 +9,10 @@ use prometheus::{Histogram, IntCounter};
 use currency::assets;
 use currency::assets::AssetBundle;
 use currency::error::Error;
-use currency::service::{CONFIGURATION, PERMISSIONS};
+use currency::service::CONFIGURATION;
 use currency::status;
 use currency::transactions::components::FeesCalculator;
-use currency::transactions::components::{mask_for, has_permission, Permissions};
+use currency::transactions::components::permissions;
 use currency::wallet;
 use currency::SERVICE_ID;
 
@@ -28,18 +28,6 @@ message! {
         pub_key:     &PublicKey,
         assets:      Vec<AssetBundle>,
         seed:        u64,
-    }
-}
-
-impl Permissions for DeleteAssets {
-    fn is_authorized(&self) -> bool {
-        let permissions = PERMISSIONS.read().unwrap();
-        let global_mask = CONFIGURATION.read().unwrap().permissions().global_permission_mask();
-        let tx_mask = mask_for(DELETE_ASSETS_ID);
-        match permissions.get(self.pub_key()) {
-            Some(mask) => has_permission(*mask, tx_mask),
-            None => has_permission(global_mask, tx_mask)
-        }
     }
 }
 
@@ -132,7 +120,7 @@ impl Transaction for DeleteAssets {
             return true;
         }
 
-        if !self.is_authorized() {
+        if !permissions::is_authorized(DELETE_ASSETS_ID, vec![self.pub_key()]) {
             return false;
         }
 

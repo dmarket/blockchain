@@ -10,11 +10,11 @@ use currency::assets::TradeAsset;
 use currency::error::Error;
 use currency::status;
 use currency::transactions::components::{FeesCalculator, ThirdPartyFees};
-use currency::transactions::components::{mask_for, has_permission, Permissions};
+use currency::transactions::components::permissions;
 use currency::wallet;
 use currency::offers;
 use currency::SERVICE_ID;
-use currency::service::{CONFIGURATION, PERMISSIONS};
+use currency::service::CONFIGURATION;
 
 /// Transaction ID.
 pub const BID_OFFER_ID: u16 = 700;
@@ -29,18 +29,6 @@ message! {
         asset:        TradeAsset,
         seed:         u64,
         data_info:    &str,
-    }
-}
-
-impl Permissions for BidOffer {
-    fn is_authorized(&self) -> bool {
-        let permissions = PERMISSIONS.read().unwrap();
-        let global_mask = CONFIGURATION.read().unwrap().permissions().global_permission_mask();
-        let tx_mask = mask_for(BID_OFFER_ID);
-        match permissions.get(self.pub_key()) {
-            Some(mask) => has_permission(*mask, tx_mask),
-            None => has_permission(global_mask, tx_mask)
-        }
     }
 }
 
@@ -131,7 +119,7 @@ impl Transaction for BidOffer {
             return true;
         }
 
-        if !self.is_authorized() {
+        if !permissions::is_authorized(BID_OFFER_ID, vec![&self.pub_key()]) {
             return false;
         }
 

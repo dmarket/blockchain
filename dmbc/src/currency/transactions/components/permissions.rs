@@ -1,4 +1,6 @@
+use exonum::crypto::PublicKey;
 use currency::transactions;
+use currency::service::{CONFIGURATION, PERMISSIONS};
 
 /// Transaction permission mask
 /// 0 - Tx not Allowd, 1 - Tx allowed
@@ -34,6 +36,21 @@ pub fn has_permission(mask: u64, transaction_mask: u64) -> bool {
     (mask & transaction_mask) != 0
 }
 
-pub trait Permissions {
-    fn is_authorized(&self) -> bool;
+pub fn is_authorized<'a>(message_id: u16, keys: Vec<&PublicKey>) -> bool
+{
+    let permissions = PERMISSIONS.read().unwrap();
+    let global_mask = CONFIGURATION.read().unwrap().permissions().global_permission_mask();
+    let tx_mask = mask_for(message_id);
+
+    for key in keys {
+        match permissions.get(key) {
+            Some(mask) => {
+                if !has_permission(*mask, tx_mask) {
+                    return false;
+                }
+            },
+            None => ()
+        } 
+    }
+    return has_permission(global_mask, tx_mask);
 }

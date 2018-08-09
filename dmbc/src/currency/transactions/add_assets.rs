@@ -10,10 +10,10 @@ use prometheus::{Histogram, IntCounter};
 use currency::assets;
 use currency::assets::{AssetId, AssetInfo, MetaAsset};
 use currency::error::Error;
-use currency::service::{CONFIGURATION, PERMISSIONS};
+use currency::service::CONFIGURATION;
 use currency::status;
 use currency::transactions::components::{FeesCalculator, ThirdPartyFees};
-use currency::transactions::components::{mask_for, has_permission, Permissions};
+use currency::transactions::components::permissions;
 use currency::wallet;
 use currency::SERVICE_ID;
 
@@ -29,18 +29,6 @@ message!{
         pub_key:     &PublicKey,
         meta_assets: Vec<MetaAsset>,
         seed:        u64,
-    }
-}
-
-impl Permissions for AddAssets {
-    fn is_authorized(&self) -> bool {
-        let permissions = PERMISSIONS.read().unwrap();
-        let global_mask = CONFIGURATION.read().unwrap().permissions().global_permission_mask();
-        let tx_mask = mask_for(ADD_ASSETS_ID);
-        match permissions.get(self.pub_key()) {
-            Some(mask) => has_permission(*mask, tx_mask),
-            None => has_permission(global_mask, tx_mask)
-        }
     }
 }
 
@@ -166,7 +154,7 @@ impl Transaction for AddAssets {
             return true;
         }
 
-        if !self.is_authorized() {
+        if !permissions::is_authorized(ADD_ASSETS_ID, vec![&self.pub_key()]) {
             return false;
         }
 

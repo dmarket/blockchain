@@ -8,10 +8,10 @@ use prometheus::{Histogram, IntCounter};
 
 use currency::assets::AssetBundle;
 use currency::error::Error;
-use currency::service::{CONFIGURATION, PERMISSIONS};
+use currency::service::CONFIGURATION;
 use currency::status;
 use currency::transactions::components::{FeesCalculator, ThirdPartyFees};
-use currency::transactions::components::{mask_for, has_permission, Permissions};
+use currency::transactions::components::permissions;
 use currency::wallet;
 use currency::SERVICE_ID;
 
@@ -30,34 +30,6 @@ message! {
         assets:    Vec<AssetBundle>,
         seed:      u64,
         data_info: &str,
-    }
-}
-
-impl Permissions for Transfer {
-    fn is_authorized(&self) -> bool {
-        let permissions = PERMISSIONS.read().unwrap();
-        let global_mask = CONFIGURATION.read().unwrap().permissions().global_permission_mask();
-        let tx_mask = mask_for(TRANSFER_ID);
-
-        match permissions.get(self.from()) {
-            Some(mask) => { 
-                if !has_permission(*mask, tx_mask) {
-                    return false;
-                }
-            },
-            None => ()
-        }
-
-        match permissions.get(self.to()) {
-            Some(mask) => {
-                if !has_permission(*mask, tx_mask) {
-                    return false;
-                }
-            },
-            None => ()
-        }
-
-        has_permission(global_mask, tx_mask)
     }
 }
 
@@ -164,7 +136,10 @@ impl Transaction for Transfer {
             return wallets_ok;
         }
 
-        if !self.is_authorized() {
+        if !permissions::is_authorized(TRANSFER_ID, vec![
+            &self.from(),
+            &self.to()
+        ]) {
             return false;
         }
 

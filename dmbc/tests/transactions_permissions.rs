@@ -18,7 +18,7 @@ use dmbc::currency::assets::{AssetBundle, MetaAsset, TradeAsset};
 use dmbc::currency::configuration::{Configuration, TransactionFees, TransactionPermissions, WalletPermissions};
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::transactions::components::FeeStrategy;
-use dmbc::currency::transactions::components::{ADD_ASSETS_MASK, DELETE_ASSETS_MASK, 
+use dmbc::currency::transactions::components::permissions::{ADD_ASSETS_MASK, DELETE_ASSETS_MASK, 
     EXCHANGE_MASK, EXCHANGE_INTERMEDIARY_MASK, TRADE_MASK, TRADE_INTERMEDIARY_MASK, 
     TRANSFER_MASK, TRANSFER_WITH_FEES_PAYER_MASK, ASK_MASK, BID_MASK, ALL_ALLOWED_MASK};
 use dmbc::currency::wallet::Wallet;

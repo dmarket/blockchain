@@ -9,11 +9,11 @@ use prometheus::{Histogram, IntCounter};
 
 use currency::assets::TradeAsset;
 use currency::error::Error;
-use currency::service::{CONFIGURATION, PERMISSIONS};
+use currency::service::CONFIGURATION;
 use currency::status;
 use currency::transactions::components::Intermediary;
 use currency::transactions::components::{FeeStrategy, FeesCalculator, ThirdPartyFees};
-use currency::transactions::components::{mask_for, has_permission, Permissions};
+use currency::transactions::components::permissions;
 use currency::wallet;
 use currency::SERVICE_ID;
 
@@ -42,43 +42,6 @@ message! {
         offer:                  TradeOfferIntermediary,
         seller_signature:       &Signature,
         intermediary_signature: &Signature,
-    }
-}
-
-impl Permissions for TradeIntermediary {
-    fn is_authorized(&self) -> bool {
-        let permissions = PERMISSIONS.read().unwrap();
-        let global_mask = CONFIGURATION.read().unwrap().permissions().global_permission_mask();
-        let tx_mask = mask_for(TRADE_INTERMEDIARY_ID);
-
-        match permissions.get(self.offer().buyer()) {
-            Some(mask) => { 
-                if !has_permission(*mask, tx_mask) {
-                    return false;
-                }
-            },
-            None => ()
-        }
-
-        match permissions.get(self.offer().seller()) {
-            Some(mask) => {
-                if !has_permission(*mask, tx_mask) {
-                    return false;
-                }
-            },
-            None => ()
-        }
-
-        match permissions.get(self.offer().intermediary().wallet()) {
-            Some(mask) => {
-                if !has_permission(*mask, tx_mask) {
-                    return false;
-                }
-            },
-            None => ()
-        }
-
-        has_permission(global_mask, tx_mask)
     }
 }
 
@@ -309,7 +272,11 @@ impl Transaction for TradeIntermediary {
             return wallets_ok && fee_strategy_ok;
         }
 
-        if !self.is_authorized() {
+        if !permissions::is_authorized(TRADE_INTERMEDIARY_ID, vec![
+            &self.offer().seller(),
+            &self.offer().buyer(),
+            &self.offer().intermediary().wallet()
+        ]) {
             return false;
         }
 
