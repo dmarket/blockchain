@@ -14,6 +14,7 @@ use currency::status;
 use currency::transactions::components::{
     FeeStrategy, FeesCalculator, Intermediary, ThirdPartyFees,
 };
+use currency::transactions::components::permissions;
 use currency::wallet;
 use currency::{Service, SERVICE_ID};
 
@@ -249,6 +250,14 @@ impl Transaction for ExchangeIntermediary {
 
         if cfg!(fuzzing) {
             return wallets_ok && fee_strategy_ok;
+        }
+
+        if !permissions::is_authorized(EXCHANGE_INTERMEDIARY_ID, vec![
+            &self.offer().sender(), 
+            &self.offer().recipient(), 
+            &self.offer().intermediary().wallet()
+        ]) {
+            return false;
         }
 
         let recipient_ok = self.verify_signature(offer.recipient());

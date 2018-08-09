@@ -16,7 +16,7 @@ use exonum::crypto;
 use hyper::status::StatusCode;
 
 use dmbc::currency::api::fees::FeesResponseBody;
-use dmbc::currency::configuration::{Configuration, TransactionFees};
+use dmbc::currency::configuration::{Configuration, TransactionFees, TransactionPermissions};
 use dmbc::currency::error::Error;
 use dmbc::currency::transactions::builders::transaction;
 
@@ -27,6 +27,7 @@ fn fees_for_transfer() {
     let fixed = 10;
     let meta_data = "asset";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee);
+    let permissions = TransactionPermissions::default();
 
     let (creator_key, _) = crypto::gen_keypair();
     let (recipient_key, _) = crypto::gen_keypair();
@@ -40,7 +41,7 @@ fn fees_for_transfer() {
     );
 
     let testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_asset_to_wallet(&sender_pub_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
@@ -70,6 +71,7 @@ fn fees_for_transfer_sender_is_creator() {
     let fixed = 10;
     let meta_data = "asset";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee);
+    let permissions = TransactionPermissions::default();
 
     let (recipient_key, _) = crypto::gen_keypair();
     let (sender_pub_key, sender_sec_key) = crypto::gen_keypair();
@@ -82,7 +84,7 @@ fn fees_for_transfer_sender_is_creator() {
     );
 
     let testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_asset_to_wallet(&sender_pub_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
@@ -111,6 +113,7 @@ fn fees_for_transfer_asset_not_found() {
     let fixed = 10;
     let meta_data = "asset";
     let config_fees = TransactionFees::with_default_key(0, 0, 0, 0, 0, transaction_fee);
+    let permissions = TransactionPermissions::default();
 
     let (creator_key, _) = crypto::gen_keypair();
     let (recipient_key, _) = crypto::gen_keypair();
@@ -124,7 +127,7 @@ fn fees_for_transfer_asset_not_found() {
     );
 
     let testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .create();
     let api = testkit.api();
 

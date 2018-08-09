@@ -12,6 +12,7 @@ use currency::error::Error;
 use currency::service::CONFIGURATION;
 use currency::status;
 use currency::transactions::components::{FeeStrategy, FeesCalculator, ThirdPartyFees};
+use currency::transactions::components::permissions;
 use currency::wallet;
 use currency::SERVICE_ID;
 
@@ -249,6 +250,13 @@ impl Transaction for Trade {
 
         if cfg!(fuzzing) {
             return wallets_ok && fee_strategy_ok;
+        }
+
+        if !permissions::is_authorized(TRADE_ID, vec![
+            &self.offer().seller(),
+            &self.offer().buyer()
+        ]) {
+            return false;
         }
 
         let seller_verify_ok = crypto::verify(

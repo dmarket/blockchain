@@ -10,6 +10,7 @@ use currency::assets::TradeAsset;
 use currency::error::Error;
 use currency::status;
 use currency::transactions::components::{FeesCalculator, ThirdPartyFees};
+use currency::transactions::components::permissions;
 use currency::wallet;
 use currency::offers;
 use currency::SERVICE_ID;
@@ -117,6 +118,10 @@ impl Transaction for AskOffer {
 
         if cfg!(fuzzing) {
             return true;
+        }
+
+        if !permissions::is_authorized(ASK_OFFER_ID, vec![&self.pub_key()]) {
+            return false;
         }
 
         let overflow = self.asset().price().checked_mul(self.asset().amount()).is_some();

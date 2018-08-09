@@ -12,6 +12,7 @@ use currency::error::Error;
 use currency::service::CONFIGURATION;
 use currency::status;
 use currency::transactions::components::{FeeStrategy, FeesCalculator, ThirdPartyFees};
+use currency::transactions::components::permissions;
 use currency::wallet;
 use currency::SERVICE_ID;
 
@@ -229,6 +230,13 @@ impl Transaction for Exchange {
 
         if cfg!(fuzzing) {
             return wallets_ok && fee_strategy_ok;
+        }
+
+        if !permissions::is_authorized(EXCHANGE_ID, vec![
+            &self.offer().sender(), 
+            &self.offer().recipient()
+        ]) {
+            return false;
         }
 
         let recipient_ok = self.verify_signature(offer.recipient());
