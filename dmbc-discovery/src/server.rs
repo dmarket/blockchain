@@ -49,13 +49,13 @@ fn post_node(body: Body, addr: SocketAddr) -> ResponseFuture {
         .concat2()
         .and_then(move |v| match json::from_slice::<ValidatorInfo>(&v) {
             Ok(mut info) => {
-                let fixed_peer = {
-                    let mut peer = info.1.peer;
-                    let offset = peer.find(':').unwrap_or(peer.len());
-                    peer.replace_range(..offset, &format!("{}", addr.ip()));
-                    peer
+                let fix_addr = |reported: &mut String| {
+                    let offset = reported.find(':').unwrap_or(reported.len());
+                    reported.replace_range(..offset, &format!("{}", addr.ip()));
                 };
-                info.1.peer = fixed_peer;
+                fix_addr(&mut info.1.public);
+                fix_addr(&mut info.1.private);
+                fix_addr(&mut info.1.peer);
                 update_peer(info)
             }
             Err(e) => Box::new(future::ok(
