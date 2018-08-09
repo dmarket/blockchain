@@ -8,6 +8,7 @@ use exonum::encoding::serialize::FromHex;
 use exonum::storage::Snapshot;
 
 use currency;
+use currency::transactions::components::permissions;
 
 encoding_struct! {
     /// Wallet tx permittion configuration
@@ -30,7 +31,7 @@ impl Default for TransactionPermissions {
     fn default() -> Self {
         TransactionPermissions::new(
             vec![],
-            <u64>::max_value()
+            permissions::ALL_ALLOWED_MASK
         )
     }
 }
