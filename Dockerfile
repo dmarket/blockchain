@@ -8,6 +8,10 @@ COPY ./target/$TYPE/dmbc-node /src/app/
 COPY ./target/$TYPE/dmbc-discovery /src/app/
 RUN mkdir /src/app/etc
 COPY ./etc/config.toml /src/app/etc/config.toml
+RUN mkdir -p /src/app/var/db
+RUN mkdir -p /src/app/var/keys
+
+COPY ./var/keys /src/app/etc/config.toml
 
 RUN chmod +x /src/app/dmbc-node
 RUN chmod +x /src/app/dmbc-discovery
