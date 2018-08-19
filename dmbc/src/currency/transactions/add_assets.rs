@@ -13,6 +13,7 @@ use currency::error::Error;
 use currency::service::CONFIGURATION;
 use currency::status;
 use currency::transactions::components::{FeesCalculator, ThirdPartyFees};
+use currency::transactions::components::permissions;
 use currency::wallet;
 use currency::SERVICE_ID;
 
@@ -51,6 +52,7 @@ impl FeesCalculator for AddAssets {
 }
 
 impl AddAssets {
+
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
         info!("Processing tx: {:?}", self);
         let genesis_fees = CONFIGURATION.read().unwrap().fees();
@@ -150,6 +152,10 @@ impl Transaction for AddAssets {
 
         if cfg!(fuzzing) {
             return true;
+        }
+
+        if !permissions::is_authorized(ADD_ASSETS_ID, vec![&self.pub_key()]) {
+            return false;
         }
 
         if !self.verify_signature(&self.pub_key()) {

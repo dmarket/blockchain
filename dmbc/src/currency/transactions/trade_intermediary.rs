@@ -13,6 +13,7 @@ use currency::service::CONFIGURATION;
 use currency::status;
 use currency::transactions::components::Intermediary;
 use currency::transactions::components::{FeeStrategy, FeesCalculator, ThirdPartyFees};
+use currency::transactions::components::permissions;
 use currency::wallet;
 use currency::SERVICE_ID;
 
@@ -269,6 +270,14 @@ impl Transaction for TradeIntermediary {
 
         if cfg!(fuzzing) {
             return wallets_ok && fee_strategy_ok;
+        }
+
+        if !permissions::is_authorized(TRADE_INTERMEDIARY_ID, vec![
+            &self.offer().seller(),
+            &self.offer().buyer(),
+            &self.offer().intermediary().wallet()
+        ]) {
+            return false;
         }
 
         let buyer_ok = self.verify_signature(offer.buyer());

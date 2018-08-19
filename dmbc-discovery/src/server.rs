@@ -1,4 +1,5 @@
 use std::error::Error;
+use std::net::SocketAddr;
 
 use futures::{future, Future, Stream};
 use hyper;
@@ -14,15 +15,16 @@ pub struct ValidatorInfo(NodeKeys, NodeInfo);
 
 pub type ResponseFuture = Box<Future<Item = Response<Body>, Error = hyper::Error> + Send + 'static>;
 
-pub fn new(req: Request<Body>) -> ResponseFuture {
+pub fn serve(req: Request<Body>, addr: SocketAddr) -> ResponseFuture {
     info!(log::SERVER,
           "Processing request";
+          "remote" => %addr,
           "method" => %req.method(),
           "uri" => %req.uri());
 
     match (req.method(), req.uri().path()) {
         (&Method::GET, "/nodes") => get_nodes(),
-        (&Method::POST, "/nodes") => post_node(req.into_body()),
+        (&Method::POST, "/nodes") => post_node(req.into_body(), addr),
         _ => Box::new(future::ok(
             Response::builder()
                 .status(StatusCode::NOT_FOUND)
@@ -42,11 +44,20 @@ fn update_peer(vi: ValidatorInfo) -> ResponseFuture {
     Box::new(future::ok(Response::new(Body::empty())))
 }
 
-fn post_node(body: Body) -> ResponseFuture {
+fn post_node(body: Body, addr: SocketAddr) -> ResponseFuture {
     let post = body
         .concat2()
         .and_then(move |v| match json::from_slice::<ValidatorInfo>(&v) {
-            Ok(info) => update_peer(info),
+            Ok(mut info) => {
+                let fix_addr = |reported: &mut String| {
+                    let offset = reported.find(':').unwrap_or(reported.len());
+                    reported.replace_range(..offset, &format!("{}", addr.ip()));
+                };
+                fix_addr(&mut info.1.public);
+                fix_addr(&mut info.1.private);
+                fix_addr(&mut info.1.peer);
+                update_peer(info)
+            }
             Err(e) => Box::new(future::ok(
                 Response::builder()
                     .status(StatusCode::BAD_REQUEST)
@@ -56,3 +67,4 @@ fn post_node(body: Body) -> ResponseFuture {
         });
     Box::new(post)
 }
+

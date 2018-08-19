@@ -12,6 +12,7 @@ use currency::error::Error;
 use currency::service::CONFIGURATION;
 use currency::status;
 use currency::transactions::components::FeesCalculator;
+use currency::transactions::components::permissions;
 use currency::wallet;
 use currency::SERVICE_ID;
 
@@ -117,6 +118,10 @@ impl Transaction for DeleteAssets {
 
         if cfg!(fuzzing) {
             return true;
+        }
+
+        if !permissions::is_authorized(DELETE_ASSETS_ID, vec![self.pub_key()]) {
+            return false;
         }
 
         if self.verify_signature(self.pub_key()) {

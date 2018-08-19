@@ -16,7 +16,7 @@ use currency::transactions::exchange_intermediary::{
 use currency::transactions::trade::{Trade, TradeOffer};
 use currency::transactions::trade_intermediary::{TradeIntermediary, TradeOfferIntermediary};
 use currency::transactions::transfer::Transfer;
-use currency::transactions::transfer_fees_payes::{TransferOffer, TransferWithFeesPayer};
+use currency::transactions::transfer_fees_payers::{TransferOffer, TransferWithFeesPayer};
 use currency::transactions::bid_offer::BidOffer;
 use currency::transactions::ask_offer::AskOffer;
 

@@ -11,6 +11,7 @@ use currency::error::Error;
 use currency::service::CONFIGURATION;
 use currency::status;
 use currency::transactions::components::{FeesCalculator, ThirdPartyFees};
+use currency::transactions::components::permissions;
 use currency::wallet;
 use currency::SERVICE_ID;
 
@@ -133,6 +134,13 @@ impl Transaction for Transfer {
 
         if cfg!(fuzzing) {
             return wallets_ok;
+        }
+
+        if !permissions::is_authorized(TRANSFER_ID, vec![
+            &self.from(),
+            &self.to()
+        ]) {
+            return false;
         }
 
         let verify_ok = self.verify_signature(&self.from());

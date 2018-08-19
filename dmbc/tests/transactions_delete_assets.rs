@@ -16,7 +16,7 @@ use hyper::status::StatusCode;
 
 use dmbc::currency::api::transaction::TransactionResponse;
 use dmbc::currency::assets::{AssetBundle, AssetInfo};
-use dmbc::currency::configuration::{Configuration, TransactionFees};
+use dmbc::currency::configuration::{Configuration, TransactionFees, TransactionPermissions};
 use dmbc::currency::error::Error;
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::wallet::Wallet;
@@ -30,6 +30,7 @@ fn delete_assets_one_from_bundle() {
     let balance = 100_000;
     let fixed = 10;
     let config_fees = TransactionFees::with_default_key(0, 0, transaction_fee, 0, 0, 0);
+    let permissions = TransactionPermissions::default();
 
     let (public_key, secret_key) = crypto::gen_keypair();
     let (asset, info) = dmbc_testkit::create_asset(
@@ -40,7 +41,7 @@ fn delete_assets_one_from_bundle() {
     );
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
         .add_asset_to_wallet(&public_key, (asset.clone(), info.clone()))
         .create();
@@ -93,6 +94,7 @@ fn delete_assets_all_from_bundle() {
     let balance = 100_000;
     let fixed = 10;
     let config_fees = TransactionFees::with_default_key(0, 0, transaction_fee, 0, 0, 0);
+    let permissions = TransactionPermissions::default();
 
     let (public_key, secret_key) = crypto::gen_keypair();
     let (asset, info) = dmbc_testkit::create_asset(
@@ -103,7 +105,7 @@ fn delete_assets_all_from_bundle() {
     );
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
         .add_asset_to_wallet(&public_key, (asset.clone(), info))
         .create();
@@ -141,11 +143,12 @@ fn delete_assets_that_doent_exist() {
     let transaction_fee = 100;
     let balance = 100_000;
     let config_fees = TransactionFees::with_default_key(0, 0, transaction_fee, 0, 0, 0);
+    let permissions = TransactionPermissions::default();
 
     let (public_key, secret_key) = crypto::gen_keypair();
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
         .create();
     let api = testkit.api();
@@ -183,6 +186,7 @@ fn delete_assets_that_doent_exist2() {
     let balance = 100_000;
     let fixed = 10;
     let config_fees = TransactionFees::with_default_key(0, 0, transaction_fee, 0, 0, 0);
+    let permissions = TransactionPermissions::default();
 
     let (public_key, secret_key) = crypto::gen_keypair();
     let (another_asset, another_info) = dmbc_testkit::create_asset(
@@ -193,7 +197,7 @@ fn delete_assets_that_doent_exist2() {
     );
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
         .add_asset_to_wallet(&public_key, (another_asset.clone(), another_info.clone()))
         .create();
@@ -244,6 +248,7 @@ fn delete_assets_amount_more_than_wallet_have() {
     let balance = 100_000;
     let fixed = 10;
     let config_fees = TransactionFees::with_default_key(0, 0, transaction_fee, 0, 0, 0);
+    let permissions = TransactionPermissions::default();
 
     let (public_key, secret_key) = crypto::gen_keypair();
     let (asset, info) = dmbc_testkit::create_asset(
@@ -254,7 +259,7 @@ fn delete_assets_amount_more_than_wallet_have() {
     );
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
         .add_asset_to_wallet(&public_key, (asset.clone(), info.clone()))
         .create();
@@ -304,6 +309,7 @@ fn delete_assets_insufficient_funds() {
     let balance = 5;
     let fixed = 10;
     let config_fees = TransactionFees::with_default_key(0, 0, transaction_fee, 0, 0, 0);
+    let permissions = TransactionPermissions::default();
 
     let (public_key, secret_key) = crypto::gen_keypair();
     let (asset, info) = dmbc_testkit::create_asset(
@@ -314,7 +320,7 @@ fn delete_assets_insufficient_funds() {
     );
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
         .add_asset_to_wallet(&public_key, (asset.clone(), info.clone()))
         .create();
@@ -363,6 +369,7 @@ fn delete_assets_with_different_creator() {
     let balance = 100_000;
     let fixed = 10;
     let config_fees = TransactionFees::with_default_key(0, 0, transaction_fee, 0, 0, 0);
+    let permissions = TransactionPermissions::default();
 
     let (creator_key, _) = crypto::gen_keypair();
     let (public_key, secret_key) = crypto::gen_keypair();
@@ -374,7 +381,7 @@ fn delete_assets_with_different_creator() {
     );
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
         .add_asset_to_wallet(&public_key, (asset.clone(), info.clone()))
         .create();
@@ -425,6 +432,7 @@ fn delete_assets_two_assets_where_one_asset_doesnt_have_enough_items() {
     let balance = 100_000;
     let fixed = 10;
     let config_fees = TransactionFees::with_default_key(0, 0, transaction_fee, 0, 0, 0);
+    let permissions = TransactionPermissions::default();
 
     let (public_key, secret_key) = crypto::gen_keypair();
     let (asset1, info1) = dmbc_testkit::create_asset(
@@ -441,7 +449,7 @@ fn delete_assets_two_assets_where_one_asset_doesnt_have_enough_items() {
     );
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
         .add_asset_to_wallet(&public_key, (asset1.clone(), info1.clone()))
         .add_asset_to_wallet(&public_key, (asset2.clone(), info2.clone()))
@@ -494,6 +502,7 @@ fn delete_assets_two_assets_where_one_have_another_creator() {
     let balance = 100_000;
     let fixed = 10;
     let config_fees = TransactionFees::with_default_key(0, 0, transaction_fee, 0, 0, 0);
+    let permissions = TransactionPermissions::default();
 
     let (creator_key, _) = crypto::gen_keypair();
     let (public_key, secret_key) = crypto::gen_keypair();
@@ -511,7 +520,7 @@ fn delete_assets_two_assets_where_one_have_another_creator() {
     );
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
         .add_asset_to_wallet(&public_key, (asset1.clone(), info1.clone()))
         .add_asset_to_wallet(&public_key, (asset2.clone(), info2.clone()))

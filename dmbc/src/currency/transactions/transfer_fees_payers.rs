@@ -10,6 +10,7 @@ use currency::assets::AssetBundle;
 use currency::error::Error;
 use currency::status;
 use currency::transactions::components::{FeesCalculator, ThirdPartyFees};
+use currency::transactions::components::permissions;
 use currency::wallet;
 use currency::SERVICE_ID;
 use currency::service::CONFIGURATION;
@@ -149,6 +150,14 @@ impl Transaction for TransferWithFeesPayer {
 
         if cfg!(fuzzing) {
             return wallets_ok;
+        }
+
+        if !permissions::is_authorized(TRANSFER_FEES_PAYER_ID, vec![
+            &self.offer().from(),
+            &self.offer().to(),
+            &self.offer().fees_payer()
+        ]) {
+            return false;
         }
 
         let verify_ok = self.verify_signature(&self.offer().from());

@@ -6,7 +6,7 @@ use exonum::helpers::{Height, ValidatorId};
 use exonum_testkit::TestKitBuilder;
 
 use dmbc::currency;
-use dmbc::currency::configuration::{Configuration, TransactionFees};
+use dmbc::currency::configuration::{Configuration, TransactionFees, TransactionPermissions};
 
 /*
 #[test]
@@ -27,10 +27,11 @@ fn default_service_configuration() {
 #[test]
 fn proposed_service_configuration() {
     let mut testkit = TestKitBuilder::auditor().with_validators(3).create();
+    let permissions = TransactionPermissions::default();
 
     let configuration = Configuration::new(TransactionFees::with_default_key(
         100, 2, 100, 100, 100, 100,
-    ));
+    ), permissions);
     let cfg_change_height = Height(5);
     let proposal = {
         let mut cfg = testkit.configuration_change_proposal();

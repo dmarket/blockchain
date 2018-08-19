@@ -8,6 +8,33 @@ use exonum::encoding::serialize::FromHex;
 use exonum::storage::Snapshot;
 
 use currency;
+use currency::transactions::components::permissions;
+
+encoding_struct! {
+    /// Wallet tx permittion configuration
+    #[derive(Eq, PartialOrd, Ord)]
+    struct WalletPermissions {
+        key: &PublicKey,
+        mask: u64
+    }
+}
+
+encoding_struct! {
+    /// List of wallets that have permissions.
+    struct TransactionPermissions {
+        wallets: Vec<WalletPermissions>,
+        global_permission_mask: u64,
+    }
+}
+
+impl Default for TransactionPermissions {
+    fn default() -> Self {
+        TransactionPermissions::new(
+            vec![],
+            permissions::ALL_ALLOWED_MASK
+        )
+    }
+}
 
 encoding_struct! {
     /// Fixed fees to be paid to the genesis wallet when transaction is executed.
@@ -63,6 +90,7 @@ encoding_struct! {
     #[derive(Eq, PartialOrd, Ord)]
     struct Configuration {
         fees: TransactionFees,
+        permissions: TransactionPermissions
     }
 }
 
@@ -72,7 +100,7 @@ pub const GENESIS_WALLET_PUB_KEY: &str =
 
 impl Default for Configuration {
     fn default() -> Configuration {
-        Configuration::new(TransactionFees::default())
+        Configuration::new(TransactionFees::default(), TransactionPermissions::default())
     }
 }
 

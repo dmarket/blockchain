@@ -18,7 +18,7 @@ use hyper::status::StatusCode;
 use dmbc::currency::api::blocks::{BlockResponse, BlocksResponse};
 use dmbc::currency::api::error::ApiError;
 use dmbc::currency::assets::MetaAsset;
-use dmbc::currency::configuration::{Configuration, TransactionFees};
+use dmbc::currency::configuration::{Configuration, TransactionFees, TransactionPermissions};
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::wallet::Wallet;
 
@@ -125,12 +125,13 @@ fn blocks_skip_empty_with_tx_in_blockchain() {
     let transaction_fee = 10;
     let per_asset_fee = 4;
     let config_fees = TransactionFees::with_default_key(transaction_fee, per_asset_fee, 0, 0, 0, 0);
+    let permissions = TransactionPermissions::default();
 
     let (creator_public_key, creator_secret_key) = crypto::gen_keypair();
     let (receiver_key, _) = crypto::gen_keypair();
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_wallet_value(&creator_public_key, Wallet::new(balance, vec![]))
         .create();
     let api = testkit.api();
@@ -274,12 +275,13 @@ fn blocks_height_with_tx_in_blockchain() {
     let transaction_fee = 10;
     let per_asset_fee = 4;
     let config_fees = TransactionFees::with_default_key(transaction_fee, per_asset_fee, 0, 0, 0, 0);
+    let permissions = TransactionPermissions::default();
 
     let (creator_public_key, creator_secret_key) = crypto::gen_keypair();
     let (receiver_key, _) = crypto::gen_keypair();
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, permissions))
         .add_wallet_value(&creator_public_key, Wallet::new(balance, vec![]))
         .create();
     let api = testkit.api();
