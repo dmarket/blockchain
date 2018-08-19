@@ -35,15 +35,15 @@ pub struct OpenOffersInfo {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct OpenOfferInfo {
-    pub bids: u64,
-    pub asks: u64,
+    pub bids_count: u64,
+    pub asks_count: u64,
 }
 
 impl OpenOfferInfo {
     pub fn from(open_offers: &OpenOffers) -> Self {
         OpenOfferInfo {
-            bids: open_offers.bids().into_iter().map(|bid| bid.offers().len() as u64).sum(),
-            asks: open_offers.asks().into_iter().map(|ask| ask.offers().len() as u64).sum(),
+            bids_count: open_offers.bids().into_iter().map(|bid| bid.offers().len() as u64).sum(),
+            asks_count: open_offers.asks().into_iter().map(|ask| ask.offers().len() as u64).sum(),
         }
     }
 }
@@ -152,7 +152,7 @@ impl Api for OfferApi {
 
         };
 
-        router.get("/v1/offers/", offers_info, "open_offers");
+        router.get("/v1/offers", offers_info, "open_offers");
         router.get("/v1/offers/:asset_id", bids_asks, "bids_asks");
     }
 }
