@@ -14,6 +14,16 @@ extern "C" {
 typedef struct dmbc_tx_transfer dmbc_tx_transfer;
 
 /*
+ * dmbc_tx_transfer_fees_payer_offer is a type of transfer offer with fees payer
+ */
+typedef struct dmbc_transfer_fees_payer_offer dmbc_transfer_fees_payer_offer;
+
+/*
+ * dmbc_tx_transfer_fees_payer is a type of transfer transaction with feees payer
+ */
+typedef struct dmbc_tx_transfer_fees_payer dmbc_tx_transfer_fees_payer;
+
+/*
  * dmbc_tx_add_assets is a type of add_assets transaction
  */
 typedef struct dmbc_tx_add_assets dmbc_tx_add_assets;
@@ -269,6 +279,103 @@ bool dmbc_tx_transfer_add_asset(
  */
 uint8_t *dmbc_tx_transfer_into_bytes(
     dmbc_tx_transfer *tx,
+    size_t *length,
+    dmbc_error *error
+);
+
+/*
+ * @dmbc_transfer_fees_payer_offer_create creates transfer fees payer offer object on the heap.
+ * Object should be dealocated when it is no needed anymore.
+ * 
+ * @from_key public key of a sender [32 bytes long] in hex format.
+ * @to_key public key of a receiver [32 bytes long] in hex format.
+ * @fees_payer_key public key of a fees payer [32 bytes long] in hex format.
+ * @amount amount of coins from sender.
+ * @seed seed number.
+ * @data_info memo message.
+ * @error contains error message if any occurs.
+ * 
+ * @ret dmbc_transfer_fees_payer_offer pointer to transfer fees payer offer object, otherwise NULL.
+ */
+dmbc_transfer_fees_payer_offer *dmbc_transfer_fees_payer_offer_create(
+    const char *from_key,
+    const char *to_key,
+    const char *fees_payer_key,
+    uint64_t amount,
+    uint64_t seed,
+    const char *data_info,
+    dmbc_error *error
+);
+
+/*
+ * @dmbc_transfer_fees_payer_offer_free frees allocated transfer offer object.
+ * 
+ * @dmbc_transfer_fees_payer_offer pointer to transfer offer object.
+ */
+void dmbc_transfer_fees_payer_offer_free(dmbc_transfer_fees_payer_offer *offer);
+
+/*
+ * @dmbc_transfer_fees_payer_offer_add_asset adds sender's asset to offer.
+ * 
+ * @offer pointer to dmbc_transfer_fees_payer_offer offer object.
+ * @asset pointer to asset object.
+ * @error contains error message if any occurs.
+ */
+bool dmbc_transfer_fees_payer_offer_add_asset(
+    dmbc_transfer_fees_payer_offer *offer,
+    dmbc_asset *asset,
+    dmbc_error *error
+);
+
+/*
+ * dmbc_transfer_fees_payer_offer_into_bytes converts offer object into byte array.
+ * 
+ * @offer pointer to offer object.
+ * @length output parameter, contains byte array size.
+ * @error contains error message if any occurs.
+ * 
+ * @ret byte array if succeeded, otherwise NULL.
+ */
+uint8_t* dmbc_transfer_fees_payer_offer_into_bytes(
+    dmbc_transfer_fees_payer_offer *offer,
+    size_t *length,
+    dmbc_error *error
+);
+
+/*
+ * @dmbc_tx_transfer_fees_payer_create creates transfer fees payer transaction object on the heap.
+ * Object should be dealocated when it is no needed anymore.
+ * 
+ * @offer pointer to transfer offer object.
+ * @signature signature of an offer signed by fees payer [64 bytes long] in hex format.
+ * @error contains error message if any occurs.
+ * 
+ * @ret dmbc_tx_transfer_fees_payer pointer to exchange transaction, otherwise NULL.
+ */
+dmbc_tx_transfer_fees_payer *dmbc_tx_transfer_fees_payer_create(
+    dmbc_transfer_fees_payer_offer *offer,
+    const char *fees_payer_signature,
+    dmbc_error *error
+);
+
+/*
+ * @dmbc_tx_transfer_fees_payer_free frees allocated transfer transaction.
+ * 
+ * @dmbc_tx_transfer_fees_payer pointer to transfer fees payer transaction.
+ */
+void dmbc_tx_transfer_fees_payer_free(dmbc_tx_transfer_fees_payer *tx);
+
+/*
+ * dmbc_tx_transfer_fees_payer_into_bytes converts transaction into byte array.
+ * 
+ * @tx pointer to transation.
+ * @length output parameter, contains byte array size.
+ * @error contains error message if any occurs.
+ * 
+ * @ret byte array if succeeded, otherwise NULL.
+ */
+uint8_t * dmbc_tx_transfer_fees_payer_into_bytes(
+    dmbc_tx_transfer_fees_payer *tx,
     size_t *length,
     dmbc_error *error
 );
