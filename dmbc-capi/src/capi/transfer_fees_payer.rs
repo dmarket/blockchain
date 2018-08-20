@@ -120,7 +120,7 @@ ffi_fn! {
        wrapper: *mut TransferOfferWrapper,
         length: *mut size_t,
         error: *mut Error 
-    ) -> bool {
+    ) -> *const u8 {
         let wrapper = match TransferOfferWrapper::from_ptr(wrapper) {
             Ok(wrapper) => wrapper,
             Err(err) => {
@@ -151,7 +151,7 @@ ffi_fn! {
         wrapper: *mut TransferOfferWrapper,
         fees_payer_signature: *const c_char,
         error: *mut Error,
-    ) -> TransferWithFeesPayerWrapper {
+    ) -> *mut TransferWithFeesPayerWrapper {
         let wrapper = match TransferOfferWrapper::from_ptr(wrapper) {
             Ok(wrapper) => wrapper,
             Err(err) => {
