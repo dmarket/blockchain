@@ -310,6 +310,94 @@ free_error:
     cJSON_Delete(inputs);
 }
 
+void transfer_fees_payer(const char *input_file, const char *output_file) {
+    cJSON *inputs = read_inputs(input_file);
+    const cJSON *offer_json = cJSON_GetObjectItemCaseSensitive(inputs, "offer");
+    const cJSON *fees_payer_signature_json = cJSON_GetObjectItemCaseSensitive(inputs, "fees_payer_signature");
+
+    const char *fees_payer_signature = fees_payer_signature_json->valuestring;
+
+    const cJSON *from_key_json = cJSON_GetObjectItemCaseSensitive(offer_json, "from");
+    const cJSON *to_key_json = cJSON_GetObjectItemCaseSensitive(offer_json, "to");
+    const cJSON *fees_payer_key_json = cJSON_GetObjectItemCaseSensitive(offer_json, "fees_payer");
+    const cJSON *seed_json = cJSON_GetObjectItemCaseSensitive(offer_json, "seed");
+    const cJSON *assets = cJSON_GetObjectItemCaseSensitive(offer_json, "assets");
+    const cJSON *data_info = cJSON_GetObjectItemCaseSensitive(offer_json, "data_info");
+    const cJSON *amount_json = cJSON_GetObjectItemCaseSensitive(offer_json, "amount");
+    const cJSON *asset = NULL;
+
+    uint64_t seed = seed_json->valueint;
+    uint64_t amount = amount_json->valueint;
+    const char *from_public_key = from_key_json->valuestring;
+    const char *to_public_key = to_key_json->valuestring;
+    const char *fees_payer_key = fees_payer_key_json->valuestring;
+    
+    dmbc_error *err = dmbc_error_new();
+    dmbc_transfer_fees_payer_offer *offer = dmbc_transfer_fees_payer_offer_create(from_public_key, to_public_key, fees_payer_key, amount, seed, data_info->string, err);
+        if (NULL == offer) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, error_msg, msg);
+        }
+        goto free_error;
+    }
+
+    cJSON_ArrayForEach(asset, assets) {
+        cJSON *id = cJSON_GetObjectItemCaseSensitive(asset, "id");
+        cJSON *amount = cJSON_GetObjectItemCaseSensitive(asset, "amount");
+
+        dmbc_asset *asset = dmbc_asset_create(id->valuestring, amount->valueint, err);
+        if (NULL == asset) {
+            const char *msg = dmbc_error_message(err);
+            if (NULL != msg) {
+                fprintf(stderr, error_msg, msg);
+            }
+            goto free_offer;
+        }
+
+        if (!dmbc_transfer_fees_payer_offer_add_asset(offer, asset, err)) {
+            const char *msg = dmbc_error_message(err);
+            if (NULL != msg) {
+                fprintf(stderr, error_msg, msg);
+            }
+            dmbc_asset_free(asset);
+            goto free_offer;
+        }
+
+        dmbc_asset_free(asset);
+    }
+
+    dmbc_tx_transfer_fees_payer *tx = dmbc_tx_transfer_fees_payer_create(offer, fees_payer_signature, err);
+    if (NULL == tx) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, error_msg, msg);
+        }
+        goto free_offer;
+    }
+    size_t length = 0;
+    uint8_t *buffer = dmbc_tx_transfer_fees_payer_into_bytes(tx, &length, err);
+    if (NULL == buffer) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, error_msg, msg);
+        }
+        goto free_tx;
+    }
+
+    write_hex_to_file(output_file, buffer, length);
+
+    dmbc_bytes_free(buffer, length);
+free_tx:
+    dmbc_tx_transfer_fees_payer_free(tx);
+free_offer:
+    dmbc_transfer_fees_payer_offer_free(offer);
+free_error:
+    dmbc_error_free(err);
+
+    cJSON_Delete(inputs);
+}
+
 void exchange(const char *input_file, const char *output_file) {
     cJSON *inputs = read_inputs(input_file);
     const cJSON *offer_json = cJSON_GetObjectItemCaseSensitive(inputs, "offer");
@@ -779,6 +867,7 @@ int main(int argc, char *argv[]) {
     add_assets\n \
     delete_assets\n \
     transfer\n \
+    transfer_fees_payer\n \
     exchange\n \
     exchange_intermediary\n \
     trade\n \
@@ -792,6 +881,7 @@ int main(int argc, char *argv[]) {
         "add_assets",
         "delete_assets",
         "transfer",
+        "transfer_fees_payer",
         "exchange",
         "exchange_intermediary",
         "trade",
@@ -802,6 +892,7 @@ int main(int argc, char *argv[]) {
         add_assets,
         delete_assets,
         transfer,
+        transfer_fees_payer,
         exchange,
         exchange_intermediary,
         trade,
@@ -809,7 +900,7 @@ int main(int argc, char *argv[]) {
     };
     int i = 0;
 
-    for (i = 0; i < 7; ++i) {
+    for (i = 0; i < 8; ++i) {
         if (strcmp(argv[1], tx_names[i]) == 0) {
             fs[i](argv[2], argv[3]);
             return 0;

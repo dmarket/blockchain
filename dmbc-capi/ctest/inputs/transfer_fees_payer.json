@@ -1,0 +1,15 @@
+{
+    "offer": {
+        "from": "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f",
+        "to": "00098e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c41100f",
+        "fees_payer": "22298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411999",
+        "amount": 64,
+        "assets": [{
+            "id": "00001111222233334444555566667777",
+            "amount": 10
+        }],
+        "seed": 128,
+        "data_info": "CAPI Transfer Test"
+    },
+    "fees_payer_signature" : "cc67e458df68fb146b61f0f097e3804c74cca1f8d7ec194d4b973adf4b702fd660bd0460be268450c21513c9dcfb44af067c59351267b26cbec445ffbd772405"
+}
