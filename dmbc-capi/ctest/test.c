@@ -333,7 +333,7 @@ void transfer_fees_payer(const char *input_file, const char *output_file) {
     const char *fees_payer_key = fees_payer_key_json->valuestring;
     
     dmbc_error *err = dmbc_error_new();
-    dmbc_transfer_fees_payer_offer *offer = dmbc_transfer_fees_payer_offer_create(from_public_key, to_public_key, fees_payer_key, amount, seed, data_info->string, err);
+    dmbc_transfer_fees_payer_offer *offer = dmbc_transfer_fees_payer_offer_create(from_public_key, to_public_key, fees_payer_key, amount, seed, data_info->valuestring, err);
         if (NULL == offer) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
