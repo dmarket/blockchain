@@ -6,6 +6,7 @@ pub mod trade;
 pub mod trade_intermediary;
 pub mod transfer;
 pub mod transfer_fees_payers;
-pub mod bid_ask;
+pub mod ask_offer;
+pub mod bid_offer;
 
 pub mod components;

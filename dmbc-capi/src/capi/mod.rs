@@ -11,3 +11,5 @@ pub mod trade_asset;
 pub mod trade_intermediary;
 pub mod transfer;
 pub mod transfer_fees_payer;
+pub mod bid_offer;
+pub mod ask_offer;

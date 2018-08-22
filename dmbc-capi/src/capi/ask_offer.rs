@@ -7,12 +7,12 @@ use libc::{c_char, size_t};
 
 use assets::TradeAsset;
 use capi::common::*;
-use transactions::bid_ask::{AskOfferWrapper, AskOffer};
+use transactions::ask_offer::AskOfferWrapper;
 
 use error::{Error, ErrorKind};
 
 ffi_fn! {
-    fn dmbc_tx_bid_ask_create(
+    fn dmbc_tx_ask_offer_create(
         public_key: *const c_char,
         asset: *mut TradeAsset,
         seed: u64,
@@ -36,7 +36,7 @@ ffi_fn! {
                 if !error.is_null() {
                     *error = Error::new(ErrorKind::Text("Invalid asset pointer.".to_string()));
                 }
-                return false;
+                return ptr::null_mut();
             }
         }
 
@@ -54,13 +54,13 @@ ffi_fn! {
             }
         };
 
-        let wrapper = AskOfferWrapper::new(&public_key, asset, seed, data_info);
+        let wrapper = AskOfferWrapper::new(&public_key, asset.clone(), seed, data_info);
         Box::into_raw(Box::new(wrapper))
     }
 }
 
 ffi_fn! {
-    fn dmbc_tx_bid_ask_free(wrapper: *const AskOfferWrapper) {
+    fn dmbc_tx_ask_offer_free(wrapper: *const AskOfferWrapper) {
         if !wrapper.is_null() {
             unsafe { Box::from_raw(wrapper as *mut AskOfferWrapper); }
         }
@@ -68,7 +68,7 @@ ffi_fn! {
 }
 
 ffi_fn! {
-    fn dmbc_t_bid_ask_into_bytes(
+    fn dmbc_tx_ask_offer_into_bytes(
         wrapper: *mut AskOfferWrapper,
         length: *mut size_t,
         error: *mut Error 
