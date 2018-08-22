@@ -94,6 +94,16 @@ typedef struct dmbc_tx_trade dmbc_tx_trade;
 typedef struct dmbc_tx_trade_intermediary dmbc_tx_trade_intermediary;
 
 /*
+ * dmbc_tx_ask_offer is a type of ask offer transaction
+ */
+typedef struct dmbc_tx_ask_offer dmbc_tx_ask_offer;
+
+/*
+ * dmbc_tx_bid_offer is a type of bid offer transaction
+ */
+typedef struct dmbc_tx_bid_offer dmbc_tx_bid_offer;
+
+/*
  * dmbc_error is a type of error object
  */
 typedef struct dmbc_error dmbc_error;
@@ -819,6 +829,85 @@ void dmbc_tx_trade_intermediary_free(dmbc_tx_trade_intermediary *tx);
  */
 uint8_t *dmbc_tx_trade_intermediary_into_bytes(
     dmbc_tx_trade_intermediary *tx,
+    size_t *length,
+    dmbc_error *error
+);
+
+/*
+ * dmbc_tx_ask_offer_create creates ask offer transaction object.
+ * 
+ * @public_key public key of a seller [32 bytes long] in hex format.
+ * @asset pointer to trade asset object.
+ * @error contains error message if any occurs.
+ * 
+ * @ret pointer to dmbc_tx_ask_offer if succeeded, otherwise NULL.
+ */
+dmbc_tx_ask_offer *dmbc_tx_ask_offer_create(
+    const char *public_key,
+    dmbc_trade_asset *asset,
+    uint64_t seed,
+    const char *data_info,
+    dmbc_error *error
+);
+
+/*
+ * @dmbc_tx_ask_offer_free frees allocated ask offer transaction.
+ * 
+ * @dmbc_tx_ask_offer_free pointer to ask offer transaction.
+ */
+void dmbc_tx_ask_offer_free(dmbc_tx_ask_offer *tx);
+
+
+/*
+ * dmbc_tx_ask_offer_into_bytes converts transaction into byte array.
+ * 
+ * @tx pointer to transation.
+ * @length output parameter, contains byte array size.
+ * @error contains error message if any occurs.
+ * 
+ * @ret byte array if succeeded, otherwise NULL.
+ */
+uint8_t *dmbc_tx_ask_offer_into_bytes(
+    dmbc_tx_ask_offer *tx,
+    size_t *length,
+    dmbc_error *error
+);
+
+/*
+ * dmbc_tx_bid_offer_create creates bid offer transaction object.
+ * 
+ * @public_key public key of a seller [32 bytes long] in hex format.
+ * @asset pointer to trade asset object.
+ * @error contains error message if any occurs.
+ * 
+ * @ret pointer to dmbc_tx_bid_offer if succeeded, otherwise NULL.
+ */
+dmbc_tx_bid_offer *dmbc_tx_bid_offer_create(
+    const char *public_key,
+    dmbc_trade_asset *asset,
+    uint64_t seed,
+    const char *data_info,
+    dmbc_error *error
+);
+
+/*
+ * @dmbc_tx_bid_offer_free frees allocated bid offer transaction.
+ * 
+ * @dmbc_tx_bid_offer_free pointer to bid offer transaction.
+ */
+void dmbc_tx_bid_offer_free(dmbc_tx_bid_offer *tx);
+
+/*
+ * dmbc_tx_bid_offer_into_bytes converts transaction into byte array.
+ * 
+ * @tx pointer to transation.
+ * @length output parameter, contains byte array size.
+ * @error contains error message if any occurs.
+ * 
+ * @ret byte array if succeeded, otherwise NULL.
+ */
+uint8_t *dmbc_tx_bid_offer_into_bytes(
+    dmbc_tx_bid_offer *tx,
     size_t *length,
     dmbc_error *error
 );

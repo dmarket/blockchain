@@ -862,6 +862,110 @@ free_error:
     cJSON_Delete(inputs);
 }
 
+void ask_offer(const char *input_file, const char *output_file) {
+    cJSON *inputs = read_inputs(input_file);
+    const cJSON *pub_key = cJSON_GetObjectItemCaseSensitive(inputs, "pub_key");
+    const cJSON *asset_json = cJSON_GetObjectItemCaseSensitive(inputs, "asset");
+    const cJSON *seed = cJSON_GetObjectItemCaseSensitive(inputs, "seed");
+    const cJSON *data_info = cJSON_GetObjectItemCaseSensitive(inputs, "data_info");
+
+    cJSON *id = cJSON_GetObjectItemCaseSensitive(asset_json, "id");
+    cJSON *amount = cJSON_GetObjectItemCaseSensitive(asset_json, "amount");
+    cJSON *price = cJSON_GetObjectItemCaseSensitive(asset_json, "price");
+
+    dmbc_error *err = dmbc_error_new();
+
+    dmbc_trade_asset *asset = dmbc_trade_asset_create(id->valuestring, amount->valueint, price->valueint, err);
+    if (NULL == asset) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, error_msg, msg);
+        }
+        goto free_error;
+    }
+
+    dmbc_tx_ask_offer *tx = dmbc_tx_ask_offer_create(pub_key->valuestring, asset, seed->valueint, data_info->valuestring, err);
+    if (NULL == tx) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL == msg) {
+            fprintf(stderr, error_msg, msg);
+        }
+        goto free_asset;
+    }
+    size_t length = 0;
+    uint8_t *buffer = dmbc_tx_ask_offer_into_bytes(tx, &length, err);
+    if (NULL == buffer) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL == msg) {
+            fprintf(stderr, error_msg, msg);
+        }
+        goto free_tx;
+    }
+
+    write_hex_to_file(output_file, buffer, length);
+
+    dmbc_bytes_free(buffer, length);
+free_tx:
+    dmbc_tx_ask_offer_free(tx);
+free_asset:
+    dmbc_trade_asset_free(asset);
+free_error:
+    dmbc_error_free(err);
+    cJSON_Delete(inputs);
+}
+
+void bid_offer(const char *input_file, const char *output_file) {
+    cJSON *inputs = read_inputs(input_file);
+    const cJSON *pub_key = cJSON_GetObjectItemCaseSensitive(inputs, "pub_key");
+    const cJSON *asset_json = cJSON_GetObjectItemCaseSensitive(inputs, "asset");
+    const cJSON *seed = cJSON_GetObjectItemCaseSensitive(inputs, "seed");
+    const cJSON *data_info = cJSON_GetObjectItemCaseSensitive(inputs, "data_info");
+
+    cJSON *id = cJSON_GetObjectItemCaseSensitive(asset_json, "id");
+    cJSON *amount = cJSON_GetObjectItemCaseSensitive(asset_json, "amount");
+    cJSON *price = cJSON_GetObjectItemCaseSensitive(asset_json, "price");
+
+    dmbc_error *err = dmbc_error_new();
+
+    dmbc_trade_asset *asset = dmbc_trade_asset_create(id->valuestring, amount->valueint, price->valueint, err);
+    if (NULL == asset) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL != msg) {
+            fprintf(stderr, error_msg, msg);
+        }
+        goto free_error;
+    }
+
+    dmbc_tx_bid_offer *tx = dmbc_tx_bid_offer_create(pub_key->valuestring, asset, seed->valueint, data_info->valuestring, err);
+    if (NULL == tx) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL == msg) {
+            fprintf(stderr, error_msg, msg);
+        }
+        goto free_asset;
+    }
+    size_t length = 0;
+    uint8_t *buffer = dmbc_tx_bid_offer_into_bytes(tx, &length, err);
+    if (NULL == buffer) {
+        const char *msg = dmbc_error_message(err);
+        if (NULL == msg) {
+            fprintf(stderr, error_msg, msg);
+        }
+        goto free_tx;
+    }
+
+    write_hex_to_file(output_file, buffer, length);
+
+    dmbc_bytes_free(buffer, length);
+free_tx:
+    dmbc_tx_bid_offer_free(tx);
+free_asset:
+    dmbc_trade_asset_free(asset);
+free_error:
+    dmbc_error_free(err);
+    cJSON_Delete(inputs);
+}
+
 int main(int argc, char *argv[]) {
     const char *usage = "Please specify the transaction type: app TRANSACTION input output\nTRANSACTIONS:\n\n \
     add_assets\n \
@@ -871,7 +975,9 @@ int main(int argc, char *argv[]) {
     exchange\n \
     exchange_intermediary\n \
     trade\n \
-    trade_intermediary\n";
+    trade_intermediary\n \
+    ask_offer\n \
+    bid_offer\n";
 
     if (argc < 4) {
         puts(usage);
@@ -885,7 +991,9 @@ int main(int argc, char *argv[]) {
         "exchange",
         "exchange_intermediary",
         "trade",
-        "trade_intermediary"
+        "trade_intermediary",
+        "ask_offer",
+        "bid_offer"
     };
 
     void (*fs[])(const char *, const char *) = {
@@ -896,11 +1004,13 @@ int main(int argc, char *argv[]) {
         exchange,
         exchange_intermediary,
         trade,
-        trade_intermediary
+        trade_intermediary,
+        ask_offer,
+        bid_offer
     };
     int i = 0;
 
-    for (i = 0; i < 8; ++i) {
+    for (i = 0; i < 10; ++i) {
         if (strcmp(argv[1], tx_names[i]) == 0) {
             fs[i](argv[2], argv[3]);
             return 0;

@@ -1,0 +1,10 @@
+{
+    "pub_key": "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f",
+    "asset": {
+        "id": "00001111222233334444555566667777",
+        "amount": 64,
+        "price": 10
+    },
+    "seed": 128,
+    "data info": "CAPI Test"
+}
