@@ -1,7 +1,7 @@
 use std::mem;
 use std::ptr;
 
-use exonum::storage::StorageValue;
+use exonum::messages::Message;
 use libc::{c_char, size_t};
 
 use assets::TradeAsset;
@@ -84,7 +84,7 @@ ffi_fn! {
             }
         };
 
-        let bytes = wrapper.unwrap().clone().into_bytes();
+        let bytes = wrapper.unwrap().raw().body().to_vec();
         assert!(bytes.len() == bytes.capacity());
         let length = unsafe { &mut *length };
         let len = bytes.len() as size_t;
