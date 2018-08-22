@@ -892,6 +892,7 @@ void ask_offer(const char *input_file, const char *output_file) {
         }
         goto free_asset;
     }
+
     size_t length = 0;
     uint8_t *buffer = dmbc_tx_ask_offer_into_bytes(tx, &length, err);
     if (NULL == buffer) {
