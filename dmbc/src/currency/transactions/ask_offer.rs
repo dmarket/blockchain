@@ -80,8 +80,6 @@ impl AskOffer {
 
         offers::Schema(&mut *view).store(&self.asset().id(), open_offers);
         wallet::Schema(&mut *view).store(self.pub_key(), wallet_from);
-
-
         offers::history::Schema(&mut *view).update(&self.hash(), &history_offers);
 
         Ok(())
