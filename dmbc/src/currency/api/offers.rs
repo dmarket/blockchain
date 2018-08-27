@@ -26,14 +26,14 @@ pub struct OfferApi {
 pub type OpenOffersResult = Result<Option<OpenOffers>, ApiError>;
 
 pub type OpenOffersResponse = Result<OpenOffersInfo, ApiError>;
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct OpenOffersInfo {
     pub total: u64,
     pub count: u64,
     pub offers_info: HashMap<AssetId, OpenOfferInfo>,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct OpenOfferInfo {
     pub bids_count: u64,
     pub asks_count: u64,
