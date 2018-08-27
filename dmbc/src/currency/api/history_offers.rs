@@ -75,19 +75,19 @@ impl HistoryOffersApi {
 
 lazy_static! {
     static ref LIST_REQUESTS: IntCounter = register_int_counter!(
-        "dmbc_offers_api_list_requests_total",
+        "dmbc_history_offers_api_list_requests_total",
         "OpenOffer list requests."
     ).unwrap();
     static ref LIST_RESPONSES: IntCounter = register_int_counter!(
-        "dmbc_offers_api_list_responses_total",
+        "dmbc_history_offers_api_list_responses_total",
         "OpenOffer list responses."
     ).unwrap();
     static ref INFO_REQUESTS: IntCounter = register_int_counter!(
-        "dmbc_offers_api_info_requests_total",
+        "dmbc_history_offers_api_info_requests_total",
         "OpenOffer info requests."
     ).unwrap();
     static ref INFO_RESPONSES: IntCounter = register_int_counter!(
-        "dmbc_offers_api_info_responses_total",
+        "dmbc_history_offers_api_info_responses_total",
         "OpenOffer info responses."
     ).unwrap();
 }
@@ -150,7 +150,7 @@ impl Api for HistoryOffersApi {
 
         };
 
-        router.get("/v1/history/offers/", history_offers_info, "history_offers_info");
+        router.get("/v1/history/offers", history_offers_info, "history_offers_info");
         router.get("/v1/history/offers/:tx_hash", bids_asks, "offer_history");
     }
 }

@@ -62,12 +62,17 @@ impl<'a> Schema<&'a mut Fork> {
 
         for closed_offer_info in data {
             let update = self.fetch_mut(closed_offer_info.tx_hash());
-            update.history().push(HistoryOffer::new(tx_hash, closed_offer_info.amount()));
+            let mut update_history = update.history();
+            update_history.push(HistoryOffer::new(tx_hash, closed_offer_info.amount()));
+            let update = HistoryOffers::new(update_history);
             self.store(tx_hash, update);
         }
 
         let base = self.fetch_mut(tx_hash);
-        base.history().append(&mut data.clone());
+        let mut base_history = base.history();
+        base_history.append(&mut data.clone());
+        let base = HistoryOffers::new(base_history);
+
         self.store(tx_hash, base);
     }
 }
