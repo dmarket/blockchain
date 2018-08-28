@@ -26,14 +26,14 @@ pub struct HistoryOffersApi {
 pub type HistoryOfferResult = Result<Option<HistoryOffers>, ApiError>;
 
 pub type HistoryOffersResponse = Result<HistoryOffersInfo, ApiError>;
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct HistoryOffersInfo {
     pub total: u64,
     pub count: u64,
     pub offer_info: HashMap<Hash, HistoryOfferInfo>,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
 pub struct HistoryOfferInfo {
     pub tx_amount: u64,
 }

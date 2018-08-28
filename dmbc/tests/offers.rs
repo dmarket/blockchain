@@ -17,33 +17,25 @@ use exonum::crypto;
 use exonum::messages::Message;
 use hyper::status::StatusCode;
 
-use dmbc::currency::api::offers::{OpenOffersInfo, OpenOffersResponse};
+use dmbc::currency::api::offers::{OpenOffersInfo, OpenOfferInfo, OpenOffersResponse, OpenOffersResult};
+use dmbc::currency::api::error::ApiError;
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::assets::TradeAsset;
 use dmbc::currency::wallet::Wallet;
 use dmbc::currency::offers::{OpenOffers, Offer};
 
 #[test]
-fn offers() {
+fn offers_asset_invalid() {
     let testkit = DmbcTestApiBuilder::new().create();
     let api = testkit.api();
 
-    let (status, response): (StatusCode, OpenOffersResponse) = api.get_with_status("/v1/offers");
-
-    assert_eq!(status, StatusCode::Ok);
-    assert_eq!(
-        response,
-        Ok(OpenOffersInfo {
-            total: 0,
-            count: 0,
-            offers_info: HashMap::new()
-        })
-    );
+    let (status, response): (StatusCode, OpenOffersResponse) = api.get_with_status("/v1/offers/123");
+    assert_eq!(status, StatusCode::BadRequest);
+    assert_eq!(response, Err(ApiError::AssetIdInvalid))
 }
 
-
 #[test]
-fn offers_by_asset() {
+fn offers_and_offers_by_asset() {
     let fixed = 10;
     let units = 2;
     let balance = 1000;
@@ -79,4 +71,17 @@ fn offers_by_asset() {
 
     let offers = api.get_offers(&asset.id());
     assert_eq!(Some(open_offers), offers);
+
+    let (status, response): (StatusCode, OpenOffersResponse) = api.get_with_status("/v1/offers");
+    let mut offers_info = HashMap::new();
+    offers_info.insert(asset.id(), OpenOfferInfo{bids_count:1, asks_count:0});
+    assert_eq!(status, StatusCode::Ok);
+    assert_eq!(
+        response,
+        Ok(OpenOffersInfo {
+            total: 1,
+            count: 1,
+            offers_info,
+        })
+    );
 }
