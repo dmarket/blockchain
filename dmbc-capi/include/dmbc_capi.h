@@ -739,6 +739,8 @@ uint8_t *dmbc_tx_trade_into_bytes(
  * @seller_key public key of a seller [32 bytes long] in hex format.
  * @buyer_key public key of a buyer [32 bytes long] in hex format.
  * @fee_strategy fee strategy flag.
+ * @seed transaction seed number.
+ * @memo memo message.
  * @error contains error message if any occurs.
  * 
  * @ret dmbc_trade_offer_intermediary pointer to trade offer object, otherwise NULL.
@@ -748,6 +750,8 @@ dmbc_trade_offer_intermediary *dmbc_trade_offer_intermediary_create(
     const char *seller_key,
     const char *buyer_key,
     uint8_t fee_strategy,
+    uint64_t seed,
+    const char *memo,
     dmbc_error *error
 );
 
@@ -798,8 +802,6 @@ uint8_t *dmbc_trade_offer_intermediary_into_bytes(
  * @offer pointer to trade offer object.
  * @seller_signature signature [64 bytes long] in hex format signed by seller.
  * @intermediary_signature signature [64 bytes long] in hex format signed by internediary party.
- * @seed transaction seed number.
- * @memo memo message.
  * @error contains error message if any occurs.
  * 
  * @ret dmbc_tx_trade_intermediary pointer to trade transaction, otherwise NULL.
@@ -808,8 +810,6 @@ dmbc_tx_trade_intermediary *dmbc_tx_trade_intermediary_create(
     dmbc_trade_offer_intermediary *offer,
     const char *seller_signature,
     const char *intermediary_signature,
-    uint64_t seed,
-    const char *memo,
     dmbc_error *error
 );
 

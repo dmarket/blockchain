@@ -18,6 +18,8 @@ ffi_fn! {
         seller_public_key: *const c_char,
         buyer_public_key: *const c_char,
         fee_strategy: u8,
+        seed: u64,
+        memo: *const c_char,
         error: *mut Error,
     ) -> *mut TradeOfferIntermediaryWrapper {
         let seller_public_key = match parse_public_key(seller_public_key) {
@@ -51,8 +53,21 @@ ffi_fn! {
                 return ptr::null_mut();
             }
         }
+
+        let memo = match parse_str(memo) {
+            Ok(memo) => memo,
+            Err(err) => {
+                unsafe {
+                    if !error.is_null() {
+                        *error = err;
+                    }
+                    return ptr::null_mut();
+                }
+            }
+        };
+
         let intermediary = unsafe { &*intermediary };
-        let wrapper = TradeOfferIntermediaryWrapper::new(intermediary.clone(), &seller_public_key, &buyer_public_key, fee_strategy);
+        let wrapper = TradeOfferIntermediaryWrapper::new(intermediary.clone(), &seller_public_key, &buyer_public_key, fee_strategy, seed, memo);
         Box::into_raw(Box::new(wrapper))
     }
 }
@@ -134,8 +149,6 @@ ffi_fn! {
         wrapper: *mut TradeOfferIntermediaryWrapper,
         seller_signature: *const c_char,
         intermediary_signature: *const c_char,
-        seed: u64,
-        memo: *const c_char,
         error: *mut Error,
     ) -> *mut TradeIntermediaryWrapper {
         let wrapper = match TradeOfferIntermediaryWrapper::from_ptr(wrapper) {
@@ -171,20 +184,9 @@ ffi_fn! {
                 }
             }
         };
-        let memo = match parse_str(memo) {
-            Ok(memo) => memo,
-            Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return ptr::null_mut();
-                }
-            }
-        };
 
         let wrapper = wrapper.unwrap().clone();
-        let tx = TradeIntermediaryWrapper::new(wrapper, seed, &seller_signature, &intermediary_signature, memo);
+        let tx = TradeIntermediaryWrapper::new(wrapper, &seller_signature, &intermediary_signature);
         Box::into_raw(Box::new(tx))
     }
 }

@@ -757,11 +757,11 @@ void trade_intermediary(const char *input_file, const char *output_file) {
     const cJSON *buyer_key_json = cJSON_GetObjectItemCaseSensitive(offer_json, "buyer");
     const cJSON *assets_json = cJSON_GetObjectItemCaseSensitive(offer_json, "assets");
     const cJSON *fee_strategy_json = cJSON_GetObjectItemCaseSensitive(offer_json, "fee_strategy");
-
-    const cJSON *seed_json = cJSON_GetObjectItemCaseSensitive(inputs, "seed");
+    const cJSON *memo = cJSON_GetObjectItemCaseSensitive(offer_json, "memo");
+    const cJSON *seed_json = cJSON_GetObjectItemCaseSensitive(offer_json, "seed");
+    
     const cJSON *seller_signature_json = cJSON_GetObjectItemCaseSensitive(inputs, "seller_signature");
     const cJSON *intermediary_signature_json = cJSON_GetObjectItemCaseSensitive(inputs, "intermediary_signature");
-    const cJSON *memo = cJSON_GetObjectItemCaseSensitive(inputs, "memo");
 
     const cJSON *asset = NULL;
 
@@ -785,6 +785,8 @@ void trade_intermediary(const char *input_file, const char *output_file) {
         seller_public_key, 
         buyer_public_key, 
         fee_strategy_json->valueint, 
+        seed_json->valueint,
+        memo->valuestring,
         err
     );
     if (NULL == offer) {
@@ -824,9 +826,7 @@ void trade_intermediary(const char *input_file, const char *output_file) {
     dmbc_tx_trade_intermediary *tx = dmbc_tx_trade_intermediary_create(
         offer, 
         signature, 
-        intermediary_signature, 
-        seed_json->valueint, 
-        memo->valuestring, 
+        intermediary_signature,
         err
     );
     if (NULL == tx) {
