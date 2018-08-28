@@ -1,11 +1,12 @@
 use currency::offers::Offer;
-use exonum::crypto::PublicKey;
+use exonum::crypto::{PublicKey, Hash};
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct CloseOffer {
     pub wallet: PublicKey,
     pub price: u64,
     pub amount: u64,
+    pub tx_hash: Hash,
 }
 
 encoding_struct! {
@@ -47,6 +48,7 @@ impl Offers {
                     wallet: offers[k].wallet().clone(),
                     price: self.price(),
                     amount: amount - amount_closed,
+                    tx_hash: offers[k].tx_hash().clone(),
                 });
                 amount_closed = amount;
             } else if offers[k].amount() <= amount - amount_closed {
@@ -57,6 +59,7 @@ impl Offers {
                     wallet: offers[k].wallet().clone(),
                     price: self.price(),
                     amount: a,
+                    tx_hash: offers[k].tx_hash().clone(),
                 });
             } else {
                 break;
@@ -122,10 +125,14 @@ mod test {
         let mut bids = Offers::new(price, o);
 
         let result = bids.close(5);
+        let hash1 = crypto::hash("tx1".as_bytes());
+        let hash2 = crypto::hash("tx2".as_bytes());
+        let hash3 = crypto::hash("tx3".as_bytes());
+
         let cs = vec![
-            CloseOffer { wallet, price, amount: 1 },
-            CloseOffer { wallet, price, amount: 3 },
-            CloseOffer { wallet, price, amount: 1 }
+            CloseOffer { wallet, price, amount: 1, tx_hash: hash1 },
+            CloseOffer { wallet, price, amount: 3, tx_hash: hash2 },
+            CloseOffer { wallet, price, amount: 1, tx_hash: hash3 }
         ];
         assert_eq!(cs, result);
         assert_eq!(vec![Offer::new(&wallet, 4, &crypto::hash("tx3".as_bytes()))], bids.offers());

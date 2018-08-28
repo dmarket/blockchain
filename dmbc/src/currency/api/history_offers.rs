@@ -2,13 +2,13 @@ extern crate serde_json;
 
 use currency::api::ServiceApi;
 use currency::api::error::ApiError;
-use currency::assets::{AssetId};
-use currency::offers;
-use currency::offers::OpenOffers;
-
+use currency::offers::HistoryOffers;
+use currency::offers::history;
 
 use exonum::api::Api;
 use exonum::blockchain::Blockchain;
+use exonum::crypto::Hash;
+use exonum::encoding::serialize::FromHex;
 use hyper::header::ContentType;
 use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
@@ -20,52 +20,50 @@ use std::collections::HashMap;
 const MAX_BLOCKS_PER_REQUEST: u64 = 1000;
 
 #[derive(Clone)]
-pub struct OfferApi {
+pub struct HistoryOffersApi {
     pub blockchain: Blockchain,
 }
-pub type OpenOffersResult = Result<Option<OpenOffers>, ApiError>;
+pub type HistoryOfferResult = Result<Option<HistoryOffers>, ApiError>;
 
-pub type OpenOffersResponse = Result<OpenOffersInfo, ApiError>;
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct OpenOffersInfo {
+pub type HistoryOffersResponse = Result<HistoryOffersInfo, ApiError>;
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct HistoryOffersInfo {
     pub total: u64,
     pub count: u64,
-    pub offers_info: HashMap<AssetId, OpenOfferInfo>,
+    pub offer_info: HashMap<Hash, HistoryOfferInfo>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-pub struct OpenOfferInfo {
-    pub bids_count: u64,
-    pub asks_count: u64,
+#[derive(Debug, PartialEq, Clone, Serialize, Deserialize)]
+pub struct HistoryOfferInfo {
+    pub tx_amount: u64,
 }
 
-impl OpenOfferInfo {
-    pub fn from(open_offers: &OpenOffers) -> Self {
-        OpenOfferInfo {
-            bids_count: open_offers.bids().into_iter().map(|bid| bid.offers().len() as u64).sum(),
-            asks_count: open_offers.asks().into_iter().map(|ask| ask.offers().len() as u64).sum(),
+impl HistoryOfferInfo {
+    pub fn from(open_offers: &HistoryOffers) -> Self {
+        HistoryOfferInfo {
+            tx_amount: open_offers.history().len() as u64,
         }
     }
 }
 
-impl OfferApi {
-    fn pagination_offers(
+impl HistoryOffersApi {
+    fn pagination_history_offers(
         &self,
         offset: u64,
         limit: u64,
-    ) -> (HashMap<AssetId, OpenOfferInfo>, u64, u64) {
+    ) -> (HashMap<Hash, HistoryOfferInfo>, u64, u64) {
         let view = &mut self.blockchain.fork();
-        let idx = offers::Schema(view).index();
+        let idx = history::Schema(view).index();
         let mut total: u64 = 0;
         let mut count: u64 = 0;
-        let mut result: HashMap<AssetId, OpenOfferInfo> = HashMap::new();
+        let mut result = HashMap::new();
         for v in idx.iter() {
             if total < offset || total >= offset + limit {
                 total += 1;
                 continue;
             }
-            let wi = OpenOfferInfo::from(&v.1);
-            result.insert(v.0, wi);
+            let hoi = HistoryOfferInfo::from(&v.1);
+            result.insert(v.0, hoi);
             count += 1;
             total += 1;
         }
@@ -77,37 +75,37 @@ impl OfferApi {
 
 lazy_static! {
     static ref LIST_REQUESTS: IntCounter = register_int_counter!(
-        "dmbc_offers_api_list_requests_total",
+        "dmbc_history_offers_api_list_requests_total",
         "OpenOffer list requests."
     ).unwrap();
     static ref LIST_RESPONSES: IntCounter = register_int_counter!(
-        "dmbc_offers_api_list_responses_total",
+        "dmbc_history_offers_api_list_responses_total",
         "OpenOffer list responses."
     ).unwrap();
     static ref INFO_REQUESTS: IntCounter = register_int_counter!(
-        "dmbc_offers_api_info_requests_total",
+        "dmbc_history_offers_api_info_requests_total",
         "OpenOffer info requests."
     ).unwrap();
     static ref INFO_RESPONSES: IntCounter = register_int_counter!(
-        "dmbc_offers_api_info_responses_total",
+        "dmbc_history_offers_api_info_responses_total",
         "OpenOffer info responses."
     ).unwrap();
 }
 
-impl Api for OfferApi {
+impl Api for HistoryOffersApi {
     fn wire(&self, router: &mut Router) {
         // Gets status of the wallet corresponding to the public key.
         let _self = self.clone();
-        let offers_info = move |req: &mut Request| -> IronResult<Response> {
+        let history_offers_info = move |req: &mut Request| -> IronResult<Response> {
             LIST_REQUESTS.inc();
 
             let (offset, limit) = ServiceApi::pagination_params(req);
-            let (offers_info, total, count) = _self.pagination_offers(offset, limit);
+            let (offer_info, total, count) = _self.pagination_history_offers(offset, limit);
 
-            let result: OpenOffersResponse = Ok(OpenOffersInfo {
+            let result: HistoryOffersResponse = Ok(HistoryOffersInfo {
                 total,
                 count,
-                offers_info,
+                offer_info,
             });
 
             let mut res =
@@ -126,14 +124,14 @@ impl Api for OfferApi {
 
             let params = req.extensions.get::<Router>().unwrap();
 
-            let result: OpenOffersResult = match params.find("asset_id") {
-                Some(asset_id_str) =>
-                    match AssetId::from_hex(asset_id_str) {
-                        Ok(asset_id) => {
+            let result: HistoryOfferResult = match params.find("tx_hash") {
+                Some(tx_hash_str) =>
+                    match Hash::from_hex(tx_hash_str) {
+                        Ok(tx_hash) => {
                             let view = &mut _self.blockchain.fork();
-                            Ok(Some(offers::Schema(view).fetch(&asset_id)))
+                            Ok(Some(history::Schema(view).fetch(&tx_hash)))
                         },
-                        Err(_) => Err(ApiError::AssetIdInvalid)
+                        Err(_) => Err(ApiError::TransactionHashInvalid)
                     },
                 None => Err(ApiError::IncorrectRequest),
             };
@@ -152,7 +150,7 @@ impl Api for OfferApi {
 
         };
 
-        router.get("/v1/offers", offers_info, "open_offers");
-        router.get("/v1/offers/:asset_id", bids_asks, "bids_asks");
+        router.get("/v1/history/offers", history_offers_info, "history_offers_info");
+        router.get("/v1/history/offers/:tx_hash", bids_asks, "offer_history");
     }
 }
