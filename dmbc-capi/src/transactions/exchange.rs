@@ -18,6 +18,8 @@ encoding_struct! {
         recipient_assets: Vec<AssetBundle>,
 
         fee_strategy:     u8,
+        seed:             u64,
+        data_info:        &str,
     }
 }
 
@@ -31,6 +33,8 @@ pub struct ExchangeOfferWrapper {
     recipient_assets: Vec<AssetBundle>,
 
     fee_strategy: u8,
+    seed: u64,
+    data_info: String,
 }
 
 impl ExchangeOfferWrapper {
@@ -39,6 +43,8 @@ impl ExchangeOfferWrapper {
         sender_value: u64,
         recipient: &PublicKey,
         fee_strategy: u8,
+        seed: u64, 
+        data_info: &str
     ) -> Self {
         ExchangeOfferWrapper {
             sender: *sender,
@@ -48,6 +54,8 @@ impl ExchangeOfferWrapper {
             recipient: *recipient,
             recipient_assets: Vec::new(),
             fee_strategy: fee_strategy,
+            seed: seed,
+            data_info: data_info.to_string()
         }
     }
 
@@ -78,6 +86,8 @@ impl ExchangeOfferWrapper {
             &self.recipient,
             self.recipient_assets.clone(),
             self.fee_strategy,
+            self.seed,
+            self.data_info.as_str()
         )
     }
 }
@@ -89,27 +99,21 @@ message! {
         const ID = EXCHANGE_ID;
 
         offer:             ExchangeOffer,
-        seed:              u64,
         sender_signature:  &Signature,
-        data_info:         &str,
     }
 }
 
 #[derive(Clone, Debug)]
 pub struct ExchangeWrapper {
     offer: ExchangeOffer,
-    seed: u64,
     signature: Signature,
-    data_info: String,
 }
 
 impl ExchangeWrapper {
-    pub fn new(offer: ExchangeOffer, seed: u64, signature: &Signature, data_info: &str) -> Self {
+    pub fn new(offer: ExchangeOffer, signature: &Signature) -> Self {
         ExchangeWrapper {
             offer: offer,
-            seed: seed,
             signature: *signature,
-            data_info: data_info.to_string(),
         }
     }
 
@@ -125,9 +129,7 @@ impl ExchangeWrapper {
     pub fn unwrap(&self) -> Exchange {
         Exchange::new(
             self.offer.clone(),
-            self.seed,
             &self.signature,
-            self.data_info.as_str(),
             &SecretKey::zero(),
         )
     }

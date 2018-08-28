@@ -398,6 +398,8 @@ uint8_t * dmbc_tx_transfer_fees_payer_into_bytes(
  * @sender_amount amount of coins from sender.
  * @recipient_key public key of a receiver [32 bytes long] in hex format.
  * @fee_strategy fee strategy flag.
+ * @seed transaction seed number.
+ * @memo memo messsage.
  * @error contains error message if any occurs.
  * 
  * @ret dmbc_exchange_offer pointer to exchange offer object, otherwise NULL.
@@ -407,6 +409,8 @@ dmbc_exchange_offer *dmbc_exchange_offer_create(
     uint64_t sender_amount,
     const char *recipient_key,
     uint8_t fee_strategy,
+    uint64_t seed,
+    const char *memo,
     dmbc_error *error
 );
 
@@ -470,8 +474,6 @@ uint8_t* dmbc_exchange_offer_into_bytes(
  * 
  * @offer pointer to exchange offer object.
  * @signature signature of an offer [64 bytes long] in hex format.
- * @seed transaction seed number.
- * @memo memo messsage.
  * @error contains error message if any occurs.
  * 
  * @ret dmbc_tx_exchange pointer to exchange transaction, otherwise NULL.
@@ -479,8 +481,6 @@ uint8_t* dmbc_exchange_offer_into_bytes(
 dmbc_tx_exchange *dmbc_tx_exchange_create(
     dmbc_exchange_offer *offer,
     const char *signature,
-    uint64_t seed,
-    const char *memo,
     dmbc_error *error
 );
 

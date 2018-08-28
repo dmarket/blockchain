@@ -407,9 +407,9 @@ void exchange(const char *input_file, const char *output_file) {
     const cJSON *sender_assets = cJSON_GetObjectItemCaseSensitive(offer_json, "sender_assets");
     const cJSON *sender_value_json = cJSON_GetObjectItemCaseSensitive(offer_json, "sender_value");
     const cJSON *fee_strategy_json = cJSON_GetObjectItemCaseSensitive(offer_json, "fee_strategy");
+    const cJSON *memo = cJSON_GetObjectItemCaseSensitive(offer_json, "memo");
+    const cJSON *seed_json = cJSON_GetObjectItemCaseSensitive(offer_json, "seed");
 
-    const cJSON *memo = cJSON_GetObjectItemCaseSensitive(inputs, "memo");
-    const cJSON *seed_json = cJSON_GetObjectItemCaseSensitive(inputs, "seed");
     const cJSON *signature = cJSON_GetObjectItemCaseSensitive(inputs, "sender_signature");
 
     const cJSON *asset = NULL;
@@ -420,7 +420,7 @@ void exchange(const char *input_file, const char *output_file) {
     uint8_t fee_strategy = fee_strategy_json->valueint;
 
     dmbc_error *err = dmbc_error_new();
-    dmbc_exchange_offer *offer = dmbc_exchange_offer_create(sender_public_key, sender_value, recipient_public_key, fee_strategy, err);
+    dmbc_exchange_offer *offer = dmbc_exchange_offer_create(sender_public_key, sender_value, recipient_public_key, fee_strategy, seed_json->valueint, memo->valuestring, err);
     if (NULL == offer) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
@@ -479,7 +479,7 @@ void exchange(const char *input_file, const char *output_file) {
         dmbc_asset_free(asset);
     }
 
-    dmbc_tx_exchange *tx = dmbc_tx_exchange_create(offer, signature->valuestring, seed_json->valueint, memo->valuestring, err);
+    dmbc_tx_exchange *tx = dmbc_tx_exchange_create(offer, signature->valuestring, err);
     if (NULL == tx) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {

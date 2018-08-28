@@ -17,6 +17,8 @@ ffi_fn! {
         sender_value: u64,
         recipient_public_key: *const c_char,
         fee_strategy: u8,
+        seed: u64,
+        memo: *const c_char,
         error: *mut Error,
     ) -> *mut ExchangeOfferWrapper {
         let sender_key = match parse_public_key(sender_public_key) {
@@ -41,9 +43,19 @@ ffi_fn! {
                 }
             }
         };
+        let memo = match parse_str(memo) {
+            Ok(memo) => memo,
+            Err(err) => {
+                unsafe {
+                    if !error.is_null() {
+                        *error = err;
+                    }
+                    return ptr::null_mut();
+                }
+            }
+        };
 
-
-        let wrapper = ExchangeOfferWrapper::new(&sender_key, sender_value, &recipient_key, fee_strategy);
+        let wrapper = ExchangeOfferWrapper::new(&sender_key, sender_value, &recipient_key, fee_strategy, seed, memo);
         Box::into_raw(Box::new(wrapper))
     }
 }
@@ -157,8 +169,6 @@ ffi_fn! {
     fn dmbc_tx_exchange_create(
         wrapper: *mut ExchangeOfferWrapper,
         signature: *const c_char,
-        seed: u64,
-        memo: *const c_char,
         error: *mut Error,
     ) -> *mut ExchangeWrapper {
         let wrapper = match ExchangeOfferWrapper::from_ptr(wrapper) {
@@ -183,20 +193,9 @@ ffi_fn! {
                 }
             }
         };
-        let memo = match parse_str(memo) {
-            Ok(memo) => memo,
-            Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return ptr::null_mut();
-                }
-            }
-        };
 
         let wrapper = wrapper.unwrap().clone();
-        let tx = ExchangeWrapper::new(wrapper, seed, &signature, memo);
+        let tx = ExchangeWrapper::new(wrapper, &signature);
 
         Box::into_raw(Box::new(tx))
     }
