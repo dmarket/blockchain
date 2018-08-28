@@ -21,6 +21,8 @@ encoding_struct! {
         recipient_assets: Vec<AssetBundle>,
 
         fee_strategy:     u8,
+        seed:             u64,
+        data_info:        &str,
     }
 }
 
@@ -36,6 +38,8 @@ pub struct ExchangeOfferIntermediaryWrapper {
     recipient_assets: Vec<AssetBundle>,
 
     fee_strategy: u8,
+    seed: u64,
+    data_info: String
 }
 
 impl ExchangeOfferIntermediaryWrapper {
@@ -45,6 +49,8 @@ impl ExchangeOfferIntermediaryWrapper {
         sender_value: u64,
         recipient: &PublicKey,
         fee_strategy: u8,
+        seed: u64,
+        data_info: &str,
     ) -> Self {
         ExchangeOfferIntermediaryWrapper {
             intermediary: intermediary,
@@ -56,6 +62,8 @@ impl ExchangeOfferIntermediaryWrapper {
             recipient: *recipient,
             recipient_assets: Vec::new(),
             fee_strategy: fee_strategy,
+            seed: seed,
+            data_info: data_info.to_string()
         }
     }
 
@@ -87,6 +95,8 @@ impl ExchangeOfferIntermediaryWrapper {
             &self.recipient,
             self.recipient_assets.clone(),
             self.fee_strategy,
+            self.seed,
+            &self.data_info.as_str()
         )
     }
 }
@@ -98,36 +108,28 @@ message! {
         const ID = EXCHANGE_INTERMEDIARY_ID;
 
         offer:                  ExchangeOfferIntermediary,
-        seed:                   u64,
         sender_signature:       &Signature,
         intermediary_signature: &Signature,
-        data_info:              &str,
     }
 }
 
 #[derive(Clone, Debug)]
 pub struct ExchangeIntermediaryWrapper {
     offer: ExchangeOfferIntermediary,
-    seed: u64,
     sender_signature: Signature,
     intermediary_signature: Signature,
-    data_info: String,
 }
 
 impl ExchangeIntermediaryWrapper {
     pub fn new(
         offer: ExchangeOfferIntermediary,
-        seed: u64,
         sender_signature: &Signature,
         intermediary_signature: &Signature,
-        data_info: &str,
     ) -> Self {
         ExchangeIntermediaryWrapper {
             offer: offer,
-            seed: seed,
             sender_signature: *sender_signature,
             intermediary_signature: *intermediary_signature,
-            data_info: data_info.to_string(),
         }
     }
 
@@ -145,10 +147,8 @@ impl ExchangeIntermediaryWrapper {
     pub fn unwrap(&self) -> ExchangeIntermediary {
         ExchangeIntermediary::new(
             self.offer.clone(),
-            self.seed,
             &self.sender_signature,
             &self.intermediary_signature,
-            self.data_info.as_str(),
             &SecretKey::zero(),
         )
     }
