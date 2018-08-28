@@ -665,8 +665,9 @@ void trade(const char *input_file, const char *output_file) {
     const cJSON *buyer_key_json = cJSON_GetObjectItemCaseSensitive(offer_json, "buyer");
     const cJSON *assets_json = cJSON_GetObjectItemCaseSensitive(offer_json, "assets");
     const cJSON *fee_strategy_json = cJSON_GetObjectItemCaseSensitive(offer_json, "fee_strategy");
+    const cJSON *seed_json = cJSON_GetObjectItemCaseSensitive(offer_json, "seed");
+    const cJSON *data_info = cJSON_GetObjectItemCaseSensitive(offer_json, "data_info");
 
-    const cJSON *seed_json = cJSON_GetObjectItemCaseSensitive(inputs, "seed");
     const cJSON *seller_signature_json = cJSON_GetObjectItemCaseSensitive(inputs, "seller_signature");
 
     const cJSON *asset = NULL;
@@ -675,7 +676,7 @@ void trade(const char *input_file, const char *output_file) {
     const char *buyer_public_key = buyer_key_json->valuestring;
 
     dmbc_error *err = dmbc_error_new();
-    dmbc_trade_offer *offer = dmbc_trade_offer_create(seller_public_key, buyer_public_key, fee_strategy_json->valueint, err);
+    dmbc_trade_offer *offer = dmbc_trade_offer_create(seller_public_key, buyer_public_key, fee_strategy_json->valueint, seed_json->valueint, data_info->valuestring, err);
     if (NULL == offer) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {
@@ -711,7 +712,7 @@ void trade(const char *input_file, const char *output_file) {
     }
 
     const char *signature = seller_signature_json->valuestring;
-    dmbc_tx_trade *tx = dmbc_tx_trade_create(offer, signature, seed_json->valueint, err);
+    dmbc_tx_trade *tx = dmbc_tx_trade_create(offer, signature, err);
     if (NULL == tx) {
         const char *msg = dmbc_error_message(err);
         if (NULL != msg) {

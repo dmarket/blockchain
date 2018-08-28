@@ -15,6 +15,8 @@ encoding_struct! {
         assets: Vec<TradeAsset>,
 
         fee_strategy: u8,
+        seed:         u64,
+        data_info:    &str,
     }
 }
 
@@ -25,15 +27,19 @@ pub struct TradeOfferWrapper {
     assets: Vec<TradeAsset>,
 
     fee_strategy: u8,
+    seed:         u64,
+    data_info:    String,
 }
 
 impl TradeOfferWrapper {
-    pub fn new(seller: &PublicKey, buyer: &PublicKey, fee_strategy: u8) -> Self {
+    pub fn new(seller: &PublicKey, buyer: &PublicKey, fee_strategy: u8, seed: u64, data_info: &str) -> Self {
         TradeOfferWrapper {
             buyer: *buyer,
             seller: *seller,
             assets: Vec::new(),
             fee_strategy: fee_strategy,
+            seed: seed, 
+            data_info: data_info.to_string()
         }
     }
 
@@ -58,6 +64,8 @@ impl TradeOfferWrapper {
             &self.seller,
             self.assets.clone(),
             self.fee_strategy,
+            self.seed,
+            &self.data_info.as_str()
         )
     }
 }
@@ -69,7 +77,6 @@ message! {
         const ID = TRADE_ID;
 
         offer:              TradeOffer,
-        seed:               u64,
         seller_signature:   &Signature,
     }
 }
@@ -77,15 +84,13 @@ message! {
 #[derive(Clone, Debug)]
 pub struct TradeWrapper {
     offer: TradeOffer,
-    seed: u64,
     seller_signature: Signature,
 }
 
 impl TradeWrapper {
-    pub fn new(offer: TradeOffer, seed: u64, signature: &Signature) -> Self {
+    pub fn new(offer: TradeOffer, signature: &Signature) -> Self {
         TradeWrapper {
             offer: offer,
-            seed: seed,
             seller_signature: *signature,
         }
     }
@@ -102,7 +107,6 @@ impl TradeWrapper {
     pub fn unwrap(&self) -> Trade {
         Trade::new(
             self.offer.clone(),
-            self.seed,
             &self.seller_signature,
             &SecretKey::zero(),
         )

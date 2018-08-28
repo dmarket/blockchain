@@ -16,6 +16,8 @@ ffi_fn! {
         seller_public_key: *const c_char,
         buyer_public_key: *const c_char,
         fee_strategy: u8,
+        seed: u64,
+        data_info: *const c_char,
         error: *mut Error,
     ) -> *mut TradeOfferWrapper {
         let seller_public_key = match parse_public_key(seller_public_key) {
@@ -40,9 +42,20 @@ ffi_fn! {
                 }
             }
         };
+        let data_info = match parse_str(data_info) {
+            Ok(info) => info,
+            Err(err) => {
+                unsafe {
+                    if !error.is_null() {
+                        *error = err;
+                    }
+                    return ptr::null_mut();
+                }
+            }
+        };
 
 
-        let wrapper = TradeOfferWrapper::new(&seller_public_key, &buyer_public_key, fee_strategy);
+        let wrapper = TradeOfferWrapper::new(&seller_public_key, &buyer_public_key, fee_strategy, seed, data_info);
         Box::into_raw(Box::new(wrapper))
     }
 }
@@ -123,7 +136,6 @@ ffi_fn! {
     fn dmbc_tx_trade_create(
         wrapper: *mut TradeOfferWrapper,
         signature: *const c_char,
-        seed: u64,
         error: *mut Error,
     ) -> *mut TradeWrapper {
         let wrapper = match TradeOfferWrapper::from_ptr(wrapper) {
@@ -150,7 +162,7 @@ ffi_fn! {
         };
 
         let wrapper = wrapper.unwrap().clone();
-        let tx = TradeWrapper::new(wrapper, seed, &signature);
+        let tx = TradeWrapper::new(wrapper, &signature);
         Box::into_raw(Box::new(tx))
     }
 }

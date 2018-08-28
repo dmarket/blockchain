@@ -20,13 +20,15 @@ fn capi_trade() {
     let seller = PublicKey::from_hex(offer["seller"].as_str().unwrap());
     let buyer = PublicKey::from_hex(offer["buyer"].as_str().unwrap());
     let fee_strategy = FeeStrategy::try_from(offer["fee_strategy"].as_u64().unwrap() as u8);
-    let seed = inputs["seed"].as_u64().unwrap();
+    let seed = offer["seed"].as_u64().unwrap();
+    let data_info = offer["data_info"].as_str().unwrap();
 
     let mut builder = transaction::Builder::new()
         .keypair(buyer.unwrap(), SecretKey::zero())
         .tx_trade_assets()
         .seller(seller.unwrap(), SecretKey::zero())
         .fee_strategy(fee_strategy.unwrap())
+        .data_info(data_info)
         .seed(seed);
 
     for asset in offer["assets"].as_array().unwrap() {
