@@ -15,7 +15,7 @@ ffi_fn! {
         public_key: *const c_char,
         asset: *mut TradeAsset,
         seed: u64,
-        data_info: *const c_char,
+        memo: *const c_char,
         error: *mut Error,
     ) -> *mut BidOfferWrapper {
         let public_key = match parse_public_key(public_key) {
@@ -41,7 +41,7 @@ ffi_fn! {
 
         let asset = TradeAsset::from_ptr(asset);
 
-        let data_info = match parse_str(data_info) {
+        let memo = match parse_str(memo) {
             Ok(info) => info,
             Err(err) => {
                 unsafe {
@@ -53,7 +53,7 @@ ffi_fn! {
             }
         };
 
-        let wrapper = BidOfferWrapper::new(&public_key, asset.clone(), seed, data_info);
+        let wrapper = BidOfferWrapper::new(&public_key, asset.clone(), seed, memo);
         Box::into_raw(Box::new(wrapper))
     }
 }

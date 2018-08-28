@@ -17,7 +17,7 @@ encoding_struct! {
         amount:     u64,
         assets:     Vec<AssetBundle>,
         seed:       u64,
-        data_info:  &str,
+        memo:       &str,
     }
 }
 
@@ -31,7 +31,7 @@ pub struct TransferOfferWrapper {
     amount:     u64,
     assets:     Vec<AssetBundle>,
     seed:       u64,
-    data_info:  String,
+    memo:       String,
 }
 
 impl TransferOfferWrapper {
@@ -41,7 +41,7 @@ impl TransferOfferWrapper {
         fees_payer: &PublicKey, 
         amount: u64, 
         seed: u64, 
-        data_info: &str
+        memo: &str
     ) -> Self {
         TransferOfferWrapper {
             from: *from,
@@ -50,7 +50,7 @@ impl TransferOfferWrapper {
             amount: amount,
             assets: Vec::new(),
             seed: seed,
-            data_info: data_info.to_string(),
+            memo: memo.to_string(),
         }
     }
 
@@ -77,7 +77,7 @@ impl TransferOfferWrapper {
             self.amount,
             self.assets.clone(),
             self.seed,
-            self.data_info.as_str()
+            self.memo.as_str()
         )
     }
 }

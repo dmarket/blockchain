@@ -17,7 +17,7 @@ message! {
         pub_key:      &PublicKey,
         asset:        TradeAsset,
         seed:         u64,
-        data_info:    &str,
+        memo:         &str,
     }
 }
 
@@ -26,7 +26,7 @@ pub struct AskOfferWrapper {
     pub_key:      PublicKey,
     asset:        TradeAsset,
     seed:         u64,
-    data_info:    String,
+    memo:    String,
 }
 
 impl AskOfferWrapper {
@@ -34,13 +34,13 @@ impl AskOfferWrapper {
         pub_key: &PublicKey,
         asset: TradeAsset,
         seed: u64,
-        data_info: &str
+        memo: &str
     ) -> Self {
         AskOfferWrapper {
             pub_key: *pub_key,
             asset: asset.clone(),
             seed: seed,
-            data_info: data_info.to_string()
+            memo: memo.to_string()
         }
     }
 
@@ -60,7 +60,7 @@ impl AskOfferWrapper {
             &self.pub_key,
             self.asset.clone(),
             self.seed,
-            self.data_info.as_str(),
+            self.memo.as_str(),
             &SecretKey::zero()
         )
     }

@@ -17,7 +17,7 @@ ffi_fn! {
         buyer_public_key: *const c_char,
         fee_strategy: u8,
         seed: u64,
-        data_info: *const c_char,
+        memo: *const c_char,
         error: *mut Error,
     ) -> *mut TradeOfferWrapper {
         let seller_public_key = match parse_public_key(seller_public_key) {
@@ -42,7 +42,7 @@ ffi_fn! {
                 }
             }
         };
-        let data_info = match parse_str(data_info) {
+        let memo = match parse_str(memo) {
             Ok(info) => info,
             Err(err) => {
                 unsafe {
@@ -55,7 +55,7 @@ ffi_fn! {
         };
 
 
-        let wrapper = TradeOfferWrapper::new(&seller_public_key, &buyer_public_key, fee_strategy, seed, data_info);
+        let wrapper = TradeOfferWrapper::new(&seller_public_key, &buyer_public_key, fee_strategy, seed, memo);
         Box::into_raw(Box::new(wrapper))
     }
 }

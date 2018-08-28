@@ -302,7 +302,7 @@ uint8_t *dmbc_tx_transfer_into_bytes(
  * @fees_payer_key public key of a fees payer [32 bytes long] in hex format.
  * @amount amount of coins from sender.
  * @seed seed number.
- * @data_info memo message.
+ * @memo memo message.
  * @error contains error message if any occurs.
  * 
  * @ret dmbc_transfer_fees_payer_offer pointer to transfer fees payer offer object, otherwise NULL.
@@ -313,7 +313,7 @@ dmbc_transfer_fees_payer_offer *dmbc_transfer_fees_payer_offer_create(
     const char *fees_payer_key,
     uint64_t amount,
     uint64_t seed,
-    const char *data_info,
+    const char *memo,
     dmbc_error *error
 );
 
@@ -639,7 +639,7 @@ uint8_t * dmbc_tx_exchange_intermediary_into_bytes(
  * @buyer_key public key of a buyer [32 bytes long] in hex format.
  * @fee_strategy fee strategy flag.
  * @seed transaction seed number.
- * @data_info memo message.
+ * @memo memo message.
  * @error contains error message if any occurs.
  * 
  * @ret dmbc_trade_offer pointer to trade offer object, otherwise NULL.
@@ -649,7 +649,7 @@ dmbc_trade_offer *dmbc_trade_offer_create(
     const char *buyer_key,
     uint8_t fee_strategy,
     uint64_t seed,
-    const char *data_info,
+    const char *memo,
     dmbc_error *error
 );
 
@@ -848,7 +848,7 @@ dmbc_tx_ask_offer *dmbc_tx_ask_offer_create(
     const char *public_key,
     dmbc_trade_asset *asset,
     uint64_t seed,
-    const char *data_info,
+    const char *memo,
     dmbc_error *error
 );
 
@@ -888,7 +888,7 @@ dmbc_tx_bid_offer *dmbc_tx_bid_offer_create(
     const char *public_key,
     dmbc_trade_asset *asset,
     uint64_t seed,
-    const char *data_info,
+    const char *memo,
     dmbc_error *error
 );
 

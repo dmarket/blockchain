@@ -27,7 +27,7 @@ fn capi_transfer_fees_payer() {
         .fees_payer(fees_payer.unwrap(), SecretKey::zero())
         .amount(offer["amount"].as_u64().unwrap())
         .seed(offer["seed"].as_u64().unwrap())
-        .data_info(offer["data_info"].as_str().unwrap());
+        .data_info(offer["memo"].as_str().unwrap());
 
     for asset in offer["assets"].as_array().unwrap() {
         let id = AssetId::from_hex(asset["id"].as_str().unwrap());

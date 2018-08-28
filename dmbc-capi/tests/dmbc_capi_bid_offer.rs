@@ -28,7 +28,7 @@ fn capi_bid_offer() {
         .tx_offer()
         .asset(trade_asset)
         .seed(inputs["seed"].as_u64().unwrap())
-        .data_info(inputs["data_info"].as_str().unwrap());
+        .data_info(inputs["memo"].as_str().unwrap());
 
     let tx = builder.bid_build();
 

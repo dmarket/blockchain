@@ -19,7 +19,7 @@ encoding_struct! {
 
         fee_strategy:     u8,
         seed:             u64,
-        data_info:        &str,
+        memo:        &str,
     }
 }
 
@@ -34,7 +34,7 @@ pub struct ExchangeOfferWrapper {
 
     fee_strategy: u8,
     seed: u64,
-    data_info: String,
+    memo: String,
 }
 
 impl ExchangeOfferWrapper {
@@ -44,7 +44,7 @@ impl ExchangeOfferWrapper {
         recipient: &PublicKey,
         fee_strategy: u8,
         seed: u64, 
-        data_info: &str
+        memo: &str
     ) -> Self {
         ExchangeOfferWrapper {
             sender: *sender,
@@ -55,7 +55,7 @@ impl ExchangeOfferWrapper {
             recipient_assets: Vec::new(),
             fee_strategy: fee_strategy,
             seed: seed,
-            data_info: data_info.to_string()
+            memo: memo.to_string()
         }
     }
 
@@ -87,7 +87,7 @@ impl ExchangeOfferWrapper {
             self.recipient_assets.clone(),
             self.fee_strategy,
             self.seed,
-            self.data_info.as_str()
+            self.memo.as_str()
         )
     }
 }

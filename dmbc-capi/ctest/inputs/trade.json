@@ -9,7 +9,7 @@
         }],
         "fee_strategy": 1,
         "seed": 742,
-        "data_info": "CAPI Test"
+        "memo": "CAPI Test"
     },
     "seller_signature": "a2e947b6700022ee3c1b7e858cb526c3fc0f4e2a0449910987901d7698d0e98643bfed692ceb8deeff5752380ce6db81e7ae4ce23f150b565016bf5840fdb00b"
 }
