@@ -45,6 +45,7 @@ impl WalletInfo {
 pub struct ExtendedAsset {
     pub id: AssetId,
     pub amount: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub meta_data: Option<AssetInfo>,
 }
 
