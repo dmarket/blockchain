@@ -17,7 +17,7 @@ use exonum::crypto;
 use exonum::messages::Message;
 use hyper::status::StatusCode;
 
-use dmbc::currency::api::offers::{OpenOffersInfo, OpenOfferInfo, OpenOffersResponse, OpenOffersResult};
+use dmbc::currency::api::offers::{OpenOffersInfo, OpenOfferInfo, OpenOffersResponse};
 use dmbc::currency::api::error::ApiError;
 use dmbc::currency::transactions::builders::transaction;
 use dmbc::currency::assets::TradeAsset;
