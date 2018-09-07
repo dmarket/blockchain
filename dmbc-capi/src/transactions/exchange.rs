@@ -8,7 +8,7 @@ use error::{Error, ErrorKind};
 /// Transaction ID.
 pub const EXCHANGE_ID: u16 = 601;
 
-encoding_struct! {
+evo_encoding_struct! {
     struct ExchangeOffer {
         sender:           &PublicKey,
         sender_assets:    Vec<AssetBundle>,
@@ -92,7 +92,7 @@ impl ExchangeOfferWrapper {
     }
 }
 
-message! {
+evo_message! {
     /// `exchange` transaction.
     struct Exchange {
         const TYPE = SERVICE_ID;

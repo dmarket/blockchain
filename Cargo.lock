@@ -366,6 +366,8 @@ dependencies = [
 name = "dmbc-capi"
 version = "2.2.0"
 dependencies = [
+ "bit-vec 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "byteorder 1.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "dmbc 2.2.0",
  "exonum 0.5.2",
  "extprim 1.6.0 (registry+https://github.com/rust-lang/crates.io-index)",

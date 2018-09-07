@@ -9,7 +9,7 @@ use error::{Error, ErrorKind};
 /// Transaction ID.
 pub const TRADE_INTERMEDIARY_ID: u16 = 502;
 
-encoding_struct! {
+evo_encoding_struct! {
     struct TradeOfferIntermediary {
         intermediary: Intermediary,
         buyer:        &PublicKey,
@@ -82,7 +82,7 @@ impl TradeOfferIntermediaryWrapper {
     }
 }
 
-message! {
+evo_message! {
     /// `trade_intermediary` transaction.
     struct TradeIntermediary {
         const TYPE = SERVICE_ID;

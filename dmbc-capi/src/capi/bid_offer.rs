@@ -1,7 +1,7 @@
 use std::mem;
 use std::ptr;
 
-use exonum::messages::Message;
+use messages::Message;
 use libc::{c_char, size_t};
 
 use assets::TradeAsset;

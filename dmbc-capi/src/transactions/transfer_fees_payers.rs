@@ -7,7 +7,7 @@ use error::{Error, ErrorKind};
 /// Transaction ID.
 pub const TRANSFER_FEES_PAYER_ID: u16 = 201;
 
-encoding_struct! {
+evo_encoding_struct! {
     struct TransferOffer {
 
         from:       &PublicKey,
@@ -82,7 +82,7 @@ impl TransferOfferWrapper {
     }
 }
 
-message! {
+evo_message! {
     /// `transfer` transaction.
     struct TransferWithFeesPayer {
         const TYPE = SERVICE_ID;

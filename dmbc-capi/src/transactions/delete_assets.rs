@@ -8,7 +8,7 @@ use error::{Error, ErrorKind};
 /// Transaction ID.
 pub const DELETE_ASSETS_ID: u16 = 400;
 
-message! {
+evo_message! {
     /// `delete_assets` transaction.
     struct DeleteAssets {
         const TYPE = SERVICE_ID;

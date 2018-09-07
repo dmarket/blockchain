@@ -2,7 +2,7 @@ use exonum::crypto::PublicKey;
 
 use assets::Fees;
 
-encoding_struct! {
+evo_encoding_struct! {
     /// Info for asset to be committed into the network in `add_assets` transaction.
     struct MetaAsset {
         receiver:  &PublicKey,

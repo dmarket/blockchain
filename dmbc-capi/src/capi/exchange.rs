@@ -1,8 +1,8 @@
 use std::mem;
 use std::ptr;
 
-use exonum::messages::Message;
-use exonum::storage::StorageValue;
+use messages::Message;
+use storage::StorageValue;
 use libc::{c_char, size_t};
 
 use assets::AssetBundle;

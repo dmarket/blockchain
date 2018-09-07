@@ -8,7 +8,7 @@ use error::{Error, ErrorKind};
 /// Transaction ID.
 pub const ASK_OFFER_ID: u16 = 701;
 
-message! {
+evo_message! {
     /// `AskOffer` transaction.
     struct AskOffer {
         const TYPE = SERVICE_ID;

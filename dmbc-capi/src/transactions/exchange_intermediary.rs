@@ -9,7 +9,7 @@ use error::{Error, ErrorKind};
 /// Transaction ID.
 pub const EXCHANGE_INTERMEDIARY_ID: u16 = 602;
 
-encoding_struct! {
+evo_encoding_struct! {
     struct ExchangeOfferIntermediary {
         intermediary:     Intermediary,
 
@@ -101,7 +101,7 @@ impl ExchangeOfferIntermediaryWrapper {
     }
 }
 
-message! {
+evo_message! {
     /// `exchange_intermediary` transaction.
     struct ExchangeIntermediary {
         const TYPE = SERVICE_ID;

@@ -5,13 +5,10 @@ use std::string::ToString;
 use serde::de::{self, Deserialize, Deserializer, Visitor};
 use serde::{Serialize, Serializer};
 
-use exonum::crypto::PublicKey;
-use exonum::encoding;
-use exonum::encoding::serialize::json::ExonumJson;
-use exonum::encoding::serialize::WriteBufferWrapper;
-use exonum::encoding::{CheckedOffset, Field, Offset};
+use crypto::PublicKey;
+use encoding;
+use encoding::{CheckedOffset, Field, Offset};
 use exonum::storage::StorageKey;
-use serde_json;
 use uuid;
 use uuid::Uuid;
 
@@ -27,26 +24,6 @@ impl AssetId {
         AssetId([0; 16])
     }
 
-    /// Creates unique `AssetId` from
-    /// `&str` and `&PublicKey`
-    /// # Example:
-    /// ```
-    /// # extern crate exonum;
-    /// # extern crate dmbc;
-    /// #
-    /// # fn main () {
-    /// #
-    /// # use exonum::crypto::{PublicKey};
-    /// # use exonum::encoding::serialize::FromHex;
-    /// # use dmbc::currency::assets::AssetId;
-    ///
-    /// let data = "a8d5c97d-9978-4b0b-9947-7a95dcb31d0f";
-    /// let public_key = PublicKey::from_hex("3115dbc2ff73f4819672d5e9e421692305a9de1a18e4389df041c0cf6c8918a8").unwrap();
-    ///
-    /// let asset_id = AssetId::from_data(&data, &public_key);
-    /// assert_eq!(asset_id.to_string(), "82c1f90bed24508e9ce74b536f97fa9c");
-    /// # }
-    /// ```
     pub fn from_data(data: &str, pub_key: &PublicKey) -> AssetId {
         let s = pub_key.to_hex();
         let ful_s = s + &data;
@@ -169,28 +146,6 @@ impl fmt::Display for ParseError {
 impl Error for ParseError {
     fn description(&self) -> &str {
         "AssetId parse error"
-    }
-}
-
-impl ExonumJson for AssetId {
-    fn serialize_field(&self) -> Result<serde_json::value::Value, Box<Error + Send + Sync>> {
-        Ok(serde_json::Value::String(self.to_string()))
-    }
-
-    fn deserialize_field<B: WriteBufferWrapper>(
-        value: &serde_json::Value,
-        buffer: &mut B,
-        from: Offset,
-        to: Offset,
-    ) -> Result<(), Box<Error>> {
-        let value = value.as_str().ok_or("AssetId JSON value is not a string")?;
-        match AssetId::from_hex(value) {
-            Ok(asset_id) => {
-                buffer.write(from, to, asset_id);
-                Ok(())
-            }
-            Err(err) => Err(Box::new(err)),
-        }
     }
 }
 
