@@ -8,7 +8,7 @@ use serde::{Serialize, Serializer};
 use crypto::PublicKey;
 use encoding;
 use encoding::{CheckedOffset, Field, Offset};
-use exonum::storage::StorageKey;
+use storage::StorageKey;
 use uuid;
 use uuid::Uuid;
 

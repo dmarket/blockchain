@@ -4,9 +4,9 @@
 use std::borrow::Cow;
 use std::mem;
 
-use byteorder::{ByteOrder, LittleEndian};
+use byteorder::{ByteOrder, BigEndian, LittleEndian};
 
-use crypto::{Hash, PublicKey};
+use crypto::{Hash, PublicKey, HASH_SIZE, PUBLIC_KEY_LENGTH};
 use messages::{MessageBuffer, RawMessage};
 
 pub trait StorageValue: Sized {
@@ -175,5 +175,212 @@ impl StorageValue for String {
 
     fn from_bytes(value: Cow<[u8]>) -> Self {
         String::from_utf8(value.into_owned()).unwrap()
+    }
+}
+
+pub trait StorageKey {
+    /// Returns the size of the serialized key in bytes.
+    fn size(&self) -> usize;
+
+    /// Serializes the key into the specified buffer of bytes.
+    ///
+    /// The caller must guarantee that the size of the buffer is equal to the precalculated size
+    /// of the serialized key.
+    // TODO: should be unsafe (ECR-174)?
+    fn write(&self, buffer: &mut [u8]);
+
+    /// Deserializes the key from the specified buffer of bytes.
+    // TODO: should be unsafe (ECR-174)?
+    fn read(buffer: &[u8]) -> Self;
+}
+
+/// No-op implementation.
+impl StorageKey for () {
+    fn size(&self) -> usize {
+        0
+    }
+
+    fn write(&self, _buffer: &mut [u8]) {
+        // no-op
+    }
+
+    fn read(_buffer: &[u8]) -> Self {
+        ()
+    }
+}
+
+impl StorageKey for u8 {
+    fn size(&self) -> usize {
+        1
+    }
+
+    fn write(&self, buffer: &mut [u8]) {
+        buffer[0] = *self
+    }
+
+    fn read(buffer: &[u8]) -> Self {
+        buffer[0]
+    }
+}
+
+/// Uses big-endian encoding.
+impl StorageKey for u16 {
+    fn size(&self) -> usize {
+        2
+    }
+
+    fn write(&self, buffer: &mut [u8]) {
+        BigEndian::write_u16(buffer, *self)
+    }
+
+    fn read(buffer: &[u8]) -> Self {
+        BigEndian::read_u16(buffer)
+    }
+}
+
+/// Uses big-endian encoding.
+impl StorageKey for u32 {
+    fn size(&self) -> usize {
+        4
+    }
+
+    fn write(&self, buffer: &mut [u8]) {
+        BigEndian::write_u32(buffer, *self)
+    }
+
+    fn read(buffer: &[u8]) -> Self {
+        BigEndian::read_u32(buffer)
+    }
+}
+
+/// Uses big-endian encoding.
+impl StorageKey for u64 {
+    fn size(&self) -> usize {
+        8
+    }
+
+    fn write(&self, buffer: &mut [u8]) {
+        BigEndian::write_u64(buffer, *self)
+    }
+
+    fn read(buffer: &[u8]) -> Self {
+        BigEndian::read_u64(buffer)
+    }
+}
+
+/// **Not sorted in the natural order.**
+impl StorageKey for i8 {
+    fn size(&self) -> usize {
+        1
+    }
+
+    fn write(&self, buffer: &mut [u8]) {
+        buffer[0] = *self as u8
+    }
+
+    fn read(buffer: &[u8]) -> Self {
+        buffer[0] as i8
+    }
+}
+
+/// Uses big-endian encoding. **Not sorted in the natural order.**
+impl StorageKey for i16 {
+    fn size(&self) -> usize {
+        2
+    }
+
+    fn write(&self, buffer: &mut [u8]) {
+        BigEndian::write_i16(buffer, *self)
+    }
+
+    fn read(buffer: &[u8]) -> Self {
+        BigEndian::read_i16(buffer)
+    }
+}
+
+/// Uses big-endian encoding. **Not sorted in the natural order.**
+impl StorageKey for i32 {
+    fn size(&self) -> usize {
+        4
+    }
+
+    fn write(&self, buffer: &mut [u8]) {
+        BigEndian::write_i32(buffer, *self)
+    }
+
+    fn read(buffer: &[u8]) -> Self {
+        BigEndian::read_i32(buffer)
+    }
+}
+
+/// Uses big-endian encoding. **Not sorted in the natural order.**
+impl StorageKey for i64 {
+    fn size(&self) -> usize {
+        8
+    }
+
+    fn write(&self, buffer: &mut [u8]) {
+        BigEndian::write_i64(buffer, *self)
+    }
+
+    fn read(buffer: &[u8]) -> Self {
+        BigEndian::read_i64(buffer)
+    }
+}
+
+impl StorageKey for Hash {
+    fn size(&self) -> usize {
+        HASH_SIZE
+    }
+
+    fn write(&self, buffer: &mut [u8]) {
+        buffer.copy_from_slice(self.as_ref())
+    }
+
+    fn read(buffer: &[u8]) -> Self {
+        Hash::from_slice(buffer).unwrap()
+    }
+}
+
+impl StorageKey for PublicKey {
+    fn size(&self) -> usize {
+        PUBLIC_KEY_LENGTH
+    }
+
+    fn write(&self, buffer: &mut [u8]) {
+        buffer.copy_from_slice(self.as_ref())
+    }
+
+    fn read(buffer: &[u8]) -> Self {
+        PublicKey::from_slice(buffer).unwrap()
+    }
+}
+
+impl StorageKey for Vec<u8> {
+    fn size(&self) -> usize {
+        self.len()
+    }
+
+    fn write(&self, buffer: &mut [u8]) {
+        buffer.copy_from_slice(self)
+    }
+
+    fn read(buffer: &[u8]) -> Self {
+        buffer.to_vec()
+    }
+}
+
+/// Uses UTF-8 string serialization.
+impl StorageKey for String {
+    fn size(&self) -> usize {
+        self.len()
+    }
+
+    fn write(&self, buffer: &mut [u8]) {
+        buffer.copy_from_slice(self.as_bytes())
+    }
+
+    fn read(buffer: &[u8]) -> Self {
+        unsafe { ::std::str::from_utf8_unchecked(buffer).to_string() }
     }
 }
