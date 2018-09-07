@@ -2,7 +2,7 @@ use std::ffi::CStr;
 
 use assets::AssetId;
 use exonum::crypto::{PublicKey, Signature};
-use exonum::encoding::serialize::FromHex;
+use hex::FromHex;
 use libc::{c_char, size_t};
 
 use error::{Error, ErrorKind};

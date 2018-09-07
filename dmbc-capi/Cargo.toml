@@ -16,7 +16,7 @@ extprim = "1.5"
 uuid = { version = "0.5", features = ["v5"] }
 byteorder = "1.1.0"
 bit-vec = "0.4.4"
-
+hex = "0.3.0"
 
 [dev-dependencies]
 dmbc = { path = "../dmbc" }

@@ -7,6 +7,7 @@ extern crate serde_json;
 extern crate uuid;
 extern crate byteorder;
 extern crate bit_vec;
+extern crate hex;
 
 #[macro_use]
 mod encoding;
