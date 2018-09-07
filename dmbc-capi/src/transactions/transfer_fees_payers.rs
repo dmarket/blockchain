@@ -1,4 +1,4 @@
-use exonum::crypto::{PublicKey, SecretKey, Signature};
+use crypto::{PublicKey, SecretKey, Signature};
 
 use assets::AssetBundle;
 use transactions::components::service::SERVICE_ID;

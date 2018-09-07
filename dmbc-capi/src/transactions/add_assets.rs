@@ -1,4 +1,4 @@
-use exonum::crypto::{PublicKey, SecretKey};
+use crypto::{PublicKey, SecretKey};
 
 use assets::MetaAsset;
 use transactions::components::service::SERVICE_ID;

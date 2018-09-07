@@ -1,5 +1,3 @@
-// #[macro_use]
-extern crate exonum;
 extern crate extprim;
 extern crate libc;
 extern crate serde;
@@ -8,6 +6,7 @@ extern crate uuid;
 extern crate byteorder;
 extern crate bit_vec;
 extern crate hex;
+extern crate exonum_sodiumoxide as sodiumoxide;
 
 #[macro_use]
 mod encoding;
@@ -21,8 +20,8 @@ mod decimal;
 mod error;
 mod transactions;
 mod storage;
+mod crypto;
 
 pub use capi::*;
 pub use error::*;
-pub use exonum::crypto;
 pub use encoding::*;

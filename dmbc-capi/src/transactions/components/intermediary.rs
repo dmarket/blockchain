@@ -1,4 +1,4 @@
-use exonum::crypto::PublicKey;
+use crypto::PublicKey;
 
 evo_encoding_struct! {
     /// Intermediary specification for `_intermediary` transactions.
