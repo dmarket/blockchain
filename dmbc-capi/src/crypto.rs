@@ -23,12 +23,11 @@ use std::ops::{Index, Range, RangeFrom, RangeFull, RangeTo};
 
 use serde::de::{self, Deserialize, Deserializer, Visitor};
 use serde::{Serialize, Serializer};
-use sodiumoxide;
-use sodiumoxide::crypto::hash::sha256::{hash as hash_sodium, Digest, State as HashState};
+use sodiumoxide::crypto::hash::sha256::{hash as hash_sodium, Digest};
 use sodiumoxide::crypto::sign::ed25519::{
-    gen_keypair as gen_keypair_sodium, keypair_from_seed, sign_detached, verify_detached,
-    PublicKey as PublicKeySodium, SecretKey as SecretKeySodium, Seed as SeedSodium,
-    Signature as SignatureSodium, State as SignState,
+    sign_detached, verify_detached,
+    PublicKey as PublicKeySodium, SecretKey as SecretKeySodium,
+    Signature as SignatureSodium,
 };
 
 use hex::{encode as encode_hex, FromHex, FromHexError, ToHex};
@@ -58,41 +57,6 @@ const BYTES_IN_DEBUG: usize = 4;
 pub fn sign(data: &[u8], secret_key: &SecretKey) -> Signature {
     let sodium_signature = sign_detached(data, &secret_key.0);
     Signature(sodium_signature)
-}
-
-/// Computes a secret key and a corresponding public key from a `Seed`.
-///
-/// # Examples
-///
-/// ```
-/// use exonum::crypto::{self, Seed};
-///
-/// # crypto::init();
-/// let (public_key, secret_key) = crypto::gen_keypair_from_seed(&Seed::new([1; 32]));
-/// # drop(public_key);
-/// # drop(secret_key);
-/// ```
-pub fn gen_keypair_from_seed(seed: &Seed) -> (PublicKey, SecretKey) {
-    let (sod_pub_key, sod_secr_key) = keypair_from_seed(&seed.0);
-    (PublicKey(sod_pub_key), SecretKey(sod_secr_key))
-}
-
-/// Generates a secret key and a corresponding public key using a cryptographically secure
-/// pseudo-random number generator.
-///
-/// # Examples
-///
-/// ```
-/// use exonum::crypto;
-///
-/// # crypto::init();
-/// let (public_key, secret_key) = crypto::gen_keypair();
-/// # drop(public_key);
-/// # drop(secret_key);
-/// ```
-pub fn gen_keypair() -> (PublicKey, SecretKey) {
-    let (pubkey, secrkey) = gen_keypair_sodium();
-    (PublicKey(pubkey), SecretKey(secrkey))
 }
 
 /// Verifies that `data` is signed with a secret key corresponding to the given public key.
@@ -127,109 +91,6 @@ pub fn verify(sig: &Signature, data: &[u8], pubkey: &PublicKey) -> bool {
 pub fn hash(data: &[u8]) -> Hash {
     let dig = hash_sodium(data);
     Hash(dig)
-}
-
-/// Initializes the sodium library and chooses faster versions of the primitives if possible.
-///
-/// # Panics
-///
-/// Panics if sodium initialization is failed.
-///
-/// # Examples
-///
-/// ```
-/// use exonum::crypto;
-///
-/// crypto::init();
-/// ```
-pub fn init() {
-    if !sodiumoxide::init() {
-        panic!("Cryptographic library hasn't initialized.");
-    }
-}
-
-/// This structure provides a possibility to calculate a SHA-256 hash digest
-/// for a stream of data.
-///
-/// # Example
-///
-/// ```rust
-/// use exonum::crypto::HashStream;
-///
-/// let data: Vec<[u8; 5]> = vec![[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]];
-/// let mut hash_stream = HashStream::new();
-/// for chunk in data {
-///     hash_stream = hash_stream.update(&chunk);
-/// }
-/// let _ = hash_stream.hash();
-/// ```
-#[derive(Debug, Default)]
-pub struct HashStream(HashState);
-
-impl HashStream {
-    /// Creates a new instance of `HashStream`.
-    pub fn new() -> Self {
-        HashStream(HashState::init())
-    }
-
-    /// Processes a chunk of stream and returns a `HashStream` with the updated internal state.
-    pub fn update(mut self, chunk: &[u8]) -> Self {
-        self.0.update(chunk);
-        self
-    }
-
-    /// Returns the hash of data supplied to the stream so far.
-    pub fn hash(self) -> Hash {
-        let dig = self.0.finalize();
-        Hash(dig)
-    }
-}
-
-/// This structure provides a possibility to create and/or verify Ed25519 digital signatures
-/// for a stream of data.
-///
-/// # Example
-///
-/// ```rust
-/// use exonum::crypto::{SignStream, gen_keypair};
-///
-/// let data: Vec<[u8; 5]> = vec![[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]];
-/// let (pk, sk) = gen_keypair();
-/// let mut create_stream = SignStream::new();
-/// let mut verify_stream = SignStream::new();
-/// for chunk in data {
-///     create_stream = create_stream.update(&chunk);
-///     verify_stream = verify_stream.update(&chunk);
-/// }
-/// let file_sign = create_stream.sign(&sk);
-/// assert!(verify_stream.verify(&file_sign, &pk));
-/// ```
-#[derive(Debug, Default)]
-pub struct SignStream(SignState);
-
-impl SignStream {
-    /// Creates a new instance of `SignStream`.
-    pub fn new() -> Self {
-        SignStream(SignState::init())
-    }
-
-    /// Adds a new `chunk` to the message that will eventually be signed and/or verified.
-    pub fn update(mut self, chunk: &[u8]) -> Self {
-        self.0.update(chunk);
-        self
-    }
-
-    /// Computes and returns a signature for the previously supplied message
-    /// using the given `secret_key`.
-    pub fn sign(&mut self, secret_key: &SecretKey) -> Signature {
-        Signature(self.0.finalize(&secret_key.0))
-    }
-
-    /// Verifies that `sig` is a valid signature for the previously supplied message
-    /// using the given `public_key`.
-    pub fn verify(&mut self, sig: &Signature, public_key: &PublicKey) -> bool {
-        self.0.verify(&sig.0, &public_key.0)
-    }
 }
 
 macro_rules! implement_public_sodium_wrapper {
@@ -413,22 +274,6 @@ implement_public_sodium_wrapper! {
     struct Signature, SignatureSodium, SIGNATURE_LENGTH
 }
 
-implement_private_sodium_wrapper! {
-/// Ed25519 seed that can be used for deterministic keypair generation.
-///
-/// # Examples
-///
-/// ```
-/// use exonum::crypto::{self, Seed};
-///
-/// # crypto::init();
-/// let (public_key, secret_key) = crypto::gen_keypair_from_seed(&Seed::new([1; 32]));
-/// # drop(public_key);
-/// # drop(secret_key);
-/// ```
-    struct Seed, SeedSodium, SEED_LENGTH
-}
-
 macro_rules! implement_serde {
     ($name:ident) => {
         impl FromHex for $name {
@@ -482,7 +327,6 @@ macro_rules! implement_serde {
 implement_serde! {Hash}
 implement_serde! {PublicKey}
 implement_serde! {SecretKey}
-implement_serde! {Seed}
 implement_serde! {Signature}
 
 macro_rules! implement_index_traits {
@@ -520,7 +364,6 @@ macro_rules! implement_index_traits {
 implement_index_traits! {Hash}
 implement_index_traits! {PublicKey}
 implement_index_traits! {SecretKey}
-implement_index_traits! {Seed}
 implement_index_traits! {Signature}
 
 /// Returns hash consisting of zeros.
