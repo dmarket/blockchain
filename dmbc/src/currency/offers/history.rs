@@ -3,9 +3,15 @@ use exonum::storage::{Fork, MapIndex, Snapshot};
 use currency::SERVICE_NAME;
 
 encoding_struct! {
-    struct OfferHistory {
+    struct HistoryOffer {
         tx_hash: &Hash,
         amount: u64,
+    }
+}
+
+encoding_struct!{
+    struct HistoryOffers {
+        history: Vec<HistoryOffer>,
     }
 }
 
@@ -19,29 +25,54 @@ impl<S> Schema<S>
         S: AsRef<Snapshot>,
 {
     /// Internal `MapIndex` with immutable access.
-    pub fn index(self) -> MapIndex<S, Hash, Vec<OfferHistory>> {
-        let key = SERVICE_NAME.to_string() + ".offer_history";
+    pub fn index(self) -> MapIndex<S, Hash, HistoryOffers> {
+        let key = SERVICE_NAME.to_string() + ".history_offer";
         MapIndex::new(key, self.0)
     }
 
     /// Fetch state for the specified wallet from the snapshot.
-    pub fn fetch(self, tx_hash: &Hash) -> Vec<OfferHistory> {
+    pub fn fetch(self, tx_hash: &Hash) -> HistoryOffers {
         self.index()
             .get(tx_hash)
-            .unwrap_or_else(|| vec![] )
+            .unwrap_or_else(|| HistoryOffers::new(vec![]) )
     }
 }
 
 impl<'a> Schema<&'a mut Fork> {
 
     /// Internal `MapIndex` with mutable access.
-    pub fn index_mut(&mut self) -> MapIndex<&mut Fork, Hash, Vec<OfferHistory>> {
-        let key = SERVICE_NAME.to_string() + ".offer_history";
+    pub fn index_mut(&mut self) -> MapIndex<&mut Fork, Hash, HistoryOffers >{
+        let key = SERVICE_NAME.to_string() + ".history_offer";
         MapIndex::new(key, &mut *self.0)
     }
 
+    pub fn fetch_mut(&mut self, tx_hash: &Hash) -> HistoryOffers {
+        self.index_mut()
+            .get(tx_hash)
+            .unwrap_or_else(|| HistoryOffers::new(vec![]) )
+    }
+
     /// Store the new state for a wallet in the database.
-    pub fn store(&mut self, tx_hash: &Hash, offer_history: Vec<OfferHistory>) {
-        self.index_mut().put(tx_hash, offer_history);
+    pub fn store(&mut self, tx_hash: &Hash, history: HistoryOffers) {
+        self.index_mut().put(tx_hash, history);
+    }
+
+    /// Store the new state for a wallet in the database.
+    pub fn update(&mut self, tx_hash: &Hash, data: &Vec<HistoryOffer>) {
+
+        for closed_offer_info in data {
+            let update = self.fetch_mut(closed_offer_info.tx_hash());
+            let mut update_history = update.history();
+            update_history.push(HistoryOffer::new(tx_hash, closed_offer_info.amount()));
+            let update = HistoryOffers::new(update_history);
+            self.store(closed_offer_info.tx_hash(), update);
+        }
+
+        let base = self.fetch_mut(tx_hash);
+        let mut base_history = base.history();
+        base_history.append(&mut data.clone());
+        let base = HistoryOffers::new(base_history);
+
+        self.store(tx_hash, base);
     }
 }
