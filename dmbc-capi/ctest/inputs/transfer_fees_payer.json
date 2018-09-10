@@ -1,0 +1,15 @@
+{
+    "offer": {
+        "from": "4e298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411b9f",
+        "to": "00098e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c41100f",
+        "fees_payer": "22298e435018ab0a1430b6ebd0a0656be15493966d5ce86ed36416e24c411999",
+        "amount": 64,
+        "assets": [{
+            "id": "00001111222233334444555566667777",
+            "amount": 10
+        }],
+        "seed": 128,
+        "memo": "Testing CAPI"
+    },
+    "fees_payer_signature" : "aee367dd7a49ab7a5cab9ee42b4f404fcd41b42105185f53b1e97d1045b45e65b42a9cfed2d5ab1efef114c29c17dedaecb51d6c31ee00b7e7e3c393c5287509"
+}

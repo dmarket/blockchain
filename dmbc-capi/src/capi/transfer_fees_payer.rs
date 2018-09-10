@@ -7,44 +7,22 @@ use libc::{c_char, size_t};
 
 use assets::AssetBundle;
 use capi::common::*;
-use transactions::exchange::{ExchangeOfferWrapper, ExchangeWrapper};
+use transactions::transfer_fees_payers::{TransferOfferWrapper, TransferWithFeesPayerWrapper};
 
 use error::{Error, ErrorKind};
 
 ffi_fn! {
-    fn dmbc_exchange_offer_create(
-        sender_public_key: *const c_char,
-        sender_value: u64,
-        recipient_public_key: *const c_char,
-        fee_strategy: u8,
+    fn dmbc_transfer_fees_payer_offer_create(
+        from_public_key: *mut c_char,
+        to_public_key: *mut c_char,
+        fees_payer_public_key: *mut c_char,
+        amount: u64,
         seed: u64,
         memo: *const c_char,
         error: *mut Error,
-    ) -> *mut ExchangeOfferWrapper {
-        let sender_key = match parse_public_key(sender_public_key) {
+    ) -> *mut TransferOfferWrapper {
+        let from = match parse_public_key(from_public_key) {
             Ok(public_key) => public_key,
-            Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return ptr::null_mut();
-                }
-            }
-        };
-        let recipient_key = match parse_public_key(recipient_public_key) {
-            Ok(public_key) => public_key,
-            Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return ptr::null_mut();
-                }
-            }
-        };
-        let memo = match parse_str(memo) {
-            Ok(memo) => memo,
             Err(err) => {
                 unsafe {
                     if !error.is_null() {
@@ -55,26 +33,62 @@ ffi_fn! {
             }
         };
 
-        let wrapper = ExchangeOfferWrapper::new(&sender_key, sender_value, &recipient_key, fee_strategy, seed, memo);
+        let to = match parse_public_key(to_public_key) {
+            Ok(public_key) => public_key,
+            Err(err) => {
+                unsafe {
+                    if !error.is_null() {
+                        *error = err;
+                    }
+                    return ptr::null_mut();
+                }
+            }
+        };
+
+        let fees_payer = match parse_public_key(fees_payer_public_key) {
+            Ok(public_key) => public_key,
+            Err(err) => {
+                unsafe {
+                    if !error.is_null() {
+                        *error = err;
+                    }
+                    return ptr::null_mut();
+                }
+            }
+        };
+
+        let memo = match parse_str(memo) {
+            Ok(info) => info,
+            Err(err) => {
+                unsafe {
+                    if !error.is_null() {
+                        *error = err;
+                    }
+                    return ptr::null_mut();
+                }
+            }
+        };
+
+        let wrapper = TransferOfferWrapper::new(&from, &to, &fees_payer, amount, seed, memo);
         Box::into_raw(Box::new(wrapper))
     }
 }
 
 ffi_fn! {
-    fn dmbc_exchange_offer_free(wrapper: *const ExchangeOfferWrapper) {
+    fn dmbc_transfer_fees_payer_offer_free(wrapper: *const TransferOfferWrapper) {
         if !wrapper.is_null() {
-            unsafe { Box::from_raw(wrapper as *mut ExchangeOfferWrapper); }
+            unsafe { Box::from_raw(wrapper as *mut TransferOfferWrapper); }
         }
     }
 }
 
 ffi_fn! {
-    fn dmbc_exchange_offer_recipient_add_asset(
-        wrapper: *mut ExchangeOfferWrapper,
+    fn dmbc_transfer_fees_payer_offer_add_asset(
+        wrapper: *mut TransferOfferWrapper,
         asset: *mut AssetBundle,
         error: *mut Error,
     ) -> bool {
-        let wrapper = match ExchangeOfferWrapper::from_ptr(wrapper) {
+        let wrapper = match TransferOfferWrapper::from_ptr(wrapper) {
             Ok(wrapper) => wrapper,
             Err(err) => {
                 unsafe {
@@ -96,51 +110,18 @@ ffi_fn! {
         }
 
         let asset = AssetBundle::from_ptr(asset);
-        wrapper.add_recipient_asset(asset.clone());
+        wrapper.add_asset(asset.clone());
         true
     }
 }
 
 ffi_fn! {
-    fn dmbc_exchange_offer_sender_add_asset(
-        wrapper: *mut ExchangeOfferWrapper,
-        asset: *mut AssetBundle,
-        error: *mut Error,
-    ) -> bool {
-        let wrapper = match ExchangeOfferWrapper::from_ptr(wrapper) {
-            Ok(wrapper) => wrapper,
-            Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return false;
-                }
-            }
-        };
-
-        if asset.is_null() {
-            unsafe {
-                if !error.is_null() {
-                    *error = Error::new(ErrorKind::Text("Invalid asset pointer.".to_string()));
-                }
-                return false;
-            }
-        }
-
-        let asset = AssetBundle::from_ptr(asset);
-        wrapper.add_sender_asset(asset.clone());
-        true
-    }
-}
-
-ffi_fn! {
-    fn dmbc_exchange_offer_into_bytes(
-        wrapper: *mut ExchangeOfferWrapper,
+    fn dmbc_transfer_fees_payer_offer_into_bytes(
+       wrapper: *mut TransferOfferWrapper,
         length: *mut size_t,
-        error: *mut Error
+        error: *mut Error 
     ) -> *const u8 {
-        let wrapper = match ExchangeOfferWrapper::from_ptr(wrapper) {
+        let wrapper = match TransferOfferWrapper::from_ptr(wrapper) {
             Ok(wrapper) => wrapper,
             Err(err) => {
                 unsafe {
@@ -166,12 +147,12 @@ ffi_fn! {
 }
 
 ffi_fn! {
-    fn dmbc_tx_exchange_create(
-        wrapper: *mut ExchangeOfferWrapper,
-        signature: *const c_char,
+    fn dmbc_tx_transfer_fees_payer_create(
+        wrapper: *mut TransferOfferWrapper,
+        fees_payer_signature: *const c_char,
         error: *mut Error,
-    ) -> *mut ExchangeWrapper {
-        let wrapper = match ExchangeOfferWrapper::from_ptr(wrapper) {
+    ) -> *mut TransferWithFeesPayerWrapper {
+        let wrapper = match TransferOfferWrapper::from_ptr(wrapper) {
             Ok(wrapper) => wrapper,
             Err(err) => {
                 unsafe {
@@ -182,7 +163,8 @@ ffi_fn! {
                 }
             }
         };
-        let signature = match parse_signature(signature) {
+
+        let fees_payer_signature = match parse_signature(fees_payer_signature) {
             Ok(sig) => sig,
             Err(err) => {
                 unsafe {
@@ -195,27 +177,26 @@ ffi_fn! {
         };
 
         let wrapper = wrapper.unwrap().clone();
-        let tx = ExchangeWrapper::new(wrapper, &signature);
-
+        let tx = TransferWithFeesPayerWrapper::new(wrapper, &fees_payer_signature);
         Box::into_raw(Box::new(tx))
     }
 }
 
 ffi_fn! {
-    fn dmbc_tx_exchange_free(wrapper: *const ExchangeWrapper) {
+    fn dmbc_tx_transfer_fees_payer_free(wrapper: *const TransferWithFeesPayerWrapper) {
         if !wrapper.is_null() {
-            unsafe { Box::from_raw(wrapper as *mut ExchangeWrapper); }
+            unsafe { Box::from_raw(wrapper as *mut TransferWithFeesPayerWrapper); }
         }
     }
 }
 
 ffi_fn! {
-    fn dmbc_tx_exchange_into_bytes(
-        wrapper: *mut ExchangeWrapper,
+    fn dmbc_tx_transfer_fees_payer_into_bytes(
+        wrapper: *mut TransferWithFeesPayerWrapper,
         length: *mut size_t,
         error: *mut Error
     ) -> *const u8 {
-        let wrapper = match ExchangeWrapper::from_ptr(wrapper) {
+        let wrapper = match TransferWithFeesPayerWrapper::from_ptr(wrapper) {
             Ok(wrapper) => wrapper,
             Err(err) => {
                 unsafe {

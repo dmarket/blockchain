@@ -1,7 +1,7 @@
 use std::mem;
 use std::ptr;
 
-use exonum::messages::Message;
+use messages::Message;
 use libc::{c_char, size_t};
 
 use assets::AssetBundle;
@@ -16,7 +16,7 @@ ffi_fn! {
         to: *const c_char,
         amout: u64,
         seed: u64,
-        data_info: *const c_char,
+        memo: *const c_char,
         error: *mut Error,
     ) -> *mut TransferWrapper {
         let from = match parse_public_key(from) {
@@ -43,7 +43,7 @@ ffi_fn! {
             }
         };
 
-        let data_info = match parse_str(data_info) {
+        let memo = match parse_str(memo) {
             Ok(pk) => pk,
             Err(err) => {
                 unsafe {
@@ -57,7 +57,7 @@ ffi_fn! {
 
         Box::into_raw(
             Box::new(
-                TransferWrapper::new(&from, &to, amout, seed, data_info)
+                TransferWrapper::new(&from, &to, amout, seed, memo)
             )
         )
     }

@@ -9,9 +9,9 @@
             "id": "00001111222233334444555566667777",
             "amount": 10
         }],
-        "fee_strategy": 1
+        "fee_strategy": 1,
+        "seed": 22,
+        "memo": "CAPI Exchange Test"
     },
-    "seed": 22,
-    "sender_signature": "63eb6cac0d073b6db2157e6ad8fa33981c126d2a09530b25d5072be67dc3ab509009e603184a031a5d7564b2b0d5f5a7ba5f84f50651ebc9ac6592535c3cff0a",
-    "memo": "CAPI Exchange Test"
+    "sender_signature": "c9244247be49f608aa75b43c0db7d4f095a48cd5da8955af19da224de2c89bf103f261248dc3672a9dd08f872b8cf179cd51c32227e5244e055806e585f58f0f"
 }

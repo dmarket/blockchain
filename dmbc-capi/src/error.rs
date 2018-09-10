@@ -2,8 +2,8 @@ use std::ffi::CString;
 use std::fmt;
 use std::str;
 
+use hex::FromHexError;
 use assets::AssetIdError;
-use exonum::encoding::serialize;
 use libc::c_char;
 
 #[derive(Debug)]
@@ -16,7 +16,7 @@ pub struct Error {
 pub enum ErrorKind {
     None,
     Utf8(str::Utf8Error),
-    Hex(serialize::FromHexError),
+    Hex(FromHexError),
     Text(String),
     Asset(AssetIdError),
 }

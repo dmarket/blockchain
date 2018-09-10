@@ -1,7 +1,7 @@
 use assets::AssetId;
 use std::mem;
 
-encoding_struct! {
+evo_encoding_struct! {
     /// Asset representation to used in `trade` transactions.
     struct TradeAsset {
         id: AssetId,

@@ -1,4 +1,4 @@
-use exonum::crypto::{PublicKey, SecretKey, Signature};
+use crypto::{PublicKey, SecretKey, Signature};
 
 use assets::TradeAsset;
 use transactions::components::service::SERVICE_ID;
@@ -9,7 +9,7 @@ use error::{Error, ErrorKind};
 /// Transaction ID.
 pub const TRADE_INTERMEDIARY_ID: u16 = 502;
 
-encoding_struct! {
+evo_encoding_struct! {
     struct TradeOfferIntermediary {
         intermediary: Intermediary,
         buyer:        &PublicKey,
@@ -17,6 +17,8 @@ encoding_struct! {
         assets:       Vec<TradeAsset>,
 
         fee_strategy: u8,
+        seed: u64,
+        memo: &str,
     }
 }
 
@@ -28,6 +30,8 @@ pub struct TradeOfferIntermediaryWrapper {
     assets: Vec<TradeAsset>,
 
     fee_strategy: u8,
+    seed: u64,
+    memo: String,
 }
 
 impl TradeOfferIntermediaryWrapper {
@@ -36,6 +40,8 @@ impl TradeOfferIntermediaryWrapper {
         seller: &PublicKey,
         buyer: &PublicKey,
         fee_strategy: u8,
+        seed: u64,
+        memo: &str
     ) -> Self {
         TradeOfferIntermediaryWrapper {
             intermediary: intermediary,
@@ -43,6 +49,8 @@ impl TradeOfferIntermediaryWrapper {
             seller: *seller,
             assets: Vec::new(),
             fee_strategy: fee_strategy,
+            seed: seed, 
+            memo: memo.to_string()
         }
     }
 
@@ -68,47 +76,41 @@ impl TradeOfferIntermediaryWrapper {
             &self.seller,
             self.assets.clone(),
             self.fee_strategy,
+            self.seed,
+            &self.memo.as_str()
         )
     }
 }
 
-message! {
+evo_message! {
     /// `trade_intermediary` transaction.
     struct TradeIntermediary {
         const TYPE = SERVICE_ID;
         const ID = TRADE_INTERMEDIARY_ID;
 
         offer:                  TradeOfferIntermediary,
-        seed:                   u64,
         seller_signature:       &Signature,
         intermediary_signature: &Signature,
-        data_info:              &str,
     }
 }
 
 #[derive(Clone, Debug)]
 pub struct TradeIntermediaryWrapper {
     offer: TradeOfferIntermediary,
-    seed: u64,
     seller_signature: Signature,
-    intermediary_signature: Signature,
-    data_info: String,
+    intermediary_signature: Signature
 }
 
 impl TradeIntermediaryWrapper {
     pub fn new(
         offer: TradeOfferIntermediary,
-        seed: u64,
         seller_signature: &Signature,
         intermediary_signature: &Signature,
-        data_info: &str,
     ) -> Self {
         TradeIntermediaryWrapper {
             offer: offer,
-            seed: seed,
             seller_signature: *seller_signature,
             intermediary_signature: *intermediary_signature,
-            data_info: data_info.to_string(),
         }
     }
 
@@ -126,10 +128,8 @@ impl TradeIntermediaryWrapper {
     pub fn unwrap(&self) -> TradeIntermediary {
         TradeIntermediary::new(
             self.offer.clone(),
-            self.seed,
             &self.seller_signature,
             &self.intermediary_signature,
-            self.data_info.as_str(),
             &SecretKey::zero(),
         )
     }

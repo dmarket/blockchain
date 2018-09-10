@@ -1,4 +1,4 @@
-use exonum::crypto::{PublicKey, SecretKey, Signature};
+use crypto::{PublicKey, SecretKey, Signature};
 
 use assets::TradeAsset;
 use transactions::components::service::SERVICE_ID;
@@ -8,13 +8,15 @@ use error::{Error, ErrorKind};
 /// Transaction ID.
 pub const TRADE_ID: u16 = 501;
 
-encoding_struct! {
+evo_encoding_struct! {
     struct TradeOffer {
         buyer: &PublicKey,
         seller: &PublicKey,
         assets: Vec<TradeAsset>,
 
         fee_strategy: u8,
+        seed:         u64,
+        memo:         &str,
     }
 }
 
@@ -25,15 +27,19 @@ pub struct TradeOfferWrapper {
     assets: Vec<TradeAsset>,
 
     fee_strategy: u8,
+    seed:         u64,
+    memo:         String,
 }
 
 impl TradeOfferWrapper {
-    pub fn new(seller: &PublicKey, buyer: &PublicKey, fee_strategy: u8) -> Self {
+    pub fn new(seller: &PublicKey, buyer: &PublicKey, fee_strategy: u8, seed: u64, memo: &str) -> Self {
         TradeOfferWrapper {
             buyer: *buyer,
             seller: *seller,
             assets: Vec::new(),
             fee_strategy: fee_strategy,
+            seed: seed, 
+            memo: memo.to_string()
         }
     }
 
@@ -58,18 +64,19 @@ impl TradeOfferWrapper {
             &self.seller,
             self.assets.clone(),
             self.fee_strategy,
+            self.seed,
+            &self.memo.as_str()
         )
     }
 }
 
-message! {
+evo_message! {
     /// `trade` transaction.
     struct Trade {
         const TYPE = SERVICE_ID;
         const ID = TRADE_ID;
 
         offer:              TradeOffer,
-        seed:               u64,
         seller_signature:   &Signature,
     }
 }
@@ -77,15 +84,13 @@ message! {
 #[derive(Clone, Debug)]
 pub struct TradeWrapper {
     offer: TradeOffer,
-    seed: u64,
     seller_signature: Signature,
 }
 
 impl TradeWrapper {
-    pub fn new(offer: TradeOffer, seed: u64, signature: &Signature) -> Self {
+    pub fn new(offer: TradeOffer, signature: &Signature) -> Self {
         TradeWrapper {
             offer: offer,
-            seed: seed,
             seller_signature: *signature,
         }
     }
@@ -102,7 +107,6 @@ impl TradeWrapper {
     pub fn unwrap(&self) -> Trade {
         Trade::new(
             self.offer.clone(),
-            self.seed,
             &self.seller_signature,
             &SecretKey::zero(),
         )

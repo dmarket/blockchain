@@ -20,8 +20,8 @@ fn capi_trade_intermediary() {
     let seller = PublicKey::from_hex(offer["seller"].as_str().unwrap());
     let buyer = PublicKey::from_hex(offer["buyer"].as_str().unwrap());
     let fee_strategy = FeeStrategy::try_from(offer["fee_strategy"].as_u64().unwrap() as u8);
-    let seed = inputs["seed"].as_u64().unwrap();
-    let memo = inputs["memo"].as_str().unwrap();
+    let seed = offer["seed"].as_u64().unwrap();
+    let memo = offer["memo"].as_str().unwrap();
 
     let intermediary = offer["intermediary"].as_object().unwrap();
     let intermediary_key = PublicKey::from_hex(intermediary["wallet"].as_str().unwrap());
