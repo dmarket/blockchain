@@ -23,7 +23,7 @@ references:
       command: |
         rustup default nightly
         # rustup target add aarch64-apple-ios armv7-apple-ios armv7s-apple-ios x86_64-apple-ios i386-apple-ios
-        rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android
+        rustup target add aarch64-linux-android armv7-linux-androideabi
         rustup update
         rustup show
         cat cargo-config.toml >> ~/.cargo/config
@@ -38,7 +38,6 @@ references:
 
         cargo build -p dmbc-capi --target aarch64-linux-android -vv
         cargo build -p dmbc-capi --target armv7-linux-androideabi -vv
-        cargo build -p dmbc-capi --target i686-linux-android -vv
 
         # cargo build -p dmbc-capi --target aarch64-apple-ios --lib -vv
         # cargo build -p dmbc-capi --target armv7-apple-ios --lib -vv
