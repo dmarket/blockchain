@@ -35,6 +35,12 @@ references:
         export CXX=clang++
         cargo build -p dmbc -p dmbc-node -p dmbc-discovery -p dmbc-capi -vv
 
+  build_dev_m: &build_dev_m
+    run:
+      name: Build CAPI project mobile debug
+      command: |
+        export CC=clang
+        export CXX=clang++
         mkdir .cargo
         cat cargo-config.toml >> .cargo/config
         cargo build -p dmbc-capi --target aarch64-linux-android -vv
@@ -136,6 +142,7 @@ jobs:
       - *pre_setup
       - *setup_rust
       - *build_dev
+      - *build_dev_m
       - *run_tests
       - *save_cache
       - *setup_coverage
