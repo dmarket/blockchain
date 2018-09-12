@@ -48,6 +48,7 @@ use crypto::{self, Hash, PublicKey, SecretKey};
 use helpers::{Height, ValidatorId};
 use messages::{Connect, Precommit, RawMessage, CONSENSUS as CORE_SERVICE};
 use node::ApiSender;
+use node::PeerInfo;
 use storage::{Database, Error, Fork, Patch, Snapshot};
 
 pub use self::block::{Block, BlockProof, SCHEMA_MAJOR_VERSION};
@@ -451,7 +452,7 @@ impl Blockchain {
     }
 
     /// Recover cached peers if any.
-    pub fn get_saved_peers(&self) -> HashMap<PublicKey, Connect> {
+    pub fn get_saved_peers(&self) -> HashMap<PublicKey, PeerInfo> {
         let schema = Schema::new(self.snapshot());
         let peers_cache = schema.peers_cache();
         let it = peers_cache.iter().map(|(k, v)| (k, v.clone()));

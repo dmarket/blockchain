@@ -17,6 +17,7 @@ use super::{Block, BlockProof, Blockchain};
 use crypto::{Hash, PublicKey};
 use helpers::Height;
 use messages::{Connect, Precommit, RawMessage};
+use node::PeerInfo;
 use storage::{
     Fork, ListIndex, MapIndex, MapProof, ProofListIndex, ProofMapIndex, Snapshot, StorageKey,
     StorageValue,
@@ -125,7 +126,7 @@ where
 
     /// Returns peers that have to be recovered in case of process' restart
     /// after abnormal termination.
-    pub fn peers_cache(&self) -> MapIndex<&T, PublicKey, Connect> {
+    pub fn peers_cache(&self) -> MapIndex<&T, PublicKey, PeerInfo> {
         MapIndex::new("core.peers_cache", &self.view)
     }
 
