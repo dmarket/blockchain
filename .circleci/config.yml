@@ -141,7 +141,7 @@ jobs:
       - *restore_cache
       - *pre_setup
       - *setup_rust
-      - *build_dev
+      # - *build_dev
       - *build_dev_m
       - *run_tests
       - *save_cache
