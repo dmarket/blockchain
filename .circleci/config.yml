@@ -34,8 +34,8 @@ references:
         export CC=clang
         export CXX=clang++
         cargo build -p dmbc -p dmbc-node -p dmbc-discovery -p dmbc-capi -vv
-        
-        cat cargo-config.toml >> ~/.cargo/config
+
+        cat cargo-config.toml >> .cargo/config
         cargo build -p dmbc-capi --target aarch64-linux-android -vv
         cargo build -p dmbc-capi --target armv7-linux-androideabi -vv
 
