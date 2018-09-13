@@ -4,7 +4,7 @@ use std::{convert, mem, sync};
 
 use byteorder::{ByteOrder, LittleEndian};
 
-use crypto::{hash, Hash, Signature, SIGNATURE_LENGTH};
+use crypto::{Signature, SIGNATURE_LENGTH};
 use encoding::{self, CheckedOffset, Field, Offset, Result as StreamStructResult};
 
 /// Length of the message header.
@@ -249,11 +249,6 @@ pub trait Message: Debug + Send + Sync {
 
     /// Returns raw message.
     fn raw(&self) -> &RawMessage;
-
-    /// Returns hash of the `RawMessage`.
-    fn hash(&self) -> Hash {
-        self.raw().hash()
-    }
 }
 
 impl Message for RawMessage {
@@ -263,9 +258,5 @@ impl Message for RawMessage {
 
     fn raw(&self) -> &RawMessage {
         self
-    }
-
-    fn hash(&self) -> Hash {
-        hash(self.as_ref())
     }
 }

@@ -17,13 +17,11 @@
 //! [Sodium library](https://github.com/jedisct1/libsodium) is used under the hood through
 //! [sodiumoxide rust bindings](https://github.com/dnaq/sodiumoxide).
 
-use std::default::Default;
 use std::fmt;
 use std::ops::{Index, Range, RangeFrom, RangeFull, RangeTo};
 
 use serde::de::{self, Deserialize, Deserializer, Visitor};
 use serde::{Serialize, Serializer};
-use sodiumoxide::crypto::hash::sha256::{hash as hash_sodium, Digest};
 use sodiumoxide::crypto::sign::ed25519::{
     PublicKey as PublicKeySodium,
     Signature as SignatureSodium,
@@ -39,23 +37,6 @@ pub use sodiumoxide::crypto::sign::ed25519::{
 
 /// The size to crop the string in debug messages.
 const BYTES_IN_DEBUG: usize = 4;
-
-/// Calculates an SHA-256 hash digest of a bytes slice.
-///
-/// # Examples
-///
-/// ```
-/// use exonum::crypto;
-///
-/// # crypto::init();
-/// let data = [1, 2, 3];
-/// let hash = crypto::hash(&data);
-/// # drop(hash);
-/// ```
-pub fn hash(data: &[u8]) -> Hash {
-    let dig = hash_sodium(data);
-    Hash(dig)
-}
 
 macro_rules! implement_public_sodium_wrapper {
     ($(#[$attr:meta])* struct $name:ident, $name_from:ident, $size:expr) => (
@@ -136,23 +117,6 @@ implement_public_sodium_wrapper! {
 }
 
 implement_public_sodium_wrapper! {
-/// SHA-256 hash.
-///
-/// # Examples
-///
-/// ```
-/// use exonum::crypto::{self, Hash};
-///
-/// let data = [1, 2, 3];
-/// let hash_from_data = crypto::hash(&data);
-/// let default_hash = Hash::default();
-/// # drop(hash_from_data);
-/// # drop(default_hash);
-/// ```
-    struct Hash, Digest, HASH_SIZE
-}
-
-implement_public_sodium_wrapper! {
 /// Ed25519 digital signature.
 ///
 /// # Examples
@@ -219,7 +183,6 @@ macro_rules! implement_serde {
     };
 }
 
-implement_serde! {Hash}
 implement_serde! {PublicKey}
 implement_serde! {Signature}
 
@@ -255,13 +218,6 @@ macro_rules! implement_index_traits {
         }
     };
 }
-implement_index_traits! {Hash}
+
 implement_index_traits! {PublicKey}
 implement_index_traits! {Signature}
-
-/// Returns hash consisting of zeros.
-impl Default for Hash {
-    fn default() -> Hash {
-        Hash::zero()
-    }
-}
