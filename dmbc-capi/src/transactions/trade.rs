@@ -1,4 +1,4 @@
-use crypto::{PublicKey, SecretKey, Signature};
+use crypto::{PublicKey, Signature};
 
 use assets::TradeAsset;
 use transactions::components::service::SERVICE_ID;
@@ -107,8 +107,7 @@ impl TradeWrapper {
     pub fn unwrap(&self) -> Trade {
         Trade::new(
             self.offer.clone(),
-            &self.seller_signature,
-            &SecretKey::zero(),
+            &self.seller_signature
         )
     }
 }

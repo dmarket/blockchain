@@ -1,4 +1,4 @@
-use crypto::{PublicKey, SecretKey};
+use crypto::PublicKey;
 
 use assets::AssetBundle;
 use transactions::components::service::SERVICE_ID;
@@ -55,8 +55,7 @@ impl DeleteAssetsWrapper {
         DeleteAssets::new(
             &self.public_key,
             self.assets.clone(),
-            self.seed,
-            &SecretKey::zero(),
+            self.seed
         )
     }
 }

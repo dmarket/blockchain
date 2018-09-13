@@ -1,4 +1,4 @@
-use crypto::{PublicKey, SecretKey, Signature};
+use crypto::{PublicKey, Signature};
 
 use assets::AssetBundle;
 use transactions::components::service::SERVICE_ID;
@@ -148,8 +148,7 @@ impl ExchangeIntermediaryWrapper {
         ExchangeIntermediary::new(
             self.offer.clone(),
             &self.sender_signature,
-            &self.intermediary_signature,
-            &SecretKey::zero(),
+            &self.intermediary_signature
         )
     }
 }

@@ -1,4 +1,4 @@
-use crypto::{PublicKey, SecretKey};
+use crypto::PublicKey;
 
 use assets::TradeAsset;
 use transactions::components::service::SERVICE_ID;
@@ -60,8 +60,7 @@ impl AskOfferWrapper {
             &self.pub_key,
             self.asset.clone(),
             self.seed,
-            self.memo.as_str(),
-            &SecretKey::zero()
+            self.memo.as_str()
         )
     }
 }

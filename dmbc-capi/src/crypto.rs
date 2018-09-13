@@ -25,12 +25,11 @@ use serde::de::{self, Deserialize, Deserializer, Visitor};
 use serde::{Serialize, Serializer};
 use sodiumoxide::crypto::hash::sha256::{hash as hash_sodium, Digest};
 use sodiumoxide::crypto::sign::ed25519::{
-    sign_detached, verify_detached,
-    PublicKey as PublicKeySodium, SecretKey as SecretKeySodium,
+    PublicKey as PublicKeySodium,
     Signature as SignatureSodium,
 };
 
-use hex::{encode as encode_hex, FromHex, FromHexError, ToHex};
+use hex::{encode as encode_hex, FromHex, FromHexError};
 
 pub use sodiumoxide::crypto::hash::sha256::DIGESTBYTES as HASH_SIZE;
 pub use sodiumoxide::crypto::sign::ed25519::{
@@ -40,41 +39,6 @@ pub use sodiumoxide::crypto::sign::ed25519::{
 
 /// The size to crop the string in debug messages.
 const BYTES_IN_DEBUG: usize = 4;
-
-/// Signs slice of bytes using the signer's secret key. Returns the resulting `Signature`.
-///
-/// # Examples
-///
-/// ```
-/// use exonum::crypto;
-///
-/// # crypto::init();
-/// let (public_key, secret_key) = crypto::gen_keypair();
-/// let data = [1, 2, 3];
-/// let signature = crypto::sign(&data, &secret_key);
-/// assert!(crypto::verify(&signature, &data, &public_key));
-/// ```
-pub fn sign(data: &[u8], secret_key: &SecretKey) -> Signature {
-    let sodium_signature = sign_detached(data, &secret_key.0);
-    Signature(sodium_signature)
-}
-
-/// Verifies that `data` is signed with a secret key corresponding to the given public key.
-///
-/// # Examples
-///
-/// ```
-/// use exonum::crypto;
-///
-/// # crypto::init();
-/// let (public_key, secret_key) = crypto::gen_keypair();
-/// let data = [1, 2, 3];
-/// let signature = crypto::sign(&data, &secret_key);
-/// assert!(crypto::verify(&signature, &data, &public_key));
-/// ```
-pub fn verify(sig: &Signature, data: &[u8], pubkey: &PublicKey) -> bool {
-    verify_detached(&sig.0, data, &pubkey.0)
-}
 
 /// Calculates an SHA-256 hash digest of a bytes slice.
 ///
@@ -156,60 +120,6 @@ macro_rules! implement_public_sodium_wrapper {
     )
 }
 
-macro_rules! implement_private_sodium_wrapper {
-    ($(#[$attr:meta])* struct $name:ident, $name_from:ident, $size:expr) => (
-    #[derive(Clone, PartialEq, Eq)]
-    $(#[$attr])*
-    pub struct $name($name_from);
-
-    impl $name {
-        /// Creates a new instance filled with zeros.
-        pub fn zero() -> Self {
-            $name::new([0; $size])
-        }
-    }
-
-    impl $name {
-        /// Creates a new instance from bytes array.
-        pub fn new(ba: [u8; $size]) -> Self {
-            $name($name_from(ba))
-        }
-
-        /// Creates a new instance from bytes slice.
-        pub fn from_slice(bs: &[u8]) -> Option<Self> {
-            $name_from::from_slice(bs).map($name)
-        }
-
-        /// Returns the hex representation of the binary data.
-        /// Lower case letters are used (e.g. f9b4ca).
-        pub fn to_hex(&self) -> String {
-            encode_hex(&self[..])
-        }
-    }
-
-    impl fmt::Debug for $name {
-        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-            write!(f, stringify!($name))?;
-            write!(f, "(")?;
-            for i in &self[0..BYTES_IN_DEBUG] {
-                write!(f, "{:02X}", i)?
-            }
-            write!(f, "...)")
-        }
-    }
-
-    impl ToHex for $name {
-        fn write_hex<W: ::std::fmt::Write>(&self, w: &mut W) -> ::std::fmt::Result {
-            (self.0).0.as_ref().write_hex(w)
-        }
-
-        fn write_hex_upper<W: ::std::fmt::Write>(&self, w: &mut W) -> ::std::fmt::Result {
-            (self.0).0.as_ref().write_hex_upper(w)
-        }
-    }
-    )
-}
-
 implement_public_sodium_wrapper! {
 /// Ed25519 public key used to verify digital signatures.
 ///
@@ -223,21 +133,6 @@ implement_public_sodium_wrapper! {
 /// # drop(public_key);
 /// ```
     struct PublicKey, PublicKeySodium, PUBLIC_KEY_LENGTH
-}
-
-implement_private_sodium_wrapper! {
-/// Ed25519 secret key used to create digital signatures over messages.
-///
-/// # Examples
-///
-/// ```
-/// use exonum::crypto;
-///
-/// # crypto::init();
-/// let (_, secret_key) = crypto::gen_keypair();
-/// # drop(secret_key);
-/// ```
-    struct SecretKey, SecretKeySodium, SECRET_KEY_LENGTH
 }
 
 implement_public_sodium_wrapper! {
@@ -326,7 +221,6 @@ macro_rules! implement_serde {
 
 implement_serde! {Hash}
 implement_serde! {PublicKey}
-implement_serde! {SecretKey}
 implement_serde! {Signature}
 
 macro_rules! implement_index_traits {
@@ -363,7 +257,6 @@ macro_rules! implement_index_traits {
 }
 implement_index_traits! {Hash}
 implement_index_traits! {PublicKey}
-implement_index_traits! {SecretKey}
 implement_index_traits! {Signature}
 
 /// Returns hash consisting of zeros.

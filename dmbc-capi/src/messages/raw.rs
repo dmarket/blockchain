@@ -4,7 +4,7 @@ use std::{convert, mem, sync};
 
 use byteorder::{ByteOrder, LittleEndian};
 
-use crypto::{hash, sign, verify, Hash, PublicKey, SecretKey, Signature, SIGNATURE_LENGTH};
+use crypto::{hash, Hash, Signature, SIGNATURE_LENGTH};
 use encoding::{self, CheckedOffset, Field, Offset, Result as StreamStructResult};
 
 /// Length of the message header.
@@ -125,7 +125,7 @@ impl MessageBuffer {
 
     /// Returns message body without signature.
     pub fn body(&self) -> &[u8] {
-        &self.raw[..self.raw.len() - SIGNATURE_LENGTH]
+        &self.raw[..self.raw.len()]
     }
 
     /// Returns signature of the message.
@@ -225,12 +225,9 @@ impl MessageWriter {
         );
     }
 
-    /// Signs the message with the given secret key.
-    pub fn sign(mut self, secret_key: &SecretKey) -> MessageBuffer {
+    pub fn to_message_buffer(mut self) -> MessageBuffer {
         let payload_length = self.raw.len() + SIGNATURE_LENGTH;
         self.set_payload_length(payload_length);
-        let signature = sign(&self.raw, secret_key);
-        self.raw.extend_from_slice(signature.as_ref());
         MessageBuffer { raw: self.raw }
     }
 
@@ -257,11 +254,6 @@ pub trait Message: Debug + Send + Sync {
     fn hash(&self) -> Hash {
         self.raw().hash()
     }
-
-    /// Verifies the message using given public key.
-    fn verify_signature(&self, pub_key: &PublicKey) -> bool {
-        self.raw().verify_signature(pub_key)
-    }
 }
 
 impl Message for RawMessage {
@@ -275,9 +267,5 @@ impl Message for RawMessage {
 
     fn hash(&self) -> Hash {
         hash(self.as_ref())
-    }
-
-    fn verify_signature(&self, pub_key: &PublicKey) -> bool {
-        verify(self.signature(), self.body(), pub_key)
     }
 }
