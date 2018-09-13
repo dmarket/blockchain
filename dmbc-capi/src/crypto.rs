@@ -29,7 +29,6 @@ use sodiumoxide::crypto::sign::ed25519::{
 
 use hex::{encode as encode_hex, FromHex, FromHexError};
 
-pub use sodiumoxide::crypto::hash::sha256::DIGESTBYTES as HASH_SIZE;
 pub use sodiumoxide::crypto::sign::ed25519::{
     PUBLICKEYBYTES as PUBLIC_KEY_LENGTH, SECRETKEYBYTES as SECRET_KEY_LENGTH,
     SEEDBYTES as SEED_LENGTH, SIGNATUREBYTES as SIGNATURE_LENGTH,
