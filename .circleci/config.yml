@@ -9,7 +9,6 @@ references:
         apt-get -y install libsodium18 libsodium-dev pkg-config clang unzip cmake make binutils-dev libcurl4-openssl-dev zlib1g-dev libdw-dev libiberty-dev
         export ANDROID_NDK_HOME=/opt/android-ndk/android-ndk-r17c/
         mkdir -p /opt/android-ndk/
-        apt-get install openjdk-8-jdk -y
         CWD=$(pwd)
         cd /opt/android-ndk/
         wget https://dl.google.com/android/repository/android-ndk-r17c-linux-x86_64.zip
