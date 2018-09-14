@@ -35,7 +35,7 @@ references:
         export CXX=clang++
         cargo build -p dmbc -p dmbc-node -p dmbc-discovery -p dmbc-capi -vv
 
-  build_dev_m: &build_dev_m
+  build_dev_m: &build_dev_mobile
     run:
       name: Build CAPI project mobile debug
       command: |
@@ -57,6 +57,21 @@ references:
         export CC=clang
         export CXX=clang++
         cargo build -p dmbc -p dmbc-node -p dmbc-discovery -p dmbc-capi -vv --release
+
+  build_dev_m: &build_prod_mobile
+    run:
+      name: Build CAPI project mobile debug
+      command: |
+        export CC=clang
+        export CXX=clang++
+        mkdir .cargo
+        cat cargo-config.toml >> .cargo/config
+        cargo build -p dmbc-capi --target aarch64-linux-android -vv --release
+        cargo build -p dmbc-capi --target armv7-linux-androideabi -vv --release
+
+        # cargo build -p dmbc-capi --target aarch64-apple-ios --lib -vv
+        # cargo build -p dmbc-capi --target armv7-apple-ios --lib -vv
+        # cargo build -p dmbc-capi --target armv7s-apple-ios --lib -vv
 
   run_tests: &run_tests
     run:
