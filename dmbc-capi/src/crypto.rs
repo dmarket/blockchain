@@ -22,24 +22,67 @@ use std::ops::{Index, Range, RangeFrom, RangeFull, RangeTo};
 
 use serde::de::{self, Deserialize, Deserializer, Visitor};
 use serde::{Serialize, Serializer};
-use sodiumoxide::crypto::sign::ed25519::{
-    PublicKey as PublicKeySodium,
-    Signature as SignatureSodium,
-};
 
 use hex::{encode as encode_hex, FromHex, FromHexError};
 
-pub use sodiumoxide::crypto::sign::ed25519::{
-    PUBLICKEYBYTES as PUBLIC_KEY_LENGTH, SECRETKEYBYTES as SECRET_KEY_LENGTH,
-    SEEDBYTES as SEED_LENGTH, SIGNATUREBYTES as SIGNATURE_LENGTH,
-};
+pub const PUBLIC_KEY_LENGTH: usize = 32;
+
+pub const SIGNATURE_LENGTH: usize = 64;
 
 /// The size to crop the string in debug messages.
 const BYTES_IN_DEBUG: usize = 4;
 
+#[derive(Copy, Clone)]
+struct PublicKeySodium([u8; PUBLIC_KEY_LENGTH]);
+
+impl PublicKeySodium {
+    pub fn zero() -> PublicKeySodium {
+        PublicKeySodium([0; PUBLIC_KEY_LENGTH])
+    }
+
+    pub fn from_slice(b: &[u8]) -> Option<PublicKeySodium> {
+        let len = b.len();
+        if len != PUBLIC_KEY_LENGTH {
+            return None;
+        }
+
+        let mut public_key = PublicKeySodium::zero();
+        public_key.0.copy_from_slice(b);
+        Some(public_key)
+    }
+
+    pub fn as_ref(&self) -> &[u8] {
+        &self.0[..]
+    }
+}
+
+#[derive(Copy, Clone)]
+struct SignatureSodium([u8; SIGNATURE_LENGTH]);
+
+impl SignatureSodium {
+    pub fn zero() -> SignatureSodium {
+        SignatureSodium([0; SIGNATURE_LENGTH])
+    }
+
+    pub fn from_slice(b: &[u8]) -> Option<SignatureSodium> {
+        let len = b.len();
+        if len != SIGNATURE_LENGTH {
+            return None;
+        }
+
+        let mut signature = SignatureSodium::zero();
+        signature.0.copy_from_slice(b);
+        Some(signature)
+    }
+
+    pub fn as_ref(&self) -> &[u8] {
+        &self.0[..]
+    }
+}
+
 macro_rules! implement_public_sodium_wrapper {
     ($(#[$attr:meta])* struct $name:ident, $name_from:ident, $size:expr) => (
-    #[derive(PartialEq, Eq, Clone, Copy, PartialOrd, Ord, Hash)]
+    #[derive(Clone, Copy)]
     $(#[$attr])*
     pub struct $name($name_from);
 
