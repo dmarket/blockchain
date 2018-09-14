@@ -22,7 +22,7 @@ references:
       name: Setup nightly
       command: |
         rustup default nightly
-        # rustup target add aarch64-apple-ios armv7-apple-ios armv7s-apple-ios x86_64-apple-ios i386-apple-ios
+        rustup target add aarch64-apple-ios armv7-apple-ios armv7s-apple-ios x86_64-apple-ios i386-apple-ios
         rustup target add aarch64-linux-android armv7-linux-androideabi
         rustup update
         rustup show
@@ -35,7 +35,7 @@ references:
         export CXX=clang++
         cargo build -p dmbc -p dmbc-node -p dmbc-discovery -p dmbc-capi -vv
 
-  build_dev_m: &build_dev_mobile
+  build_dev_mobile: &build_dev_mobile
     run:
       name: Build CAPI project mobile debug
       command: |
@@ -58,7 +58,7 @@ references:
         export CXX=clang++
         cargo build -p dmbc -p dmbc-node -p dmbc-discovery -p dmbc-capi -vv --release
 
-  build_dev_m: &build_prod_mobile
+  build_prod_mobile: &build_prod_mobile
     run:
       name: Build CAPI project mobile debug
       command: |
@@ -157,7 +157,7 @@ jobs:
       - *pre_setup
       - *setup_rust
       - *build_dev
-      # - *build_dev_m
+      - *build_dev_mobile
       - *run_tests
       - *save_cache
       - *setup_coverage
@@ -177,6 +177,7 @@ jobs:
       - *pre_setup
       - *setup_rust
       - *build_prod
+      - *build_prod_mobile
       - *run_tests
       - *save_cache
       - *setup_coverage
