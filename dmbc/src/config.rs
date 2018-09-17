@@ -15,7 +15,7 @@ pub struct Config {
     api: Api,
     db: Db,
     nats: Nats,
-    service_discovery: ServiceDiscovery,
+    service_discovery: Option<String>,
 }
 
 /// Node communications configuration.
@@ -46,9 +46,7 @@ pub struct Nats {
 
 /// Configuration for communicating with a global service discovery.
 #[derive(Deserialize, Clone)]
-pub struct ServiceDiscovery {
-    address: Option<String>,
-}
+pub struct ServiceDiscovery();
 
 impl Config {
     /// Get `Api` configuration from the config file.
@@ -68,7 +66,7 @@ impl Config {
 
     /// Get `ServiceDiscovery` configuration from the config file.
     pub fn service_discovery(self) -> ServiceDiscovery {
-        self.service_discovery
+       panic!("Service discovery is deprecated, remove it from config")
     }
 }
 
@@ -190,10 +188,7 @@ impl Nats {
 impl ServiceDiscovery {
     /// Address of the service discovery.
     pub fn address(self) -> String {
-        match env::var("SD_ADDRESS") {
-            Ok(address) => address,
-            Err(_) => self.address.unwrap(),
-        }
+        panic!("External service discovery is deprecated, please update your config")
     }
 }
 

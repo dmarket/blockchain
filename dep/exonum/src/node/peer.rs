@@ -41,8 +41,6 @@ impl StorageValue for PeerInfo {
     fn from_bytes(value: Cow<[u8]>) -> Self {
         let total_len = SocketAddr::field_size() + Connect::field_size();
 
-        debug_assert_eq!(total_len as usize, value.len());
-
         unsafe {
             let addr = SocketAddr::read(&value, 0, SocketAddr::field_size());
             let connect = Connect::read(&value, SocketAddr::field_size(), total_len);

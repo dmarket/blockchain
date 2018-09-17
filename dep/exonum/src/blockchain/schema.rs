@@ -16,7 +16,7 @@ use super::config::StoredConfiguration;
 use super::{Block, BlockProof, Blockchain};
 use crypto::{Hash, PublicKey};
 use helpers::Height;
-use messages::{Connect, Precommit, RawMessage};
+use messages::{Precommit, RawMessage};
 use node::PeerInfo;
 use storage::{
     Fork, ListIndex, MapIndex, MapProof, ProofListIndex, ProofMapIndex, Snapshot, StorageKey,
@@ -371,7 +371,7 @@ impl<'a> Schema<&'a mut Fork> {
     /// Mutable reference to the [`peers_cache`][1] index.
     ///
     /// [1]: struct.Schema.html#method.peers_cache
-    pub fn peers_cache_mut(&mut self) -> MapIndex<&mut Fork, PublicKey, Connect> {
+    pub fn peers_cache_mut(&mut self) -> MapIndex<&mut Fork, PublicKey, PeerInfo> {
         MapIndex::new("core.peers_cache", &mut self.view)
     }
 

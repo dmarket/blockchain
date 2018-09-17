@@ -125,10 +125,10 @@ impl NodeHandler {
             "Received Connect message from {}, {}",
             peer_new.addr, need_connect,
         );
-        self.blockchain.save_peer(&pub_key, peer_new.connect);
+        self.blockchain.save_peer(&pub_key, peer_new.clone());
         if need_connect {
             // TODO: reduce double sending of connect message
-            info!("Send Connect message to {}", peer_new.addr);
+            info!("Send Connect message to {}", &peer_new.addr);
             self.connect(&peer_new.addr);
         }
     }
