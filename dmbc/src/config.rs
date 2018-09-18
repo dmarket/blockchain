@@ -15,7 +15,7 @@ pub struct Config {
     api: Api,
     db: Db,
     nats: Nats,
-    service_discovery: Option<String>,
+    service_discovery: Option<ServiceDiscovery>,
 }
 
 /// Node communications configuration.
@@ -46,7 +46,7 @@ pub struct Nats {
 
 /// Configuration for communicating with a global service discovery.
 #[derive(Deserialize, Clone)]
-pub struct ServiceDiscovery();
+pub struct ServiceDiscovery {}
 
 impl Config {
     /// Get `Api` configuration from the config file.
