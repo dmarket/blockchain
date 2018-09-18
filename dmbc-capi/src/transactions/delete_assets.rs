@@ -1,4 +1,4 @@
-use exonum::crypto::{PublicKey, SecretKey};
+use crypto::{PublicKey, SecretKey};
 
 use assets::AssetBundle;
 use transactions::components::service::SERVICE_ID;
@@ -8,7 +8,7 @@ use error::{Error, ErrorKind};
 /// Transaction ID.
 pub const DELETE_ASSETS_ID: u16 = 400;
 
-message! {
+evo_message! {
     /// `delete_assets` transaction.
     struct DeleteAssets {
         const TYPE = SERVICE_ID;

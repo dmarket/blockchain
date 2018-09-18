@@ -20,9 +20,9 @@ fn capi_exchange() {
     let sender = PublicKey::from_hex(offer["sender"].as_str().unwrap());
     let recipient = PublicKey::from_hex(offer["recipient"].as_str().unwrap());
     let fee_strategy = FeeStrategy::try_from(offer["fee_strategy"].as_u64().unwrap() as u8);
-    let memo = inputs["memo"].as_str().unwrap();
+    let memo = offer["memo"].as_str().unwrap();
     let sender_value = offer["sender_value"].as_u64().unwrap();
-    let seed = inputs["seed"].as_u64().unwrap();
+    let seed = offer["seed"].as_u64().unwrap();
 
     let mut builder = transaction::Builder::new()
         .keypair(recipient.unwrap(), SecretKey::zero())

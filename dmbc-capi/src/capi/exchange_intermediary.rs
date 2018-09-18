@@ -1,8 +1,8 @@
 use std::mem;
 use std::ptr;
 
-use exonum::messages::Message;
-use exonum::storage::StorageValue;
+use messages::Message;
+use storage::StorageValue;
 use libc::{c_char, size_t};
 
 use assets::AssetBundle;
@@ -21,6 +21,8 @@ ffi_fn! {
         sender_value: u64,
         recipient_public_key: *const c_char,
         fee_strategy: u8,
+        seed: u64,
+        memo: *const c_char,
         error: *mut Error,
     ) -> *mut ExchangeOfferIntermediaryWrapper {
         let sender_key = match parse_public_key(sender_public_key) {
@@ -53,8 +55,19 @@ ffi_fn! {
                 return ptr::null_mut();
             }
         }
+        let memo = match parse_str(memo) {
+            Ok(memo) => memo,
+            Err(err) => {
+                unsafe {
+                    if !error.is_null() {
+                        *error = err;
+                    }
+                    return ptr::null_mut();
+                }
+            }
+        };
         let intermediary = unsafe { &*intermediary };
-        let wrapper = ExchangeOfferIntermediaryWrapper::new(intermediary.clone(), &sender_key, sender_value, &recipient_key, fee_strategy);
+        let wrapper = ExchangeOfferIntermediaryWrapper::new(intermediary.clone(), &sender_key, sender_value, &recipient_key, fee_strategy, seed, memo);
         Box::into_raw(Box::new(wrapper))
     }
 }
@@ -169,8 +182,6 @@ ffi_fn! {
         wrapper: *mut ExchangeOfferIntermediaryWrapper,
         sender_signature: *const c_char,
         intermediary_signature: *const c_char,
-        seed: u64,
-        memo: *const c_char,
         error: *mut Error,
     ) -> *mut ExchangeIntermediaryWrapper {
         let wrapper = match ExchangeOfferIntermediaryWrapper::from_ptr(wrapper) {
@@ -206,20 +217,9 @@ ffi_fn! {
                 }
             }
         };
-        let memo = match parse_str(memo) {
-            Ok(memo) => memo,
-            Err(err) => {
-                unsafe {
-                    if !error.is_null() {
-                        *error = err;
-                    }
-                    return ptr::null_mut();
-                }
-            }
-        };
 
         let wrapper = wrapper.unwrap().clone();
-        let tx = ExchangeIntermediaryWrapper::new(wrapper, seed, &sender_signature, &intermediary_signature, memo);
+        let tx = ExchangeIntermediaryWrapper::new(wrapper, &sender_signature, &intermediary_signature);
         Box::into_raw(Box::new(tx))
     }
 }

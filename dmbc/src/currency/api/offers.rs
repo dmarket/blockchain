@@ -26,24 +26,24 @@ pub struct OfferApi {
 pub type OpenOffersResult = Result<Option<OpenOffers>, ApiError>;
 
 pub type OpenOffersResponse = Result<OpenOffersInfo, ApiError>;
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct OpenOffersInfo {
     pub total: u64,
     pub count: u64,
     pub offers_info: HashMap<AssetId, OpenOfferInfo>,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct OpenOfferInfo {
-    pub bids: u64,
-    pub asks: u64,
+    pub bids_count: u64,
+    pub asks_count: u64,
 }
 
 impl OpenOfferInfo {
     pub fn from(open_offers: &OpenOffers) -> Self {
         OpenOfferInfo {
-            bids: open_offers.bids().into_iter().map(|bid| bid.offers().len() as u64).sum(),
-            asks: open_offers.asks().into_iter().map(|ask| ask.offers().len() as u64).sum(),
+            bids_count: open_offers.bids().into_iter().map(|bid| bid.offers().len() as u64).sum(),
+            asks_count: open_offers.asks().into_iter().map(|ask| ask.offers().len() as u64).sum(),
         }
     }
 }
@@ -152,7 +152,7 @@ impl Api for OfferApi {
 
         };
 
-        router.get("/v1/offers/", offers_info, "open_offers");
+        router.get("/v1/offers", offers_info, "open_offers");
         router.get("/v1/offers/:asset_id", bids_asks, "bids_asks");
     }
 }

@@ -13,10 +13,10 @@
             "id": "00001111222233334444555566667777",
             "amount": 10
         }],
-        "fee_strategy": 1
+        "fee_strategy": 1,
+        "seed": 999,
+        "memo": "Testing CAPI for exchange intermediary"
     },
-    "seed": 999,
-    "sender_signature": "2f433eeaefbc0ba3800c76be8f5ad30e5f7a29b02a82a6b121c55b63d3cf014fc53226e811364e75a94e597f08185e09bf42e931179e2c2b6991a42b6b1e350c",
-    "intermediary_signature": "2f433eeaefbc0ba3800c76be8f5ad30e5f7a29b02a82a6b121c55b63d3cf014fc53226e811364e75a94e597f08185e09bf42e931179e2c2b6991a42b6b1e350c",
-    "memo": "Testing CAPI for exchange intermediary"
+    "sender_signature": "964b55f0bc61729c494fac503b5ab810fb5db1f6031b80349213396596e4d38b12236364898f277569d2f77236e35b4fd1ad172d6411b4cac3d2411f8a247d07",
+    "intermediary_signature": "964b55f0bc61729c494fac503b5ab810fb5db1f6031b80349213396596e4d38b12236364898f277569d2f77236e35b4fd1ad172d6411b4cac3d2411f8a247d07"
 }

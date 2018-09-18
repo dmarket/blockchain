@@ -1,4 +1,4 @@
-use exonum::crypto::{PublicKey, SecretKey};
+use crypto::{PublicKey, SecretKey};
 
 use assets::MetaAsset;
 use transactions::components::service::SERVICE_ID;
@@ -7,7 +7,7 @@ use error::{Error, ErrorKind};
 
 pub const ADD_ASSETS_ID: u16 = 300;
 
-message!{
+evo_message!{
     /// `add_assets` transaction.
     struct AddAssets {
         const TYPE = SERVICE_ID;

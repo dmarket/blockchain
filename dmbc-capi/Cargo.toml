@@ -1,20 +1,24 @@
 [package]
 name = "dmbc-capi"
 version = "2.2.0"
-authors = ["Taras Shchybovyk <tshchybo@gmail.com>"]
+authors = ["Ilya Sinyakin <sinyakin.ilya@gmail.com>", "Mikola Samardak <niksaak@gmail.com>", "Taras Shchybovyk <tshchybo@gmail.com>"]
 
 [lib]
 name = "dmbc_capi"
 crate-type = ["staticlib", "cdylib"]
 
 [dependencies]
-exonum = "0.5"
 libc = "0.2"
 serde = "1.0"
 serde_json = "1.0"
 extprim = "1.5"
 uuid = { version = "0.5", features = ["v5"] }
+byteorder = "1.1.0"
+bit-vec = "0.4.4"
+hex = "0.3.0"
+exonum_sodiumoxide = "0.0.16"
 
 [dev-dependencies]
 dmbc = { path = "../dmbc" }
 serde_json = "1.0"
+exonum = "0.5"

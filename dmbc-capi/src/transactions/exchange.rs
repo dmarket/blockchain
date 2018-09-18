@@ -1,4 +1,4 @@
-use exonum::crypto::{PublicKey, SecretKey, Signature};
+use crypto::{PublicKey, SecretKey, Signature};
 
 use assets::AssetBundle;
 use transactions::components::service::SERVICE_ID;
@@ -8,7 +8,7 @@ use error::{Error, ErrorKind};
 /// Transaction ID.
 pub const EXCHANGE_ID: u16 = 601;
 
-encoding_struct! {
+evo_encoding_struct! {
     struct ExchangeOffer {
         sender:           &PublicKey,
         sender_assets:    Vec<AssetBundle>,
@@ -18,6 +18,8 @@ encoding_struct! {
         recipient_assets: Vec<AssetBundle>,
 
         fee_strategy:     u8,
+        seed:             u64,
+        memo:        &str,
     }
 }
 
@@ -31,6 +33,8 @@ pub struct ExchangeOfferWrapper {
     recipient_assets: Vec<AssetBundle>,
 
     fee_strategy: u8,
+    seed: u64,
+    memo: String,
 }
 
 impl ExchangeOfferWrapper {
@@ -39,6 +43,8 @@ impl ExchangeOfferWrapper {
         sender_value: u64,
         recipient: &PublicKey,
         fee_strategy: u8,
+        seed: u64, 
+        memo: &str
     ) -> Self {
         ExchangeOfferWrapper {
             sender: *sender,
@@ -48,6 +54,8 @@ impl ExchangeOfferWrapper {
             recipient: *recipient,
             recipient_assets: Vec::new(),
             fee_strategy: fee_strategy,
+            seed: seed,
+            memo: memo.to_string()
         }
     }
 
@@ -78,38 +86,34 @@ impl ExchangeOfferWrapper {
             &self.recipient,
             self.recipient_assets.clone(),
             self.fee_strategy,
+            self.seed,
+            self.memo.as_str()
         )
     }
 }
 
-message! {
+evo_message! {
     /// `exchange` transaction.
     struct Exchange {
         const TYPE = SERVICE_ID;
         const ID = EXCHANGE_ID;
 
         offer:             ExchangeOffer,
-        seed:              u64,
         sender_signature:  &Signature,
-        data_info:         &str,
     }
 }
 
 #[derive(Clone, Debug)]
 pub struct ExchangeWrapper {
     offer: ExchangeOffer,
-    seed: u64,
     signature: Signature,
-    data_info: String,
 }
 
 impl ExchangeWrapper {
-    pub fn new(offer: ExchangeOffer, seed: u64, signature: &Signature, data_info: &str) -> Self {
+    pub fn new(offer: ExchangeOffer, signature: &Signature) -> Self {
         ExchangeWrapper {
             offer: offer,
-            seed: seed,
             signature: *signature,
-            data_info: data_info.to_string(),
         }
     }
 
@@ -125,9 +129,7 @@ impl ExchangeWrapper {
     pub fn unwrap(&self) -> Exchange {
         Exchange::new(
             self.offer.clone(),
-            self.seed,
             &self.signature,
-            self.data_info.as_str(),
             &SecretKey::zero(),
         )
     }

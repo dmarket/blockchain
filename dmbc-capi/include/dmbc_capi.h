@@ -14,6 +14,16 @@ extern "C" {
 typedef struct dmbc_tx_transfer dmbc_tx_transfer;
 
 /*
+ * dmbc_tx_transfer_fees_payer_offer is a type of transfer offer with fees payer
+ */
+typedef struct dmbc_transfer_fees_payer_offer dmbc_transfer_fees_payer_offer;
+
+/*
+ * dmbc_tx_transfer_fees_payer is a type of transfer transaction with feees payer
+ */
+typedef struct dmbc_tx_transfer_fees_payer dmbc_tx_transfer_fees_payer;
+
+/*
  * dmbc_tx_add_assets is a type of add_assets transaction
  */
 typedef struct dmbc_tx_add_assets dmbc_tx_add_assets;
@@ -82,6 +92,16 @@ typedef struct dmbc_tx_trade dmbc_tx_trade;
  * dmbc_tx_trade_intermediary is a type of trade with intermediary transaction
  */
 typedef struct dmbc_tx_trade_intermediary dmbc_tx_trade_intermediary;
+
+/*
+ * dmbc_tx_ask_offer is a type of ask offer transaction
+ */
+typedef struct dmbc_tx_ask_offer dmbc_tx_ask_offer;
+
+/*
+ * dmbc_tx_bid_offer is a type of bid offer transaction
+ */
+typedef struct dmbc_tx_bid_offer dmbc_tx_bid_offer;
 
 /*
  * dmbc_error is a type of error object
@@ -274,6 +294,103 @@ uint8_t *dmbc_tx_transfer_into_bytes(
 );
 
 /*
+ * @dmbc_transfer_fees_payer_offer_create creates transfer fees payer offer object on the heap.
+ * Object should be dealocated when it is no needed anymore.
+ * 
+ * @from_key public key of a sender [32 bytes long] in hex format.
+ * @to_key public key of a receiver [32 bytes long] in hex format.
+ * @fees_payer_key public key of a fees payer [32 bytes long] in hex format.
+ * @amount amount of coins from sender.
+ * @seed seed number.
+ * @memo memo message.
+ * @error contains error message if any occurs.
+ * 
+ * @ret dmbc_transfer_fees_payer_offer pointer to transfer fees payer offer object, otherwise NULL.
+ */
+dmbc_transfer_fees_payer_offer *dmbc_transfer_fees_payer_offer_create(
+    const char *from_key,
+    const char *to_key,
+    const char *fees_payer_key,
+    uint64_t amount,
+    uint64_t seed,
+    const char *memo,
+    dmbc_error *error
+);
+
+/*
+ * @dmbc_transfer_fees_payer_offer_free frees allocated transfer offer object.
+ * 
+ * @dmbc_transfer_fees_payer_offer pointer to transfer offer object.
+ */
+void dmbc_transfer_fees_payer_offer_free(dmbc_transfer_fees_payer_offer *offer);
+
+/*
+ * @dmbc_transfer_fees_payer_offer_add_asset adds sender's asset to offer.
+ * 
+ * @offer pointer to dmbc_transfer_fees_payer_offer offer object.
+ * @asset pointer to asset object.
+ * @error contains error message if any occurs.
+ */
+bool dmbc_transfer_fees_payer_offer_add_asset(
+    dmbc_transfer_fees_payer_offer *offer,
+    dmbc_asset *asset,
+    dmbc_error *error
+);
+
+/*
+ * dmbc_transfer_fees_payer_offer_into_bytes converts offer object into byte array.
+ * 
+ * @offer pointer to offer object.
+ * @length output parameter, contains byte array size.
+ * @error contains error message if any occurs.
+ * 
+ * @ret byte array if succeeded, otherwise NULL.
+ */
+uint8_t* dmbc_transfer_fees_payer_offer_into_bytes(
+    dmbc_transfer_fees_payer_offer *offer,
+    size_t *length,
+    dmbc_error *error
+);
+
+/*
+ * @dmbc_tx_transfer_fees_payer_create creates transfer fees payer transaction object on the heap.
+ * Object should be dealocated when it is no needed anymore.
+ * 
+ * @offer pointer to transfer offer object.
+ * @signature signature of an offer signed by fees payer [64 bytes long] in hex format.
+ * @error contains error message if any occurs.
+ * 
+ * @ret dmbc_tx_transfer_fees_payer pointer to exchange transaction, otherwise NULL.
+ */
+dmbc_tx_transfer_fees_payer *dmbc_tx_transfer_fees_payer_create(
+    dmbc_transfer_fees_payer_offer *offer,
+    const char *fees_payer_signature,
+    dmbc_error *error
+);
+
+/*
+ * @dmbc_tx_transfer_fees_payer_free frees allocated transfer transaction.
+ * 
+ * @dmbc_tx_transfer_fees_payer pointer to transfer fees payer transaction.
+ */
+void dmbc_tx_transfer_fees_payer_free(dmbc_tx_transfer_fees_payer *tx);
+
+/*
+ * dmbc_tx_transfer_fees_payer_into_bytes converts transaction into byte array.
+ * 
+ * @tx pointer to transation.
+ * @length output parameter, contains byte array size.
+ * @error contains error message if any occurs.
+ * 
+ * @ret byte array if succeeded, otherwise NULL.
+ */
+uint8_t * dmbc_tx_transfer_fees_payer_into_bytes(
+    dmbc_tx_transfer_fees_payer *tx,
+    size_t *length,
+    dmbc_error *error
+);
+
+/*
  * @dmbc_exchange_offer_create creates exchange offer object on the heap.
  * Object should be dealocated when it is no needed anymore.
  * 
@@ -281,6 +398,8 @@ uint8_t *dmbc_tx_transfer_into_bytes(
  * @sender_amount amount of coins from sender.
  * @recipient_key public key of a receiver [32 bytes long] in hex format.
  * @fee_strategy fee strategy flag.
+ * @seed transaction seed number.
+ * @memo memo messsage.
  * @error contains error message if any occurs.
  * 
  * @ret dmbc_exchange_offer pointer to exchange offer object, otherwise NULL.
@@ -290,6 +409,8 @@ dmbc_exchange_offer *dmbc_exchange_offer_create(
     uint64_t sender_amount,
     const char *recipient_key,
     uint8_t fee_strategy,
+    uint64_t seed,
+    const char *memo,
     dmbc_error *error
 );
 
@@ -353,8 +474,6 @@ uint8_t* dmbc_exchange_offer_into_bytes(
  * 
  * @offer pointer to exchange offer object.
  * @signature signature of an offer [64 bytes long] in hex format.
- * @seed transaction seed number.
- * @memo memo messsage.
  * @error contains error message if any occurs.
  * 
  * @ret dmbc_tx_exchange pointer to exchange transaction, otherwise NULL.
@@ -362,8 +481,6 @@ uint8_t* dmbc_exchange_offer_into_bytes(
 dmbc_tx_exchange *dmbc_tx_exchange_create(
     dmbc_exchange_offer *offer,
     const char *signature,
-    uint64_t seed,
-    const char *memo,
     dmbc_error *error
 );
 
@@ -399,6 +516,8 @@ uint8_t * dmbc_tx_exchange_into_bytes(
  * @sender_amount amount of coins from sender.
  * @recipient_key public key of a receiver [32 bytes long] in hex format.
  * @fee_strategy fee strategy flag.
+ * @seed transaction seed number.
+ * @memo memo messsage.
  * @error contains error message if any occurs.
  * 
  * @ret dmbc_exchange_offer_intermediary pointer to exchange offer object,
@@ -410,6 +529,8 @@ dmbc_exchange_offer_intermediary *dmbc_exchange_offer_intermediary_create(
     uint64_t sender_amount,
     const char *recipient_key,
     uint8_t fee_strategy,
+    uint64_t seed,
+    const char *memo,
     dmbc_error *error
 );
 
@@ -477,8 +598,6 @@ uint8_t* dmbc_exchange_offer_intermediary_into_bytes(
  * @offer pointer to exchange offer with intermediary object.
  * @sender_signature signature of an offer [64 bytes long] in hex format signed by sender.
  * @intermediary_signature signature of an offer [64 bytes long] in hex format signed by intermediary party.
- * @seed transaction seed number.
- * @memo memo messsage.
  * @error contains error message if any occurs.
  * 
  * @ret dmbc_tx_exchange_intermediary pointer to exchange transaction, otherwise NULL.
@@ -487,8 +606,6 @@ dmbc_tx_exchange_intermediary *dmbc_tx_exchange_intermediary_create(
     dmbc_exchange_offer_intermediary *offer,
     const char *sender_signature,
     const char *intermediary_signature,
-    uint64_t seed,
-    const char *memo,
     dmbc_error *error
 );
 
@@ -521,6 +638,8 @@ uint8_t * dmbc_tx_exchange_intermediary_into_bytes(
  * @seller_key public key of a seller [32 bytes long] in hex format.
  * @buyer_key public key of a buyer [32 bytes long] in hex format.
  * @fee_strategy fee strategy flag.
+ * @seed transaction seed number.
+ * @memo memo message.
  * @error contains error message if any occurs.
  * 
  * @ret dmbc_trade_offer pointer to trade offer object, otherwise NULL.
@@ -529,6 +648,8 @@ dmbc_trade_offer *dmbc_trade_offer_create(
     const char *seller_key,
     const char *buyer_key,
     uint8_t fee_strategy,
+    uint64_t seed,
+    const char *memo,
     dmbc_error *error
 );
 
@@ -578,7 +699,6 @@ uint8_t *dmbc_trade_offer_into_bytes(
  * 
  * @offer pointer to trade offer object.
  * @seller_signature signature of a seller [64 bytes long] in hex format signed by sender.
- * @seed transaction seed number.
  * @error contains error message if any occurs.
  * 
  * @ret dmbc_tx_trade pointer to exchange transaction, otherwise NULL.
@@ -586,7 +706,6 @@ uint8_t *dmbc_trade_offer_into_bytes(
 dmbc_tx_trade *dmbc_tx_trade_create(
     dmbc_trade_offer *offer,
     const char *seller_signature,
-    uint64_t seed,
     dmbc_error *error
 );
 
@@ -620,6 +739,8 @@ uint8_t *dmbc_tx_trade_into_bytes(
  * @seller_key public key of a seller [32 bytes long] in hex format.
  * @buyer_key public key of a buyer [32 bytes long] in hex format.
  * @fee_strategy fee strategy flag.
+ * @seed transaction seed number.
+ * @memo memo message.
  * @error contains error message if any occurs.
  * 
  * @ret dmbc_trade_offer_intermediary pointer to trade offer object, otherwise NULL.
@@ -629,6 +750,8 @@ dmbc_trade_offer_intermediary *dmbc_trade_offer_intermediary_create(
     const char *seller_key,
     const char *buyer_key,
     uint8_t fee_strategy,
+    uint64_t seed,
+    const char *memo,
     dmbc_error *error
 );
 
@@ -679,8 +802,6 @@ uint8_t *dmbc_trade_offer_intermediary_into_bytes(
  * @offer pointer to trade offer object.
  * @seller_signature signature [64 bytes long] in hex format signed by seller.
  * @intermediary_signature signature [64 bytes long] in hex format signed by internediary party.
- * @seed transaction seed number.
- * @memo memo message.
  * @error contains error message if any occurs.
  * 
  * @ret dmbc_tx_trade_intermediary pointer to trade transaction, otherwise NULL.
@@ -689,8 +810,6 @@ dmbc_tx_trade_intermediary *dmbc_tx_trade_intermediary_create(
     dmbc_trade_offer_intermediary *offer,
     const char *seller_signature,
     const char *intermediary_signature,
-    uint64_t seed,
-    const char *memo,
     dmbc_error *error
 );
 
@@ -712,6 +831,85 @@ void dmbc_tx_trade_intermediary_free(dmbc_tx_trade_intermediary *tx);
  */
 uint8_t *dmbc_tx_trade_intermediary_into_bytes(
     dmbc_tx_trade_intermediary *tx,
+    size_t *length,
+    dmbc_error *error
+);
+
+/*
+ * dmbc_tx_ask_offer_create creates ask offer transaction object.
+ * 
+ * @public_key public key of a seller [32 bytes long] in hex format.
+ * @asset pointer to trade asset object.
+ * @error contains error message if any occurs.
+ * 
+ * @ret pointer to dmbc_tx_ask_offer if succeeded, otherwise NULL.
+ */
+dmbc_tx_ask_offer *dmbc_tx_ask_offer_create(
+    const char *public_key,
+    dmbc_trade_asset *asset,
+    uint64_t seed,
+    const char *memo,
+    dmbc_error *error
+);
+
+/*
+ * @dmbc_tx_ask_offer_free frees allocated ask offer transaction.
+ * 
+ * @dmbc_tx_ask_offer_free pointer to ask offer transaction.
+ */
+void dmbc_tx_ask_offer_free(dmbc_tx_ask_offer *tx);
+
+
+/*
+ * dmbc_tx_ask_offer_into_bytes converts transaction into byte array.
+ * 
+ * @tx pointer to transation.
+ * @length output parameter, contains byte array size.
+ * @error contains error message if any occurs.
+ * 
+ * @ret byte array if succeeded, otherwise NULL.
+ */
+uint8_t *dmbc_tx_ask_offer_into_bytes(
+    dmbc_tx_ask_offer *tx,
+    size_t *length,
+    dmbc_error *error
+);
+
+/*
+ * dmbc_tx_bid_offer_create creates bid offer transaction object.
+ * 
+ * @public_key public key of a seller [32 bytes long] in hex format.
+ * @asset pointer to trade asset object.
+ * @error contains error message if any occurs.
+ * 
+ * @ret pointer to dmbc_tx_bid_offer if succeeded, otherwise NULL.
+ */
+dmbc_tx_bid_offer *dmbc_tx_bid_offer_create(
+    const char *public_key,
+    dmbc_trade_asset *asset,
+    uint64_t seed,
+    const char *memo,
+    dmbc_error *error
+);
+
+/*
+ * @dmbc_tx_bid_offer_free frees allocated bid offer transaction.
+ * 
+ * @dmbc_tx_bid_offer_free pointer to bid offer transaction.
+ */
+void dmbc_tx_bid_offer_free(dmbc_tx_bid_offer *tx);
+
+/*
+ * dmbc_tx_bid_offer_into_bytes converts transaction into byte array.
+ * 
+ * @tx pointer to transation.
+ * @length output parameter, contains byte array size.
+ * @error contains error message if any occurs.
+ * 
+ * @ret byte array if succeeded, otherwise NULL.
+ */
+uint8_t *dmbc_tx_bid_offer_into_bytes(
+    dmbc_tx_bid_offer *tx,
     size_t *length,
     dmbc_error *error
 );

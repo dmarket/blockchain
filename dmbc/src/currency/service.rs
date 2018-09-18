@@ -21,9 +21,10 @@ use currency::configuration;
 use currency::configuration::Configuration;
 use currency::status;
 use currency::transactions::{
-    AddAssets, DeleteAssets, Exchange, ExchangeIntermediary, Trade, TradeIntermediary, Transfer,
+    AddAssets, DeleteAssets, Exchange, ExchangeIntermediary, Trade, TradeIntermediary, Transfer, TransferWithFeesPayer,
+    BidOffer, AskOffer,
     ADD_ASSETS_ID, DELETE_ASSETS_ID, EXCHANGE_ID, EXCHANGE_INTERMEDIARY_ID, TRADE_ID,
-    TRADE_INTERMEDIARY_ID, TRANSFER_ID,
+    TRADE_INTERMEDIARY_ID, TRANSFER_ID, TRANSFER_FEES_PAYER_ID, BID_OFFER_ID, ASK_OFFER_ID
 };
 use currency::wallet;
 use currency::wallet::Wallet;
@@ -83,6 +84,9 @@ impl blockchain::Service for Service {
             TRADE_ID => Box::new(Trade::from_raw(raw)?),
             TRADE_INTERMEDIARY_ID => Box::new(TradeIntermediary::from_raw(raw)?),
             TRANSFER_ID => Box::new(Transfer::from_raw(raw)?),
+            TRANSFER_FEES_PAYER_ID => Box::new(TransferWithFeesPayer::from_raw(raw)?),
+            BID_OFFER_ID => Box::new(BidOffer::from_raw(raw)?),
+            ASK_OFFER_ID => Box::new(AskOffer::from_raw(raw)?),
             _ => {
                 return Err(encoding::Error::IncorrectMessageType {
                     message_type: raw.message_type(),

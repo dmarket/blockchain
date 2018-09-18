@@ -1,4 +1,4 @@
-use exonum::crypto::{PublicKey, SecretKey};
+use crypto::{PublicKey, SecretKey};
 
 use assets::AssetBundle;
 use transactions::components::service::SERVICE_ID;
@@ -8,7 +8,7 @@ use error::{Error, ErrorKind};
 /// Transaction ID.
 pub const TRANSFER_ID: u16 = 200;
 
-message! {
+evo_message! {
     /// `transfer` transaction.
     struct Transfer {
         const TYPE = SERVICE_ID;
@@ -19,7 +19,7 @@ message! {
         amount:    u64,
         assets:    Vec<AssetBundle>,
         seed:      u64,
-        data_info: &str,
+        memo:      &str,
     }
 }
 
@@ -30,18 +30,18 @@ pub struct TransferWrapper {
     amount: u64,
     assets: Vec<AssetBundle>,
     seed: u64,
-    data_info: String,
+    memo: String,
 }
 
 impl TransferWrapper {
-    pub fn new(from: &PublicKey, to: &PublicKey, amount: u64, seed: u64, data_info: &str) -> Self {
+    pub fn new(from: &PublicKey, to: &PublicKey, amount: u64, seed: u64, memo: &str) -> Self {
         TransferWrapper {
             from: *from,
             to: *to,
             amount: amount,
             assets: Vec::new(),
             seed: seed,
-            data_info: data_info.to_string(),
+            memo: memo.to_string(),
         }
     }
 
@@ -65,7 +65,7 @@ impl TransferWrapper {
             self.amount,
             self.assets.clone(),
             self.seed,
-            &self.data_info,
+            &self.memo,
             &SecretKey::zero(),
         )
     }

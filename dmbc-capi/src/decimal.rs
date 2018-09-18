@@ -4,11 +4,8 @@ use std::ops::Mul;
 use std::str::FromStr;
 use std::string::ToString;
 
-use exonum::encoding::serialize::json::ExonumJson;
-use exonum::encoding::serialize::WriteBufferWrapper;
-use exonum::encoding::{CheckedOffset, Field, Offset};
+use encoding::{CheckedOffset, Field, Offset};
 use extprim::u128::u128;
-use serde_json;
 
 const BITS_PER_DIGIT: usize = 4;
 const UFRACT64_DIGITS: usize = 16;
@@ -166,30 +163,8 @@ impl<'a> Field<'a> for UFract64 {
         from: CheckedOffset,
         to: CheckedOffset,
         latest_segment: CheckedOffset,
-    ) -> Result<CheckedOffset, ::exonum::encoding::Error> {
+    ) -> Result<CheckedOffset, ::encoding::Error> {
         u64::check(buffer, from, to, latest_segment)
-    }
-}
-
-impl ExonumJson for UFract64 {
-    fn serialize_field(&self) -> Result<serde_json::value::Value, Box<Error + Send + Sync>> {
-        Ok(serde_json::Value::String(self.to_string()))
-    }
-
-    fn deserialize_field<B: WriteBufferWrapper>(
-        value: &serde_json::Value,
-        buffer: &mut B,
-        from: Offset,
-        to: Offset,
-    ) -> Result<(), Box<Error>> {
-        let value = value.as_str().ok_or("UFract64 value is not a string")?;
-        match str::parse::<UFract64>(value) {
-            Ok(fract) => {
-                buffer.write(from, to, fract);
-                Ok(())
-            }
-            Err(err) => Err(Box::new(err)),
-        }
     }
 }
 

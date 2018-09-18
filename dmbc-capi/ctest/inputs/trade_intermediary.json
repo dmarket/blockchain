@@ -11,10 +11,10 @@
             "amount": 23,
             "price": 6666
         }],
-        "fee_strategy": 1
+        "fee_strategy": 1,
+        "seed": 742,
+        "memo": "Testing CAPI trade with intermediary"
     },
-    "seed": 742,
-    "seller_signature": "4a14e5155a7676ffca5e81da8032c6453cba4155acc1562da99e1b372cff794bb74fa08b617ddeb9079d2221fd7b6f0e8d9272a8be25d89db4179c036cfd1c0b",
-    "intermediary_signature": "4a14e5155a7676ffca5e81da8032c6453cba4155acc1562da99e1b372cff794bb74fa08b617ddeb9079d2221fd7b6f0e8d9272a8be25d89db4179c036cfd1c0b",
-    "memo": "Testing CAPI trade with intermediary"
+    "seller_signature": "f23ac793409263b3c5c1452821eed718c960b947bb81d671545d17aefac5d6782dd766115773496149dcd59f01cd2ec5fa3c73b7c4a9eaeb05f6ab27ceeb4901",
+    "intermediary_signature": "f23ac793409263b3c5c1452821eed718c960b947bb81d671545d17aefac5d6782dd766115773496149dcd59f01cd2ec5fa3c73b7c4a9eaeb05f6ab27ceeb4901"
 }

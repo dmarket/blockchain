@@ -1,9 +1,7 @@
 use exonum::encoding::Field;
-use exonum::crypto::{PublicKey, Hash};
 
-use currency::assets::{AssetBundle, TradeAsset};
+use currency::assets::AssetBundle;
 use currency::error::Error;
-use currency::offers::Offer;
 
 encoding_struct! {
     /// Wallet data.
@@ -129,35 +127,4 @@ pub fn move_assets(
     *to = Wallet::new(to.balance(), to_assets);
 
     return Ok(());
-}
-
-pub fn create_ask(wallet: &mut Wallet, pk: &PublicKey, asset: &TradeAsset, tx_hash: &Hash) -> Result<Offer, Error>
-{
-    if wallet.balance() < asset.price()*asset.amount() {
-        return Err(Error::InsufficientFunds);
-    }
-    *wallet = Wallet::new(wallet.balance() - asset.price()*asset.amount(), wallet.assets());
-
-    Ok(Offer::new(pk, asset.amount(), tx_hash))
-}
-
-pub fn create_bid(wallet: &mut Wallet, pk: &PublicKey, trade_asset: &TradeAsset, tx_hash: &Hash) -> Result<Offer, Error>
-{
-    let mut wallet_assets = wallet.assets();
-    {
-        let moved_asset = match wallet_assets.iter_mut().find(|a| a.id() == trade_asset.id()) {
-            Some(asset) => {
-                if asset.amount() < trade_asset.amount() {
-                    return Err(Error::InsufficientAssets);
-                }
-                asset
-            }
-            None => return Err(Error::InsufficientAssets),
-        };
-        *moved_asset = AssetBundle::new(trade_asset.id(), moved_asset.amount() - trade_asset.amount());
-    }
-    wallet_assets.retain(|a| a.amount() > 0);
-    *wallet = Wallet::new(wallet.balance(), wallet_assets);
-
-    Ok(Offer::new(pk, trade_asset.amount(), tx_hash))
 }

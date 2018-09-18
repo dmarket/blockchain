@@ -21,13 +21,12 @@ fn capi_exchange() {
     let recipient = PublicKey::from_hex(offer["recipient"].as_str().unwrap());
     let fee_strategy = FeeStrategy::try_from(offer["fee_strategy"].as_u64().unwrap() as u8);
     let sender_value = offer["sender_value"].as_u64().unwrap();
+    let memo = offer["memo"].as_str().unwrap();
+    let seed = offer["seed"].as_u64().unwrap();
 
     let intermediary = offer["intermediary"].as_object().unwrap();
     let intermediary_key = PublicKey::from_hex(intermediary["wallet"].as_str().unwrap());
     let intermediary_commission = intermediary["commission"].as_u64().unwrap();
-
-    let memo = inputs["memo"].as_str().unwrap();
-    let seed = inputs["seed"].as_u64().unwrap();
 
     let mut builder = transaction::Builder::new()
         .keypair(recipient.unwrap(), SecretKey::zero())

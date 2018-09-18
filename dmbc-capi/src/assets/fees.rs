@@ -1,7 +1,7 @@
 use decimal;
 use std::mem;
 
-encoding_struct! {
+evo_encoding_struct! {
     /// Fee data for specific kind of operations.
     struct Fee {
         fixed:      u64,
@@ -9,7 +9,7 @@ encoding_struct! {
     }
 }
 
-encoding_struct! {
+evo_encoding_struct! {
     /// Third party fee data, part of `AssetInfo`.
     struct Fees {
         trade:    Fee,
