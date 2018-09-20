@@ -6,7 +6,7 @@ use std::mem;
 
 use byteorder::{ByteOrder, BigEndian, LittleEndian};
 
-use crypto::{Hash, PublicKey, HASH_SIZE, PUBLIC_KEY_LENGTH};
+use crypto::{PublicKey, PUBLIC_KEY_LENGTH};
 use messages::{MessageBuffer, RawMessage};
 
 pub trait StorageValue: Sized {
@@ -124,16 +124,6 @@ impl StorageValue for i64 {
 
     fn from_bytes(value: Cow<[u8]>) -> Self {
         LittleEndian::read_i64(value.as_ref())
-    }
-}
-
-impl StorageValue for Hash {
-    fn into_bytes(self) -> Vec<u8> {
-        self.as_ref().to_vec()
-    }
-
-    fn from_bytes(value: Cow<[u8]>) -> Self {
-        Self::from_slice(value.as_ref()).unwrap()
     }
 }
 
@@ -325,20 +315,6 @@ impl StorageKey for i64 {
 
     fn read(buffer: &[u8]) -> Self {
         BigEndian::read_i64(buffer)
-    }
-}
-
-impl StorageKey for Hash {
-    fn size(&self) -> usize {
-        HASH_SIZE
-    }
-
-    fn write(&self, buffer: &mut [u8]) {
-        buffer.copy_from_slice(self.as_ref())
-    }
-
-    fn read(buffer: &[u8]) -> Self {
-        Hash::from_slice(buffer).unwrap()
     }
 }
 

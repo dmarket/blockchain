@@ -1,4 +1,4 @@
-use crypto::{PublicKey, SecretKey, Signature};
+use crypto::{PublicKey, Signature};
 
 use assets::TradeAsset;
 use transactions::components::service::SERVICE_ID;
@@ -129,8 +129,7 @@ impl TradeIntermediaryWrapper {
         TradeIntermediary::new(
             self.offer.clone(),
             &self.seller_signature,
-            &self.intermediary_signature,
-            &SecretKey::zero(),
+            &self.intermediary_signature
         )
     }
 }

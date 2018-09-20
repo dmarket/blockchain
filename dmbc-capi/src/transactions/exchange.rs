@@ -1,4 +1,4 @@
-use crypto::{PublicKey, SecretKey, Signature};
+use crypto::{PublicKey, Signature};
 
 use assets::AssetBundle;
 use transactions::components::service::SERVICE_ID;
@@ -129,8 +129,7 @@ impl ExchangeWrapper {
     pub fn unwrap(&self) -> Exchange {
         Exchange::new(
             self.offer.clone(),
-            &self.signature,
-            &SecretKey::zero(),
+            &self.signature
         )
     }
 }
