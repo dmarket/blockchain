@@ -78,7 +78,7 @@ fn main() {
         ..Default::default()
     };
 
-    let peers = config::config().api() .peers();
+    let peers = config::config().api().peers();
 
     // Complete node configuration
     let node_cfg = NodeConfig {

@@ -114,7 +114,13 @@ impl Api {
     /// Existing peers of the current node.
     pub fn peers(self) -> Vec<SocketAddr> {
         match env::var("API_PEERS") {
-            Ok(_) => vec![], // todo: add parse environment
+            Ok(peers_string) => {
+                let peers = peers_string
+                    .split(",")
+                    .map(|peer| peer.parse().unwrap())
+                    .collect::<Vec<SocketAddr>>();
+                peers
+            },
             Err(_) => {
                 let mut peers: Vec<SocketAddr> = vec![];
                 for peer in self.peers.unwrap() {
