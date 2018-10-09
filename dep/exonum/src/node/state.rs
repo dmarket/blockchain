@@ -31,6 +31,7 @@ use helpers::{Height, Milliseconds, Round, ValidatorId};
 use messages::{Connect, ConsensusMessage, Message, Precommit, Prevote, Propose};
 use node::timeout_adjuster::{Constant, Dynamic, MovingAverage, TimeoutAdjuster};
 use node::whitelist::Whitelist;
+use node::peer::PeerInfo;
 use storage::{Patch, Snapshot};
 
 // TODO: move request timeouts into node configuration (ECR-171)
@@ -64,7 +65,7 @@ pub struct State {
     whitelist: Whitelist,
     tx_pool_capacity: usize,
 
-    peers: HashMap<PublicKey, Connect>,
+    peers: HashMap<PublicKey, PeerInfo>,
     connections: HashMap<SocketAddr, PublicKey>,
     height_start_time: SystemTime,
     height: Height,
@@ -362,7 +363,7 @@ impl State {
         whitelist: Whitelist,
         stored: StoredConfiguration,
         connect: Connect,
-        peers: HashMap<PublicKey, Connect>,
+        peers: HashMap<PublicKey, PeerInfo>,
         last_hash: Hash,
         last_height: Height,
         height_start_time: SystemTime,
@@ -512,9 +513,11 @@ impl State {
     }
 
     /// Adds the public key, address, and `Connect` message of a validator.
-    pub fn add_peer(&mut self, pubkey: PublicKey, msg: Connect) -> bool {
-        self.connections.insert(msg.addr(), pubkey);
-        self.peers.insert(pubkey, msg).is_none()
+    pub fn add_peer(&mut self, pubkey: PublicKey, peer: PeerInfo) -> bool {
+        // TODO(@niksaak): peer may not be deleted from self.connections
+        //                 when reconnecting from another address.
+        self.connections.insert(peer.addr, pubkey);
+        self.peers.insert(pubkey, peer).is_none()
     }
 
     /// Removes a peer by the socket address.
@@ -531,7 +534,7 @@ impl State {
     }
 
     /// Returns the keys of known peers with their `Connect` messages.
-    pub fn peers(&self) -> &HashMap<PublicKey, Connect> {
+    pub fn peers(&self) -> &HashMap<PublicKey, PeerInfo> {
         &self.peers
     }
 

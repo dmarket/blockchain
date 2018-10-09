@@ -49,6 +49,7 @@ use storage::Database;
 
 pub use self::state::{RequestData, State, TxPool, ValidatorState};
 pub use self::whitelist::Whitelist;
+pub use self::peer::PeerInfo;
 
 mod basic;
 mod consensus;
@@ -57,6 +58,7 @@ mod requests;
 pub mod state; // TODO: temporary solution to get access to WAIT consts (ECR-167)
 pub mod timeout_adjuster;
 mod whitelist;
+mod peer;
 
 /// External messages.
 #[derive(Debug)]
@@ -467,7 +469,7 @@ impl NodeHandler {
         info!("Start listening address={}", listen_address);
 
         let peers: HashSet<_> = {
-            let it = self.state.peers().values().map(Connect::addr);
+            let it = self.state.peers().values().map(|pi| pi.addr);
             let it = it.chain(self.peer_discovery.iter().cloned());
             let it = it.filter(|&address| address != listen_address);
             it.collect()
@@ -501,7 +503,7 @@ impl NodeHandler {
     /// Sends the given message to a peer by its public key.
     pub fn send_to_peer(&mut self, public_key: PublicKey, message: &RawMessage) {
         if let Some(conn) = self.state.peers().get(&public_key) {
-            let address = conn.addr();
+            let address = conn.addr;
             trace!("Send to address: {}", address);
             let request = NetworkRequest::SendMessage(address, message.raw().clone());
             self.channel.network_requests.send(request).log_error();
@@ -520,7 +522,7 @@ impl NodeHandler {
     /// Broadcasts given message to all peers.
     pub fn broadcast(&mut self, message: &Message) {
         for conn in self.state.peers().values() {
-            let address = conn.addr();
+            let address = conn.addr;
             trace!("Send to address: {}", address);
             let request = NetworkRequest::SendMessage(address, message.raw().clone());
             self.channel.network_requests.send(request).log_error();

@@ -393,7 +393,7 @@ impl SharedNodeState {
                 .write()
                 .expect("Expected write lock.")
                 .peers_info
-                .insert(c.addr(), *p);
+                .insert(c.addr, *p);
         }
     }
 

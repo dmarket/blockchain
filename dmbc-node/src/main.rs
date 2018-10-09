@@ -3,7 +3,6 @@ extern crate exonum;
 extern crate exonum_configuration;
 extern crate exonum_rocksdb;
 extern crate serde;
-#[macro_use]
 extern crate serde_derive;
 extern crate clap;
 extern crate serde_json;
@@ -12,7 +11,6 @@ extern crate dmbc;
 
 mod flag;
 mod keyfile;
-mod net_config;
 
 use dmbc::config;
 use dmbc::currency::Service;
@@ -47,20 +45,6 @@ fn main() {
 
     let public_api = config::config().api().address();
     let private_api = config::config().api().private_address();
-    let peer_address = config::config().api().peer_address();
-
-    let info = net_config::ValidatorInfo(
-        net_config::NodeKeys {
-            consensus: consensus_public_key,
-            service: service_public_key,
-        },
-        net_config::NodeInfo {
-            public: public_api.clone(),
-            private: private_api.clone(),
-            peer: peer_address.clone(),
-        },
-    );
-    eprintln!("Node info: {:?}", &info);
 
     let is_validator = config::config().api().is_validator();
     eprintln!(
@@ -71,18 +55,6 @@ fn main() {
             "as auditor"
         }
     );
-
-    let peers = match net_config::connect(&info, is_validator) {
-        Ok(peers) => {
-            eprintln!("Connected as validator, peers: {:?}", &peers);
-            peers
-        }
-        Err(e) => {
-            eprintln!("Unable to connect as validator: {}", &e);
-            eprintln!("Running in loner-mode.");
-            Default::default()
-        }
-    };
 
     let consensus_config = ConsensusConfig {
         round_timeout: 3500,
@@ -106,15 +78,12 @@ fn main() {
         ..Default::default()
     };
 
-    let peer_addrs = peers
-        .iter()
-        .map(|(_, info)| info.peer.parse().unwrap())
-        .collect();
+    let peers = config::config().api().peers();
 
     // Complete node configuration
     let node_cfg = NodeConfig {
         listen_address: config::config().api().peer_address().parse().unwrap(),
-        peers: peer_addrs,
+        peers,
         service_public_key,
         service_secret_key,
         consensus_public_key,
