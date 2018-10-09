@@ -1,4 +1,4 @@
-use crypto::{PublicKey, SecretKey, Signature};
+use crypto::{PublicKey, Signature};
 
 use assets::AssetBundle;
 use transactions::components::service::SERVICE_ID;
@@ -121,8 +121,7 @@ impl TransferWithFeesPayerWrapper {
     pub fn unwrap(&self) -> TransferWithFeesPayer {
         TransferWithFeesPayer::new(
             self.offer.clone(),
-            &self.fees_payer_signature,
-            &SecretKey::zero(),
+            &self.fees_payer_signature
         )
     }
 }

@@ -103,11 +103,6 @@ macro_rules! evo_encoding_struct {
                 $name { raw: buf }
             }
 
-            /// Hashes data as a raw byte array and returns the resulting hash.
-            pub fn hash(&self) -> $crate::crypto::Hash {
-                $crate::crypto::hash(self.raw.as_ref())
-            }
-
             __ex_for_each_field!(
                 __ex_struct_mk_field, (),
                 $( ($(#[$field_attr])*, $field_name, $field_type) )*

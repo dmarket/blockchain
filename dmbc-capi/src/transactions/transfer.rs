@@ -1,4 +1,4 @@
-use crypto::{PublicKey, SecretKey};
+use crypto::PublicKey;
 
 use assets::AssetBundle;
 use transactions::components::service::SERVICE_ID;
@@ -65,8 +65,7 @@ impl TransferWrapper {
             self.amount,
             self.assets.clone(),
             self.seed,
-            &self.memo,
-            &SecretKey::zero(),
+            &self.memo
         )
     }
 }

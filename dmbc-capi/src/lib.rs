@@ -6,7 +6,6 @@ extern crate uuid;
 extern crate byteorder;
 extern crate bit_vec;
 extern crate hex;
-extern crate exonum_sodiumoxide as sodiumoxide;
 
 #[macro_use]
 mod encoding;

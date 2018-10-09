@@ -1,4 +1,4 @@
-use crypto::{PublicKey, SecretKey};
+use crypto::PublicKey;
 
 use assets::MetaAsset;
 use transactions::components::service::SERVICE_ID;
@@ -52,8 +52,7 @@ impl AddAssetWrapper {
         AddAssets::new(
             &self.pub_key,
             self.meta_assets.clone(),
-            self.seed,
-            &SecretKey::zero(),
+            self.seed
         )
     }
 }

@@ -119,8 +119,7 @@ macro_rules! evo_message {
             #[cfg_attr(feature="cargo-clippy", allow(too_many_arguments))]
             /// Creates message and signs it.
             #[allow(unused_mut)]
-            pub fn new($($field_name: $field_type,)*
-                       secret_key: &$crate::crypto::SecretKey) -> $name {
+            pub fn new($($field_name: $field_type,)*) -> $name {
                 use $crate::messages::{RawMessage, MessageWriter};
                 let mut writer = MessageWriter::new(
                     $crate::messages::PROTOCOL_MAJOR_VERSION,
@@ -131,7 +130,7 @@ macro_rules! evo_message {
                     __ex_message_write_field, (writer),
                     $( ($(#[$field_attr])*, $field_name, $field_type) )*
                 );
-                $name { raw: RawMessage::new(writer.sign(secret_key)) }
+                $name { raw: RawMessage::new(writer.to_message_buffer()) }
             }
 
             /// Creates message and appends existing signature.

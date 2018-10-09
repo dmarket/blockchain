@@ -10,6 +10,7 @@
 **/*.rs.bk
 /.idea/
 /.vscode/
+/.cargo/
 
 /var/db/*
 !/var/db/.gitkeep
@@ -21,3 +22,6 @@
 /fuzz-data.toml
 /fuzz-in/
 /fuzz-out/
+
+/NDK/
+cargo-config.toml
