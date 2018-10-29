@@ -21,6 +21,7 @@ use currency::wallet;
 use currency::wallet::Wallet;
 
 pub const PARAMETER_META_DATA_KEY: &str = "meta_data";
+pub const PARAMETER_CREATORS_KEY: &str = "creators";
 
 #[derive(Clone)]
 pub struct WalletApi {
@@ -129,7 +130,23 @@ impl WalletApi {
         wallets
     }
 
-    fn assets(&self, pub_key: &PublicKey) -> Vec<AssetBundle> {
+    fn assets(&self, pub_key: &PublicKey, creators: Vec<PublicKey>) -> Vec<AssetBundle> {
+        if creators.len() > 0 {
+            let mut assets: Vec<AssetBundle> = vec![];
+            for asset in self.wallet(pub_key).assets() {
+                match self.asset_info(&asset.id()) {
+                    Some(info) => {
+                        if creators.iter().find(|& x| x == info.creator()).is_some() {
+                            assets.push(asset);
+                        }
+                    }
+                    None => {}
+                }
+            }
+
+            return assets;
+        }
+
         self.wallet(pub_key).assets()
     }
 
@@ -242,11 +259,50 @@ impl Api for WalletApi {
                     .unwrap();
                 PublicKey::from_hex(wallet_key)
             };
+            let mut creators: Vec<PublicKey> = vec![];
+
+            let creators_str = ServiceApi::read_parameter(req, PARAMETER_CREATORS_KEY, String::new());
+            if creators_str.len() > 0 {
+                let creators_results = creators_str.split(',').collect::<Vec<_>>().iter().map(|v| PublicKey::from_hex(v)).collect::<Vec<_>>();
+                if creators_results.len() > 10 {
+                    let result: WalletAssetsResponse = Err(ApiError::IncorrectRequest);
+                    let mut res = Response::with((    
+                        ApiError::IncorrectRequest.to_status(),
+                        serde_json::to_string_pretty(&result).unwrap(),
+                    ));
+                    res.headers.set(ContentType::json());
+                    res.headers.set(AccessControlAllowOrigin::Any);
+
+                    ASSETS_RESPONSES.inc();
+
+                    return Ok(res);
+                } 
+                
+                for creator in creators_results {
+                    if creator.is_err() {
+                        let result: WalletAssetsResponse = Err(ApiError::WalletHexInvalid);
+                        let mut res = Response::with((    
+                            ApiError::WalletHexInvalid.to_status(),
+                            serde_json::to_string_pretty(&result).unwrap(),
+                        ));
+                        res.headers.set(ContentType::json());
+                        res.headers.set(AccessControlAllowOrigin::Any);
+
+                        ASSETS_RESPONSES.inc();
+
+                        return Ok(res);
+                    }
+
+                    creators.push(creator.unwrap());
+                }
+            }
+
             let result: WalletAssetsResponse = match public_key_result {
                 Ok(public_key) => {
+                    
+                    let assets = self_.assets(&public_key, creators);
                     let extend_assets =
                         ServiceApi::read_parameter(req, PARAMETER_META_DATA_KEY, false);
-                    let assets = self_.assets(&public_key);
                     // apply pagination parameters if they exist
                     let assets_to_send = ServiceApi::apply_pagination(req, &assets);
                     let assets_list = if extend_assets {
@@ -311,7 +367,7 @@ impl Api for WalletApi {
             let result: WalletAssetResponse = match public_key_result {
                 Ok(public_key) => match asset_id_result {
                     Ok(id) => {
-                        let assets = self_.assets(&public_key);
+                        let assets = self_.assets(&public_key, vec![]);
                         let info =
                             if ServiceApi::read_parameter(req, PARAMETER_META_DATA_KEY, false) {
                                 self_.asset_info(&id)
@@ -350,6 +406,7 @@ impl Api for WalletApi {
             wallet_assets_info,
             "assets_info",
         );
+
         router.get(
             "/v1/wallets/:pub_key/assets/:asset_id",
             wallet_asset_info,

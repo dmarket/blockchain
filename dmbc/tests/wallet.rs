@@ -224,6 +224,179 @@ fn wallet_assets() {
 }
 
 #[test]
+fn wallet_assets_filter() {
+    let fixed = 10;
+    let units = 2;
+    let meta_data0 = "asset0";
+    let meta_data1 = "asset1";
+    let meta_data2 = "asset2";
+
+    let (pub_key, _) = crypto::gen_keypair();
+    let (pub_key1, _) = crypto::gen_keypair();
+    let (pub_key2, _) = crypto::gen_keypair();
+
+    let (asset0, info0) = dmbc_testkit::create_asset(
+        meta_data0,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &pub_key,
+    );
+    let (asset1, info1) = dmbc_testkit::create_asset(
+        meta_data1,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &pub_key1,
+    );
+    let (asset2, info2) = dmbc_testkit::create_asset(
+        meta_data2,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &pub_key2,
+    );
+
+    let testkit = DmbcTestApiBuilder::new()
+        .add_asset_to_wallet(&pub_key, (asset0.clone(), info0.clone()))
+        .add_asset_to_wallet(&pub_key, (asset1.clone(), info1.clone()))
+        .add_asset_to_wallet(&pub_key, (asset2.clone(), info2.clone()))
+        .create();
+    let api = testkit.api();
+
+    let (status, response): (StatusCode, WalletAssetsResponse) = api.get_with_status(&format!(
+        "/v1/wallets/{}/assets?{}=true&creators={},{}",
+        pub_key.to_string(),
+        wallet::PARAMETER_META_DATA_KEY,
+        pub_key.to_string(),
+        pub_key2.to_string()
+    ));
+
+    let assets = vec![
+        ExtendedAsset::from_asset(&asset0, Some(info0)),
+        ExtendedAsset::from_asset(&asset2, Some(info2)),
+    ];
+    let total = assets.len() as u64;
+    let count = assets.len() as u64;
+
+    assert_eq!(status, StatusCode::Ok);
+    assert_eq!(
+        response,
+        Ok(WalletAssetsResponseBody {
+            total,
+            count,
+            assets
+        })
+    );
+}
+
+#[test]
+fn wallet_assets_bad_filter() {
+    let fixed = 10;
+    let units = 2;
+    let meta_data0 = "asset0";
+    let meta_data1 = "asset1";
+    let meta_data2 = "asset2";
+
+    let (pub_key, _) = crypto::gen_keypair();
+    let (pub_key1, _) = crypto::gen_keypair();
+    let (pub_key2, _) = crypto::gen_keypair();
+
+    let (asset0, info0) = dmbc_testkit::create_asset(
+        meta_data0,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &pub_key,
+    );
+    let (asset1, info1) = dmbc_testkit::create_asset(
+        meta_data1,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &pub_key1,
+    );
+    let (asset2, info2) = dmbc_testkit::create_asset(
+        meta_data2,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &pub_key2,
+    );
+
+    let testkit = DmbcTestApiBuilder::new()
+        .add_asset_to_wallet(&pub_key, (asset0.clone(), info0.clone()))
+        .add_asset_to_wallet(&pub_key, (asset1.clone(), info1.clone()))
+        .add_asset_to_wallet(&pub_key, (asset2.clone(), info2.clone()))
+        .create();
+    let api = testkit.api();
+
+    let (status, response): (StatusCode, WalletAssetsResponse) = api.get_with_status(&format!(
+        "/v1/wallets/{}/assets?{}=true&creators={},{},{},{},{},{},{},{},{},{},{}",
+        pub_key.to_string(),
+        wallet::PARAMETER_META_DATA_KEY,
+        pub_key.to_string(),
+        pub_key2.to_string(),
+        pub_key.to_string(),
+        pub_key2.to_string(),
+        pub_key.to_string(),
+        pub_key2.to_string(),
+        pub_key.to_string(),
+        pub_key2.to_string(),
+        pub_key.to_string(),
+        pub_key2.to_string(),
+        pub_key2.to_string(),
+    ));
+
+    assert_eq!(status, StatusCode::BadRequest);
+    assert_eq!(response, Err(ApiError::IncorrectRequest));
+}
+
+#[test]
+fn wallet_assets_bad_filter2() {
+    let fixed = 10;
+    let units = 2;
+    let meta_data0 = "asset0";
+    let meta_data1 = "asset1";
+    let meta_data2 = "asset2";
+
+    let (pub_key, _) = crypto::gen_keypair();
+    let (pub_key1, _) = crypto::gen_keypair();
+    let (pub_key2, _) = crypto::gen_keypair();
+
+    let (asset0, info0) = dmbc_testkit::create_asset(
+        meta_data0,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &pub_key,
+    );
+    let (asset1, info1) = dmbc_testkit::create_asset(
+        meta_data1,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &pub_key1,
+    );
+    let (asset2, info2) = dmbc_testkit::create_asset(
+        meta_data2,
+        units,
+        dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
+        &pub_key2,
+    );
+
+    let testkit = DmbcTestApiBuilder::new()
+        .add_asset_to_wallet(&pub_key, (asset0.clone(), info0.clone()))
+        .add_asset_to_wallet(&pub_key, (asset1.clone(), info1.clone()))
+        .add_asset_to_wallet(&pub_key, (asset2.clone(), info2.clone()))
+        .create();
+    let api = testkit.api();
+
+    let (status, response): (StatusCode, WalletAssetsResponse) = api.get_with_status(&format!(
+        "/v1/wallets/{}/assets?{}=true&creators={},{}",
+        pub_key.to_string(),
+        wallet::PARAMETER_META_DATA_KEY,
+        pub_key.to_string(),
+        "broken_key"
+    ));
+
+    assert_eq!(status, StatusCode::BadRequest);
+    assert_eq!(response, Err(ApiError::WalletHexInvalid));
+}
+
+#[test]
 fn wallet_assets_meta_data() {
     let fixed = 10;
     let units = 2;
