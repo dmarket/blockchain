@@ -110,8 +110,6 @@ fn wallets() {
             assets_count: 1,
         },
     );
-    let total = wallets.len() as u64;
-    let count = wallets.len() as u64;
 
     let (status, response): (StatusCode, WalletsResponse) = api.get_with_status("/v1/wallets");
 
@@ -119,8 +117,6 @@ fn wallets() {
     assert_eq!(
         response,
         Ok(WalletsResponseBody {
-            total,
-            count,
             wallets
         })
     );
@@ -155,7 +151,6 @@ fn wallets_pagination() {
 
     let api = testkit.api();
 
-    let total = 3;
     let count = 1;
 
     let (status, response): (StatusCode, WalletsResponse) =
@@ -165,8 +160,7 @@ fn wallets_pagination() {
     assert!(response.is_ok());
 
     let body = response.unwrap();
-    assert_eq!(body.total, total);
-    assert_eq!(body.count, count);
+    assert_eq!(body.wallets.len(), count);
 }
 
 #[test]

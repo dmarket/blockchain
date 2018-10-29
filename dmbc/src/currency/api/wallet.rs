@@ -65,8 +65,6 @@ impl ExtendedAsset {
 
 #[derive(Serialize, Deserialize, PartialEq, Debug)]
 pub struct WalletsResponseBody {
-    pub total: u64,
-    pub count: u64,
     pub wallets: HashMap<PublicKey, WalletInfo>,
 }
 
@@ -107,24 +105,21 @@ impl WalletApi {
         &self,
         offset: u64,
         limit: u64,
-    ) -> (HashMap<PublicKey, WalletInfo>, u64, u64) {
+    ) -> HashMap<PublicKey, WalletInfo> {
         let view = &mut self.blockchain.fork();
         let idx = wallet::Schema(view).index();
-        let mut total: u64 = 0;
         let mut count: u64 = 0;
         let mut result: HashMap<PublicKey, WalletInfo> = HashMap::new();
         for v in idx.iter() {
-            if total < offset || total >= offset + limit {
-                total += 1;
-                continue;
+            if offset <= count && count < offset + limit {
+                let wi = WalletInfo::from(v.1);
+                result.insert(v.0, wi);
             }
-            let wi = WalletInfo::from(v.1);
-            result.insert(v.0, wi);
+
             count += 1;
-            total += 1;
         }
 
-        (result, total, count)
+        result
     }
 
     fn wallets_balance(&self) -> Vec<PublicKey> {
@@ -218,11 +213,9 @@ impl Api for WalletApi {
             LIST_REQUESTS.inc();
 
             let (offset, limit) = ServiceApi::pagination_params(req);
-            let (wallets, total, count) = self_.pagination_wallets(offset, limit);
+            let wallets = self_.pagination_wallets(offset, limit);
 
             let result: WalletsResponse = Ok(WalletsResponseBody {
-                total,
-                count,
                 wallets,
             });
 
