@@ -10,6 +10,10 @@ RUN mkdir /src/app/etc
 COPY ./etc/config.toml /src/app/etc/config.toml
 RUN mkdir -p /src/app/var/db
 RUN mkdir -p /src/app/var/keys
+COPY ./var/keys/consensus /src/app/var/keys/consensus
+COPY ./var/keys/consensus /src/app/var/keys/consensus.pub
+COPY ./var/keys/consensus /src/app/var/keys/service
+COPY ./var/keys/consensus /src/app/var/keys/service.pub
 
 RUN chmod +x /src/app/dmbc-node
 RUN chmod +x /src/app/dmbc-discovery
