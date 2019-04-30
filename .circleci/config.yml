@@ -165,6 +165,7 @@ jobs:
           path: target/debug/coverage/merged
 
   build_release:
+    context: org-global
     working_directory: /project
 
     docker:
@@ -216,10 +217,12 @@ workflows:
   debug:
     jobs:
       - build_debug:
+          context: org-global
           filters:
             tags:
               ignore: /.*/
       - build_docker_dev:
+          context: org-global
           requires:
             - build_debug
           filters:
@@ -228,12 +231,14 @@ workflows:
   release:
     jobs:
       - build_release:
+          context: org-global
           filters:
             branches:
               ignore: /.*/
             tags:
               only: /^v.*/
       - build_docker_release:
+          context: org-global
           requires:
             - build_release
           filters:
