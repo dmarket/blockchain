@@ -156,13 +156,13 @@ jobs:
       - *pre_setup
       - *setup_rust
       - *build_dev
-      - *build_dev_mobile
-      - *run_tests
+#      - *build_dev_mobile
+#      - *run_tests
       - *save_cache
-      - *setup_coverage
-      - *coverage
-      - store_artifacts:
-          path: target/debug/coverage/merged
+#      - *setup_coverage
+#      - *coverage
+#      - store_artifacts:
+#          path: target/debug/coverage/merged
 
   build_release:
     context: org-global
@@ -177,13 +177,13 @@ jobs:
       - *pre_setup
       - *setup_rust
       - *build_prod
-      - *build_prod_mobile
-      - *run_tests
+#      - *build_prod_mobile
+#      - *run_tests
       - *save_cache
-      - *setup_coverage
-      - *coverage
-      - store_artifacts:
-          path: target/debug/coverage/merged
+#      - *setup_coverage
+#      - *coverage
+#      - store_artifacts:
+#          path: target/debug/coverage/merged
 
 
   build_docker_dev:
