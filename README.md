@@ -16,8 +16,8 @@ To build and run a single node use:
 
 ```sh
 # clone the repository with blockchain node
-git clone git@github.com:suntechsoft/dmarket-blockchain.git
-cd dmarket-blockchain
+git clone git@github.com:dmarket/blockchain.git
+cd /blockchain
 
 # build and run
 cargo run
