@@ -1,13 +1,13 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- ../base/dmbc01
-- ../base/dmbc02
-- ../base/dmbc03
-- ../base/dmbc04
-- ../base/dmbc-discovery
-- extra/service.yaml
-- extra/ingress.yaml
+- ../base
+# - ../base/dmbc00-common
+# - ../base/dmbc01
+# - ../base/dmbc02
+# - ../base/dmbc03
+# - ../base/dmbc04
+# - ../base/dmbc-discovery
 namespace: dmbc-dev
 images:
 - name: globalgames/dmarket-blockchain
@@ -15,3 +15,4 @@ images:
   newTag: v2.1.2
 patchesStrategicMerge:
 - patches/node-affinity.yaml
+- patches/ingress.yaml
