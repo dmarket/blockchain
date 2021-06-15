@@ -5,6 +5,7 @@ These manifests only for testing purposes.
 - adopt configs for prod (carefully)
 - integrate vault
 - move k8s-manifests to environment repo
+- integrate with ArgoCD (carefully)
 
 
 #HOWTO
