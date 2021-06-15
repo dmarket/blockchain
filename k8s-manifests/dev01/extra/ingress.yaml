@@ -30,7 +30,7 @@ spec:
     http:
       paths:
       - backend:
-          serviceName: dmbc01
+          serviceName: dmbc
           servicePort: 8000
         path: /  
   tls:
