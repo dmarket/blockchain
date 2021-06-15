@@ -5,6 +5,7 @@ metadata:
   name: dmbc01
   labels:
     app: dmbc01
+    dmbc: "true"
 spec:
   progressDeadlineSeconds: 600
   replicas: 1
@@ -17,6 +18,8 @@ spec:
   template:
     metadata:
       name: dmbc01
+      labels:
+        app: dmbc01
     spec:
       containers:
       - name: dmarket-blockchain
@@ -27,16 +30,16 @@ spec:
             value: info
           - name: RUST_BACKTRACE
             value: "1"
-      ports:
-      - containerPort: 8000
-        protocol: TCP
-      volumeMounts:
-      - mountPath: /src/app/var/keys
-        name: dmbc01-keys
-      - mountPath: /src/app/var/db
-        name: dmbc01
-      - mountPath: /src/app/etc
-        name: dmbc01-config
+        ports:
+        - containerPort: 8000
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /src/app/var/keys
+          name: dmbc01-keys
+        - mountPath: /src/app/var/db
+          name: dmbc01
+        - mountPath: /src/app/etc
+          name: dmbc01-config
       dnsPolicy: ClusterFirst
       imagePullSecrets:
       - name: dockerhub

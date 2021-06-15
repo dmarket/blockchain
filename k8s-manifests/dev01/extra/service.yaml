@@ -11,6 +11,5 @@ spec:
     protocol: TCP
     targetPort: 8000
   selector:
-    matchExpressions:
-      - {key: app, operator: In, values: [dmbc01, dmbc02, dmbc03, dmbc04]}
+    dmbc: "true"
   type: ClusterIP
