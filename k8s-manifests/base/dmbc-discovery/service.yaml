@@ -5,7 +5,6 @@ metadata:
   name: dmbc-discovery
   labels:
     app: dmbc-discovery
-    dmbc: "true"
 spec:
   ports:
   - port: 3000
@@ -13,5 +12,4 @@ spec:
     targetPort: 3000
   selector:
     app: dmbc-discovery
-    dmbc: "true"
   type: ClusterIP

@@ -20,6 +20,7 @@ spec:
       name: dmbc04
       labels:
         app: dmbc04
+        dmbc: "true"
     spec:
       containers:
       - name: dmarket-blockchain
