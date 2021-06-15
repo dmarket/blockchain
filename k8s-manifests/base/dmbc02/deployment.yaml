@@ -31,6 +31,10 @@ spec:
             value: info
           - name: RUST_BACKTRACE
             value: "1"
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
         ports:
         - containerPort: 8000
           protocol: TCP
