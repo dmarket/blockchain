@@ -7,6 +7,8 @@ These manifests only for testing purposes.
 - move k8s-manifests to environment repo
 - integrate with ArgoCD (carefully)
 
+#NOT CLEAR
+- how to generate secrets data?
 
 #HOWTO
 
