@@ -15,7 +15,7 @@ data:
     [nats]
     enabled = false
     [service_discovery]
-    address = "0.0.0.0:3000/nodes"
+    address = "dmbc-discovery:3000/nodes"
 kind: ConfigMap
 metadata:
   name: dmbc03-config

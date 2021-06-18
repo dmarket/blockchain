@@ -14,5 +14,9 @@ images:
   newName: globalgames/dmarket-blockchain
   newTag: v2.1.2
 patchesStrategicMerge:
-- patches/node-affinity.yaml
-- patches/ingress.yaml
+- patches/dmbc00-common/node-affinity.yaml
+- patches/dmbc00-common/ingress.yaml
+- patches/dmbc04/deployment.yaml
+- patches/dmbc03/deployment.yaml
+- patches/dmbc02/deployment.yaml
+- patches/dmbc01/deployment.yaml

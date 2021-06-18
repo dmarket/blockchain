@@ -1,0 +1,28 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dmbc02
+spec:
+  template:
+    spec:
+      serviceAccountName: dmbc-configmap-updater
+      initContainers:
+      - command:
+          - sh
+          - -c
+          - |
+            #!/usr/bin/env bash -e
+            echo "Updating of dmbc02-config configmap"
+            echo "POD_IP: $POD_IP"
+            kubectl get cm dmbc02-config -o yaml | sed -e "s|0.0.0.0|$POD_IP|g" | kubectl apply -f -
+
+            echo "End"
+        image: bitnami/kubectl:1.21.2
+        imagePullPolicy: IfNotPresent
+        name: configmap-updater
+        env:
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP

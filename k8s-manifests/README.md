@@ -13,3 +13,6 @@ These manifests only for testing purposes.
 > cd dev01
 
 > kustomize build  | kubectl apply -f -
+
+
+Don't hesitate to ask DevOps for any help!
