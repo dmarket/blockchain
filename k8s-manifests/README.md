@@ -8,7 +8,7 @@ These manifests only for testing purposes.
 - integrate with ArgoCD (carefully)
 
 #NOT CLEAR
-- how to generate secrets data?
+- how to generate secrets data? (leaved empty secrets for node02;node03;node04)
 
 #HOWTO
 
@@ -18,18 +18,3 @@ These manifests only for testing purposes.
 
 
 Don't hesitate to ask DevOps for any help!
-
-
-
-
-kubectl annotate secret dockerhub vault.security.banzaicloud.io/vault-addr="https://vault.default.svc.cluster.local:8200"
-kubectl annotate secret dockerhub vault.security.banzaicloud.io/vault-role="default"
-kubectl annotate secret dockerhub vault.security.banzaicloud.io/vault-skip-verify="true"
-kubectl annotate secret dockerhub vault.security.banzaicloud.io/vault-path="kubernetes"
-
-
-kubectl annotate secret dockerhub-new vault.security.banzaicloud.io/vault-addr="http://10.157.0.109:8200"
-kubectl annotate secret dockerhub-new vault.security.banzaicloud.io/vault-agent="true"
-kubectl annotate secret dockerhub-new vault.security.banzaicloud.io/vault-auth-method="kubernetes"
-kubectl annotate secret dockerhub-new vault.security.banzaicloud.io/vault-role="vault-auth"
-kubectl annotate secret dockerhub-new vault.security.banzaicloud.io/vault-skip-verify="true"
