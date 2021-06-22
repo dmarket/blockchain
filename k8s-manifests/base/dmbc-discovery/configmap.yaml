@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+data:
+  discovery.toml: |
+    listen_address = "0.0.0.0:3000"
+    peers_path = "./var/peers/peers.toml"
+kind: ConfigMap
+metadata:
+  name: dmbc-discovery-cfg
+  labels:
+    app: dmbc-discovery-cfg
