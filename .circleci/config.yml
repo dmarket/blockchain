@@ -130,7 +130,8 @@ jobs:
     working_directory: /project
 
     docker:
-      - image: rust
+      - image: rust:1.50
+    resource_class: x-large
 
     steps:
       - checkout
