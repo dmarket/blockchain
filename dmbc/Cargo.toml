@@ -2,6 +2,7 @@
 name = "dmbc"
 version = "2.1.2"
 authors = ["Ilya Sinyakin <sinyakin.ilya@gmail.com>", "Mikola Samardak <niksaak@gmail.com>" ,"Taras Shchybovyk <tshchybo@gmail.com>"]
+edition = "2015"
 publish = false
 
 [features]

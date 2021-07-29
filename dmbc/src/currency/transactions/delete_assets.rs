@@ -67,9 +67,6 @@ impl DeleteAssets {
                 Some(info) => info,
                 None => return Err(Error::AssetNotFound),
             };
-            if info.creator() != creator_pub {
-                return Err(Error::InvalidTransaction);
-            }
             let mut entry = infos.remove(&asset.id()).unwrap_or(info);
             let entry = entry.decrease(asset.amount())?;
             infos.insert(asset.id(), entry);
