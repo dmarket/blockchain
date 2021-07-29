@@ -131,7 +131,7 @@ jobs:
 
     docker:
       - image: rust:1.50
-    resource_class: x-large
+    resource_class: xlarge
 
     steps:
       - checkout
