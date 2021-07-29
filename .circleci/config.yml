@@ -110,13 +110,13 @@ jobs:
     working_directory: /project
 
     docker:
-      - image: rust
+      - image: rust:1.52
 
     steps:
       - checkout
       - *restore_cache
       - *pre_setup
-      - *setup_rust
+//      - *setup_rust
       - *build_dev
       - *run_tests
       - *save_cache
