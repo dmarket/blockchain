@@ -111,7 +111,7 @@ jobs:
     working_directory: /project
 
     docker:
-      - image: rust:1.43
+      - image: rust:1.50
 
     steps:
       - checkout
