@@ -38,6 +38,7 @@ references:
       command: |
         export CC=clang
         export CXX=clang++
+        export RUSTFLAGS=-Awarnings
         cargo test -p dmbc --color=always --jobs 2 -- --test-threads=1
 
   save_cache: &save_cache
