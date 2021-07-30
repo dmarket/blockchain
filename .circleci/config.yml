@@ -180,6 +180,8 @@ workflows:
     jobs:
       - build_debug:
           filters:
+            branches:
+              ignore: /^release.*/
             tags:
               ignore: /.*/
       - build_docker_dev:
