@@ -122,10 +122,10 @@ jobs:
       - *build_dev
       - *run_tests
       - *save_cache
-      - *setup_coverage
-      - *coverage
-      - store_artifacts:
-          path: target/debug/coverage/merged
+#      - *setup_coverage
+#      - *coverage
+#      - store_artifacts:
+#          path: target/debug/coverage/merged
 
   build_release:
     working_directory: /project
@@ -138,7 +138,7 @@ jobs:
       - checkout
       - *restore_cache
       - *pre_setup
-      - *setup_rust
+#      - *setup_rust
       - *build_prod
       - *run_tests
       - *save_cache
