@@ -105,11 +105,11 @@ references:
         fi
         docker tag globalgames/dmarket-blockchain globalgames/dmarket-blockchain:$APP_VERSION
         docker push globalgames/dmarket-blockchain:$APP_VERSION
-  
+
   docker_login: &docker_login
     run:
       name: Docker Login
-      command: echo $DOCKER_PASS | docker login --username $DOCKER_USER --password-stdin        
+      command: echo $DOCKER_PASS | docker login --username $DOCKER_USER --password-stdin
 
 jobs:
   build_debug:
@@ -117,20 +117,20 @@ jobs:
 
     docker:
       - image: rust:1.53
-    resource_class: xlarge  
+    resource_class: xlarge
 
     steps:
       - checkout
       - *restore_cache
       - *pre_setup
-#      - *setup_rust
+      #      - *setup_rust
       - *build_dev
       - *run_tests
       - *save_cache
-#      - *setup_coverage
-#      - *coverage
-#      - store_artifacts:
-#          path: target/debug/coverage/merged
+  #      - *setup_coverage
+  #      - *coverage
+  #      - store_artifacts:
+  #          path: target/debug/coverage/merged
 
   build_release:
     working_directory: /project
@@ -143,14 +143,14 @@ jobs:
       - checkout
       - *restore_cache
       - *pre_setup
-#      - *setup_rust
+      #      - *setup_rust
       - *build_prod
       - *run_tests
       - *save_cache
-#      - *setup_coverage
-#      - *coverage
-#      - store_artifacts:
-#          path: target/debug/coverage/merged
+  #      - *setup_coverage
+  #      - *coverage
+  #      - store_artifacts:
+  #          path: target/debug/coverage/merged
 
 
   build_docker_dev:
@@ -163,20 +163,20 @@ jobs:
     steps:
       - *restore_cache
       - setup_remote_docker
-      # - *docker_login
+      - *docker_login
       - *build_dev_image
 
   build_docker_release:
     working_directory: /project
     docker:
       - image: docker:git
-        # auth:
-        #   username: $DOCKER_USER
-        #   password: $DOCKER_PASS
+        auth:
+          username: $DOCKER_USER
+          password: $DOCKER_PASS
     steps:
       - *restore_cache
       - setup_remote_docker
-      # - *docker_login
+      - *docker_login
       - *build_prod_image
 
 workflows:
