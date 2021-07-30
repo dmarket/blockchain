@@ -104,7 +104,7 @@ references:
             export APP_VERSION=$CIRCLE_TAG
         fi
         docker tag globalgames/dmarket-blockchain globalgames/dmarket-blockchain:$APP_VERSION
-        docker push globalgames/dmarket-blockchain:$CIRCLE_TAG
+        docker push globalgames/dmarket-blockchain:$APP_VERSION
   
   docker_login: &docker_login
     run:
