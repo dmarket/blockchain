@@ -184,12 +184,14 @@ workflows:
   debug:
     jobs:
       - build_debug:
+          context: org-global
           filters:
             branches:
               ignore: /^release.*/
             tags:
               ignore: /.*/
       - build_docker_dev:
+          context: org-global
           requires:
             - build_debug
           filters:
@@ -198,12 +200,14 @@ workflows:
   release:
     jobs:
       - build_release:
+          context: org-global
           filters:
             branches:
               only: /^release.*/
             tags:
               only: /^v.*/
       - build_docker_release:
+          context: org-global
           requires:
             - build_release
           filters:
