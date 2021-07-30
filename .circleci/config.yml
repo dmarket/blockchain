@@ -158,7 +158,7 @@ jobs:
     steps:
       - *restore_cache
       - setup_remote_docker
-      - *docker_login
+      # - *docker_login
       - *build_dev_image
 
   build_docker_release:
@@ -171,7 +171,7 @@ jobs:
     steps:
       - *restore_cache
       - setup_remote_docker
-      - *docker_login
+      # - *docker_login
       - *build_prod_image
 
 workflows:
