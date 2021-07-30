@@ -88,8 +88,7 @@ references:
       name: Build and Push docker container
       command: |
         docker build -t globalgames/dmarket-blockchain .
-        VERSION=`docker run --rm -ti globalgames/dmarket-blockchain /src/app/dmbc-node -v | awk '{print $3}'`
-        TAG=$VERSION-$CIRCLE_BUILD_NUM
+        export TAG=$CIRCLE_BRANCH-$CIRCLE_BUILD_NUM
         docker tag globalgames/dmarket-blockchain globalgames/dmarket-blockchain:$TAG
         docker push globalgames/dmarket-blockchain:$TAG
 
@@ -98,7 +97,13 @@ references:
       name: Build and Push docker container
       command: |
         docker build -t globalgames/dmarket-blockchain . --build-arg TYPE=release
-        docker tag globalgames/dmarket-blockchain globalgames/dmarket-blockchain:$CIRCLE_TAG
+        if [[ -z "$CIRCLE_TAG" ]]
+          then
+            export APP_VERSION=`echo $CIRCLE_BRANCH | awk -F "/" '{print $2}'`
+          else
+            export APP_VERSION=$CIRCLE_TAG
+        fi
+        docker tag globalgames/dmarket-blockchain globalgames/dmarket-blockchain:$APP_VERSION
         docker push globalgames/dmarket-blockchain:$CIRCLE_TAG
   
   docker_login: &docker_login
