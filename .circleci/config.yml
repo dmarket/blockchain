@@ -122,7 +122,7 @@ jobs:
     steps:
       - checkout
       - *restore_cache
-      - *pre_setup
+#      - *pre_setup
       #      - *setup_rust
       - *build_dev
       - *run_tests
@@ -142,7 +142,7 @@ jobs:
     steps:
       - checkout
       - *restore_cache
-      - *pre_setup
+ #     - *pre_setup
       #      - *setup_rust
       - *build_prod
       - *run_tests
