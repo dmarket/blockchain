@@ -6,13 +6,13 @@ references:
       command: |
         apt-get update
         apt-get full-upgrade -y
-        apt-get -y install libsodium18 libsodium-dev pkg-config clang unzip cmake make binutils-dev libcurl4-openssl-dev zlib1g-dev libdw-dev libiberty-dev
+        apt-get -y install libsodium-dev pkg-config clang unzip cmake make binutils-dev libcurl4-openssl-dev zlib1g-dev libdw-dev libiberty-dev
 
   setup_rust: &setup_rust
     run:
       name: Setup nightly
       command: |
-        rustup default nightly
+        rustup default stable
         rustup update
         rustup show
 
@@ -22,7 +22,9 @@ references:
       command: |
         export CC=clang
         export CXX=clang++
-        cargo build -p dmbc -p dmbc-node -p dmbc-discovery -vv
+        export RUSTFLAGS=-Awarnings
+        rustc --version
+        cargo build -p dmbc -p dmbc-node -p dmbc-discovery
 
   build_prod: &build_prod
     run:
@@ -30,7 +32,8 @@ references:
       command: |
         export CC=clang
         export CXX=clang++
-        cargo build -p dmbc -p dmbc-node -p dmbc-discovery -vv --release
+        export RUSTFLAGS=-Awarnings
+        cargo build -p dmbc -p dmbc-node -p dmbc-discovery --release
 
   run_tests: &run_tests
     run:
@@ -38,6 +41,7 @@ references:
       command: |
         export CC=clang
         export CXX=clang++
+        export RUSTFLAGS=-Awarnings
         cargo test -p dmbc --color=always --jobs 2 -- --test-threads=1
 
   save_cache: &save_cache
@@ -107,13 +111,14 @@ jobs:
     working_directory: /project
 
     docker:
-      - image: rust
+      - image: rust:1.53
+    resource_class: xlarge  
 
     steps:
       - checkout
       - *restore_cache
       - *pre_setup
-      - *setup_rust
+#      - *setup_rust
       - *build_dev
       - *run_tests
       - *save_cache
@@ -126,7 +131,8 @@ jobs:
     working_directory: /project
 
     docker:
-      - image: rust
+      - image: rust:1.50
+    
 
     steps:
       - checkout

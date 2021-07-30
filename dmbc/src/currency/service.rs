@@ -111,7 +111,7 @@ impl blockchain::Service for Service {
         let txs = schema.block_txs(last_block.height());
         for hash in txs.iter() {
             let status = status::Schema(ctx.snapshot()).fetch(&hash);
-            let msg = json!({ "tx_hash": status }).to_string();
+            let msg = json!({ "tx_hash": hash, "status": status }).to_string();
             let queuename = config::config().nats().queuename();
             nats::publish(queuename, msg);
             info!("Made transaction {:?}", hash.to_hex());

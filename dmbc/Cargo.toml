@@ -14,7 +14,7 @@ iron = "0.6.0"
 params = "0.8.0"
 bodyparser = "0.8.0"
 router = "0.6.0"
-nats = { git = "https://github.com/jedisct1/rust-nats", rev = "21919e5" }
+nats = "0.10"
 serde = "1.0"
 serde_json = "1.0"
 serde_derive = "1.0"
