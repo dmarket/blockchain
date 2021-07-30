@@ -4,9 +4,10 @@ references:
     run:
       name: Install System Packages
       command: |
-        apt-get update
-        apt-get full-upgrade -y
-        apt-get -y install libsodium-dev pkg-config clang unzip cmake make binutils-dev libcurl4-openssl-dev zlib1g-dev libdw-dev libiberty-dev
+#        apt-get update
+#        apt-get full-upgrade -y
+#        apt-get -y install libsodium-dev pkg-config clang unzip cmake make binutils-dev libcurl4-openssl-dev zlib1g-dev libdw-dev libiberty-dev
+        apt-get -y install clang
 
   setup_rust: &setup_rust
     run:
@@ -142,7 +143,7 @@ jobs:
     steps:
       - checkout
       - *restore_cache
- #     - *pre_setup
+      - *pre_setup
       #      - *setup_rust
       - *build_prod
       - *run_tests
