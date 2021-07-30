@@ -340,7 +340,7 @@ fn delete_assets_with_different_creator() {
     assert_eq!(response, Ok(Ok(TransactionResponse { tx_hash })));
 
     let (_, tx_status) = api.get_tx_status(&tx_delete_assets);
-    assert_eq!(tx_status, Ok(Ok());
+    assert_eq!(tx_status, Ok(Ok()));
 
     let wallet = api.get_wallet(&public_key);
     let wallet_assets = api.get_wallet_assets(&public_key);
@@ -447,7 +447,7 @@ fn delete_assets_two_assets_where_one_have_another_creator() {
     assert_eq!(response, Ok(Ok(TransactionResponse { tx_hash })));
 
     let (_, tx_status) = api.get_tx_status(&tx_delete_assets);
-    assert_eq!(tx_status, Ok(Ok());
+    assert_eq!(tx_status, Ok(Ok()));
 
     let wallet = api.get_wallet(&public_key);
     let wallet_assets = api.get_wallet_assets(&public_key);
