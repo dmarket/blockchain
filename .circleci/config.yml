@@ -131,8 +131,8 @@ jobs:
     working_directory: /project
 
     docker:
-      - image: rust:1.50
-    
+      - image: rust:1.53
+    resource_class: xlarge
 
     steps:
       - checkout
@@ -193,7 +193,7 @@ workflows:
       - build_release:
           filters:
             branches:
-              ignore: /.*/
+              only: /^release.*/
             tags:
               only: /^v.*/
       - build_docker_release:
@@ -201,7 +201,7 @@ workflows:
             - build_release
           filters:
             branches:
-              ignore: /.*/
+              only: /^release.*/
             tags:
               only: /^v.*/
 
