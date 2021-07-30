@@ -4,7 +4,6 @@ use std::sync::{Once, ONCE_INIT};
 use std::thread;
 use std::time::{Duration, Instant};
 
-use nats::Client;
 
 use config;
 
@@ -53,7 +52,8 @@ impl Pipe {
     }
 
     fn work(receiver: Receiver<PublishPair>) {
-        let mut client = match Client::new(config::config().nats().addresses()) {
+        let nc = nats::connect(config::config().nats().addresses().get(0).unwrap());
+        let mut client = match nc {
             Ok(client) => client,
             Err(e) => {
                 warn!("Error when creating NATS client: {}", e);
