@@ -347,10 +347,10 @@ fn delete_assets_with_different_creator() {
     let assets = wallet_assets.iter().map(|a| a.into()).collect::<Vec<AssetBundle>>();
     let expected_balance = balance - transaction_fee;
     assert_eq!(wallet.balance, expected_balance);
-    assert_eq!(assets, vec![asset.clone()]);
+    assert_eq!(assets, vec![]);
 
     let assets_infos = wallet_assets.iter().map(|a| a.clone().meta_data.unwrap()).collect::<Vec<AssetInfo>>();
-    assert_eq!(assets_infos[0], info);
+    assert_eq!(assets_infos.len(), 0);
 }
 
 #[test]
@@ -454,8 +454,8 @@ fn delete_assets_two_assets_where_one_have_another_creator() {
     let assets = wallet_assets.iter().map(|a| a.into()).collect::<Vec<AssetBundle>>();
     let expected_balance = balance - transaction_fee;
     assert_eq!(wallet.balance, expected_balance);
-    assert_eq!(assets, vec![asset1.clone(), asset2.clone()]);
+    assert_eq!(assets, vec![]);
 
     let assets_infos = wallet_assets.iter().map(|a| a.clone().meta_data.unwrap()).collect::<Vec<AssetInfo>>();
-    assert_eq!(assets_infos, vec![info1, info2]);
+    assert_eq!(assets_infos, vec![]);
 }
