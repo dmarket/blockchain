@@ -165,9 +165,9 @@ jobs:
     working_directory: /project
     docker:
       - image: docker:git
-        auth:
-          username: $DOCKER_USER
-          password: $DOCKER_PASS
+        # auth:
+        #   username: $DOCKER_USER
+        #   password: $DOCKER_PASS
     steps:
       - *restore_cache
       - setup_remote_docker
