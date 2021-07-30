@@ -142,10 +142,10 @@ jobs:
       - *build_prod
       - *run_tests
       - *save_cache
-      - *setup_coverage
-      - *coverage
-      - store_artifacts:
-          path: target/debug/coverage/merged
+#      - *setup_coverage
+#      - *coverage
+#      - store_artifacts:
+#          path: target/debug/coverage/merged
 
 
   build_docker_dev:
