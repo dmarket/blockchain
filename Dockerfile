@@ -1,4 +1,4 @@
-FROM debian:stretch
+FROM ubuntu:bionic
 
 ARG TYPE=debug
 #RUN apt-get update && apt-get -y install libsodium18 libsodium-dev pkg-config
