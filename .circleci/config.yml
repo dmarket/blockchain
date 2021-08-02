@@ -32,7 +32,7 @@ references:
         export CC=clang
         export CXX=clang++
         export RUSTFLAGS=-Awarnings
-        cargo build -p dmbc -p dmbc-node -p dmbc-discovery --release
+        RUSTFLAGS=-Awarnings cargo build -p dmbc -p dmbc-node -p dmbc-discovery --release
 
   run_tests: &run_tests
     run:
@@ -41,7 +41,7 @@ references:
         export CC=clang
         export CXX=clang++
         export RUSTFLAGS=-Awarnings
-        cargo test -p dmbc --color=always --jobs 2 -- --test-threads=1
+        RUSTFLAGS=-Awarnings cargo test -p dmbc --color=always --release --jobs 2 -- --test-threads=1
 
   save_cache: &save_cache
     save_cache:
