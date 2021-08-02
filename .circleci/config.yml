@@ -28,6 +28,7 @@ references:
     run:
       name: Build project prod
       command: |
+        source $HOME/.cargo/env
         export CC=clang
         export CXX=clang++
         export RUSTFLAGS=-Awarnings
@@ -37,6 +38,7 @@ references:
     run:
       name: Run Tests
       command: |
+        source $HOME/.cargo/env
         export CC=clang
         export CXX=clang++
         export RUSTFLAGS=-Awarnings
