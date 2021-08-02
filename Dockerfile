@@ -1,7 +1,7 @@
 FROM ubuntu:bionic
 
 ARG TYPE=debug
-
+RUN apt-get update && apt-get -y install pkg-config curl libssl-dev zlib1g-dev libsodium-dev libc++-dev
 WORKDIR /src/app
 COPY ./target/$TYPE/dmbc-node /src/app/
 COPY ./target/$TYPE/dmbc-discovery /src/app/

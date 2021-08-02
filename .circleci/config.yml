@@ -5,15 +5,14 @@ references:
       name: Install System Packages
       command: |
         apt-get update
-        apt-get -y install clang
+        apt-get -y install clang pkg-config curl libssl-dev zlib1g-dev libsodium-dev libc++-dev
 
   setup_rust: &setup_rust
     run:
       name: Setup nightly
       command: |
-        rustup default stable
-        rustup update
-        rustup show
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        export PATH=$PATH:$HOME/.cargo/bin
 
   build_dev: &build_dev
     run:
@@ -133,14 +132,14 @@ jobs:
     working_directory: /project
 
     docker:
-      - image: rust:1.53
+      - image: ubuntu:bionic
     resource_class: xlarge
 
     steps:
       - checkout
 #      - *restore_cache
       - *pre_setup
-      #      - *setup_rust
+      - *setup_rust
       - *build_prod
       - *run_tests
       - *save_cache
