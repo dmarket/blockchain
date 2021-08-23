@@ -7,6 +7,7 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_json;
 extern crate clap;
+extern crate jemallocator;
 
 extern crate dmbc;
 
@@ -23,6 +24,13 @@ use exonum::encoding::serialize::FromHex;
 use exonum::node::{Node, NodeApiConfig, NodeConfig};
 use exonum::storage::{RocksDB, RocksDBOptions};
 use exonum_configuration::ConfigurationService;
+
+#[cfg(not(target_env = "msvc"))]
+use jemallocator::Jemalloc;
+
+#[cfg(not(target_env = "msvc"))]
+#[global_allocator]
+static GLOBAL: Jemalloc = Jemalloc;
 
 pub const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
