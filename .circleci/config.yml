@@ -109,15 +109,30 @@ references:
     run:
       name: Build and Push docker container
       command: |
-        docker build -t globalgames/dmarket-blockchain . --build-arg TYPE=release
-        if [[ -z "$CIRCLE_TAG" ]]
-          then
-            export APP_VERSION=`echo $CIRCLE_BRANCH | awk -F "/" '{print $2}'`
-          else
-            export APP_VERSION=$CIRCLE_TAG
-        fi
-        docker tag globalgames/dmarket-blockchain globalgames/dmarket-blockchain:$APP_VERSION
-        docker push globalgames/dmarket-blockchain:$APP_VERSION
+         source VERSION
+
+            echo "DOCKER_VERSION - " $DOCKER_VERSION
+            echo "DOCKER_SHORT_VERSION -" $DOCKER_SHORT_VERSION
+            echo "DOCKER_FULL_VERSION - " $DOCKER_FULL_VERSION
+
+            docker build -t globalgames/dmarket-blockchain:$DOCKER_VERSION 
+
+            docker tag globalgames/dmarket-blockchain:$DOCKER_VERSION globalgames/dmarket-blockchain:$DOCKER_SHORT_VERSION
+            docker tag globalgames/dmarket-blockchain:$DOCKER_VERSION globalgames/dmarket-blockchain:$DOCKER_FULL_VERSION
+            docker push globalgames/dmarket-blockchain:$DOCKER_VERSION
+            docker push globalgames/dmarket-blockchain:$DOCKER_SHORT_VERSION
+            docker push globalgames/dmarket-blockchain:$DOCKER_FULL_VERSION
+   
+
+        # docker build -t globalgames/dmarket-blockchain . --build-arg TYPE=release
+        # if [[ -z "$CIRCLE_TAG" ]]
+        #   then
+        #     export APP_VERSION=`echo $CIRCLE_BRANCH | awk -F "/" '{print $2}'`
+        #   else
+        #     export APP_VERSION=$CIRCLE_TAG
+        # fi
+        # docker tag globalgames/dmarket-blockchain globalgames/dmarket-blockchain:$APP_VERSION
+        # docker push globalgames/dmarket-blockchain:$APP_VERSION
 
   docker_login: &docker_login
     run:
