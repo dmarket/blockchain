@@ -59,8 +59,8 @@ impl TransactionRequest {
     }
 }
 
-impl Into<Box<Transaction>> for TransactionRequest {
-    fn into(self) -> Box<Transaction> {
+impl Into<Box<dyn Transaction>> for TransactionRequest {
+    fn into(self) -> Box<dyn Transaction> {
         match self {
             TransactionRequest::Transfer(trans) => Box::new(trans),
             TransactionRequest::AddAssets(trans) => Box::new(trans),
@@ -120,7 +120,7 @@ impl Api for TransactionApi {
                     Ok(Err(Error::InvalidTransaction))
                 }
                 Ok(Some(transaction)) => {
-                    let tx: Box<Transaction> = transaction.into();
+                    let tx: Box<dyn Transaction> = transaction.into();
                     let tx_hash = tx.hash();
                     match self_.channel.send(tx) {
                         Ok(_) => Ok(Ok(TransactionResponse { tx_hash })),

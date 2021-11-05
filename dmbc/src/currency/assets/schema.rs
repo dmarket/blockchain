@@ -6,11 +6,11 @@ use currency::SERVICE_NAME;
 /// Schema for accessing global asset information.
 pub struct Schema<S>(pub S)
 where
-    S: AsRef<Snapshot>;
+    S: AsRef<dyn Snapshot>;
 
 impl<S> Schema<S>
 where
-    S: AsRef<Snapshot>,
+    S: AsRef<dyn Snapshot>,
 {
     /// Internal `MapIndex` for this `Schema`.
     pub fn index(self) -> MapIndex<S, AssetId, AssetInfo> {

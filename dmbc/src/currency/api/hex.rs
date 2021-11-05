@@ -34,8 +34,8 @@ enum TransactionRequest {
     ExchangeIntermediary(ExchangeIntermediary),
 }
 
-impl Into<Box<Transaction>> for TransactionRequest {
-    fn into(self) -> Box<Transaction> {
+impl Into<Box<dyn Transaction>> for TransactionRequest {
+    fn into(self) -> Box<dyn Transaction> {
         match self {
             TransactionRequest::Transfer(trans) => Box::new(trans),
             TransactionRequest::AddAssets(trans) => Box::new(trans),
@@ -68,7 +68,7 @@ impl Api for HexApi {
             let body: HexApiResponse = match request.get::<bodyparser::Struct<TransactionRequest>>()
             {
                 Ok(Some(transaction)) => {
-                    let tx: Box<Transaction> = transaction.into();
+                    let tx: Box<dyn Transaction> = transaction.into();
                     let hex = Self::hex_string(tx.raw().body().to_vec());
                     Ok(Some(HexResponse { hex }))
                 }
@@ -93,7 +93,7 @@ impl Api for HexApi {
             let body: HexApiResponse = match request.get::<bodyparser::Struct<TransactionRequest>>()
             {
                 Ok(Some(transaction)) => {
-                    let transaction: Box<Transaction> = transaction.into();
+                    let transaction: Box<dyn Transaction> = transaction.into();
                     let raw_ = transaction.raw().clone();
 
                     let vec_hash: Option<Vec<u8>> = match transaction.raw().message_type() {

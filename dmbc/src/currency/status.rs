@@ -10,7 +10,7 @@ use currency::SERVICE_NAME;
 #[derive(Clone, Debug)]
 pub struct Schema<S>(pub S)
 where
-    S: AsRef<Snapshot>;
+    S: AsRef<dyn Snapshot>;
 
 pub type ResultRepr = u8;
 
@@ -30,7 +30,7 @@ fn from_repr(repr: ResultRepr) -> Result<(), Error> {
 
 impl<S> Schema<S>
 where
-    S: AsRef<Snapshot>,
+    S: AsRef<dyn Snapshot>,
 {
     fn index(self) -> MapIndex<S, Hash, ResultRepr> {
         let key = SERVICE_NAME.to_string() + ".statuses";

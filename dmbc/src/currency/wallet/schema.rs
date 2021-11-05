@@ -1,5 +1,5 @@
 use exonum::crypto::PublicKey;
-use exonum::storage::{Fork, MapIndex, map_index::MapIndexIter, Snapshot, StorageKey};
+use exonum::storage::{Fork, MapIndex, Snapshot, StorageKey};
 
 use currency::assets::{AssetId, AssetBundle};
 use currency::wallet::Wallet;
@@ -8,11 +8,11 @@ use currency::SERVICE_NAME;
 /// The schema for accessing wallets data.
 pub struct Schema<S>(pub S)
 where
-    S: AsRef<Snapshot>;
+    S: AsRef<dyn Snapshot>;
 
 impl<S> Schema<S>
 where
-    S: AsRef<Snapshot>,
+    S: AsRef<dyn Snapshot>,
 {
     /// Internal `MapIndex` with immutable access.
     pub fn index(self) -> MapIndex<S, PublicKey, Wallet> {

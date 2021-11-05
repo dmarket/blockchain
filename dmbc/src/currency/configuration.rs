@@ -82,7 +82,7 @@ impl Configuration {
     /// # Panics
     ///
     /// Panics if service configuration is invalid or absent.
-    pub fn extract(snapshot: &Snapshot) -> Configuration {
+    pub fn extract(snapshot: &dyn Snapshot) -> Configuration {
         let schema = Schema::new(snapshot);
         let stored_configuration = schema.actual_configuration();
 

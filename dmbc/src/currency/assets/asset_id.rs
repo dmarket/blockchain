@@ -173,7 +173,7 @@ impl Error for ParseError {
 }
 
 impl ExonumJson for AssetId {
-    fn serialize_field(&self) -> Result<serde_json::value::Value, Box<Error + Send + Sync>> {
+    fn serialize_field(&self) -> Result<serde_json::value::Value, Box<dyn Error + Send + Sync>> {
         Ok(serde_json::Value::String(self.to_string()))
     }
 
@@ -182,7 +182,7 @@ impl ExonumJson for AssetId {
         buffer: &mut B,
         from: Offset,
         to: Offset,
-    ) -> Result<(), Box<Error>> {
+    ) -> Result<(), Box<dyn Error>> {
         let value = value.as_str().ok_or("AssetId JSON value is not a string")?;
         match AssetId::from_hex(value) {
             Ok(asset_id) => {

@@ -48,7 +48,7 @@ impl ThirdPartyFees {
     /// Create `ThirdPartyFees` for an `add_assets` transaction.
     pub fn new_add_assets<S, I>(view: S, assets: I) -> Result<ThirdPartyFees, Error>
     where
-        S: AsRef<Snapshot>,
+        S: AsRef<dyn Snapshot>,
         I: IntoIterator<Item = MetaAsset>,
     {
         let fees_config = Configuration::extract(view.as_ref()).fees();
@@ -70,7 +70,7 @@ impl ThirdPartyFees {
     /// Create `ThirdPartyFees` for an `delete_assets` transaction.
     pub fn new_delete_assets<S, I>(_view: S, _assets: I) -> Result<ThirdPartyFees, Error>
     where
-        S: AsRef<Snapshot>,
+        S: AsRef<dyn Snapshot>,
         I: IntoIterator<Item = AssetBundle>,
     {
         let to_third_party = HashMap::new();
@@ -83,7 +83,7 @@ impl ThirdPartyFees {
     /// Create `ThirdPartyFees` for `trade` transactions.
     pub fn new_trade<'a, S, I>(view: S, assets: I) -> Result<ThirdPartyFees, Error>
     where
-        S: AsRef<Snapshot>,
+        S: AsRef<dyn Snapshot>,
         I: IntoIterator<Item = &'a TradeAsset>,
         <I as IntoIterator>::IntoIter: Clone,
     {
@@ -113,7 +113,7 @@ impl ThirdPartyFees {
     /// Create `ThirdPartyFees` for `exchange` transactions.
     pub fn new_exchange<S, I>(view: S, assets: I) -> Result<Self, Error>
     where
-        S: AsRef<Snapshot>,
+        S: AsRef<dyn Snapshot>,
         I: IntoIterator<Item = AssetBundle>,
     {
         let view = view.as_ref();
@@ -141,7 +141,7 @@ impl ThirdPartyFees {
     /// Create `ThirdPartyFees` for `transfer` transactions.
     pub fn new_transfer<S, I>(view: S, assets: I) -> Result<Self, Error>
     where
-        S: AsRef<Snapshot>,
+        S: AsRef<dyn Snapshot>,
         I: IntoIterator<Item = AssetBundle>,
     {
         let view = view.as_ref();

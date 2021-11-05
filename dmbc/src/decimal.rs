@@ -97,7 +97,7 @@ impl ToString for UFract64 {
     fn to_string(&self) -> String {
         let mut result = String::with_capacity(2 + UFRACT64_DIGITS);
         result += "0.";
-        result.extend(self.to_digits().into_iter().map(|digit| (digit + b'0') as char));
+        result.extend(self.to_digits().iter().map(|digit| (digit + b'0') as char));
         result
     }
 }
@@ -167,7 +167,7 @@ impl<'a> Field<'a> for UFract64 {
 
 impl ExonumJson for UFract64 {
     fn serialize_field(&self)
-        -> Result<serde_json::value::Value, Box<Error + Send + Sync>> {
+        -> Result<serde_json::value::Value, Box<dyn Error + Send + Sync>> {
         Ok(serde_json::Value::String(self.to_string()))
     }
 
@@ -176,7 +176,7 @@ impl ExonumJson for UFract64 {
         buffer: &mut B,
         from: Offset,
         to: Offset,
-    ) -> Result<(), Box<Error>> {
+    ) -> Result<(), Box<dyn Error>> {
         let value = value.as_str().ok_or("UFract64 value is not a string")?;
         match str::parse::<UFract64>(value) {
             Ok(fract) => {

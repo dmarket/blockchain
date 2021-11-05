@@ -67,7 +67,7 @@ impl Api for FeesApi {
         let fees = move |req: &mut Request| -> IronResult<Response> {
             let result: FeesResponse = match req.get::<bodyparser::Struct<FeesRequest>>() {
                 Ok(Some(request)) => {
-                    let calculator: Box<FeesCalculator> = request.into();
+                    let calculator: Box<dyn FeesCalculator> = request.into();
                     let view = &mut self_.blockchain.fork();
                     match calculator.calculate_fees(view) {
                         Ok(fees) => Ok(Ok(FeesResponseBody { fees })),

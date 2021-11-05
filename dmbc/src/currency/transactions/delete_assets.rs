@@ -67,7 +67,7 @@ impl DeleteAssets {
                 Some(info) => info,
                 None => return Err(Error::AssetNotFound),
             };
-            let mut entry = infos.remove(&asset.id()).unwrap_or(info);
+            let entry = infos.remove(&asset.id()).unwrap_or(info);
             let entry = entry.decrease(asset.amount())?;
             infos.insert(asset.id(), entry);
         }

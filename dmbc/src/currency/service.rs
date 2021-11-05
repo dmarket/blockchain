@@ -43,7 +43,7 @@ impl Service {
     }
 
     /// Genesis wallet public key.
-    pub fn genesis_wallet<S: AsRef<Snapshot>>(view: S) -> PublicKey {
+    pub fn genesis_wallet<S: AsRef<dyn Snapshot>>(view: S) -> PublicKey {
         let config = Configuration::extract(view.as_ref());
         *config.fees().recipient()
     }
@@ -67,12 +67,12 @@ impl blockchain::Service for Service {
         SERVICE_ID
     }
 
-    fn state_hash(&self, _snapshot: &Snapshot) -> Vec<Hash> {
+    fn state_hash(&self, _snapshot: &dyn Snapshot) -> Vec<Hash> {
         vec![]
     }
 
-    fn tx_from_raw(&self, raw: RawTransaction) -> Result<Box<Transaction>, encoding::Error> {
-        let trans: Box<Transaction> = match raw.message_type() {
+    fn tx_from_raw(&self, raw: RawTransaction) -> Result<Box<dyn Transaction>, encoding::Error> {
+        let trans: Box<dyn Transaction> = match raw.message_type() {
             ADD_ASSETS_ID => Box::new(AddAssets::from_raw(raw)?),
             DELETE_ASSETS_ID => Box::new(DeleteAssets::from_raw(raw)?),
             EXCHANGE_ID => Box::new(Exchange::from_raw(raw)?),
@@ -89,7 +89,7 @@ impl blockchain::Service for Service {
         Ok(trans)
     }
 
-    fn public_api_handler(&self, ctx: &ApiContext) -> Option<Box<Handler>> {
+    fn public_api_handler(&self, ctx: &ApiContext) -> Option<Box<dyn Handler>> {
         let mut router = Router::new();
         let api = ServiceApi {
             channel: ctx.node_channel().clone(),

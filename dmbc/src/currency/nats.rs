@@ -53,7 +53,7 @@ impl Pipe {
 
     fn work(receiver: Receiver<PublishPair>) {
         let nc = nats::connect(config::config().nats().addresses().get(0).unwrap());
-        let mut client = match nc {
+        let client = match nc {
             Ok(client) => client,
             Err(e) => {
                 warn!("Error when creating NATS client: {}", e);
