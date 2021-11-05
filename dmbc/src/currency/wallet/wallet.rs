@@ -8,14 +8,14 @@ encoding_struct! {
     #[derive(Eq, PartialOrd, Ord)]
     struct Wallet {
         balance: u64,
-        assets:  Vec<AssetBundle>,
+        assets: Vec<AssetBundle>,
     }
 }
 
 impl Wallet {
     /// Create new wallet with zero balance and no assets.
     pub fn new_empty() -> Self {
-        Wallet::new(0, Vec::new())
+        Wallet::new(0, vec![])
     }
 
     /// Push assets into the wallet.
@@ -33,7 +33,7 @@ impl Wallet {
                 assets.push(new);
             }
         }
-        *self = Wallet::new(self.balance(), assets);
+        *self = Wallet::new(self.balance(), vec![]);
     }
 
     /// Remove assets from the wallet.
@@ -128,3 +128,4 @@ pub fn move_assets(
 
     return Ok(());
 }
+

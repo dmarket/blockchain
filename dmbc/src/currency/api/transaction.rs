@@ -33,8 +33,8 @@ pub struct TransactionApi {
     pub blockchain: Blockchain,
 }
 
-#[serde(untagged)]
 #[derive(Clone, Serialize, Deserialize)]
+#[serde(untagged)]
 pub enum TransactionRequest {
     Transfer(Transfer),
     AddAssets(AddAssets),

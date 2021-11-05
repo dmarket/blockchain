@@ -34,6 +34,9 @@ fn build_rocksdb() {
     build.define("NDEBUG", Some("1"));
     build.define("SNAPPY", Some("1"));
 
+    build.warnings(false);
+    build.extra_warnings(false);
+
     let mut lib_sources = include_str!("rocksdb_lib_sources.txt")
         .split(" ")
         .collect::<Vec<&'static str>>();
@@ -116,6 +119,9 @@ fn build_snappy() {
 
     build.define("NDEBUG", Some("1"));
     build.opt_level(3);
+
+    build.warnings(false);
+    build.extra_warnings(false);
 
     if cfg!(target_env = "msvc") {
         build.flag("-EHsc");

@@ -3367,8 +3367,3 @@ dependencies = [
  "podio",
  "time",
 ]
-
-[[patch.unused]]
-name = "prometheus"
-version = "0.4.1"
-source = "git+https://github.com/niksaak/rust-prometheus?rev=abd94f8#abd94f864617e85aadbb19c5ca64cdec6dc27437"

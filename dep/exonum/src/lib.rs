@@ -17,6 +17,7 @@
 //! For more information see the project readme.
 
 #![deny(missing_debug_implementations)]
+#![allow(warnings)]
 
 #![cfg_attr(feature="flame_profile", feature(plugin, custom_attribute))]
 #![cfg_attr(feature="flame_profile", plugin(exonum_flamer))]

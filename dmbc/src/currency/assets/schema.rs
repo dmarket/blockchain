@@ -44,3 +44,4 @@ impl<'a> Schema<&'a mut Fork> {
         self.index_mut().remove(id)
     }
 }
+

@@ -22,8 +22,8 @@ use currency::transactions::{AddAssets, DeleteAssets, Exchange, ExchangeIntermed
 #[derive(Clone)]
 pub struct HexApi {}
 
-#[serde(untagged)]
 #[derive(Clone, Serialize, Deserialize)]
+#[serde(untagged)]
 enum TransactionRequest {
     Transfer(Transfer),
     AddAssets(AddAssets),

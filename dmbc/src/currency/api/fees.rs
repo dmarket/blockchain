@@ -28,8 +28,8 @@ pub struct FeesApi {
     pub blockchain: Blockchain,
 }
 
-#[serde(untagged)]
 #[derive(Clone, Serialize, Deserialize, Debug)]
+#[serde(untagged)]
 pub enum FeesRequest {
     Transfer(Transfer),
     AddAssets(AddAssets),
@@ -40,8 +40,8 @@ pub enum FeesRequest {
     ExchangeIntermediary(ExchangeIntermediary),
 }
 
-impl Into<Box<FeesCalculator>> for FeesRequest {
-    fn into(self) -> Box<FeesCalculator> {
+impl Into<Box<dyn FeesCalculator>> for FeesRequest {
+    fn into(self) -> Box<dyn FeesCalculator> {
         match self {
             FeesRequest::Transfer(trans) => Box::new(trans),
             FeesRequest::AddAssets(trans) => Box::new(trans),

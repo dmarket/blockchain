@@ -25,7 +25,3 @@ clap = "2.31"
 [target.'cfg(not(target_env = "msvc"))'.dependencies]
 jemallocator = "0.3.2"
 
-
-[patch.crates-io]
-bzip2 = { version = "0.4.2" }
-
