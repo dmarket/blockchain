@@ -67,6 +67,7 @@ impl error::Error for Error {
 }
 
 impl fmt::Display for Error {
+    #[allow(deprecated)]
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         write!(f, "{}", error::Error::description(self))
     }

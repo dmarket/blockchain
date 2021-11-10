@@ -72,7 +72,18 @@ impl DeleteAssets {
             infos.insert(asset.id(), entry);
         }
 
-        creator.remove_assets(self.assets())?;
+        for remove in self.assets() {
+            let asset = wallet::Schema(&mut *view).fetch_asset(&creator_pub, &remove.id());
+            let updated = match asset {
+                Some(asset) if asset.amount() >= remove.amount() => {
+                    AssetBundle::new(remove.id(), asset.amount() - remove.amount())
+                }
+                _ => {
+                    return Err(Error::InsufficientAssets);
+                }
+            };
+            wallet::Schema(&mut *view).store_asset(&creator_pub, &updated.id(), updated);
+        }
 
         wallet::Schema(&mut *view).store(creator_pub, creator);
 
@@ -131,10 +142,15 @@ impl Transaction for DeleteAssets {
         EXECUTE_COUNT.inc();
         let timer = EXECUTE_DURATION.start_timer();
 
+        view.checkpoint();
+
         let result = self.process(view);
 
         if let &Ok(_) = &result {
             EXECUTE_SUCCESS_COUNT.inc();
+            view.commit();
+        } else {
+            view.rollback();
         }
 
         status::Schema(view).store(self.hash(), result);

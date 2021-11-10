@@ -31,7 +31,7 @@ impl ValidatorInfo {
 pub fn connect(
     info: &ValidatorInfo,
     is_validator: bool,
-) -> Result<HashMap<PKeys, ValidatorInfo>, Box<Error>> {
+) -> Result<HashMap<PKeys, ValidatorInfo>, Box<dyn Error>> {
     let discovery = config::config().service_discovery().address();
 
     let nodes = receive_nodes(&discovery)?;
@@ -44,7 +44,7 @@ pub fn connect(
     Ok(nodes)
 }
 
-fn receive_nodes(discovery: &str) -> Result<HashMap<PKeys, ValidatorInfo>, Box<Error>> {
+fn receive_nodes(discovery: &str) -> Result<HashMap<PKeys, ValidatorInfo>, Box<dyn Error>> {
     let mut nodes_get = Vec::new();
 
     let mut handle = Easy::new();
@@ -64,7 +64,7 @@ fn receive_nodes(discovery: &str) -> Result<HashMap<PKeys, ValidatorInfo>, Box<E
     nodes.map_err(|e| e.into())
 }
 
-fn send_node(discovery: &str, info: &ValidatorInfo) -> Result<(), Box<Error>> {
+fn send_node(discovery: &str, info: &ValidatorInfo) -> Result<(), Box<dyn Error>> {
     let node_post = serde_json::to_string(info).map_err(Box::new)?;
 
     let mut handle = Easy::new();

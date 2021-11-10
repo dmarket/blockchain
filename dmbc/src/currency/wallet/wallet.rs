@@ -19,10 +19,13 @@ impl Wallet {
     }
 
     /// Push assets into the wallet.
-    pub fn add_assets<I>(&mut self, new_assets: I)
+    #[deprecated = "use schema instead"]
+    pub fn add_assets<I>(&mut self, _new_assets: I)
     where
         I: IntoIterator<Item = AssetBundle>,
     {
+        panic!("use schema instead");
+        /*
         let mut assets = self.assets();
         for new in new_assets {
             if let Some(index) = assets.iter_mut().position(|a| a.id() == new.id()) {
@@ -34,13 +37,17 @@ impl Wallet {
             }
         }
         *self = Wallet::new(self.balance(), vec![]);
+        */
     }
 
     /// Remove assets from the wallet.
-    pub fn remove_assets<I>(&mut self, assets_to_remove: I) -> Result<(), Error>
+    #[deprecated = "use schema instead"]
+    pub fn remove_assets<I>(&mut self, _assets_to_remove: I) -> Result<(), Error>
     where
         I: IntoIterator<Item = AssetBundle>,
     {
+        panic!("use schema instead");
+        /*
         let mut assets = self.assets();
         for to_remove in assets_to_remove {
             if let Some(index) = assets.iter_mut().position(|a| a.id() == to_remove.id()) {
@@ -63,6 +70,7 @@ impl Wallet {
         *self = Wallet::new(self.balance(), assets);
 
         Ok(())
+        */
     }
 }
 
@@ -91,11 +99,14 @@ pub fn move_coins(from: &mut Wallet, to: &mut Wallet, amount: u64) -> Result<(),
 ///
 /// Returns `InsufficientFunds` if the wallets in `move_specs` are not present
 /// in the `from` wallet in the specified quantity.
+#[deprecated = "use schema instead"]
 pub fn move_assets(
-    from: &mut Wallet,
-    to: &mut Wallet,
-    move_specs: &[AssetBundle],
+    _from: &mut Wallet,
+    _to: &mut Wallet,
+    _move_specs: &[AssetBundle],
 ) -> Result<(), Error> {
+    panic!("use schema instead");
+    /*
     let mut from_assets = from.assets();
     let mut to_assets = to.assets();
 
@@ -127,5 +138,6 @@ pub fn move_assets(
     *to = Wallet::new(to.balance(), to_assets);
 
     return Ok(());
+    */
 }
 

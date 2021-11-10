@@ -107,6 +107,7 @@ impl ToString for UFract64 {
 pub struct FromStrError;
 
 impl fmt::Display for FromStrError {
+    #[allow(deprecated)]
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         write!(f, "{}", self.description())
     }

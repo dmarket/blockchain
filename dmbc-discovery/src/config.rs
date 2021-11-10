@@ -1,12 +1,12 @@
 use std::env;
 use std::fs::File;
 use std::io::Read;
-use std::sync::{Once, ONCE_INIT};
+use std::sync::Once;
 
 use toml;
 
 static mut CONFIG: *const Config = 0usize as *const _;
-static CONFIG_INIT: Once = ONCE_INIT;
+static CONFIG_INIT: Once = Once::new();
 
 #[derive(Deserialize, Clone, Default)]
 pub struct Config {

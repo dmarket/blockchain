@@ -47,7 +47,7 @@ fn main() {
 
     exonum::helpers::init_logger().unwrap();
 
-    /** Create Keys */
+    // Create Keys
     println!(
         "Initializing node version: v{}",
         VERSION
@@ -144,7 +144,7 @@ fn main() {
     let db = Box::new(RocksDB::open(path, &options).unwrap());
 
     // Initialize services
-    let services: Vec<Box<blockchain::Service>> = vec![
+    let services: Vec<Box<dyn blockchain::Service>> = vec![
         Box::new(ConfigurationService::new()),
         Box::new(Service::new()),
     ];

@@ -2,7 +2,6 @@
 //! node and external services.
 
 #![allow(dead_code)]
-#![allow(deprecated)]
 
 extern crate bodyparser;
 #[macro_use]

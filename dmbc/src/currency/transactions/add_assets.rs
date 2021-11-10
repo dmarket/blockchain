@@ -8,7 +8,7 @@ use exonum::storage::Fork;
 use prometheus::{IntCounter, Histogram};
 
 use currency::assets;
-use currency::assets::{AssetId, AssetInfo, MetaAsset};
+use currency::assets::{AssetId, AssetInfo, MetaAsset, AssetBundle};
 use currency::error::Error;
 use currency::status;
 use currency::transactions::components::{FeesCalculator, ThirdPartyFees};
@@ -69,7 +69,7 @@ impl AddAssets {
         wallet::Schema(&mut *view).store(&genesis_pub, genesis);
         wallet::Schema(&mut *view).store(&creator_pub, creator);
 
-        let mut wallets = fees.collect(view, &creator_pub)?;
+        let wallets = fees.collect(view, &creator_pub)?;
         let mut infos: HashMap<AssetId, AssetInfo> = HashMap::new();
 
         let key = self.pub_key();
@@ -77,10 +77,11 @@ impl AddAssets {
         for meta in self.meta_assets() {
             let id = AssetId::from_data(meta.data(), key);
 
-            let wallet = wallets
-                .entry(*meta.receiver())
-                .or_insert_with(|| wallet::Schema(&*view).fetch(meta.receiver()));
-            wallet.add_assets(Some(meta.to_bundle(id)));
+            let existing_count = wallet::Schema(&*view).fetch_asset(&meta.receiver(), &id)
+                .map(|a| a.amount())
+                .unwrap_or(0);
+            let asset = AssetBundle::new(id.clone(), existing_count + meta.amount());
+            wallet::Schema(&mut *view).store_asset(&meta.receiver(), &id, asset);
 
             match infos.entry(id) {
                 Entry::Occupied(entry) => {
@@ -165,10 +166,15 @@ impl Transaction for AddAssets {
         EXECUTE_COUNT.inc();
         let timer = EXECUTE_DURATION.start_timer();
 
+        view.checkpoint();
+
         let result = self.process(view);
 
         if let &Ok(_) = &result {
             EXECUTE_SUCCESS_COUNT.inc();
+            view.commit();
+        } else {
+            view.rollback();
         }
 
         status::Schema(view).store(self.hash(), result);

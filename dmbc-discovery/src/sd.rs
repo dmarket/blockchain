@@ -267,7 +267,7 @@ impl ServiceDiscovery {
         file.write(ser.as_bytes()).map(|_| ())
     }
 
-    fn load_peers() -> Result<HashMap<PKeys, ValidatorInfo>, Box<Error>> {
+    fn load_peers() -> Result<HashMap<PKeys, ValidatorInfo>, Box<dyn Error>> {
         let path = config::get().peers_path();
         let mut file = File::open(path)?;
         let mut data = Vec::new();
@@ -280,7 +280,7 @@ impl Service for ServiceDiscovery {
     type Request = Request;
     type Response = Response;
     type Error = hyper::Error;
-    type Future = Box<Future<Item = Self::Response, Error = Self::Error>>;
+    type Future = Box<dyn Future<Item = Self::Response, Error = Self::Error>>;
 
     fn call(&self, req: Request) -> Self::Future {
         eprintln!("Got request: {:?}", req);

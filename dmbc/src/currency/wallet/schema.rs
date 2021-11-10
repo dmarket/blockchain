@@ -4,6 +4,7 @@ use exonum::storage::{Fork, MapIndex, Snapshot, StorageKey};
 use currency::assets::{AssetId, AssetBundle};
 use currency::wallet::Wallet;
 use currency::SERVICE_NAME;
+use currency::error::Error;
 
 /// The schema for accessing wallets data.
 pub struct Schema<S>(pub S)
@@ -74,7 +75,7 @@ impl<'a> Schema<&'a mut Fork> {
         };
     }
 
-    pub fn store_assets(&mut self, pub_key: &PublicKey, asset_id: &AssetId, value: AssetBundle) {
+    pub fn store_asset(&mut self, pub_key: &PublicKey, asset_id: &AssetId, value: AssetBundle) {
         let key = wallet_asset_key(pub_key, asset_id);
         self.index_assets_mut()
             .put(&key, value);
@@ -96,5 +97,53 @@ fn wallet_asset_key(pub_key: &PublicKey, asset_id: &AssetId) -> Vec<u8> {
     pub_key.write(&mut key[..]);
     asset_id.write(&mut key[(pub_key.size() + 1)..]);
     key
+}
+
+pub fn move_assets(
+    fork: &mut Fork,
+    from: &PublicKey,
+    to: &PublicKey,
+    move_specs: &[AssetBundle],
+) -> Result<(), Error> {
+    fork.checkpoint();
+
+    for spec in move_specs {
+        let id = spec.id();
+
+        let from_asset = Schema(&mut *fork).fetch_asset(from, &id);
+        let to_asset = Schema(&mut *fork).fetch_asset(to, &id);
+
+        let (from_asset, to_asset) = match (from_asset, to_asset) {
+            (_, _) if spec.amount() == 0 => {
+                continue;
+            }
+            (Some(from_asset), _) if from_asset.amount() < spec.amount() => {
+                fork.rollback();
+                return Err(Error::InsufficientAssets);
+            }
+            (None, _) => {
+                fork.rollback();
+                return Err(Error::InsufficientAssets)
+            }
+            (Some(from_asset), Some(to_asset)) => (
+                AssetBundle::new(id.clone(), from_asset.amount() - spec.amount()),
+                AssetBundle::new(id.clone(), to_asset.amount() + spec.amount()),
+            ),
+            (Some(from_asset), None) => (
+                AssetBundle::new(id.clone(), from_asset.amount() - spec.amount()),
+                AssetBundle::new(id.clone(), spec.amount()),
+            ),
+        };
+
+        if from_asset.amount() > 0 {
+            Schema(&mut *fork).store_asset(from, &id, from_asset);
+        } else {
+            Schema(&mut *fork).remove_asset(from, &id);
+        }
+        Schema(&mut *fork).store_asset(to, &id, to_asset);
+    }
+
+    fork.commit();
+    Ok(())
 }
 

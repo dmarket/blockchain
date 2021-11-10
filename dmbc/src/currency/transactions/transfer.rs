@@ -149,10 +149,15 @@ impl Transaction for Transfer {
         EXECUTE_COUNT.inc();
         let timer = EXECUTE_DURATION.start_timer();
 
+        view.checkpoint();
+
         let result = self.process(view);
 
         if let &Ok(_) = &result {
             EXECUTE_SUCCESS_COUNT.inc();
+            view.commit();
+        } else {
+            view.rollback();
         }
 
         status::Schema(view).store(self.hash(), result);

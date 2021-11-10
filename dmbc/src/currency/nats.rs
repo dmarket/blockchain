@@ -1,6 +1,6 @@
 use std::sync::mpsc;
 use std::sync::mpsc::{Receiver, Sender};
-use std::sync::{Once, ONCE_INIT};
+use std::sync::Once;
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -15,7 +15,7 @@ pub fn publish(subject: String, msg: String) {
 
 type PublishPair = (String, String);
 
-static ONCE: Once = ONCE_INIT;
+static ONCE: Once = Once::new();
 static mut PIPE: *mut Option<Pipe> = 0_usize as *mut _;
 
 const DISCARD_MODE_SECONDS: u64 = 5;

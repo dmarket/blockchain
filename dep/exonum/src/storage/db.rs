@@ -186,8 +186,7 @@ pub enum Change {
 pub struct Fork {
     snapshot: Box<Snapshot>,
     patch: Patch,
-    changelog: Vec<(String, Vec<u8>, Option<Change>)>,
-    logged: bool,
+    changelogs: Vec<Vec<(String, Vec<u8>, Option<Change>)>>,
 }
 
 struct ForkIter<'a> {
@@ -241,8 +240,7 @@ pub trait Database: Send + Sync + 'static {
         Fork {
             snapshot: self.snapshot(),
             patch: Patch::new(),
-            changelog: Vec::new(),
-            logged: false,
+            changelogs: Vec::new(),
         }
     }
 
@@ -351,10 +349,7 @@ impl Fork {
     ///
     /// Panics if another checkpoint was created before and has not been committed or rolled back.
     pub fn checkpoint(&mut self) {
-        if self.logged {
-            panic!("call checkpoint before rollback or commit");
-        }
-        self.logged = true;
+        self.changelogs.push(Vec::new());
     }
 
     /// Finalizes all changes after the latest checkpoint.
@@ -364,11 +359,7 @@ impl Fork {
     /// Panics if there is no active checkpoint, or the latest checkpoint
     /// is already committed or rolled back.
     pub fn commit(&mut self) {
-        if !self.logged {
-            panic!("call commit before checkpoint");
-        }
-        self.changelog.clear();
-        self.logged = false;
+        self.changelogs.pop();
     }
 
     /// Rolls back all changes after the latest checkpoint.
@@ -378,10 +369,8 @@ impl Fork {
     /// Panics if there is no active checkpoint, or the latest checkpoint
     /// is already committed or rolled back.
     pub fn rollback(&mut self) {
-        if !self.logged {
-            panic!("call rollback before checkpoint");
-        }
-        for (name, k, c) in self.changelog.drain(..).rev() {
+        let cl = self.changelogs.last_mut().expect("called rollback without checkpoints");
+        for (name, k, c) in cl.drain(..).rev() {
             if let Some(changes) = self.patch.changes_mut(&name) {
                 match c {
                     Some(change) => changes.data.insert(k, change),
@@ -389,7 +378,6 @@ impl Fork {
                 };
             }
         }
-        self.logged = false;
     }
 
     /// Inserts a key-value pair into the fork.
@@ -397,8 +385,8 @@ impl Fork {
         let changes = self.patch.changes_entry(name.to_string()).or_insert_with(
             Changes::new,
         );
-        if self.logged {
-            self.changelog.push((
+        if let Some(cl) = self.changelogs.last_mut() {
+            cl.push((
                 name.to_string(),
                 key.clone(),
                 changes.data.insert(key, Change::Put(value)),
@@ -413,8 +401,8 @@ impl Fork {
         let changes = self.patch.changes_entry(name.to_string()).or_insert_with(
             Changes::new,
         );
-        if self.logged {
-            self.changelog.push((
+        if let Some(cl) = self.changelogs.last_mut() {
+            cl.push((
                 name.to_string(),
                 key.clone(),
                 changes.data.insert(key, Change::Delete),
@@ -451,8 +439,8 @@ impl Fork {
         );
         while let Some((k, ..)) = iter.next() {
             let change = changes.data.insert(k.to_vec(), Change::Delete);
-            if self.logged {
-                self.changelog.push((name.to_string(), k.to_vec(), change));
+            if let Some(cl) = self.changelogs.last_mut() {
+                cl.push((name.to_string(), k.to_vec(), change));
             }
         }
     }
@@ -476,7 +464,7 @@ impl Fork {
     ///
     /// Panics if checkpoint was created before and it was not committed or rollbacked yet.
     pub fn merge(&mut self, patch: Patch) {
-        if self.logged {
+        if !self.changelogs.is_empty() {
             panic!("call merge before commit or rollback");
         }
 
