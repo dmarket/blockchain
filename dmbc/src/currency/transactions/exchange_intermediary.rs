@@ -192,8 +192,8 @@ impl ExchangeIntermediary {
             .unwrap_or_else(|| wallet::Schema(&*view).fetch(&offer.recipient()));
 
         wallet::move_coins(&mut sender, &mut recipient, offer.sender_value())?;
-        wallet::move_assets(&mut sender, &mut recipient, &offer.sender_assets())?;
-        wallet::move_assets(&mut recipient, &mut sender, &offer.recipient_assets())?;
+        wallet::move_assets(&mut *view, &offer.sender(), &offer.recipient(), &offer.sender_assets())?;
+        wallet::move_assets(&mut *view, &offer.recipient(), &offer.sender(), &offer.recipient_assets())?;
 
         updated_wallets.insert(*offer.sender(), sender);
         updated_wallets.insert(*offer.recipient(), recipient);

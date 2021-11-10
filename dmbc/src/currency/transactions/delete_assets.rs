@@ -62,36 +62,41 @@ impl DeleteAssets {
 
         let mut infos = HashMap::new();
 
-        for asset in self.assets() {
-            let info = match assets::Schema(&*view).fetch(&asset.id()) {
-                Some(info) => info,
-                None => return Err(Error::AssetNotFound),
-            };
-            let entry = infos.remove(&asset.id()).unwrap_or(info);
-            let entry = entry.decrease(asset.amount())?;
-            infos.insert(asset.id(), entry);
+        view.checkpoint();
+        let res = || {
+            for asset in self.assets() {
+                let info = match assets::Schema(&*view).fetch(&asset.id()) {
+                    Some(info) => info,
+                    None => return Err(Error::AssetNotFound),
+                };
+                let entry = infos.remove(&asset.id()).unwrap_or(info);
+                let entry = entry.decrease(asset.amount())?;
+                infos.insert(asset.id(), entry);
+            }
+
+            for remove in self.assets() {
+                let asset = wallet::Schema(&mut *view).fetch_asset(&creator_pub, &remove.id());
+                let updated = match asset {
+                    Some(asset) if asset.amount() >= remove.amount() => {
+                        AssetBundle::new(remove.id(), asset.amount() - remove.amount())
+                    }
+                    _ => {
+                        return Err(Error::InsufficientAssets);
+                    }
+                };
+                wallet::Schema(&mut *view).store_asset(&creator_pub, &updated.id(), updated);
+            }
+
+            wallet::Schema(&mut *view).store(creator_pub, creator);
+
+            for (id, info) in infos {
+                assets::Schema(&mut *view).store(&id, info);
+            }
+        }();
+        match res {
+            Ok(()) => {view.commit(); Ok(())}
+            Err(e) => {view.checkpoint(); Err(e)}
         }
-
-        for remove in self.assets() {
-            let asset = wallet::Schema(&mut *view).fetch_asset(&creator_pub, &remove.id());
-            let updated = match asset {
-                Some(asset) if asset.amount() >= remove.amount() => {
-                    AssetBundle::new(remove.id(), asset.amount() - remove.amount())
-                }
-                _ => {
-                    return Err(Error::InsufficientAssets);
-                }
-            };
-            wallet::Schema(&mut *view).store_asset(&creator_pub, &updated.id(), updated);
-        }
-
-        wallet::Schema(&mut *view).store(creator_pub, creator);
-
-        for (id, info) in infos {
-            assets::Schema(&mut *view).store(&id, info);
-        }
-
-        Ok(())
     }
 }
 

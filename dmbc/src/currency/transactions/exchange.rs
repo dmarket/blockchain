@@ -173,8 +173,8 @@ impl Exchange {
             .unwrap_or_else(|| wallet::Schema(&*view).fetch(&offer.recipient()));
 
         wallet::move_coins(&mut sender, &mut recipient, offer.sender_value())?;
-        wallet::move_assets(&mut sender, &mut recipient, &offer.sender_assets())?;
-        wallet::move_assets(&mut recipient, &mut sender, &offer.recipient_assets())?;
+        wallet::move_assets(&mut *view, &offer.sender(), &offer.recipient(), &offer.sender_assets())?;
+        wallet::move_assets(&mut *view, &offer.recipient(), &offer.sender(), &offer.recipient_assets())?;
 
         updated_wallets.insert(*offer.sender(), sender);
         updated_wallets.insert(*offer.recipient(), recipient);
@@ -246,15 +246,10 @@ impl Transaction for Exchange {
         EXECUTE_COUNT.inc();
         let timer = EXECUTE_DURATION.start_timer();
 
-        view.checkpoint();
-
         let result = self.process(view);
 
         if let &Ok(_) = &result {
             EXECUTE_SUCCESS_COUNT.inc();
-            view.commit();
-        } else {
-            view.rollback();
         }
 
         status::Schema(view).store(self.hash(), result);

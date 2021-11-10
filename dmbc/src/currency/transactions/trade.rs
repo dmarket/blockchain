@@ -91,20 +91,20 @@ impl Trade {
         self.offer().raw
     }
 
-    fn can_move_assets(&self, view: &mut Fork) -> Result<(), Error> {
-        let mut wallet_buyer = wallet::Schema(&*view).fetch(self.offer().buyer());
-        let mut wallet_seller = wallet::Schema(&*view).fetch(self.offer().seller());
-
-        let assets = self.offer()
-                    .assets()
-                    .into_iter()
-                    .map(|a| a.to_bundle())
-                    .collect::<Vec<_>>();
-
-        wallet::move_assets(&mut wallet_seller, &mut wallet_buyer, &assets)?;
-
-        Ok(())
-    }
+    // fn can_move_assets(&self, view: &mut Fork) -> Result<(), Error> {
+    //     let mut wallet_buyer = wallet::Schema(&*view).fetch(self.offer().buyer());
+    //     let mut wallet_seller = wallet::Schema(&*view).fetch(self.offer().seller());
+    //
+    //     let assets = self.offer()
+    //                 .assets()
+    //                 .into_iter()
+    //                 .map(|a| a.to_bundle())
+    //                 .collect::<Vec<_>>();
+    //
+    //     wallet::move_assets(&mut wallet_seller, &mut wallet_buyer, &assets)?;
+    //
+    //     Ok(())
+    // }
 
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
         info!("Processing tx: {:?}", self);
@@ -149,7 +149,7 @@ impl Trade {
 
         let fees = ThirdPartyFees::new_trade(&*view, &offer.assets())?;
 
-        self.can_move_assets(view)?;
+//        self.can_move_assets(view)?;
 
         let mut wallet_buyer = wallet::Schema(&*view).fetch(offer.buyer());
         let mut wallet_seller = wallet::Schema(&*view).fetch(offer.seller());
@@ -180,22 +180,22 @@ impl Trade {
                     FeeStrategy::Intermediary => HashMap::<PublicKey, wallet::Wallet>::new(),
                 };
 
-                let mut wallet_seller = updated_wallets
-                    .remove(&offer.seller())
-                    .unwrap_or_else(|| wallet::Schema(&*view).fetch(&offer.seller()));
-                let mut wallet_buyer = updated_wallets
-                    .remove(&offer.buyer())
-                    .unwrap_or_else(|| wallet::Schema(&*view).fetch(&offer.buyer()));
+                // let mut wallet_seller = updated_wallets
+                //     .remove(&offer.seller())
+                //     .unwrap_or_else(|| wallet::Schema(&*view).fetch(&offer.seller()));
+                // let mut wallet_buyer = updated_wallets
+                //     .remove(&offer.buyer())
+                //     .unwrap_or_else(|| wallet::Schema(&*view).fetch(&offer.buyer()));
                 let assets = offer
                     .assets()
                     .into_iter()
                     .map(|a| a.to_bundle())
                     .collect::<Vec<_>>();
 
-                wallet::move_assets(&mut wallet_seller, &mut wallet_buyer, &assets)?;
+                wallet::move_assets(&mut *view, &offer.seller(), &offer.buyer(), &assets)?;
 
-                updated_wallets.insert(*offer.seller(), wallet_seller);
-                updated_wallets.insert(*offer.buyer(), wallet_buyer);
+                // updated_wallets.insert(*offer.seller(), wallet_seller);
+                // updated_wallets.insert(*offer.buyer(), wallet_buyer);
 
                 // Save changes to the database.
                 for (key, wallet) in updated_wallets {

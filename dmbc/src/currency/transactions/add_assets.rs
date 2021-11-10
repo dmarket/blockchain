@@ -73,42 +73,46 @@ impl AddAssets {
         let mut infos: HashMap<AssetId, AssetInfo> = HashMap::new();
 
         let key = self.pub_key();
+        view.checkpoint();
+        let res = || {
+            for meta in self.meta_assets() {
+                let id = AssetId::from_data(meta.data(), key);
 
-        for meta in self.meta_assets() {
-            let id = AssetId::from_data(meta.data(), key);
+                let existing_count = wallet::Schema(&*view).fetch_asset(&meta.receiver(), &id)
+                    .map(|a| a.amount())
+                    .unwrap_or(0);
+                let asset = AssetBundle::new(id.clone(), existing_count + meta.amount());
+                wallet::Schema(&mut *view).store_asset(&meta.receiver(), &id, asset);
 
-            let existing_count = wallet::Schema(&*view).fetch_asset(&meta.receiver(), &id)
-                .map(|a| a.amount())
-                .unwrap_or(0);
-            let asset = AssetBundle::new(id.clone(), existing_count + meta.amount());
-            wallet::Schema(&mut *view).store_asset(&meta.receiver(), &id, asset);
-
-            match infos.entry(id) {
-                Entry::Occupied(entry) => {
-                    let info = entry.into_mut();
-                    *info = info.clone().merge(meta.to_info(key, &info.origin()))?;
-                }
-                Entry::Vacant(entry) => {
-                    let origin = self.hash();
-                    let new_info = meta.to_info(key, &origin);
-                    let info = match assets::Schema(&*view).fetch(&id) {
-                        Some(info) => info.merge(new_info)?,
-                        None => new_info,
-                    };
-                    entry.insert(info);
+                match infos.entry(id) {
+                    Entry::Occupied(entry) => {
+                        let info = entry.into_mut();
+                        *info = info.clone().merge(meta.to_info(key, &info.origin()))?;
+                    }
+                    Entry::Vacant(entry) => {
+                        let origin = self.hash();
+                        let new_info = meta.to_info(key, &origin);
+                        let info = match assets::Schema(&*view).fetch(&id) {
+                            Some(info) => info.merge(new_info)?,
+                            None => new_info,
+                        };
+                        entry.insert(info);
+                    }
                 }
             }
-        }
 
-        for (key, wallet) in wallets {
-            wallet::Schema(&mut *view).store(&key, wallet);
-        }
+            for (key, wallet) in wallets {
+                wallet::Schema(&mut *view).store(&key, wallet);
+            }
 
-        for (id, info) in infos {
-            assets::Schema(&mut *view).store(&id, info);
+            for (id, info) in infos {
+                assets::Schema(&mut *view).store(&id, info);
+            }
+        }();
+        match res {
+            Ok(()) => {view.commit(); Ok(())}
+            Err(e) => {view.checkpoint(); Err(e)}
         }
-
-        Ok(())
     }
 }
 
@@ -166,15 +170,10 @@ impl Transaction for AddAssets {
         EXECUTE_COUNT.inc();
         let timer = EXECUTE_DURATION.start_timer();
 
-        view.checkpoint();
-
         let result = self.process(view);
 
         if let &Ok(_) = &result {
             EXECUTE_SUCCESS_COUNT.inc();
-            view.commit();
-        } else {
-            view.rollback();
         }
 
         status::Schema(view).store(self.hash(), result);
