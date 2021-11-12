@@ -113,7 +113,11 @@ fn main() {
         ..Default::default()
     };
 
-    let peer_addrs = peers.iter().map(|(_, p)| p.peer).collect();
+    let peer_addrs = if !peers.is_empty() {
+        peers.iter().map(|(_, p)| p.peer).collect()
+    } else {
+        config::config().api().peers()
+    };
 
     // Complete node configuration
     let node_cfg = NodeConfig {
