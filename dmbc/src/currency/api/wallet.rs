@@ -6,6 +6,7 @@ use exonum::api::Api;
 use exonum::blockchain::Blockchain;
 use exonum::crypto::PublicKey;
 use exonum::encoding::serialize::FromHex;
+use exonum::storage::StorageKey;
 use hyper::header::ContentType;
 use iron::headers::AccessControlAllowOrigin;
 use iron::prelude::*;
@@ -36,7 +37,7 @@ impl WalletInfo {
     pub fn from(wallet: Wallet) -> Self {
         WalletInfo {
             balance: wallet.balance(),
-            assets_count: wallet.assets().len() as u64,
+            assets_count: 0, // TODO: store count in the database separately.
         }
     }
 }
@@ -134,7 +135,25 @@ impl WalletApi {
     }
 
     fn assets(&self, pub_key: &PublicKey) -> Vec<AssetBundle> {
-        self.wallet(pub_key).assets()
+        //self.wallet(pub_key).assets()
+        let view = self.blockchain.fork();
+        let index = wallet::Schema(&view).index_assets();
+
+        let mut prefix = vec![0; pub_key.size() + 1];
+        pub_key.write(&mut prefix[..]);
+        let iter = index.iter_from(&prefix);
+
+        let mut assets = vec![];
+
+        for (key, asset) in iter {
+            if key.starts_with(&prefix) {
+                assets.push(asset);
+            } else {
+                break;
+            }
+        }
+
+        assets
     }
 
     fn asset_info(&self, asset_id: &AssetId) -> Option<AssetInfo> {
@@ -357,7 +376,7 @@ impl Api for WalletApi {
             "assets_info",
         );
         router.get(
-            "/v1/wallets/:pub_key/assets/:asset_id", 
+            "/v1/wallets/:pub_key/assets/:asset_id",
             wallet_asset_info,
             "asset_info"
         );
