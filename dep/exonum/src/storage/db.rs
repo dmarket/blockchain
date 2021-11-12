@@ -359,7 +359,15 @@ impl Fork {
     /// Panics if there is no active checkpoint, or the latest checkpoint
     /// is already committed or rolled back.
     pub fn commit(&mut self) {
-        self.changelogs.pop();
+        let popped = self.changelogs.pop();
+        let last = self.changelogs.last_mut();
+        match (popped, last) {
+            (None, ..) => panic!("no active checkpoint"),
+            (Some(_), None) => (),
+            (Some(mut popped), Some(last)) => {
+                last.extend(popped);
+            }
+        }
     }
 
     /// Rolls back all changes after the latest checkpoint.
