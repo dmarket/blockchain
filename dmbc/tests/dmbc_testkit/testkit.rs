@@ -51,13 +51,17 @@ impl DmbcTestKit for ExonumTestKit {
     fn add_assets(&mut self, pub_key: &PublicKey, assets: Vec<(AssetBundle, AssetInfo)>) {
         let blockchain = self.blockchain_mut();
         let mut fork = blockchain.fork();
-        let mut wallet = wallet::Schema(&fork).fetch(&pub_key);
+        let wallet = wallet::Schema(&fork).fetch(&pub_key);
 
         for (asset, info) in assets {
-            wallet::Schema(&mut fork).store_asset(&pub_key, &asset.id());
+            let new_asset = wallet::Schema(&fork).fetch_asset(&pub_key, &asset.id())
+                .map(|a| AssetBundle::new(asset.id(), a.amount() + asset.amount()))
+                .unwrap_or_else(|| AssetBundle::new(asset.id(), asset.amount()));
+
+            wallet::Schema(&mut fork).store_asset(&pub_key, &asset.id(), new_asset);
             assets::Schema(&mut fork).store(&asset.id(), info);
         }
-        wallet::Schema(&mut fork).store(&pub_key, Wallet::new(wallet.balance(), 0));
+        wallet::Schema(&mut fork).store(&pub_key, Wallet::new(wallet.balance(), vec![]));
 
         assert!(blockchain.merge(fork.into_patch()).is_ok());
     }
@@ -84,10 +88,9 @@ impl DmbcTestKit for ExonumTestKit {
         let blockchain = self.blockchain_mut();
         let mut fork = blockchain.fork();
 
-        let mut existing_wallet = wallet::Schema(&fork).fetch(&pub_key);
-        existing_wallet.add_assets(wallet.assets());
+        let existing_wallet = wallet::Schema(&fork).fetch(&pub_key);
         let updated_balance = existing_wallet.balance() + wallet.balance();
-        wallet::Schema(&mut fork).store(&pub_key, Wallet::new(updated_balance, existing_wallet.assets()));
+        wallet::Schema(&mut fork).store(&pub_key, Wallet::new(updated_balance, vec![]));
 
         assert!(blockchain.merge(fork.into_patch()).is_ok());
     }

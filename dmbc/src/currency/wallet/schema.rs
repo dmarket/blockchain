@@ -82,7 +82,7 @@ impl<'a> Schema<&'a mut Fork> {
 
 fn wallet_asset_key(pub_key: &PublicKey, asset_id: &AssetId) -> Vec<u8> {
     let mut key = vec![0; pub_key.size() + asset_id.size() + 1];
-    pub_key.write(&mut key[..]);
+    pub_key.write(&mut key[..pub_key.size()]);
     asset_id.write(&mut key[(pub_key.size() + 1)..]);
     key
 }
