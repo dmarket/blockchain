@@ -74,7 +74,7 @@ impl AddAssets {
 
         let key = self.pub_key();
         view.checkpoint();
-        let res = || {
+        let res = (|| {
             for meta in self.meta_assets() {
                 let id = AssetId::from_data(meta.data(), key);
 
@@ -108,10 +108,13 @@ impl AddAssets {
             for (id, info) in infos {
                 assets::Schema(&mut *view).store(&id, info);
             }
-        }();
+
+            Ok(())
+        })();
+
         match res {
             Ok(()) => {view.commit(); Ok(())}
-            Err(e) => {view.checkpoint(); Err(e)}
+            Err(e) => {view.rollback(); Err(e)}
         }
     }
 }

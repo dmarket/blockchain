@@ -63,7 +63,7 @@ impl DeleteAssets {
         let mut infos = HashMap::new();
 
         view.checkpoint();
-        let res = || {
+        let res = (|| -> Result<(), Error> {
             for asset in self.assets() {
                 let info = match assets::Schema(&*view).fetch(&asset.id()) {
                     Some(info) => info,
@@ -92,10 +92,12 @@ impl DeleteAssets {
             for (id, info) in infos {
                 assets::Schema(&mut *view).store(&id, info);
             }
-        }();
+
+            Ok(())
+        })();
         match res {
             Ok(()) => {view.commit(); Ok(())}
-            Err(e) => {view.checkpoint(); Err(e)}
+            Err(e) => {view.rollback(); Err(e)}
         }
     }
 }

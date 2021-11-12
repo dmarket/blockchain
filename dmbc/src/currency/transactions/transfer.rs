@@ -82,9 +82,8 @@ impl Transfer {
             .remove(&self.to())
             .unwrap_or_else(|| wallet::Schema(&*view).fetch(&self.to()));
 
-        //wallet::Schema(&*view).fetch(self.to());
         wallet::move_coins(&mut wallet_from, &mut wallet_to, self.amount())?;
-        wallet::move_assets(&mut wallet_from, &mut wallet_to, &self.assets())?;
+        wallet::move_assets(&mut *view, &self.from(), &self.to(), &self.assets())?;
 
         updated_wallets.insert(*self.from(), wallet_from);
         updated_wallets.insert(*self.to(), wallet_to);
@@ -149,15 +148,10 @@ impl Transaction for Transfer {
         EXECUTE_COUNT.inc();
         let timer = EXECUTE_DURATION.start_timer();
 
-        view.checkpoint();
-
         let result = self.process(view);
 
         if let &Ok(_) = &result {
             EXECUTE_SUCCESS_COUNT.inc();
-            view.commit();
-        } else {
-            view.rollback();
         }
 
         status::Schema(view).store(self.hash(), result);

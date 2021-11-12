@@ -91,21 +91,6 @@ impl Trade {
         self.offer().raw
     }
 
-    // fn can_move_assets(&self, view: &mut Fork) -> Result<(), Error> {
-    //     let mut wallet_buyer = wallet::Schema(&*view).fetch(self.offer().buyer());
-    //     let mut wallet_seller = wallet::Schema(&*view).fetch(self.offer().seller());
-    //
-    //     let assets = self.offer()
-    //                 .assets()
-    //                 .into_iter()
-    //                 .map(|a| a.to_bundle())
-    //                 .collect::<Vec<_>>();
-    //
-    //     wallet::move_assets(&mut wallet_seller, &mut wallet_buyer, &assets)?;
-    //
-    //     Ok(())
-    // }
-
     fn process(&self, view: &mut Fork) -> Result<(), Error> {
         info!("Processing tx: {:?}", self);
 
@@ -149,8 +134,6 @@ impl Trade {
 
         let fees = ThirdPartyFees::new_trade(&*view, &offer.assets())?;
 
-//        self.can_move_assets(view)?;
-
         let mut wallet_buyer = wallet::Schema(&*view).fetch(offer.buyer());
         let mut wallet_seller = wallet::Schema(&*view).fetch(offer.seller());
 
@@ -180,12 +163,6 @@ impl Trade {
                     FeeStrategy::Intermediary => HashMap::<PublicKey, wallet::Wallet>::new(),
                 };
 
-                // let mut wallet_seller = updated_wallets
-                //     .remove(&offer.seller())
-                //     .unwrap_or_else(|| wallet::Schema(&*view).fetch(&offer.seller()));
-                // let mut wallet_buyer = updated_wallets
-                //     .remove(&offer.buyer())
-                //     .unwrap_or_else(|| wallet::Schema(&*view).fetch(&offer.buyer()));
                 let assets = offer
                     .assets()
                     .into_iter()
@@ -193,9 +170,6 @@ impl Trade {
                     .collect::<Vec<_>>();
 
                 wallet::move_assets(&mut *view, &offer.seller(), &offer.buyer(), &assets)?;
-
-                // updated_wallets.insert(*offer.seller(), wallet_seller);
-                // updated_wallets.insert(*offer.buyer(), wallet_buyer);
 
                 // Save changes to the database.
                 for (key, wallet) in updated_wallets {
@@ -269,15 +243,10 @@ impl Transaction for Trade {
         EXECUTE_COUNT.inc();
         let timer = EXECUTE_DURATION.start_timer();
 
-        view.checkpoint();
-
         let result = self.process(view);
 
         if let &Ok(_) = &result {
             EXECUTE_SUCCESS_COUNT.inc();
-            view.commit();
-        } else {
-            view.rollback();
         }
 
         status::Schema(view).store(self.hash(), result);
