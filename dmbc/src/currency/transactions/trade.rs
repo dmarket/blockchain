@@ -154,7 +154,7 @@ impl Trade {
                 wallet::Schema(&mut *view).store(&offer.seller(), wallet_seller);
                 wallet::Schema(&mut *view).store(&offer.buyer(), wallet_buyer);
 
-                let mut updated_wallets = match fee_strategy {
+                let updated_wallets = match fee_strategy {
                     FeeStrategy::Recipient => fees.collect(view, offer.buyer())?,
                     FeeStrategy::Sender => fees.collect(view, offer.seller())?,
                     FeeStrategy::RecipientAndSender => {

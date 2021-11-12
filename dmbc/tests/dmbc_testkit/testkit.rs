@@ -54,10 +54,10 @@ impl DmbcTestKit for ExonumTestKit {
         let mut wallet = wallet::Schema(&fork).fetch(&pub_key);
 
         for (asset, info) in assets {
-            wallet.add_assets(vec![asset.clone()]);
+            wallet::Schema(&mut fork).store_asset(&pub_key, &asset.id());
             assets::Schema(&mut fork).store(&asset.id(), info);
         }
-        wallet::Schema(&mut fork).store(&pub_key, Wallet::new(wallet.balance(), wallet.assets()));
+        wallet::Schema(&mut fork).store(&pub_key, Wallet::new(wallet.balance(), 0));
 
         assert!(blockchain.merge(fork.into_patch()).is_ok());
     }
