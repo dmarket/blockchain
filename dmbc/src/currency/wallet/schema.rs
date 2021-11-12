@@ -41,18 +41,6 @@ where
         self.index_assets()
             .get(&key)
     }
-
-    /*
-    pub fn fetch_assets(
-        self,
-        pub_key: &PublicKey,
-    ) -> MapIndexIter<Vec<u8>, AssetBundle> {
-        let mut key = vec![0; pub_key.size() + 1];
-        pub_key.write(&mut key[..]);
-        self.index_assets()
-            .iter_from(&key)
-    }
-    */
 }
 
 impl<'a> Schema<&'a mut Fork> {
