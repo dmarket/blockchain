@@ -18,6 +18,7 @@ references:
     run:
       name: Build project debug
       command: |
+        export PATH=$PATH:$HOME/.cargo/bin
         export CC=clang
         export CXX=clang++
         export RUSTFLAGS=-Awarnings
