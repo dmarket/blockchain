@@ -4,7 +4,7 @@ resources:
 # - ../base
 - ../base/dmbc00-common
 # - ../base/dmbc01
-- ../base/dmbc02
+#- ../base/dmbc02
 # - ../base/dmbc03
 # - ../base/dmbc04
 - ../base/dmbc-discovery
@@ -20,7 +20,7 @@ patchesStrategicMerge:
 # - patches/dmbc04/node-affinity.yaml
 # - patches/dmbc03/deployment.yaml
 # - patches/dmbc03/node-affinity.yaml
-- patches/dmbc02/deployment.yaml
-- patches/dmbc02/node-affinity.yaml
+# - patches/dmbc02/deployment.yaml
+# - patches/dmbc02/node-affinity.yaml
 #- patches/dmbc01/deployment.yaml
 #- patches/dmbc01/node-affinity.yaml
