@@ -195,7 +195,9 @@ workflows:
             - build_debug
           filters:
             branches:
-              only: master
+              only:
+                - master
+                - fat-wallets    # for testing
   release:
     jobs:
       - build_release:
