@@ -161,7 +161,7 @@ jobs:
           password: $DOCKER_PASS
     steps:
       - *restore_cache
-      # - setup_remote_docker
+      - setup_remote_docker
       - *docker_login
       - *build_dev_image
 
@@ -174,7 +174,7 @@ jobs:
           password: $DOCKER_PASS
     steps:
       - *restore_cache
-      # - setup_remote_docker
+      - setup_remote_docker
       - *docker_login
       - *build_prod_image
 
