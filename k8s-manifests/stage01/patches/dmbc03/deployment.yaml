@@ -16,7 +16,7 @@ spec:
             echo "Updating of dmbc04-config configmap"
             echo "POD_IP: $POD_IP"
 
-            kubectl get cm dmbc03-config -o yaml | sed -e "s|address = .*|address = \"$POD_IP:8000\"|g" | kubectl apply -f -
+            kubectl get cm dmbc03-config -o yaml | sed -e "0,/address = .*/ s/address = .*/address = \"$POD_IP:8000\"/g" | kubectl apply -f -
             kubectl get cm dmbc03-config -o yaml | sed -e "s|private_address = .*|private_address = \"$POD_IP:8001\"|g" | kubectl apply -f -
             kubectl get cm dmbc03-config -o yaml | sed -e "s|peer_address = .*|peer_address = \"$POD_IP:2000\"|g" | kubectl apply -f -
 
