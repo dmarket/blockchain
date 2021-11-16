@@ -1,0 +1,7 @@
+resources:
+  - ingress.yaml
+  - service.yaml
+  - serviceaccount.yaml
+  - role.yaml
+  - rolebinding.yaml
+  - secret.yaml

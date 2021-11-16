@@ -1,0 +1,23 @@
+---
+apiVersion: v1
+data:
+  config.toml: |
+    [api]
+    current_node = "node02"
+    address = "0.0.0.0:8000"
+    private_address = "0.0.0.0:8001"
+    peer_address = "0.0.0.0:2000"
+    peers = []
+    keys_path = "./var/keys"
+    is_validator = false
+    [db]
+    path = "./var/db"
+    [nats]
+    enabled = false
+    [service_discovery]
+    address = "dmbc-discovery:3000/nodes"
+kind: ConfigMap
+metadata:
+  name: dmbc02-config
+  labels:
+    app: dmbc02
