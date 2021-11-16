@@ -8,7 +8,7 @@ resources:
 # - ../base/dmbc03
 # - ../base/dmbc04
 - ../base/dmbc-discovery
-namespace: dmbc-dev
+namespace: dmbc-stage
 images:
 - name: globalgames/dmarket-blockchain
   newName: globalgames/dmarket-blockchain
