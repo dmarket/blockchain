@@ -56,7 +56,7 @@ fn exchange_intermediary_assets() {
     let (asset6, info6) = dmbc_testkit::create_asset(meta_data6, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
         .add_asset_to_wallet(&sender_pk, (asset1.clone(), info1))
@@ -167,7 +167,7 @@ fn exchange_intermediary_assets_creator_is_sender() {
     let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &sender_pk);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
         .add_asset_to_wallet(&sender_pk, (asset1.clone(), info1))
@@ -259,7 +259,7 @@ fn exchange_intermediary_assets_creator_is_intermediary() {
     let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &intermediary_pk);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
         .add_asset_to_wallet(&sender_pk, (asset1.clone(), info1))
@@ -350,7 +350,7 @@ fn exchange_intermediary_assets_payer_fee_intermediary() {
     let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &intermediary_pk);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&intermediary_pk, Wallet::new(intermediary_balance, vec![]))
@@ -439,7 +439,7 @@ fn exchange_intermediary_assets_asset_not_found() {
     let (asset2, _) = dmbc_testkit::create_asset(meta_data2, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &intermediary_pk);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&intermediary_pk, Wallet::new(intermediary_balance, vec![]))
@@ -509,7 +509,7 @@ fn exchange_intermediary_assets_insufficient_assets() {
     let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &intermediary_pk);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&intermediary_pk, Wallet::new(intermediary_balance, vec![]))
@@ -581,7 +581,7 @@ fn exchange_intermediary_assets_insufficient_funds() {
     let (asset2, info2) = dmbc_testkit::create_asset(meta_data2, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &intermediary_pk);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&intermediary_pk, Wallet::new(intermediary_balance, vec![]))

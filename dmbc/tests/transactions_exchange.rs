@@ -54,7 +54,7 @@ fn exchange_assets_fee_from_recipient() {
     let (asset6, info6) = dmbc_testkit::create_asset(meta_data6, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
         .add_asset_to_wallet(&sender_pk, (asset1.clone(), info1))
@@ -169,7 +169,7 @@ fn exchange_assets_fee_from_sender() {
     let (asset6, info6) = dmbc_testkit::create_asset(meta_data6, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
         .add_asset_to_wallet(&sender_pk, (asset1.clone(), info1))
@@ -284,7 +284,7 @@ fn exchange_assets_fee_from_recipient_and_sender() {
     let (asset6, info6) = dmbc_testkit::create_asset(meta_data6, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
         .add_asset_to_wallet(&sender_pk, (asset1.clone(), info1))
@@ -398,7 +398,7 @@ fn exchange_assets_invalid_tx() {
     let (asset6, info6) = dmbc_testkit::create_asset(meta_data6, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
         .add_asset_to_wallet(&sender_pk, (asset1.clone(), info1))
@@ -481,7 +481,7 @@ fn exchange_assets_insufficient_funds() {
     let (asset6, info6) = dmbc_testkit::create_asset(meta_data6, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
         .add_asset_to_wallet(&sender_pk, (asset1.clone(), info1))
         .add_asset_to_wallet(&sender_pk, (asset2.clone(), info2))
@@ -565,7 +565,7 @@ fn exchange_assets_assets_not_found() {
     let (asset6, info6) = dmbc_testkit::create_asset(meta_data6, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
         .add_asset_to_wallet(&sender_pk, (asset2.clone(), info2))
@@ -650,7 +650,7 @@ fn exchange_assets_insufficient_assets() {
     let (asset6, info6) = dmbc_testkit::create_asset(meta_data6, receiver_units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pk);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&sender_pk, Wallet::new(others_balance, vec![]))
         .add_wallet_value(&recipient_pk, Wallet::new(others_balance, vec![]))
         .add_asset_to_wallet(&sender_pk, (asset1.clone(), info1))

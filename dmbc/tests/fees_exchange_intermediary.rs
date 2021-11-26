@@ -43,7 +43,7 @@ fn fees_for_exchange_intermediary_recipient() {
     let (asset3, info3) = dmbc_testkit::create_asset(meta_data3, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_asset_to_wallet(&sender_public_key, (asset0.clone(), info0))
         .add_asset_to_wallet(&sender_public_key, (asset1.clone(), info1))
         .add_asset_to_wallet(&sender_public_key, (asset2.clone(), info2))
@@ -95,7 +95,7 @@ fn fees_for_exchange_intermediary_sender() {
     let (asset3, info3) = dmbc_testkit::create_asset(meta_data3, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_asset_to_wallet(&sender_public_key, (asset0.clone(), info0))
         .add_asset_to_wallet(&sender_public_key, (asset1.clone(), info1))
         .add_asset_to_wallet(&sender_public_key, (asset2.clone(), info2))
@@ -147,7 +147,7 @@ fn fees_for_exchange_intermediary_recipient_and_sender() {
     let (asset3, info3) = dmbc_testkit::create_asset(meta_data3, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_asset_to_wallet(&sender_public_key, (asset0.clone(), info0))
         .add_asset_to_wallet(&sender_public_key, (asset1.clone(), info1))
         .add_asset_to_wallet(&sender_public_key, (asset2.clone(), info2))
@@ -200,7 +200,7 @@ fn fees_for_exchange_intermediary_intermediary() {
     let (asset3, info3) = dmbc_testkit::create_asset(meta_data3, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_asset_to_wallet(&sender_public_key, (asset0.clone(), info0))
         .add_asset_to_wallet(&sender_public_key, (asset1.clone(), info1))
         .add_asset_to_wallet(&sender_public_key, (asset2.clone(), info2))
@@ -251,7 +251,7 @@ fn fees_for_exchange_intermediary_recipient_and_sender_creator() {
     let (asset3, info3) = dmbc_testkit::create_asset(meta_data3, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &sender_public_key);
 
     let testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_asset_to_wallet(&sender_public_key, (asset0.clone(), info0))
         .add_asset_to_wallet(&sender_public_key, (asset1.clone(), info1))
         .add_asset_to_wallet(&sender_public_key, (asset2.clone(), info2))
@@ -305,7 +305,7 @@ let transaction_fee = 1000;
     let (asset3, _) = dmbc_testkit::create_asset(meta_data3, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .create();
     let api = testkit.api();
 

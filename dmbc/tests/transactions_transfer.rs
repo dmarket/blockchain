@@ -36,7 +36,7 @@ fn transfer() {
     let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
         .add_asset_to_wallet(&public_key, (asset.clone(), info))
         .create();
@@ -89,7 +89,7 @@ fn transfer_asset_not_found() {
     let (asset, _) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
         .create();
     let api = testkit.api();
@@ -140,7 +140,7 @@ fn transfer_insufficient_funds() {
     let (asset, _) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
         .create();
     let api = testkit.api();
@@ -190,7 +190,7 @@ fn transfer_insufficient_assets() {
     let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
         .add_asset_to_wallet(&public_key, (asset.clone(), info))
         .create();

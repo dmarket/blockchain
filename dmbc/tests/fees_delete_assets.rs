@@ -24,7 +24,7 @@ fn fees_for_delete_assets() {
     let transaction_fee = 1000;
     let config_fees = TransactionFees::with_default_key(0, 0, transaction_fee, 0, 0, 0);
     let testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .create();
 
     let api = testkit.api();

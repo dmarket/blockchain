@@ -140,7 +140,7 @@ impl WalletApi {
         let index = wallet::Schema(&view).index_assets();
 
         let mut prefix = vec![0; pub_key.size() + 1];
-        pub_key.write(&mut prefix[..]);
+        pub_key.write(&mut prefix[..pub_key.size()]);
         let iter = index.iter_from(&prefix);
 
         let mut assets = vec![];

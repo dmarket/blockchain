@@ -30,7 +30,7 @@ fn proposed_service_configuration() {
 
     let configuration = Configuration::new(TransactionFees::with_default_key(
         100, 2, 100, 100, 100, 100,
-    ));
+    ), Default::default());
     let cfg_change_height = Height(5);
     let proposal = {
         let mut cfg = testkit.configuration_change_proposal();

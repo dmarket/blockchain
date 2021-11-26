@@ -40,7 +40,7 @@ fn trade_intermediary_fee_from_recipient() {
     let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &seller_public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))
         .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
@@ -112,7 +112,7 @@ fn trade_intermediary_fee_from_sender() {
     let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &seller_public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))
         .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
@@ -183,7 +183,7 @@ fn trade_intermediary_fee_from_recipient_and_sender() {
     let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &seller_public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))
         .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
@@ -253,7 +253,7 @@ fn trade_intermediary_fee_from_intermediary() {
     let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &seller_public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&intermediary_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))
@@ -327,7 +327,7 @@ fn trade_intermediary_asset_not_found() {
     let (asset, _) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &seller_public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&intermediary_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))
@@ -394,7 +394,7 @@ fn trade_intermediary_insufficient_assets() {
     let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &seller_public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&intermediary_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))
@@ -463,7 +463,7 @@ fn trade_intermediary_insufficient_funds() {
     let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &seller_public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&intermediary_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&buyer_public_key, Wallet::new(balance, vec![]))
         .add_wallet_value(&seller_public_key, Wallet::new(balance, vec![]))

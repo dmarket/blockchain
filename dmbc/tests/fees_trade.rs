@@ -38,7 +38,7 @@ fn fees_for_trade_recipient() {
     let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
@@ -77,7 +77,7 @@ fn fees_for_trade_sender() {
     let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
@@ -116,7 +116,7 @@ fn fees_for_trade_recipient_and_sender() {
     let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
@@ -155,7 +155,7 @@ fn fees_for_trade_recipient_and_sender_creator() {
     let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &seller_public_key);
 
     let testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
@@ -196,7 +196,7 @@ fn fees_for_trade_invalid_transaction() {
     let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_asset_to_wallet(&seller_public_key, (asset.clone(), info))
         .create();
     let api = testkit.api();
@@ -232,7 +232,7 @@ fn fees_for_trade_asset_not_found() {
     let (asset, _) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_pub_key);
 
     let testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .create();
     let api = testkit.api();
 

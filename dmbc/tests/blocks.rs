@@ -139,7 +139,7 @@ fn blocks_skip_empty_with_tx_in_blockchain() {
     let (receiver_key, _) = crypto::gen_keypair();
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&creator_public_key, Wallet::new(balance, vec![]))
         .create();
     let api = testkit.api();
@@ -292,7 +292,7 @@ fn blocks_height_with_tx_in_blockchain() {
     let (receiver_key, _) = crypto::gen_keypair();
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&creator_public_key, Wallet::new(balance, vec![]))
         .create();
     let api = testkit.api();

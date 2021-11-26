@@ -36,7 +36,7 @@ fn add_assets_mine_new_asset_to_receiver_empty_wallet() {
     let (receiver_key, _) = crypto::gen_keypair();
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&creator_public_key, Wallet::new(balance, vec![]))
         .create();
     let api = testkit.api();
@@ -104,7 +104,7 @@ fn add_assets_mine_existing_asset_to_receivers_non_empty_wallet() {
     let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&creator_public_key, Wallet::new(balance, vec![]))
         .add_asset_to_wallet(&receiver_key, (asset.clone(), info.clone()))
         .create();
@@ -164,7 +164,7 @@ fn add_assets_mine_existing_asset_to_creators_empty_wallet() {
     let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&creator_public_key, Wallet::new(balance, vec![]))
         .add_asset_to_wallet(&receiver_key, (asset.clone(), info.clone()))
         .create();
@@ -232,7 +232,7 @@ fn add_assets_mine_existing_asset_to_creator_and_receiver() {
     );
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&creator_public_key, Wallet::new(balance, vec![]))
         .add_asset_to_wallet(&receiver_key, (asset.clone(), info.clone()))
         .create();
@@ -299,7 +299,7 @@ fn add_assets_mine_existing_asset_to_receivers_wallet_with_different_asset() {
     let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &creator_public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&creator_public_key, Wallet::new(balance, vec![]))
         .add_asset_to_wallet(&receiver_key, (asset.clone(), info.clone()))
         .create();
@@ -366,7 +366,7 @@ fn add_assets_mine_existing_asset_with_different_fees() {
     let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed1, "0.0".parse().unwrap()), &public_key);
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
         .add_asset_to_wallet(&public_key, (asset.clone(), info.clone()))
         .create();
@@ -414,7 +414,7 @@ fn add_assets_insufficient_funds() {
     let (public_key, secret_key) = crypto::gen_keypair();
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .create();
     let api = testkit.api();
 
@@ -453,7 +453,7 @@ fn add_assets_transaction_too_large() {
     let (receiver_key, _) = crypto::gen_keypair();
 
     let mut testkit = DmbcTestApiBuilder::new()
-        .with_configuration(Configuration::new(config_fees))
+        .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&creator_public_key, Wallet::new(balance, vec![]))
         .create();
     let api = testkit.api();
