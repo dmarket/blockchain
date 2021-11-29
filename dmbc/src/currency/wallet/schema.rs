@@ -65,9 +65,12 @@ impl<'a> Schema<&'a mut Fork> {
     }
 
     pub fn store_asset(&mut self, pub_key: &PublicKey, asset_id: &AssetId, value: AssetBundle) {
-        let key = wallet_asset_key(pub_key, asset_id);
-        self.index_assets_mut()
-            .put(&key, value);
+        if value.amount() == 0 {
+            self.remove_asset(pub_key, asset_id);
+        } else {
+            let key = wallet_asset_key(pub_key, asset_id);
+            self.index_assets_mut().put(&key, value);
+        }
     }
 
     /// Remove wallet state from the database.

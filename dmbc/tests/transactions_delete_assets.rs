@@ -33,7 +33,7 @@ fn delete_assets_one_from_bundle() {
 
     let (public_key, secret_key) = crypto::gen_keypair();
     let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
-    
+
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))
@@ -82,7 +82,7 @@ fn delete_assets_all_from_bundle() {
 
     let (public_key, secret_key) = crypto::gen_keypair();
     let (asset, info) = dmbc_testkit::create_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()), &public_key);
-    
+
     let mut testkit = DmbcTestApiBuilder::new()
         .with_configuration(Configuration::new(config_fees, Default::default()))
         .add_wallet_value(&public_key, Wallet::new(balance, vec![]))

@@ -70,8 +70,8 @@ fn add_assets_mine_new_asset_to_receiver_empty_wallet() {
 
     // create asset's equivalents created by tx execution
     let (asset, info) = dmbc_testkit::create_asset2(
-        meta_data, 
-        units, 
+        meta_data,
+        units,
         dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
         &creator_public_key,
         &tx_hash
@@ -109,7 +109,7 @@ fn add_assets_mine_existing_asset_to_receivers_non_empty_wallet() {
         .add_asset_to_wallet(&receiver_key, (asset.clone(), info.clone()))
         .create();
     let api = testkit.api();
-    
+
     let tx_add_assets = transaction::Builder::new()
         .keypair(creator_public_key, creator_secret_key)
         .tx_add_assets()
@@ -169,7 +169,7 @@ fn add_assets_mine_existing_asset_to_creators_empty_wallet() {
         .add_asset_to_wallet(&receiver_key, (asset.clone(), info.clone()))
         .create();
     let api = testkit.api();
-    
+
     let meta_asset = MetaAsset::new(&creator_public_key, meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()));
     let tx_add_assets = transaction::Builder::new()
         .keypair(creator_public_key, creator_secret_key)
@@ -225,10 +225,10 @@ fn add_assets_mine_existing_asset_to_creator_and_receiver() {
     let (receiver_key, _) = crypto::gen_keypair();
 
     let (asset, info) = dmbc_testkit::create_asset(
-        meta_data, 
-        units, 
+        meta_data,
+        units,
         dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
-        &creator_public_key, 
+        &creator_public_key,
     );
 
     let mut testkit = DmbcTestApiBuilder::new()
@@ -237,7 +237,7 @@ fn add_assets_mine_existing_asset_to_creator_and_receiver() {
         .add_asset_to_wallet(&receiver_key, (asset.clone(), info.clone()))
         .create();
     let api = testkit.api();
-    
+
     let meta_asset_for_creator = MetaAsset::new(&creator_public_key, meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()));
     let meta_asset_for_receiver = MetaAsset::new(&receiver_key, meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()));
     let tx_add_assets = transaction::Builder::new()
@@ -304,7 +304,7 @@ fn add_assets_mine_existing_asset_to_receivers_wallet_with_different_asset() {
         .add_asset_to_wallet(&receiver_key, (asset.clone(), info.clone()))
         .create();
     let api = testkit.api();
-    
+
     let meta_asset_for_receiver = MetaAsset::new(&receiver_key, new_meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()));
     let tx_add_assets = transaction::Builder::new()
         .keypair(creator_public_key, creator_secret_key)
@@ -327,10 +327,10 @@ fn add_assets_mine_existing_asset_to_receivers_wallet_with_different_asset() {
 
     // check creator wallet
     let (new_asset, new_info) = dmbc_testkit::create_asset2(
-        new_meta_data, 
-        units, 
+        new_meta_data,
+        units,
         dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()),
-        &creator_public_key, 
+        &creator_public_key,
         &tx_hash
     );
 
@@ -343,7 +343,8 @@ fn add_assets_mine_existing_asset_to_receivers_wallet_with_different_asset() {
     // check receiver wallet
     let receivers_assets = api.get_wallet_assets(&receiver_key);
     let assets: Vec<AssetBundle> = receivers_assets.iter().map(|a| a.into()).collect();
-    assert_eq!(assets, vec![asset, new_asset.clone()]);
+    assert!(assets.contains(&asset));
+    assert!(assets.contains(&new_asset));
 
     // compare asset info from blockchain
     let assets_infos: Vec<AssetInfo> = receivers_assets.iter().map(|a| a.clone().meta_data.unwrap()).collect();
@@ -378,7 +379,7 @@ fn add_assets_mine_existing_asset_with_different_fees() {
         .add_asset(meta_data, units, dmbc_testkit::asset_fees(fixed2, "0.0".parse().unwrap()))
         .seed(85)
         .build();
-    
+
     let tx_hash = tx_add_assets.hash();
 
     let (status, response) = api.post_tx(&tx_add_assets);
@@ -424,7 +425,7 @@ fn add_assets_insufficient_funds() {
         .add_asset(meta_data, units, dmbc_testkit::asset_fees(fixed, "0.0".parse().unwrap()))
         .seed(99)
         .build();
-    
+
     let tx_hash = tx_add_assets.hash();
 
     let (status, response) = api.post_tx(&tx_add_assets);
