@@ -347,8 +347,8 @@ fn add_assets_mine_existing_asset_to_receivers_wallet_with_different_asset() {
     assert!(assets.contains(&new_asset));
 
     // compare asset info from blockchain
-    let assets_infos: Vec<AssetInfo> = receivers_assets.iter().map(|a| a.clone().meta_data.unwrap()).collect();
-    assert_eq!(assets_infos[1], new_info);
+    let asset_info = receivers_assets.iter().filter_map(|a| a.meta_data.clone().filter(|md| md.data() == "new_asset")).next();
+    assert_eq!(asset_info, Some(new_info));
 }
 
 #[test]

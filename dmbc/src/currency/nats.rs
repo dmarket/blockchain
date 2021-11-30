@@ -7,10 +7,12 @@ use std::time::{Duration, Instant};
 
 use config;
 
-pub fn publish(subject: String, msg: String) {
+pub fn publish(_subject: String, _msg: String) {
+    /* Do nothing, we don't use nats.
     let pipe = Pipe::get();
     pipe.as_ref()
         .map(|p| p.sender.send((subject, msg)).unwrap());
+    */
 }
 
 type PublishPair = (String, String);
