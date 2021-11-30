@@ -41,7 +41,7 @@ pub const TRANSACTIONS_REQUEST_TIMEOUT: Milliseconds = 100;
 /// Timeout value for the `PrevotesRequest` message.
 pub const PREVOTES_REQUEST_TIMEOUT: Milliseconds = 100;
 /// Timeout value for the `BlockRequest` message.
-pub const BLOCK_REQUEST_TIMEOUT: Milliseconds = 100;
+pub const BLOCK_REQUEST_TIMEOUT: Milliseconds = 10000;
 
 /// Transactions pool.
 // TODO replace by persistent TxPool (ECR-171)
