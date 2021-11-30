@@ -67,7 +67,9 @@ encoding_struct! {
 
 impl Default for Permissions {
     fn default() -> Self {
-        Permissions::new(0, vec![])
+        // This is a plug with historical values to make hashes match.
+        // Do not change!
+        Permissions::new(18446744073709551615, vec![])
     }
 }
 
