@@ -35,13 +35,13 @@ use node::timeout_adjuster::{TimeoutAdjuster, Constant, Dynamic, MovingAverage};
 // TODO: move request timeouts into node configuration (ECR-171)
 
 /// Timeout value for the `ProposeRequest` message.
-pub const PROPOSE_REQUEST_TIMEOUT: Milliseconds = 100;
+pub const PROPOSE_REQUEST_TIMEOUT: Milliseconds = 10;
 /// Timeout value for the `TransactionsRequest` message.
-pub const TRANSACTIONS_REQUEST_TIMEOUT: Milliseconds = 100;
+pub const TRANSACTIONS_REQUEST_TIMEOUT: Milliseconds = 10;
 /// Timeout value for the `PrevotesRequest` message.
-pub const PREVOTES_REQUEST_TIMEOUT: Milliseconds = 100;
+pub const PREVOTES_REQUEST_TIMEOUT: Milliseconds = 10;
 /// Timeout value for the `BlockRequest` message.
-pub const BLOCK_REQUEST_TIMEOUT: Milliseconds = 10000;
+pub const BLOCK_REQUEST_TIMEOUT: Milliseconds = 0;
 
 /// Transactions pool.
 // TODO replace by persistent TxPool (ECR-171)
