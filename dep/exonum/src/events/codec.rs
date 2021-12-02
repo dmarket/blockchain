@@ -45,6 +45,7 @@ impl Decoder for MessagesCodec {
         // Check payload len
         let total_len = LittleEndian::read_u32(&buf[6..10]) as usize;
 
+        /* // do not check
         if total_len as u32 > self.max_message_len {
             return Err(other_error(format!(
                 "Received message is too long: {}, maximum allowed length is {} bytes",
@@ -52,6 +53,7 @@ impl Decoder for MessagesCodec {
                 self.max_message_len,
             )));
         }
+        */
 
         if total_len < HEADER_LENGTH {
             return Err(other_error(format!(
