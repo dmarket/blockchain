@@ -2,7 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
 # - ../base
-- ../base/dmbc00-common
+# - ../base/dmbc00-common
 # - ../base/dmbc01
 # - ../base/dmbc02
 # - ../base/dmbc03
@@ -15,8 +15,7 @@ images:
   newName: globalgames/dmarket-blockchain
   newTag: fat-wallets-125
 patchesStrategicMerge:
-- patches/dmbc00-common/ingress.yaml
-- patches/dmbc00-common/secret.yaml
+#- patches/dmbc00-common/ingress.yaml
 - patches/dmbc05/deployment.yaml
 - patches/dmbc05/node-affinity.yaml
 # - patches/dmbc04/deployment.yaml
