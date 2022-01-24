@@ -1,5 +1,5 @@
 resources:
-  - ingress.yaml
+ # - ingress.yaml
  # - service.yaml
   - serviceaccount.yaml
   - role.yaml
