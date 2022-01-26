@@ -59,26 +59,10 @@ impl Default for TransactionFees {
 }
 
 encoding_struct! {
-    struct Permissions {
-        global_permission_mask: u64,
-        wallets: Vec<u64>,
-    }
-}
-
-impl Default for Permissions {
-    fn default() -> Self {
-        // This is a plug with historical values to make hashes match.
-        // Do not change!
-        Permissions::new(18446744073709551615, vec![])
-    }
-}
-
-encoding_struct! {
     /// Currency service configuration.
     #[derive(Eq, PartialOrd, Ord)]
     struct Configuration {
         fees: TransactionFees,
-        permissions: Permissions,
     }
 }
 
@@ -88,7 +72,7 @@ pub const GENESIS_WALLET_PUB_KEY: &str =
 
 impl Default for Configuration {
     fn default() -> Configuration {
-        Configuration::new(TransactionFees::default(), Permissions::default())
+        Configuration::new(TransactionFees::default())
     }
 }
 
