@@ -13,7 +13,7 @@ namespace: dmbc-prod
 images:
 - name: globalgames/dmarket-blockchain
   newName: globalgames/dmarket-blockchain
-  newTag: fat-wallets-125
+  newTag: fat-wallets-136
 patchesStrategicMerge:
 # - patches/dmbc00-common/ingress.yaml
 - patches/dmbc05/deployment.yaml
