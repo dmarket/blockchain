@@ -86,30 +86,117 @@ references:
     run:
       name: Build and Push docker container
       command: |
-        docker build -t globalgames/dmarket-blockchain .
-        export TAG=$CIRCLE_BRANCH-$CIRCLE_BUILD_NUM
-        docker tag globalgames/dmarket-blockchain globalgames/dmarket-blockchain:$TAG
-        docker push globalgames/dmarket-blockchain:$TAG
+            
+            source VERSION
+
+            echo "DOCKER_VERSION - " $DOCKER_VERSION
+            echo "DOCKER_SHORT_VERSION -" $DOCKER_SHORT_VERSION
+            echo "DOCKER_FULL_VERSION - " $DOCKER_FULL_VERSION
+
+            docker build -t globalgames/dmarket-blockchain:$DOCKER_VERSION 
+
+            docker tag globalgames/dmarket-blockchain:$DOCKER_VERSION globalgames/dmarket-blockchain:$DOCKER_SHORT_VERSION
+            docker tag globalgames/dmarket-blockchain:$DOCKER_VERSION globalgames/dmarket-blockchain:$DOCKER_FULL_VERSION
+            docker push globalgames/dmarket-blockchain:$DOCKER_VERSION
+            docker push globalgames/dmarket-blockchain:$DOCKER_SHORT_VERSION
+            docker push globalgames/dmarket-blockchain:$DOCKER_FULL_VERSION
+
+        # docker build -t globalgames/dmarket-blockchain .
+        # export TAG=$CIRCLE_BRANCH-$CIRCLE_BUILD_NUM
+        # docker tag globalgames/dmarket-blockchain globalgames/dmarket-blockchain:$TAG
+        # docker push globalgames/dmarket-blockchain:$TAG
 
   build_prod_image: &build_prod_image
     run:
       name: Build and Push docker container
       command: |
-        docker build -t globalgames/dmarket-blockchain . --build-arg TYPE=release
-        if [[ -z "$CIRCLE_TAG" ]]
-          then
-            export APP_VERSION=`echo $CIRCLE_BRANCH | awk -F "/" '{print $2}'`
-          else
-            export APP_VERSION=$CIRCLE_TAG
-        fi
-        docker tag globalgames/dmarket-blockchain globalgames/dmarket-blockchain:$APP_VERSION
-        docker push globalgames/dmarket-blockchain:$APP_VERSION
+         source VERSION
+
+            echo "DOCKER_VERSION - " $DOCKER_VERSION
+            echo "DOCKER_SHORT_VERSION -" $DOCKER_SHORT_VERSION
+            echo "DOCKER_FULL_VERSION - " $DOCKER_FULL_VERSION
+
+            docker build -t globalgames/dmarket-blockchain:$DOCKER_VERSION 
+
+            docker tag globalgames/dmarket-blockchain:$DOCKER_VERSION globalgames/dmarket-blockchain:$DOCKER_SHORT_VERSION
+            docker tag globalgames/dmarket-blockchain:$DOCKER_VERSION globalgames/dmarket-blockchain:$DOCKER_FULL_VERSION
+            docker push globalgames/dmarket-blockchain:$DOCKER_VERSION
+            docker push globalgames/dmarket-blockchain:$DOCKER_SHORT_VERSION
+            docker push globalgames/dmarket-blockchain:$DOCKER_FULL_VERSION
+   
+
+        # docker build -t globalgames/dmarket-blockchain . --build-arg TYPE=release
+        # if [[ -z "$CIRCLE_TAG" ]]
+        #   then
+        #     export APP_VERSION=`echo $CIRCLE_BRANCH | awk -F "/" '{print $2}'`
+        #   else
+        #     export APP_VERSION=$CIRCLE_TAG
+        # fi
+        # docker tag globalgames/dmarket-blockchain globalgames/dmarket-blockchain:$APP_VERSION
+        # docker push globalgames/dmarket-blockchain:$APP_VERSION
 
   docker_login: &docker_login
     run:
       name: Docker Login
       command: echo $DOCKER_PASS | docker login --username $DOCKER_USER --password-stdin
 
+  set_version:
+    steps:
+      - run:
+          name: Set VERSION
+          command: |
+            BRANCH=`echo $CIRCLE_BRANCH | sed 's/.*\/\(.*\)/\1/' | awk '{print tolower($0)}' | tr _ - `
+            echo "BRANCH=$BRANCH"
+            if [[ -z "$CIRCLE_TAG" ]]
+                then
+                    export APP_VERSION=$BRANCH
+                else
+                    export APP_VERSION=`echo $CIRCLE_TAG | sed 's/\(v[0-9]*\.[0-9]*\.[0-9]*\).*/\1/'`
+            fi
+            echo "APP_VERSION=$APP_VERSION"
+            # v1.2.3 -> v1
+            # develop -> develop
+            if echo $APP_VERSION | grep -Eq 'v[0-9]+\.[0-9]+\.[0-9]+'
+              then
+                MAJOR_VERSION=`echo $APP_VERSION | sed  's/\(v[0-9]*\).*/\1/'`
+              else
+                MAJOR_VERSION=$APP_VERSION
+            fi
+            echo "MAJOR_VERSION=$MAJOR_VERSION"
+            # v1.2.3 -> v1.2
+            # develop -> develop
+            if echo $APP_VERSION | grep -Eq 'v[0-9]+\.[0-9]+\.[0-9]+'
+              then
+                MINOR_VERSION=`echo $APP_VERSION | sed  's/\(v[0-9]*\.[0-9]*\).*/\1/'`
+              else
+                MINOR_VERSION=$APP_VERSION
+            fi
+            echo "MINOR_VERSION=$MINOR_VERSION"
+            #v1.2.3 -> v1-2-3
+            HELM_VERSION=`echo $APP_VERSION | sed -e 's/\./-/g'`
+            echo "HELM_VERSION=$HELM_VERSION"
+            # v1.2.3-uiaidb-355
+            DOCKER_FULL_VERSION=$APP_VERSION-${CIRCLE_SHA1:0:7}-$CIRCLE_BUILD_NUM
+
+            if [[ -z "$CIRCLE_TAG" ]]; then
+              DOCKER_VERSION=$DOCKER_FULL_VERSION
+            else
+              DOCKER_VERSION=$APP_VERSION
+            fi
+
+            DOCKER_SHORT_VERSION=$APP_VERSION-$CIRCLE_BUILD_NUM
+
+            echo "export BRANCH=$BRANCH" > VERSION
+            echo "export VERSION=$VERSION" >> VERSION
+            echo "export APP_VERSION=$APP_VERSION" >> VERSION
+            echo "export MAJOR_VERSION=$MAJOR_VERSION" >> VERSION
+            echo "export MINOR_VERSION=$MINOR_VERSION" >> VERSION
+            echo "export HELM_VERSION=$HELM_VERSION" >> VERSION
+            echo "export DOCKER_FULL_VERSION=$DOCKER_FULL_VERSION" >> VERSION
+            echo "export DOCKER_VERSION=$DOCKER_VERSION" >> VERSION
+            echo "export DOCKER_SHORT_VERSION=$DOCKER_SHORT_VERSION" >> VERSION    
+
+  
 jobs:
   build_debug:
     working_directory: /project
